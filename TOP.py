@@ -35,27 +35,36 @@ for i in range(1, S+1):
 model.setObjective(gp.quicksum(R[0][i] * y[i, v] for i in range(2, S) for v in range(1, V+1)), GRB.MAXIMIZE)
 
 # Add constraint (2): guarantee that each service vehicle starts and ends in at the depot.
-model.addConstr(gp.quicksum(x[1, j, v] for v in range(1, V+1) for j in range(2, S+1)), GRB.EQUAL, V, "c_2_1")
-model.addConstr(gp.quicksum(x[i, S, v] for v in range(1, V+1) for i in range(1, S)), GRB.EQUAL, V, "c_2_2")
+model.addConstr(
+    gp.quicksum(x[1, j, v] for v in range(1, V+1) for j in range(2, S+1)), GRB.EQUAL, V, "must_visit_depot_1"
+)
+model.addConstr(
+    gp.quicksum(x[i, S, v] for v in range(1, V+1) for i in range(1, S)), GRB.EQUAL, V, "must_visit_depot_end"
+)
 
 # Add constraint (3): ensure that every scooter is visited at most once.
 for k in range(2, S):
-    model.addConstr(gp.quicksum(y[k, v] for v in range(1, V+1)), GRB.LESS_EQUAL, 1, f"c_3_{k}")
+    model.addConstr(
+        gp.quicksum(y[k, v] for v in range(1, V+1)), GRB.LESS_EQUAL, 1, f"only_one_visit_pr_scooter_(k={k})"
+    )
 
 # Add constraint (4): guarantee the connectivity of each service vehicle path
 for k in range(2, S):
     for v in range(1, V+1):
-        model.addConstr(gp.quicksum(x[i, k, v] for i in range(1, S)), GRB.EQUAL, y[k, v], f"c_4_1_{k},{v}")
-        model.addConstr(gp.quicksum(x[k, j, v] for j in range(2, S+1)), GRB.EQUAL, y[k, v], f"c_4_2_{k},{v}")
+        model.addConstr(
+            gp.quicksum(x[i, k, v] for i in range(1, S)), GRB.EQUAL, y[k, v], f"connectivity_1_(k={k},v={v})"
+        )
+        model.addConstr(
+            gp.quicksum(x[k, j, v] for j in range(2, S+1)), GRB.EQUAL, y[k, v], f"connectivity_2_(k={k},v={v})"
+        )
 
 # Optimize model
 model.optimize()
 
 # Print solution
 for v in model.getVars():
-    if v.x > 0:
-        print(f'{v.varName} {int(v.x)}')
+    print(f'{v.varName}: {int(v.x)}')
 
 print(f'Obj: {model.objVal}')
 
-helpers.print_model(model)
+helpers.print_model(model, delete_file=False)
