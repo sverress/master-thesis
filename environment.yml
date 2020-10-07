@@ -1,25 +1,7 @@
 name: master
 channels:
   - gurobi
-  - http://conda.anaconda.org/gurobi
   - defaults
 dependencies:
-  - ca-certificates=2020.7.22=0
-  - certifi=2020.6.20=py36_0
-  - gurobi=9.0.3=py36_0
-  - libcxx=10.0.0=1
-  - libedit=3.1.20191231=h1de35cc_1
-  - libffi=3.3=hb1e8313_2
-  - ncurses=6.2=h0a44026_1
-  - openssl=1.1.1h=haf1e3a3_0
-  - pip=20.2.3=py36_0
-  - python=3.6.12=h26836e1_2
-  - readline=8.0=h1de35cc_0
-  - setuptools=50.3.0=py36h0dc7051_1
-  - sqlite=3.33.0=hffcf06c_0
-  - tk=8.6.10=hb0a8c7a_0
-  - wheel=0.35.1=py_0
-  - xz=5.2.5=h1de35cc_0
-  - zlib=1.2.11=h1de35cc_3
-prefix: /Users/sverrespetalen/anaconda3/envs/master
-
+  - gurobi
+  - numpy
