@@ -11,8 +11,24 @@ itself. [This quickstart](https://www.gurobi.com/wp-content/plugins/hd_documenta
 ### Anaconda environment
 It is recommended to use anaconda for gurobi. [Download anaconda](https://docs.anaconda.com/anaconda/install/mac-os/) 
 (I used the command-line install) and create an environment from a environment.yml file.
+
+
+This whole tutorial is based on [the conda documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
+
 Change directory into the root directory and run the following command:
 ```
-conda env create -f environment.yml
+conda env create --prefix ./env -f environment.yml
 ```
-This command creates a conda environment named "master" with all the required packages for the project.
+This command creates a conda environment at ./env in your current directory with all the required packages for the project.
+PS: To remove the awful looking path on the left when activating your environment run `conda config --set env_prompt '({name})'`
+when the environment is active. You need to restart your terminal to see this change. 
+
+####Adding new packages to conda environment
+1. Search for package using `conda search <package>` to check for availability
+2. Add package name to environment.yml under dependencies
+3. run the following command to update your conda environment with the new dependencies:
+```
+conda env update --prefix ./env --file environment.yml  --prune
+```
+To remove packages just remove it from the packages.yml and run the same command. 
+This is a nice command to make a alias for.

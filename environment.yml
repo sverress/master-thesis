@@ -6,3 +6,4 @@ dependencies:
   - gurobi
   - numpy
   - scipy
+  - networkx

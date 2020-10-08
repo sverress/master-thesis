@@ -13,8 +13,8 @@ V = 1  # Number of service vehicles
 # Using random values for R and T
 np.random.seed(42)
 R = np.random.randint(100, size=(1, S))  # Reward for swapping battery for scooter i
-T = np.random.randint(10, size=(S, S))  # Time needed to travel from scooter i to j
-T_max = 10  # Duration of shift
+T = np.random.randint(10, size=(S+1, S+1))  # Time needed to travel from scooter i to j
+T_max = 6  # Duration of shift
 
 """
 Create variables
@@ -52,11 +52,20 @@ for k in range(2, S):
 for k in range(2, S):
     for v in range(1, V+1):
         model.addConstr(
-            gp.quicksum(x[i, k, v] if i != k else 0 for i in range(1, S)), GRB.EQUAL, y[k, v], f"connectivity_1_(k={k},v={v})"
+            gp.quicksum(x[i, k, v] if i != k else 0 for i in range(1, S)), GRB.EQUAL, y[k, v],
+            f"connectivity_1_(k={k},v={v})"
         )
         model.addConstr(
-            gp.quicksum(x[k, j, v] if j != k else 0 for j in range(2, S+1)), GRB.EQUAL, y[k, v], f"connectivity_2_(k={k},v={v})"
+            gp.quicksum(x[k, j, v] if j != k else 0 for j in range(2, S+1)), GRB.EQUAL, y[k, v],
+            f"connectivity_2_(k={k},v={v})"
         )
+
+# Add constraints (5): ensure that the length of the paths does not exceed the shift
+for v in range(1, V):
+    model.addConstr(
+        gp.quicksum(T[i, j] * x[i, j, v] for i in range(1, S) for j in range(2, S+1)), GRB.LESS_EQUAL, T_max,
+        f"time_constraints_(v={v})"
+    )
 
 # Add constraints (6-7): prevent subtours
 for i in range(2, S+1):
@@ -78,4 +87,4 @@ for v in model.getVars():
 
 print(f'Obj: {model.objVal}')
 
-helpers.print_model(model, delete_file=False)
+helpers.print_model(model)
