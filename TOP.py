@@ -14,7 +14,7 @@ V = 1  # Number of service vehicles
 np.random.seed(42)
 R = np.random.randint(100, size=(1, S))  # Reward for swapping battery for scooter i
 T = np.random.randint(10, size=(S+1, S+1))  # Time needed to travel from scooter i to j
-T_max = 6  # Duration of shift
+T_max = 10  # Duration of shift
 
 """
 Create variables
@@ -61,7 +61,7 @@ for k in range(2, S):
         )
 
 # Add constraints (5): ensure that the length of the paths does not exceed the shift
-for v in range(1, V):
+for v in range(1, V+1):
     model.addConstr(
         gp.quicksum(T[i, j] * x[i, j, v] for i in range(1, S) for j in range(2, S+1)), GRB.LESS_EQUAL, T_max,
         f"time_constraints_(v={v})"
@@ -83,7 +83,8 @@ model.optimize()
 
 # Print solution
 for v in model.getVars():
-    print(f'{v.varName}: {int(v.x)}')
+    if v.x > 0:
+        print(f'{v.varName}: {int(v.x)}')
 
 print(f'Obj: {model.objVal}')
 
