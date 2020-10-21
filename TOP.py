@@ -13,7 +13,9 @@ V = 1  # Number of service vehicles
 # Using random values for R and T
 np.random.seed(42)
 R = np.random.randint(100, size=(1, S))  # Reward for swapping battery for scooter i
-T = np.random.randint(10, size=(S+1, S+1))  # Time needed to travel from scooter i to j
+T = np.random.randint(
+    10, size=(S + 1, S + 1)
+)  # Time needed to travel from scooter i to j
 T_max = 10  # Duration of shift
 Q_b = 1  # Battery capacity of service vehicle v
 
@@ -25,7 +27,7 @@ b_iv - 1 if scooter i is visited by service vehicle v- 0 otherwise
 u_iv - position of scooter i for service vehicle v route
 """
 x, b, u = [{} for i in range(3)]
-for i in range(1, S+1):
+for i in range(1, S + 1):
     for v in range(1, V + 1):
         b[i, v] = model.addVar(vtype=GRB.BINARY, name=f"b_{i}_{v}")
         u[i, v] = model.addVar(vtype=GRB.INTEGER, name=f"u_{i}_{v}")
@@ -33,55 +35,79 @@ for i in range(1, S+1):
             x[i, j, v] = model.addVar(vtype=GRB.BINARY, name=f"x_({i},{j})_{v}")
 
 # Set objective
-model.setObjective(gp.quicksum(R[0][i] * b[i, v] for i in range(2, S) for v in range(1, V + 1)), GRB.MAXIMIZE)
+model.setObjective(
+    gp.quicksum(R[0][i] * b[i, v] for i in range(2, S) for v in range(1, V + 1)),
+    GRB.MAXIMIZE,
+)
 
 # Add constraints (2): guarantee that each service vehicle starts and ends in at the depot.
 model.addConstr(
-    gp.quicksum(x[1, j, v] for v in range(1, V + 1) for j in range(2, S + 1)), GRB.EQUAL, V, "must_visit_depot_first"
+    gp.quicksum(x[1, j, v] for v in range(1, V + 1) for j in range(2, S + 1)),
+    GRB.EQUAL,
+    V,
+    "must_visit_depot_first",
 )
 model.addConstr(
-    gp.quicksum(x[i, S, v] for v in range(1, V + 1) for i in range(1, S)), GRB.EQUAL, V, "must_visit_depot_end"
+    gp.quicksum(x[i, S, v] for v in range(1, V + 1) for i in range(1, S)),
+    GRB.EQUAL,
+    V,
+    "must_visit_depot_end",
 )
 
 # Add constraints (3): ensure that every scooter is visited at most once.
 for k in range(2, S):
     model.addConstr(
-        gp.quicksum(b[k, v] for v in range(1, V + 1)), GRB.LESS_EQUAL, 1, f"only_one_visit_pr_scooter_(k={k})"
+        gp.quicksum(b[k, v] for v in range(1, V + 1)),
+        GRB.LESS_EQUAL,
+        1,
+        f"only_one_visit_pr_scooter_(k={k})",
     )
 
 for v in range(1, V + 1):
     model.addConstr(
-        gp.quicksum(b[k, v] for k in range(2, S)), GRB.LESS_EQUAL, Q_b, f"battery_capacity_(k={k})"
+        gp.quicksum(b[k, v] for k in range(2, S)),
+        GRB.LESS_EQUAL,
+        Q_b,
+        f"battery_capacity_(k={k})",
     )
 
 # Add constraints (5): guarantee the connectivity of each service vehicle path
 for k in range(2, S):
-    for v in range(1, V+1):
+    for v in range(1, V + 1):
         model.addConstr(
-            gp.quicksum(x[i, k, v] if i != k else 0 for i in range(1, S)), GRB.EQUAL, b[k, v],
-            f"connectivity_1_(k={k},v={v})"
+            gp.quicksum(x[i, k, v] if i != k else 0 for i in range(1, S)),
+            GRB.EQUAL,
+            b[k, v],
+            f"connectivity_1_(k={k},v={v})",
         )
         model.addConstr(
-            gp.quicksum(x[k, j, v] if j != k else 0 for j in range(2, S + 1)), GRB.EQUAL, b[k, v],
-            f"connectivity_2_(k={k},v={v})"
+            gp.quicksum(x[k, j, v] if j != k else 0 for j in range(2, S + 1)),
+            GRB.EQUAL,
+            b[k, v],
+            f"connectivity_2_(k={k},v={v})",
         )
 
 # Add constraints (6): ensure that the length of the paths does not exceed the shift
-for v in range(1, V+1):
+for v in range(1, V + 1):
     model.addConstr(
-        gp.quicksum(T[i, j] * x[i, j, v] for i in range(1, S) for j in range(2, S + 1)), GRB.LESS_EQUAL, T_max,
-        f"time_constraints_(v={v})"
+        gp.quicksum(T[i, j] * x[i, j, v] for i in range(1, S) for j in range(2, S + 1)),
+        GRB.LESS_EQUAL,
+        T_max,
+        f"time_constraints_(v={v})",
     )
 
 # Add constraints (7-8): prevent subtours
-for i in range(2, S+1):
-    for v in range(1, V+1):
+for i in range(2, S + 1):
+    for v in range(1, V + 1):
         model.addConstr(2, GRB.LESS_EQUAL, u[i, v], f"subtours_1_(i={i},v={v})")
         model.addConstr(u[i, v], GRB.LESS_EQUAL, S, f"subtours_2_(i={i},v={v})")
-        for j in range(2, S+1):
+        for j in range(2, S + 1):
             if i != j:
                 model.addConstr(
-                    u[i, v] - u[j, v] + 1, GRB.LESS_EQUAL, (S-1)*(1 - x[i, j, v]), f"subtours_3_(i,j=({i},{j}),v={v})"
+                    u[i, v] - u[j, v] + 1,
+                    GRB.LESS_EQUAL,
+                    (S - 1) * (1 - x[i, j, v]),
+                    f"subtours_3_(i,j=({i},{j}),v={v})",
                 )
 
 # Optimize model
@@ -90,8 +116,7 @@ model.optimize()
 # Print solution
 for v in model.getVars():
     if v.x > 0:
-        print(f'{v.varName}: {int(v.x)}')
-
-print(f'Obj: {model.objVal}')
+        print(f"{v.varName}: {int(v.x)}")
+print(f"Obj: {model.objVal}")
 
 helpers.print_model(model)
