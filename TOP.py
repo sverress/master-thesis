@@ -2,6 +2,7 @@ import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
 import helpers
+from solution_visualizer import visualize_model_solution
 
 # Create a new model
 model = gp.Model("TOP")
@@ -16,8 +17,8 @@ R = np.random.randint(100, size=(1, S))  # Reward for swapping battery for scoot
 T = np.random.randint(
     10, size=(S + 1, S + 1)
 )  # Time needed to travel from scooter i to j
-T_max = 10  # Duration of shift
-Q_b = 1  # Battery capacity of service vehicle v
+T_max = 100  # Duration of shift
+Q_b = 2  # Battery capacity of service vehicle v
 
 """
 Create variables
@@ -113,10 +114,6 @@ for i in range(2, S + 1):
 # Optimize model
 model.optimize()
 
-# Print solution
-for v in model.getVars():
-    if v.x > 0:
-        print(f"{v.varName}: {int(v.x)}")
-print(f"Obj: {model.objVal}")
+visualize_model_solution(model, S)
 
-helpers.print_model(model)
+# helpers.print_model_to_file(model)

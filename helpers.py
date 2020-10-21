@@ -1,6 +1,7 @@
 # Print model
-def print_model(model, delete_file=True):
+def print_model_to_file(model, delete_file=True):
     import os
+
     model.write("model.lp")
     with open("model.lp") as f:
         for line in f.readlines():
