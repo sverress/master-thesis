@@ -43,20 +43,25 @@ time_cost = {
     for i, j in cart_locs
 }  # Calculate distance in time between all locations
 T_max = 15  # Duration of shift
-Q_b = [2] * num_service_vehicles  # Battery capacity of service vehicle v
+Q_b = [5] * num_service_vehicles  # Battery capacity of service vehicle v
+Q_s = [2] * num_service_vehicles
 
 # Variables
 
 # x_ijv - 1 if, for service vehicle v, visit to location i is followed by a visit to location j- 0 otherwise
 x = m.addVars(cart_loc_loc_v, vtype=GRB.BINARY, name="x")
 # b_iv - 1 if location i is visited by service vehicle v- 0 otherwise
-b = m.addVars(cart_loc_v, vtype=GRB.BINARY, name="b")
+y = m.addVars(cart_loc_v, vtype=GRB.BINARY, name="y")
+# p_iv - 1 if service vehicle v picks up a scooter at location i - 0 otherwise
+p = m.addVars(cart_loc_v, vtype=GRB.BINARY, name="p")
 # u_iv - position of location i for service vehicle v route
 u = m.addVars(cart_loc_v, vtype=GRB.INTEGER, name="u")
+# l_iv - load (number of scooters) when entering location i
+l = m.addVars(cart_loc_v, vtype=GRB.INTEGER, name="l")
 
 # Objective function
 m.setObjective(
-    gp.quicksum(reward[i] * b[(i, v)] for i, v in cart_loc_v), GRB.MAXIMIZE,
+    gp.quicksum(reward[i] * y[(i, v)] for i, v in cart_loc_v), GRB.MAXIMIZE,
 )
 
 # Constraints
@@ -76,7 +81,7 @@ m.addConstr(
 # Add constraints (3): ensure that every location is visited at most once.
 m.addConstrs(
     (
-        gp.quicksum(b[(k, v)] for v in service_vehicles) <= 1
+        gp.quicksum(y[(k, v)] for v in service_vehicles) <= 1
         for k in locations
         if k != depot
     ),
@@ -86,18 +91,18 @@ m.addConstrs(
 
 # Add constraints (4): ensure that each vehicle capacity is not exceeded
 m.addConstrs(
-    (gp.quicksum(b[(k, v)] for k in scooters) <= Q_b[v] for v in service_vehicles),
+    (gp.quicksum(y[(k, v)] for k in scooters) <= Q_b[v] for v in service_vehicles),
     "battery_capacity",
 )
 
 # Add constraints (5): guarantee the connectivity of each service vehicle path
 m.addConstrs(
-    (gp.quicksum(x[(i, k, v)] for i in locations) == b[(k, v)] for k, v in cart_loc_v),
+    (gp.quicksum(x[(i, k, v)] for i in locations) == y[(k, v)] for k, v in cart_loc_v),
     "connectivity_inn",
 )
 
 m.addConstrs(
-    (gp.quicksum(x[(k, j, v)] for j in locations) == b[(k, v)] for k, v in cart_loc_v),
+    (gp.quicksum(x[(k, j, v)] for j in locations) == y[(k, v)] for k, v in cart_loc_v),
     "connectivity_out",
 )
 
@@ -109,6 +114,53 @@ m.addConstrs(
     ),
     "time_constraints",
 )
+
+# Add constraints (7):
+m.addConstrs(
+    (
+        l[(i, v)] + p[(i, v)] - l[(j, v)] - Q_s[v] * (1 - x[(i, j, v)]) <= 0
+        for i, j, v in cart_loc_loc_v
+        if i in scooters and j != i
+    ),
+    "vehicle_capacity_pick_up",
+)
+m.addConstrs(
+    (
+        l[(i, v)] - y[(i, v)] - l[(j, v)] + Q_s[v] * (1 - x[(i, j, v)]) >= 0
+        for i, j, v in cart_loc_loc_v
+        if i in delivery and j != i
+    ),
+    "vehicle_capacity_delivery",
+)
+
+m.addConstrs(
+    (
+        p[(i, v)] == l[(j, v)] - l[(i, v)]
+        for i, j, v in cart_loc_loc_v
+        if i in delivery and i != j
+    ),
+    "force_p",
+)
+
+m.addConstrs(
+    (y[(i, v)] <= l[(i, v)] for i, v in cart_loc_v if i in delivery),
+    "force_scooters_in_vehicle",
+)
+
+m.addConstrs(
+    (0 <= l[(i, v)] for i, v in cart_loc_v if i != depot), "vehicle_capacity_cap_noneg"
+)
+m.addConstrs(
+    (l[(i, v)] <= Q_b[v] for i, v in cart_loc_v if i != depot), "vehicle_capacity_cap"
+)
+
+m.addConstrs((l[(0, v)] == 0 for v in service_vehicles), "vehicle_capacity_depot_in")
+m.addConstrs(
+    (l[(i, v)] - Q_s[v] * (1 - x[(0, i, v)]) <= 0 for i, v in cart_loc_v if i != depot),
+    "vehicle_capacity_depot_out",
+)
+
+
 m.addConstrs((2 <= u[(i, v)] for i, v in cart_loc_v if i != depot), "subtours_1")
 m.addConstrs(
     (u[(i, v)] <= num_locations for i, v in cart_loc_v if i != depot), "subtours_2"
@@ -117,7 +169,7 @@ m.addConstrs(
     (
         u[i, v] - u[j, v] + 1 <= (num_locations - 1) * (1 - x[i, j, v])
         for i, j, v in cart_loc_loc_v
-        if i != j and i != depot
+        if i != depot
     ),
     "subtours_3",
 )
