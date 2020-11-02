@@ -1,5 +1,7 @@
+from math import sqrt
+
 # Print model
-def print_model_to_file(model, delete_file=True):
+def print_model(model, delete_file=True):
     import os
 
     model.write("model.lp")
@@ -8,3 +10,8 @@ def print_model_to_file(model, delete_file=True):
             print(line)
     if delete_file:
         os.remove("model.lp")
+
+def compute_distance(loc1, loc2):
+    dx = loc1[0] - loc2[0]
+    dy = loc1[1] - loc2[1]
+    return sqrt(dx * dx + dy * dy)
