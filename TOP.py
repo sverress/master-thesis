@@ -61,7 +61,9 @@ l = m.addVars(cart_loc_v, vtype=GRB.INTEGER, name="l")
 
 # Objective function
 m.setObjective(
-    gp.quicksum(reward[i] * y[(i, v)] for i, v in cart_loc_v), GRB.MAXIMIZE,
+    gp.quicksum(reward[i] * y[(i, v)] for i, v in cart_loc_v)
+    - gp.quicksum(reward[i] * p[(i, v)] for i, v in cart_loc_v if i in scooters),
+    GRB.MAXIMIZE,
 )
 
 # Constraints
@@ -100,7 +102,6 @@ m.addConstrs(
     (gp.quicksum(x[(i, k, v)] for i in locations) == y[(k, v)] for k, v in cart_loc_v),
     "connectivity_inn",
 )
-
 m.addConstrs(
     (gp.quicksum(x[(k, j, v)] for j in locations) == y[(k, v)] for k, v in cart_loc_v),
     "connectivity_out",
@@ -122,31 +123,40 @@ m.addConstrs(
         for i, j, v in cart_loc_loc_v
         if i in scooters and j != i
     ),
-    "vehicle_capacity_pick_up",
+    "vehicle_capacity_pick_up_less",
 )
+
+# Add constraints (8):
+m.addConstrs(
+    (
+        l[(i, v)] + p[(i, v)] - l[(j, v)] + Q_s[v] * (1 - x[(i, j, v)]) >= 0
+        for i, j, v in cart_loc_loc_v
+        if i in scooters and j != i
+    ),
+    "vehicle_capacity_pick_up_greater",
+)
+
+# Add constraints (9):
+m.addConstrs(
+    (
+        l[(i, v)] - y[(i, v)] - l[(j, v)] - Q_s[v] * (1 - x[(i, j, v)]) <= 0
+        for i, j, v in cart_loc_loc_v
+        if i in delivery and j != i
+    ),
+    "vehicle_capacity_delivery_less",
+)
+
+# Add constraints (10):
 m.addConstrs(
     (
         l[(i, v)] - y[(i, v)] - l[(j, v)] + Q_s[v] * (1 - x[(i, j, v)]) >= 0
         for i, j, v in cart_loc_loc_v
         if i in delivery and j != i
     ),
-    "vehicle_capacity_delivery",
+    "vehicle_capacity_delivery_greater",
 )
 
-m.addConstrs(
-    (
-        p[(i, v)] == l[(j, v)] - l[(i, v)]
-        for i, j, v in cart_loc_loc_v
-        if i in delivery and i != j
-    ),
-    "force_p",
-)
-
-m.addConstrs(
-    (y[(i, v)] <= l[(i, v)] for i, v in cart_loc_v if i in delivery),
-    "force_scooters_in_vehicle",
-)
-
+# Add constraints (11):
 m.addConstrs(
     (0 <= l[(i, v)] for i, v in cart_loc_v if i != depot), "vehicle_capacity_cap_noneg"
 )
@@ -154,17 +164,22 @@ m.addConstrs(
     (l[(i, v)] <= Q_b[v] for i, v in cart_loc_v if i != depot), "vehicle_capacity_cap"
 )
 
+# Add constraints (12):
 m.addConstrs((l[(0, v)] == 0 for v in service_vehicles), "vehicle_capacity_depot_in")
+
+# Add constraints (13):
 m.addConstrs(
     (l[(i, v)] - Q_s[v] * (1 - x[(0, i, v)]) <= 0 for i, v in cart_loc_v if i != depot),
     "vehicle_capacity_depot_out",
 )
 
-
+# Add constraints (14):
 m.addConstrs((2 <= u[(i, v)] for i, v in cart_loc_v if i != depot), "subtours_1")
 m.addConstrs(
     (u[(i, v)] <= num_locations for i, v in cart_loc_v if i != depot), "subtours_2"
 )
+
+# Add constraints (15):
 m.addConstrs(
     (
         u[i, v] - u[j, v] + 1 <= (num_locations - 1) * (1 - x[i, j, v])
