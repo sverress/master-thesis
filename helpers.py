@@ -1,6 +1,6 @@
 from math import sqrt
 
-# Print model
+
 def print_model(model, delete_file=True):
     import os
 
@@ -10,6 +10,7 @@ def print_model(model, delete_file=True):
             print(line)
     if delete_file:
         os.remove("model.lp")
+
 
 def compute_distance(loc1, loc2):
     dx = loc1[0] - loc2[0]

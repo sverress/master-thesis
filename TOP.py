@@ -2,7 +2,6 @@ import gurobipy as gp
 from gurobipy import GRB
 import helpers
 from itertools import product
-from solution_visualizer import visualize_model_solution
 
 # Create a new model
 m = gp.Model("TOP")
@@ -17,8 +16,8 @@ locations_coordinates = [
 ]  # First element is depot
 
 # Constants
-num_scooters = 5  # Number of scooters
-num_service_vehicles = 2  # Number of service vehicles
+num_scooters = 3  # Number of scooters
+num_service_vehicles = 1  # Number of service vehicles
 num_locations = len(locations_coordinates)
 
 # Sets
@@ -43,7 +42,7 @@ time_cost = {
     (i, j): helpers.compute_distance(locations_coordinates[i], locations_coordinates[j])
     for i, j in cart_locs
 }  # Calculate distance in time between all locations
-T_max = 10  # Duration of shift
+T_max = 15  # Duration of shift
 Q_b = [5] * num_service_vehicles  # Battery capacity of service vehicle v
 Q_s = [2] * num_service_vehicles
 
@@ -62,7 +61,9 @@ l = m.addVars(cart_loc_v, vtype=GRB.INTEGER, name="l")
 
 # Objective function
 m.setObjective(
-    gp.quicksum(reward[i] * y[(i, v)] for i, v in cart_loc_v), GRB.MAXIMIZE,
+    gp.quicksum(reward[i] * y[(i, v)] for i, v in cart_loc_v)
+    - gp.quicksum(reward[i] * p[(i, v)] for i, v in cart_loc_v if i in scooters),
+    GRB.MAXIMIZE,
 )
 
 # Constraints
@@ -101,7 +102,6 @@ m.addConstrs(
     (gp.quicksum(x[(i, k, v)] for i in locations) == y[(k, v)] for k, v in cart_loc_v),
     "connectivity_inn",
 )
-
 m.addConstrs(
     (gp.quicksum(x[(k, j, v)] for j in locations) == y[(k, v)] for k, v in cart_loc_v),
     "connectivity_out",
@@ -123,31 +123,40 @@ m.addConstrs(
         for i, j, v in cart_loc_loc_v
         if i in scooters and j != i
     ),
-    "vehicle_capacity_pick_up",
+    "vehicle_capacity_pick_up_less",
 )
+
+# Add constraints (8):
+m.addConstrs(
+    (
+        l[(i, v)] + p[(i, v)] - l[(j, v)] + Q_s[v] * (1 - x[(i, j, v)]) >= 0
+        for i, j, v in cart_loc_loc_v
+        if i in scooters and j != i
+    ),
+    "vehicle_capacity_pick_up_greater",
+)
+
+# Add constraints (9):
+m.addConstrs(
+    (
+        l[(i, v)] - y[(i, v)] - l[(j, v)] - Q_s[v] * (1 - x[(i, j, v)]) <= 0
+        for i, j, v in cart_loc_loc_v
+        if i in delivery and j != i
+    ),
+    "vehicle_capacity_delivery_less",
+)
+
+# Add constraints (10):
 m.addConstrs(
     (
         l[(i, v)] - y[(i, v)] - l[(j, v)] + Q_s[v] * (1 - x[(i, j, v)]) >= 0
         for i, j, v in cart_loc_loc_v
         if i in delivery and j != i
     ),
-    "vehicle_capacity_delivery",
+    "vehicle_capacity_delivery_greater",
 )
 
-m.addConstrs(
-    (
-        p[(i, v)] == l[(j, v)] - l[(i, v)]
-        for i, j, v in cart_loc_loc_v
-        if i in delivery and i != j
-    ),
-    "force_p",
-)
-
-m.addConstrs(
-    (y[(i, v)] <= l[(i, v)] for i, v in cart_loc_v if i in delivery),
-    "force_scooters_in_vehicle",
-)
-
+# Add constraints (11):
 m.addConstrs(
     (0 <= l[(i, v)] for i, v in cart_loc_v if i != depot), "vehicle_capacity_cap_noneg"
 )
@@ -155,17 +164,22 @@ m.addConstrs(
     (l[(i, v)] <= Q_b[v] for i, v in cart_loc_v if i != depot), "vehicle_capacity_cap"
 )
 
+# Add constraints (12):
 m.addConstrs((l[(0, v)] == 0 for v in service_vehicles), "vehicle_capacity_depot_in")
+
+# Add constraints (13):
 m.addConstrs(
     (l[(i, v)] - Q_s[v] * (1 - x[(0, i, v)]) <= 0 for i, v in cart_loc_v if i != depot),
     "vehicle_capacity_depot_out",
 )
 
-
+# Add constraints (14):
 m.addConstrs((2 <= u[(i, v)] for i, v in cart_loc_v if i != depot), "subtours_1")
 m.addConstrs(
     (u[(i, v)] <= num_locations for i, v in cart_loc_v if i != depot), "subtours_2"
 )
+
+# Add constraints (15):
 m.addConstrs(
     (
         u[i, v] - u[j, v] + 1 <= (num_locations - 1) * (1 - x[i, j, v])
@@ -188,8 +202,3 @@ print(f"Obj: {m.objVal}")
 print(f"Obj: {m.objVal}")
 
 helpers.print_model(m)
-visualize_model_solution(
-    m, locations_coordinates, num_service_vehicles, time_cost, reward
-)
-
-# helpers.print_model_to_file(model)
