@@ -2,7 +2,8 @@ import gurobipy as gp
 from gurobipy import GRB
 import helpers
 from itertools import product
-from solution_visualizer import  visualize_model_solution
+from solution_visualizer import visualize_model_solution
+
 # Create a new model
 m = gp.Model("TOP")
 
@@ -187,6 +188,8 @@ print(f"Obj: {m.objVal}")
 print(f"Obj: {m.objVal}")
 
 helpers.print_model(m)
-visualize_model_solution(m, locations_coordinates, num_service_vehicles, time_cost, reward)
+visualize_model_solution(
+    m, locations_coordinates, num_service_vehicles, time_cost, reward
+)
 
 # helpers.print_model_to_file(model)
