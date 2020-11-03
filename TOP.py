@@ -2,6 +2,7 @@ import gurobipy as gp
 from gurobipy import GRB
 import helpers
 from itertools import product
+from solution_visualizer import visualize_model_solution
 
 # Create a new model
 m = gp.Model("TOP")
@@ -16,8 +17,8 @@ locations_coordinates = [
 ]  # First element is depot
 
 # Constants
-num_scooters = 3  # Number of scooters
-num_service_vehicles = 1  # Number of service vehicles
+num_scooters = 5  # Number of scooters
+num_service_vehicles = 2  # Number of service vehicles
 num_locations = len(locations_coordinates)
 
 # Sets
@@ -42,7 +43,7 @@ time_cost = {
     (i, j): helpers.compute_distance(locations_coordinates[i], locations_coordinates[j])
     for i, j in cart_locs
 }  # Calculate distance in time between all locations
-T_max = 15  # Duration of shift
+T_max = 10  # Duration of shift
 Q_b = [5] * num_service_vehicles  # Battery capacity of service vehicle v
 Q_s = [2] * num_service_vehicles
 
@@ -202,3 +203,12 @@ print(f"Obj: {m.objVal}")
 print(f"Obj: {m.objVal}")
 
 helpers.print_model(m)
+
+visualize_model_solution(
+    m,
+    locations_coordinates,
+    num_service_vehicles,
+    time_cost,
+    reward,
+    (T_max, Q_b[0], Q_s[0]),
+)

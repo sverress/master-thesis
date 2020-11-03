@@ -10,6 +10,7 @@ def visualize_model_solution(
     number_of_vehicles: int,
     time_cost: dict,
     reward: list,
+    vehicle_cons: tuple,
 ):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 9.7))
     ax1.set_title("Model solution", fontweight="bold")
@@ -23,6 +24,7 @@ def visualize_model_solution(
     graph.add_nodes_from([i for i in range(len(node_locations))])
     labels = {}
 
+    # adding vehicle color description
     for i in range(len(colors)):
         s = "Vehicle %d" % (i + 1)
         ax1.text(
@@ -35,6 +37,24 @@ def visualize_model_solution(
             weight="bold",
             verticalalignment="top",
         )
+
+    # vehicle info box
+    cons = (
+        f"Vehicle constraint:\nTime = %s \n\nVehicle capacity:\nBattery = %s \nScooter = %s"
+        % vehicle_cons
+    )
+    props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
+
+    # place a text box in upper left in axes coords
+    ax1.text(
+        -0.25,
+        1 - 0.03 * (len(colors) + 1),
+        cons,
+        transform=ax1.transAxes,
+        fontsize=10,
+        verticalalignment="top",
+        bbox=props,
+    )
 
     # giving nodes positions in graph and adding reward
     for i, p in enumerate(node_locations):
@@ -52,6 +72,7 @@ def visualize_model_solution(
         graph.nodes[i]["pos"] = p
 
     edge_labels = {}
+
     # adding edges
     for var in model.getVars():
         if var.varName.startswith("x") and var.x > 0:
