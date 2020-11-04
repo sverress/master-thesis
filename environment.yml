@@ -8,3 +8,4 @@ dependencies:
   - scipy
   - networkx
   - black
+  - pandas
