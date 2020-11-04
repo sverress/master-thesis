@@ -4,8 +4,11 @@ import numpy as np
 
 
 def make_graph(nodes: dict):
+    # make graph object
     graph = nx.DiGraph()
     graph.add_nodes_from([i for i in range(len(nodes.keys()))])
+
+    # set node label and position
     labels = {}
     node_color = []
     node_border = []
@@ -29,11 +32,13 @@ def make_graph(nodes: dict):
 
 
 def visualize_solution(instance, node_list: dict):
+    # generate plot and subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 9.7))
     ax1.set_title("Model solution", fontweight="bold")
     ax2.set_title("Edges not included in solution", fontweight="bold")
 
-    colors = add_vehicle_info(
+    # add vehicle and node info to plot
+    colors = add_vehicle_node_info(
         10, instance.num_service_vehicles, instance.model._.get_vehicle_cons(), ax1
     )
 
@@ -63,11 +68,14 @@ def visualize_solution(instance, node_list: dict):
                 % (key[2] + 1, int(instance.model.l[(key[1], key[2])].x))
             )
 
+    # set edge color for solution
     edges = graph.edges()
     e_colors = [graph[u][v]["color"] for u, v in edges]
     e_weights = [graph[u][v]["width"] for u, v in edges]
 
     pos = nx.get_node_attributes(graph, "pos")
+
+    # draw solution graph
     nx.draw(
         graph,
         pos,
@@ -94,10 +102,23 @@ def visualize_solution(instance, node_list: dict):
     # displaying graph for nodes/edges not in solution
     display_edge_plot(instance, node_list, edge_labels, ax2)
 
+    # add description for nodes
+    c = ["blue", "green", "red"]
+    t = ["Depot", "Scooter", "Delivery"]
+
+    x_max = ax1.axis()[1]
+    y_max = ax1.axis()[3]
+
+    for i in range(3):
+        ax1.scatter(x_max, y_max - 0.2 * i, s=100, c=c[i], marker="o", alpha=0.7)
+        ax1.annotate(t[i], (x_max + 0.08, y_max - 0.05 - 0.2 * i))
+
+    # show figure
     plt.show()
 
 
-def add_vehicle_info(seed: int, number_of_vehicles, vehicles_cons, ax):
+def add_vehicle_node_info(seed: int, number_of_vehicles, vehicles_cons, ax):
+    # generate random colors for vehicle routs
     np.random.seed(seed)
     colors = [
         "#%06X" % np.random.randint(0, 0xFFFFFF) for i in range(number_of_vehicles)
@@ -146,9 +167,10 @@ def add_vehicle_info(seed: int, number_of_vehicles, vehicles_cons, ax):
 
 
 def display_edge_plot(instance, node_list: dict, s_edge_labels: dict, ax):
-
+    # draw nodes
     graph, labels, node_border, node_color = make_graph(node_list)
 
+    # draw edges and set label (time cost and inventory)
     edge_labels = {}
     for x in instance.model.x:
         if instance.model.x[x].x == 0:
@@ -164,6 +186,7 @@ def display_edge_plot(instance, node_list: dict, s_edge_labels: dict, ax):
                     round(instance.model._.time_cost[(x[0], x[1])], 2)
                 )
 
+    # set node and edge color
     node_color = ["white" for i in range(len(node_list.keys()))]
     node_border = ["white" for i in range(len(node_list.keys()))]
 
@@ -173,6 +196,7 @@ def display_edge_plot(instance, node_list: dict, s_edge_labels: dict, ax):
 
     pos = nx.get_node_attributes(graph, "pos")
 
+    # draw graph
     nx.draw(
         graph,
         pos,

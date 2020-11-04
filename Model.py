@@ -310,4 +310,4 @@ if __name__ == "__main__":
     data = ModelInput(locations_coordinates, num_scooters, num_service_vehicles)
     m = Model(data)
     m.optimize_model()
-    m.print_solution()
+    # m.print_solution()
