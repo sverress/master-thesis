@@ -3,6 +3,11 @@ import networkx as nx
 import numpy as np
 
 
+# Global variables
+depot, supply, delivery = "Depot", "S", "D"
+blue, green, red, black = "blue", "green", "red", "black"
+
+
 def make_graph(nodes: dict):
     # make graph object
     graph = nx.DiGraph()
@@ -13,25 +18,25 @@ def make_graph(nodes: dict):
     node_color = []
     node_border = []
     for i, p in enumerate(nodes.keys()):
-        if nodes[p]["label"] == "Depot":
-            labels[i] = "D"
-            node_color.append("blue")
-            node_border.append("black")
-        elif nodes[p]["label"] == "S":
+        if nodes[p]["label"] == depot:
+            labels[i] = delivery  # most likely, you want like it Sverre
+            node_color.append(blue)
+            node_border.append(black)
+        elif nodes[p]["label"] == supply:
             labels[i] = i
-            node_color.append("green")
-            node_border.append("black")
-        elif nodes[p]["label"] == "D":
+            node_color.append(green)
+            node_border.append(black)
+        elif nodes[p]["label"] == delivery:
             labels[i] = i
-            node_color.append("red")
-            node_border.append("black")
+            node_color.append(red)
+            node_border.append(black)
 
         graph.nodes[i]["pos"] = p
 
     return graph, labels, node_border, node_color
 
 
-def visualize_solution(instance, node_list: dict):
+def visualize_solution(instance):
     # generate plot and subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 9.7))
     ax1.set_title("Model solution", fontweight="bold")
@@ -39,15 +44,18 @@ def visualize_solution(instance, node_list: dict):
 
     # add vehicle and node info to plot
     colors = add_vehicle_node_info(
-        10, instance.num_service_vehicles, instance.model._.get_vehicle_cons(), ax1
+        instance.num_service_vehicles,
+        instance.model.get_parameters().get_vehicle_cons(),
+        ax1,
     )
 
-    graph, labels, node_border, node_color = make_graph(node_list)
+    node_dict = instance.create_node_dict()
+    graph, labels, node_border, node_color = make_graph(node_dict)
 
     # adding reward and type color to nodes
-    for i, p in enumerate(node_list.keys()):  # i is number in node list
-        if node_list[p]["label"] != "Depot":
-            s = "r=" + str(round(instance.model._.reward[i], 1))
+    for i, p in enumerate(node_dict.keys()):  # i is number in node list
+        if node_dict[p]["label"] != depot:
+            s = "r=" + str(round(instance.model.get_parameters().reward[i], 1))
             for k in range(instance.num_service_vehicles):
                 if instance.model.p[(i, k)].x > 0:
                     s += "\n p_%s=%s" % (k + 1, int(instance.model.p[(i, k)].x))
@@ -63,7 +71,11 @@ def visualize_solution(instance, node_list: dict):
             graph.add_edge(key[0], key[1], color=colors[key[2]], width=2)
             edge_labels[(key[0], key[1])] = (
                 "T = "
-                + str(round(instance.model._.time_cost[(key[0], key[1])], 2))
+                + str(
+                    round(
+                        instance.model.get_parameters().time_cost[(key[0], key[1])], 2
+                    )
+                )
                 + ", L_%d = %d"
                 % (key[2] + 1, int(instance.model.l[(key[1], key[2])].x))
             )
@@ -100,26 +112,28 @@ def visualize_solution(instance, node_list: dict):
     )
 
     # displaying graph for nodes/edges not in solution
-    display_edge_plot(instance, node_list, edge_labels, ax2)
+    display_edge_plot(instance, edge_labels, ax2)
 
     # add description for nodes
-    c = ["blue", "green", "red"]
-    t = ["Depot", "Scooter", "Delivery"]
+    legend_color = ["blue", "green", "red"]
+    legend_text = ["Depot", "Scooter", "Delivery"]
 
     x_max = ax1.axis()[1]
     y_max = ax1.axis()[3]
 
     for i in range(3):
-        ax1.scatter(x_max, y_max - 0.2 * i, s=100, c=c[i], marker="o", alpha=0.7)
-        ax1.annotate(t[i], (x_max + 0.08, y_max - 0.05 - 0.2 * i))
+        ax1.scatter(
+            x_max, y_max - 0.2 * i, s=100, c=legend_color[i], marker="o", alpha=0.7
+        )
+        ax1.annotate(legend_text[i], (x_max + 0.08, y_max - 0.05 - 0.2 * i))
 
     # show figure
     plt.show()
 
 
-def add_vehicle_node_info(seed: int, number_of_vehicles, vehicles_cons, ax):
+def add_vehicle_node_info(number_of_vehicles, vehicles_cons, ax):
     # generate random colors for vehicle routs
-    np.random.seed(seed)
+    np.random.seed(10)
     colors = [
         "#%06X" % np.random.randint(0, 0xFFFFFF) for i in range(number_of_vehicles)
     ]
@@ -166,9 +180,10 @@ def add_vehicle_node_info(seed: int, number_of_vehicles, vehicles_cons, ax):
     return colors
 
 
-def display_edge_plot(instance, node_list: dict, s_edge_labels: dict, ax):
+def display_edge_plot(instance, s_edge_labels: dict, ax):
     # draw nodes
-    graph, labels, node_border, node_color = make_graph(node_list)
+    node_dict = instance.create_node_dict()
+    graph, labels, node_border, node_color = make_graph(node_dict)
 
     # draw edges and set label (time cost and inventory)
     edge_labels = {}
@@ -183,12 +198,12 @@ def display_edge_plot(instance, node_list: dict, s_edge_labels: dict, ax):
                     x[0], x[1], color="grey", width=1, style="dotted", alpha=0.2
                 )
                 edge_labels[(x[0], x[1])] = "t = " + str(
-                    round(instance.model._.time_cost[(x[0], x[1])], 2)
+                    round(instance.model.get_parameters().time_cost[(x[0], x[1])], 2)
                 )
 
     # set node and edge color
-    node_color = ["white" for i in range(len(node_list.keys()))]
-    node_border = ["white" for i in range(len(node_list.keys()))]
+    node_color = ["white" for i in range(len(node_dict.keys()))]
+    node_border = ["white" for i in range(len(node_dict.keys()))]
 
     edges = graph.edges()
     e_colors = [graph[u][v]["color"] for u, v in edges]

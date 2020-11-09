@@ -75,6 +75,9 @@ class Model:
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.INTEGER, name="l")
         self.setup()
 
+    def get_parameters(self):
+        return self._
+
     def setup(self):
         self.set_objective()
         self.set_constraints()

@@ -30,7 +30,7 @@ class Instance:
         return output
 
     def visualize_solution(self):
-        visualize_solution(self, self.create_node_dict())
+        visualize_solution(self)
 
     def visualize_graph(self):
         pass
