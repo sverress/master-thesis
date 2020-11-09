@@ -1,5 +1,6 @@
-from Model import Model
+from Model import Model, ModelInput
 from enum import Enum, auto
+from solution_visualizer import visualize_solution
 
 
 class Status(Enum):
@@ -42,7 +43,7 @@ class Instance:
         return output
 
     def visualize_solution(self):
-        self.create_node_dict()
+        visualize_solution(self)
 
     def visualize_graph(self):
         pass

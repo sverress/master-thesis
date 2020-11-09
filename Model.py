@@ -39,6 +39,9 @@ class ModelInput:
         ] * self.num_service_vehicles  # Battery capacity of service vehicle v
         self.Q_s = [2] * self.num_service_vehicles
 
+    def get_vehicle_cons(self):
+        return self.T_max, [x for x in set(self.Q_b)], [x for x in set(self.Q_s)]
+
     @staticmethod
     def compute_distance(loc1, loc2):
         dx = loc1[0] - loc2[0]
@@ -71,6 +74,9 @@ class Model:
         # l_iv - load (number of scooters) when entering location i
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.INTEGER, name="l")
         self.setup()
+
+    def get_parameters(self):
+        return self._
 
     def setup(self):
         self.set_objective()
@@ -307,4 +313,4 @@ if __name__ == "__main__":
     data = ModelInput(locations_coordinates, num_scooters, num_service_vehicles)
     m = Model(data)
     m.optimize_model()
-    m.print_solution()
+    # m.print_solution()
