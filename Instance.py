@@ -1,18 +1,31 @@
-from Model import ModelInput, Model
+from Model import Model
+from enum import Enum, auto
+
+
+class Status(Enum):
+    NO_MODEL = auto()
+    READY_TO_RUN = auto()
+    RUNNING = auto()
+    FINISHED = auto()
 
 
 class Instance:
-    def __init__(self, locations, num_scooters, num_service_vehicles):
-        self.locations = locations
-        self.num_scooters = num_scooters
-        self.num_service_vehicles = num_service_vehicles
-        self.model = Model(
-            ModelInput(locations_coordinates, num_scooters, num_service_vehicles)
-        )
+    def __init__(self, model_input=None):
+        if model_input:
+            self.model = Model(model_input)
+            self.status = Status.READY_TO_RUN
+        else:
+            self.model = None
+            self.status = Status.NO_MODEL
 
     def run(self):
-        self.model.optimize_model()
-        self.model.print_solution()
+        if self.status.READY_TO_RUN:
+            self.status = Status.RUNNING
+            self.model.optimize_model()
+            self.status = Status.FINISHED
+            self.model.print_solution()
+        else:
+            raise ValueError("Not ready to run instance")
 
     def get_label(self, i):
         if i == 0:
@@ -33,22 +46,3 @@ class Instance:
 
     def visualize_graph(self):
         pass
-
-
-if __name__ == "__main__":
-    locations_coordinates = [
-        (0, 0),
-        (1, 5),
-        (3, 3),
-        (2, 4),
-        (3, 1),
-        (1, 3),
-    ]  # First element is depot
-
-    # Constants
-    number_of_scooters = 3  # Number of scooters
-    number_of_service_vehicles = 1  # Number of service vehicles
-    instance = Instance(
-        locations_coordinates, number_of_scooters, number_of_service_vehicles
-    )
-    instance.visualize_solution()
