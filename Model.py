@@ -1,7 +1,8 @@
 import gurobipy as gp
 from gurobipy import GRB
 from itertools import product
-from math import sqrt
+from math import sqrt, pi, sin, cos, atan2
+import pandas as pd
 import os
 
 
@@ -10,43 +11,86 @@ class ModelInput:
     Sets, Constants, and Parameters for a model instance
     """
 
-    def __init__(self, locations, number_of_scooters, number_of_service_vehicles):
+    def __init__(
+        self,
+        scooter_list: pd.DataFrame,
+        delivery_nodes_list: pd.DataFrame,
+        depot_location: tuple,
+        service_vehicles_dict: dict,
+    ):
+        """
+        Creating all input to the gurobi model
+        :param scooter_list:
+        :param delivery_nodes_list:
+        :param depot_location:
+        :param service_vehicles_dict:
+        """
+        # scooters list of list - [[lat,lon,battery]*n]
+        # delivery nodes list of list - [[lat,lon]*m]
+        # depot location tuple - (lat,lon)
+        # service vehicles dict - ["type"]: (#numbers, scooter capacity, battery capacity)
+
         # Sets
-        self.locations = range(len(locations))
-        self.scooters = self.locations[1 : number_of_scooters + 1]
-        self.delivery = self.locations[number_of_scooters + 1 :]
-        self.service_vehicles = range(number_of_service_vehicles)
+        self.locations = range(
+            1 + len(scooter_list.index) + len(delivery_nodes_list.index)
+        )
+        self.scooters = self.locations[1 : len(scooter_list.index) + 1]
+        self.delivery = self.locations[len(scooter_list.index) + 1 :]
+        self.service_vehicles = range(sum(x[0] for x in service_vehicles_dict.values()))
         self.depot = 0
 
         # Constants
-        self.num_scooters = number_of_scooters
+        self.num_scooters = len(scooter_list)
         self.num_locations = len(self.locations)
-        self.num_service_vehicles = number_of_service_vehicles
+        self.num_service_vehicles = len(self.service_vehicles)
 
         # Parameters
         self.reward = (
             [0.0]
-            + [(i + 1) / self.num_scooters - 0.1 for i in range(self.num_scooters)]
-            + [1.0] * (self.num_locations - self.num_scooters - 1)
+            + [1 - x / 100 for x in scooter_list["battery"]]
+            + [1.0] * len(delivery_nodes_list.index)
         )  # Reward for visiting location i (uniform distribution). Eks for 3 locations [0, 0.33, 0.66]
-        self.time_cost = {
-            (i, j): ModelInput.compute_distance(locations[i], locations[j])
-            for i, j in list(product(self.locations, repeat=2))
-        }  # Calculate distance in time between all locations
-        self.T_max = 15  # Duration of shift
-        self.Q_b = [
-            5
-        ] * self.num_service_vehicles  # Battery capacity of service vehicle v
-        self.Q_s = [2] * self.num_service_vehicles
+        self.time_cost = self.compute_time_matrix(
+            scooter_list, delivery_nodes_list, depot_location
+        )  # Calculate distance in time between all locations
+        self.T_max = 60 * 0.8  # Duration of shift in minutes
+        self.Q_b = (
+            [service_vehicles_dict["car"][2]] * service_vehicles_dict["car"][0]
+            + [service_vehicles_dict["bike"][2]] * service_vehicles_dict["bike"][0]
+        )  # Battery capacity of service vehicle v
+        self.Q_s = [service_vehicles_dict["car"][1]] * service_vehicles_dict["car"][
+            0
+        ] + [service_vehicles_dict["bike"][1]] * service_vehicles_dict["bike"][0]
 
-    def get_vehicle_cons(self):
-        return self.T_max, [x for x in set(self.Q_b)], [x for x in set(self.Q_s)]
+    def compute_time_matrix(self, scooters, delivery_nodes, depot):
+        locations = (
+            [depot]
+            + list(zip(scooters["lat"], scooters["lon"]))
+            + list(zip(delivery_nodes["lat"], delivery_nodes["lon"]))
+        )
+
+        return {
+            (i, j): ModelInput.compute_distance(
+                locations[i][0], locations[i][1], locations[j][0], locations[j][1]
+            )
+            / (20 * (1000 / 60))
+            for i, j in list(product(self.locations, repeat=2))
+        }
 
     @staticmethod
-    def compute_distance(loc1, loc2):
-        dx = loc1[0] - loc2[0]
-        dy = loc1[1] - loc2[1]
-        return sqrt(dx * dx + dy * dy)
+    def compute_distance(lat1, lon1, lat2, lon2):
+        # ta inn scooter, delivery, depot
+        # tid = avstand / 20km/h
+        radius = 6378.137
+        d_lat = lat2 * pi / 180 - lat1 * pi / 180
+        d_lon = lon2 * pi / 180 - lon1 * pi / 180
+        a = sin(d_lat / 2) * sin(d_lat / 2) + cos(lat1 * pi / 180) * cos(
+            lat2 * pi / 180
+        ) * sin(d_lon / 2) * sin(d_lon / 2)
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        d = radius * c
+        print(d * 1000)
+        return d * 1000
 
 
 class Model:

@@ -9,3 +9,4 @@ dependencies:
   - networkx
   - black
   - matplotlib
+  - pandas
