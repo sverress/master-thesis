@@ -1,4 +1,5 @@
 from Model import ModelInput, Model
+from solution_visualizer import visualize_solution
 
 
 class Instance:
@@ -12,7 +13,7 @@ class Instance:
 
     def run(self):
         self.model.optimize_model()
-        self.model.print_solution()
+        # self.model.print_solution()
 
     def get_label(self, i):
         if i == 0:
@@ -29,7 +30,7 @@ class Instance:
         return output
 
     def visualize_solution(self):
-        self.create_node_dict()
+        visualize_solution(self)
 
     def visualize_graph(self):
         pass
@@ -47,8 +48,9 @@ if __name__ == "__main__":
 
     # Constants
     number_of_scooters = 3  # Number of scooters
-    number_of_service_vehicles = 1  # Number of service vehicles
+    number_of_service_vehicles = 2  # Number of service vehicles
     instance = Instance(
         locations_coordinates, number_of_scooters, number_of_service_vehicles
     )
+    instance.run()
     instance.visualize_solution()
