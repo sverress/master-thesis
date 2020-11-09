@@ -18,6 +18,16 @@ class TestInstanceManager:
         self._epsilon = 0.000001  # Just a small number
         self._random_state = 1
         random.seed(self._random_state)
+        self.instances = (
+            {}
+        )  # Instances indexed by (num_of_sections, num_of_scooters_per_section)
+
+    def create_multiple_instances(self, instances_parameters: list):
+        for parameters in instances_parameters:
+            num_of_sections, num_of_scooters_per_section = parameters
+            self.instances[parameters] = self.create_test_instance(
+                num_of_sections, num_of_scooters_per_section
+            )
 
     def create_test_instance(
         self, num_of_sections: int, num_of_scooters_per_section: int,
@@ -96,7 +106,7 @@ class TestInstanceManager:
         ]
 
     def visualize_test_data(
-        self, scooters: pd.DataFrame, delivery_nodes: pd.DataFrame, sections=None,
+        self, scooters: pd.DataFrame, delivery_nodes: pd.DataFrame, num_of_sections: int
     ):
         lat_min, lat_max, lon_min, lon_max = self._bound
         fig, ax = plt.subplots()
@@ -106,10 +116,10 @@ class TestInstanceManager:
         ax.set_xlim(lon_min, lon_max)
         ax.set_ylim(lat_min, lat_max)
 
-        if sections is not None:
-            ax.set_xticks(sections["lon"])
-            ax.set_yticks(sections["lat"])
-            ax.grid()
+        sections, section_coordinated = self.create_sections(num_of_sections)
+        ax.set_xticks(sections["lon"])
+        ax.set_yticks(sections["lat"])
+        ax.grid()
 
         ax.scatter(
             delivery_nodes["lon"],
@@ -131,13 +141,14 @@ class TestInstanceManager:
 
         plt.show()
 
+    def visualize_instance(self, instance_id):
+        num_of_sections, num_of_scooters_pr_section = instance_id
+        scooters, delivery_nodes, depot, service_vehicles = self.instances[instance_id]
+        self.visualize_test_data(scooters, delivery_nodes, num_of_sections)
+
 
 if __name__ == "__main__":
     manager = TestInstanceManager()
-    NUM_OF_SECTIONS = 2
-    SCOOTERS_IN_A_ZONE = 3
-    scooters, delivery_nodes, depot, service_vehicles = manager.create_test_instance(
-        NUM_OF_SECTIONS, SCOOTERS_IN_A_ZONE
-    )
-    sections, sections_coordinates = manager.create_sections(NUM_OF_SECTIONS)
-    manager.visualize_test_data(scooters, delivery_nodes, sections)
+    parameter_list = [(2, 4), (2, 5), (3, 3)]
+    manager.create_multiple_instances(parameter_list)
+    manager.visualize_instance((3, 3))
