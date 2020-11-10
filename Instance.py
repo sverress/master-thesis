@@ -1,6 +1,7 @@
 from Model import Model, ModelInput
 from enum import Enum, auto
 from solution_visualizer import visualize_solution
+import pandas as pd
 
 
 class Status(Enum):
@@ -18,6 +19,7 @@ class Instance:
         else:
             self.model = None
             self.status = Status.NO_MODEL
+
 
     def run(self):
         if self.status.READY_TO_RUN:

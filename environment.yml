@@ -8,5 +8,5 @@ dependencies:
   - scipy
   - networkx
   - black
-  - pandas
   - matplotlib
+  - pandas
