@@ -10,16 +10,18 @@ blue, green, red, black = "blue", "green", "red", "black"
 
 def make_graph(nodes: dict):
     """
-    hva den gjør
-    :param nodes:
-    :return:
+    Creates a networkx graph of the input nodes. Adds label to the nodes
+    :param nodes: dictionary of nodes [lat, lon]: "label"
+    :return: networkx graph, list of node labels, list of nodes border color, list of nodes color
     """
+    # Converts geographical coordinates to cartesian with lim [0,1] for visualization reasons
     nodes = convert_geographic_to_cart(nodes)
+
     # make graph object
     graph = nx.DiGraph()
     graph.add_nodes_from([i for i in range(len(nodes.keys()))])
 
-    # set node label and position
+    # set node label and position in graph
     labels = {}
     node_color = []
     node_border = []
@@ -43,6 +45,15 @@ def make_graph(nodes: dict):
 
 
 def visualize_solution(instance):
+    """
+    Visualize a solution from the model. The visualization is divided into two frames.
+    Frame one: All nodes (with corresponding reward and p-value, if its picked up),
+    directed edges (with corresponding time to travel that edges as well as inventory for vehicle i on that edge)
+    info about vehicles
+    Frame two: Edges that are not included in solution and corresponding time to travel that edge
+    :param instance: Instance object for a given solution
+    """
+
     # generate plot and subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 9.7))
     ax1.set_title("Model solution", fontweight="bold")
@@ -117,7 +128,7 @@ def visualize_solution(instance):
         ax=ax1,
     )
 
-    # displaying graph for nodes/edges not in solution
+    # second plot for nodes/edges not in solution
     display_edge_plot(instance, edge_labels, ax2)
 
     # add description for nodes
@@ -134,10 +145,10 @@ def visualize_solution(instance):
 
 def add_vehicle_node_info(instance, ax):
     """
-    instance.service_vehicles,
-    instance.model.get_parameters().get_vehicle_cons():param instance:
-    :param ax:
-    :return:
+    Function to add information about vehicles for the first plot
+    :param instance: Instance object for a given solution
+    :param ax: Subplot to plot the information
+    :return: Colors corresponding to vehicles used to color edges
     """
     # generate random colors for vehicle routs
     np.random.seed(10)
@@ -197,6 +208,13 @@ def add_vehicle_node_info(instance, ax):
 
 
 def display_edge_plot(instance, s_edge_labels: dict, ax):
+    """
+    Function to display second plot of edges not included in solution
+    :param instance: Instance object for a given solution
+    :param s_edge_labels: Dictionary of edges used in solution
+    :param ax: Subplot
+    """
+
     ax.axis("off")
     # draw nodes
     node_dict = instance.create_node_dict()
@@ -238,6 +256,11 @@ def display_edge_plot(instance, s_edge_labels: dict, ax):
 
 
 def convert_geographic_to_cart(nodes):
+    """
+    Function to convert geographical coordinates to cartesian
+    :param nodes: Dictionary of nodes [lat,lon]: type
+    :return: Dictionary of nodes [cart_x, cart_y]: type
+    """
     lat = [x[0] for x in nodes.keys()]
     lon = [x[1] for x in nodes.keys()]
     delta_lat = max(lat) - min(lat)

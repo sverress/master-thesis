@@ -79,8 +79,14 @@ class ModelInput:
 
     @staticmethod
     def compute_distance(lat1, lon1, lat2, lon2):
-        # ta inn scooter, delivery, depot
-        # tid = avstand / 20km/h
+        """
+        Compute the distance between two points in meters
+        :param lat1: Coordinate 1 lat
+        :param lon1: Coordinate 1 lon
+        :param lat2: Coordinate 2 lat
+        :param lon2: Coordinate 2 lon
+        :return: Meters between coordinates
+        """
         radius = 6378.137
         d_lat = lat2 * pi / 180 - lat1 * pi / 180
         d_lon = lon2 * pi / 180 - lon1 * pi / 180
@@ -89,12 +95,15 @@ class ModelInput:
         ) * sin(d_lon / 2) * sin(d_lon / 2)
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         d = radius * c
-        print(d * 1000)
         return d * 1000
 
 
 class Model:
     def __init__(self, input: ModelInput):
+        """
+        Formulation of mathematical problem in gurobi framework
+        :param input: ModelInput object with input variables for the model
+        """
         self.m = gp.Model("TOP")
         self._ = input
 
