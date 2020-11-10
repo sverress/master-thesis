@@ -350,20 +350,21 @@ class Model:
 
 
 if __name__ == "__main__":
-    locations_coordinates = [
-        (0, 0),
-        (1, 5),
-        (3, 3),
-        (2, 4),
-        (3, 1),
-        (1, 3),
-    ]  # First element is depot
+    scooters = pd.DataFrame(
+        [
+            [59.914928, 10.747932, 21.0],
+            [59.913464, 10.732058, 53.0],
+            [59.915516, 10.775063, 69.0],
+            [59.932115, 10.712367, 10.0],
+        ],
+        columns=["lat", "lon", "battery"],
+    )
+    delivery = pd.DataFrame(
+        [[59.937612, 10.785628], [59.922692, 10.728357]], columns=["lat", "lon"],
+    )
 
-    # Constants
-    num_scooters = 3  # Number of scooters
-    num_service_vehicles = 1  # Number of service vehicles
-
-    data = ModelInput(locations_coordinates, num_scooters, num_service_vehicles)
-    m = Model(data)
-    m.optimize_model()
-    # m.print_solution()
+    depot = (59.91151, 10.763182)
+    service_vehicles = {"car": (1, 3, 10), "bike": (1, 0, 4)}
+    model = Model(ModelInput(scooters, delivery, depot, service_vehicles))
+    model.optimize_model()
+    model.print_solution()
