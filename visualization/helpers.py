@@ -1,3 +1,8 @@
+# Global variables
+DEPOT, SUPPLY, DELIVERY = "Depot", "S", "D"
+BLUE, GREEN, RED, BLACK = "blue", "green", "red", "black"
+
+
 def get_label(instance, i: int):
     """
     Returns the label of a specified index of a model
@@ -6,11 +11,11 @@ def get_label(instance, i: int):
     :return:
     """
     if i == 0:
-        return "Depot"
+        return DEPOT
     if 0 < i <= instance.model_input.num_scooters:
-        return "S"
+        return SUPPLY
     else:
-        return "D"
+        return DELIVERY
 
 
 def create_node_dict(instance):

@@ -2,12 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from instance.helpers import create_sections
-from visualization.helpers import create_node_dict, get_label
-
-
-# Global variables
-depot, supply, delivery = "Depot", "S", "D"
-blue, green, red, black = "blue", "green", "red", "black"
+from visualization.helpers import *
 
 
 def make_graph(nodes: dict):
@@ -28,18 +23,19 @@ def make_graph(nodes: dict):
     node_color = []
     node_border = []
     for i, p in enumerate(nodes.keys()):
-        if nodes[p]["label"] == depot:
-            labels[i] = delivery  # most likely, you want like it Sverre
-            node_color.append(blue)
-            node_border.append(black)
-        elif nodes[p]["label"] == supply:
+        label = nodes[p]["label"]
+        if label == DEPOT:
+            labels[i] = DELIVERY
+            node_color.append(BLUE)
+            node_border.append(BLACK)
+        elif label == SUPPLY:
             labels[i] = i
-            node_color.append(green)
-            node_border.append(black)
-        elif nodes[p]["label"] == delivery:
+            node_color.append(GREEN)
+            node_border.append(BLACK)
+        elif label == DELIVERY:
             labels[i] = i
-            node_color.append(red)
-            node_border.append(black)
+            node_color.append(RED)
+            node_border.append(BLACK)
 
         graph.nodes[i]["pos"] = p
 
@@ -70,33 +66,32 @@ def visualize_solution(instance):
 
     # adding reward and type color to nodes
     for i, p in enumerate(node_dict.keys()):  # i is number in node list
-        if node_dict[p]["label"] != depot:
+        if node_dict[p]["label"] != DEPOT:
             s = "r=" + str(round(instance.model.get_parameters().reward[i], 2))
             for k in range(instance.model_input.num_service_vehicles):
                 if (i, k) in instance.model.p.keys() and instance.model.p[(i, k)].x > 0:
                     s += "\n p_%s=%s" % (k + 1, int(instance.model.p[(i, k)].x))
+            x, y = pos[i]
             ax1.text(
-                pos[i][0] + 0.035,
-                pos[i][1],
-                s,
-                weight="bold",
-                horizontalalignment="left",
+                x + 0.035, y, s, weight="bold", horizontalalignment="left",
             )
     edge_labels = {}
 
     # adding edges
     for key in instance.model.x.keys():
+        from_node, to_node, vehicle_id = key
         if instance.model.x[key].x > 0:
-            graph.add_edge(key[0], key[1], color=colors[key[2]], width=2)
-            edge_labels[(key[0], key[1])] = (
+            graph.add_edge(from_node, to_node, color=colors[vehicle_id], width=2)
+            edge_labels[(from_node, to_node)] = (
                 "T = "
                 + str(
                     round(
-                        instance.model.get_parameters().time_cost[(key[0], key[1])], 2
+                        instance.model.get_parameters().time_cost[(from_node, to_node)],
+                        2,
                     )
                 )
                 + ", L_%d = %d"
-                % (key[2] + 1, int(instance.model.l[(key[1], key[2])].x))
+                % (vehicle_id + 1, int(instance.model.l[(from_node, vehicle_id)].x))
             )
 
     # set edge color for solution
@@ -134,10 +129,10 @@ def visualize_solution(instance):
     display_edge_plot(instance, edge_labels, ax2)
 
     # add description for nodes
-    legend_color = ["blue", "green", "red"]
+    legend_color = [BLUE, GREEN, RED]
     legend_text = ["Depot", "Scooter", "Delivery"]
 
-    for i in range(3):
+    for i in range(len(legend_text)):
         ax1.scatter(1.2, 1 - 0.05 * i, s=100, c=legend_color[i], marker="o", alpha=0.7)
         ax1.annotate(legend_text[i], (1.22, 0.992 - 0.05 * i))
 
@@ -159,9 +154,12 @@ def add_vehicle_node_info(instance, ax):
         for i in range(instance.model_input.num_service_vehicles)
     ]
 
+    num_of_cars, car_scooter_cap, car_battery_cap = instance.service_vehicles["car"]
+    num_of_bikes, bike_scooter_cap, bike_battery_cap = instance.service_vehicles["bike"]
+
     # adding vehicle color description
     for i in range(len(colors)):
-        if i < instance.service_vehicles["car"][0]:
+        if i < num_of_cars:
             s = "Vehicle %d (%s)" % (i + 1, "Car")
         else:
             s = "Vehicle %d (%s)" % (i + 1, "Bike")
@@ -182,15 +180,15 @@ def add_vehicle_node_info(instance, ax):
         % (
             int(instance.model.get_parameters().T_max / 60),
             instance.model.get_parameters().T_max % 60,
-            instance.service_vehicles["car"][2],
-            instance.service_vehicles["car"][1],
+            car_battery_cap,
+            car_scooter_cap,
         )
     )
 
-    if instance.service_vehicles["bike"][0] > 0:
+    if num_of_bikes > 0:
         cons += f"\n\nBike capacity:\nBattery = %d \nScooters = %d" % (
-            instance.service_vehicles["bike"][2],
-            instance.service_vehicles["bike"][1],
+            bike_battery_cap,
+            bike_scooter_cap,
         )
 
     props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
@@ -225,20 +223,20 @@ def display_edge_plot(instance, s_edge_labels: dict, ax):
     # draw edges and set label (time cost and inventory)
     edge_labels = {}
     for x in instance.model.x:
+        from_node, to_node, vehicle_id = x
         if instance.model.x[x].x == 0:
             if (
-                x[0] != x[1]
-                and not s_edge_labels.keys().__contains__((x[0], x[1]))
-                and not s_edge_labels.keys().__contains__((x[1], x[0]))
+                from_node != to_node
+                and not s_edge_labels.keys().__contains__((from_node, to_node))
+                and not s_edge_labels.keys().__contains__((to_node, from_node))
             ):
-                graph.add_edge(x[0], x[1], color="grey", width=1, alpha=0.2)
-                edge_labels[(x[0], x[1])] = "t = " + str(
-                    round(instance.model.get_parameters().time_cost[(x[0], x[1])], 2)
+                graph.add_edge(from_node, to_node, color="grey", width=1, alpha=0.2)
+                edge_labels[(from_node, to_node)] = "t = " + str(
+                    round(
+                        instance.model.get_parameters().time_cost[(from_node, to_node)],
+                        2,
+                    )
                 )
-
-    # set node and edge color
-    node_color = ["white" for i in range(len(node_dict.keys()))]
-    node_border = ["white" for i in range(len(node_dict.keys()))]
 
     edges = graph.edges()
     e_colors = [graph[u][v]["color"] for u, v in edges]
@@ -263,8 +261,8 @@ def convert_geographic_to_cart(nodes):
     :param nodes: Dictionary of nodes [lat,lon]: type
     :return: Dictionary of nodes [cart_x, cart_y]: type
     """
-    lat = [x[0] for x in nodes.keys()]
-    lon = [x[1] for x in nodes.keys()]
+    lat = [lat for lat, lon in nodes.keys()]
+    lon = [lon for lat, lon in nodes.keys()]
     delta_lat = max(lat) - min(lat)
     delta_lon = max(lon) - min(lon)
     zero_lat = min(lat) / delta_lat
