@@ -54,9 +54,13 @@ class TestInstanceManager:
             )
         delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon"])
         lat_min, lat_max, lon_min, lon_max = self._bound
-        depot = (lat_max - lat_min) / 2, (lon_max - lon_min) / 2
+        depot = lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
         num_of_car_service_vehicles = math.ceil(num_of_scooters / 10)
-        service_vehicles = {"car": (num_of_car_service_vehicles, 10, 30)}
+        service_vehicles = {
+            "car": (num_of_car_service_vehicles, 10, 30),
+            "bike": (0, 0, 5,),
+            # Zero bikes at init to fix key value error in visualization
+        }
         if num_of_scooters % 10 > 5:
             service_vehicles["bike"] = (1, 0, 5)
         return Instance(
@@ -145,6 +149,6 @@ if __name__ == "__main__":
     parameter_list = [(2, 4), (2, 5), (3, 3)]
     manager.create_multiple_instances(parameter_list)
     instance = manager.get_instance((2, 4))
-    instance.visualize_raw_data_map()
     instance.run()
     instance.model.print_solution()
+    instance.visualize_solution()
