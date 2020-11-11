@@ -13,7 +13,7 @@ class TestInstanceManager:
         The class contains methods for fetching data, cleaning it and creating Instance instances to later be runned.
         This class also contains methods for visualizing the incoming data.
         """
-        self._data_file_path = "test_data/bigquery-results.csv"
+        self._data_file_path = "../test_data/bigquery-results.csv"
         self._data = self.get_data()
         self._bound = (
             59.9112,

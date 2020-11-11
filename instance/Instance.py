@@ -47,7 +47,12 @@ class Instance:
     def create_node_dict(self):
         # TODO: should be moved to solution visualization script. this should return a list. Needs documentation
         output = {}
-        for i, index in enumerate(self.model_input.locations):
+        locations = (
+            [self.depot]
+            + list(zip(self.scooters["lat"], self.scooters["lon"]))
+            + list(zip(self.delivery_nodes["lat"], self.delivery_nodes["lon"]))
+        )
+        for i, index in enumerate(locations):
             output[index] = {"label": self.get_label(i)}
         return output
 

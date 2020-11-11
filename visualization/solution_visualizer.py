@@ -71,7 +71,7 @@ def visualize_solution(instance):
     for i, p in enumerate(node_dict.keys()):  # i is number in node list
         if node_dict[p]["label"] != depot:
             s = "r=" + str(round(instance.model.get_parameters().reward[i], 2))
-            for k in range(instance.num_service_vehicles):
+            for k in range(instance.model_input.num_service_vehicles):
                 if instance.model.p[(i, k)].x > 0:
                     s += "\n p_%s=%s" % (k + 1, int(instance.model.p[(i, k)].x))
             ax1.text(
