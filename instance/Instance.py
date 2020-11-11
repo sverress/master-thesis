@@ -1,4 +1,5 @@
 from model.Model import Model, ModelInput
+import pandas as pd
 from visualization.solution_visualizer import (
     visualize_solution,
     visualize_test_instance,
@@ -8,14 +9,23 @@ from visualization.solution_visualizer import (
 class Instance:
     def __init__(
         self,
-        scooters,
-        delivery_nodes,
-        depot,
-        service_vehicles,
-        number_of_sections,
-        bound,
+        scooters: pd.DataFrame,
+        delivery_nodes: pd.DataFrame,
+        depot: tuple,
+        service_vehicles: dict,
+        number_of_sections: int,
+        bound: tuple,
     ):
-        # TODO: Needs documentation
+        """
+        Wrapper class for a Model class. Contains both raw input data and model input data
+
+        :param scooters: dataframe with lat lon and battery in %
+        :param delivery_nodes: dataframe with lat lon of delivery nodes
+        :param depot: (lat, lon)
+        :param service_vehicles: dict - ["type"]: (#numbers, scooter capacity, battery capacity)
+        :param number_of_sections: int number_of_sections
+        :param bound: tuple that defines the bound of the geographical area in play
+        """
 
         # Save raw data
         self.scooters = scooters
@@ -32,35 +42,27 @@ class Instance:
         self.number_of_sections = number_of_sections
 
     def run(self):
-        # TODO: Needs documentation
+        """
+        Runs the model of the instance
+        """
         self.model.optimize_model()
 
-    def get_label(self, i):
-        # TODO: should be moved to solution visualization script
-        if i == 0:
-            return "Depot"
-        if 0 < i <= self.model_input.num_scooters:
-            return "S"
-        else:
-            return "D"
-
-    def create_node_dict(self):
-        # TODO: should be moved to solution visualization script. this should return a list. Needs documentation
-        output = {}
-        locations = (
-            [self.depot]
-            + list(zip(self.scooters["lat"], self.scooters["lon"]))
-            + list(zip(self.delivery_nodes["lat"], self.delivery_nodes["lon"]))
-        )
-        for i, index in enumerate(locations):
-            output[index] = {"label": self.get_label(i)}
-        return output
-
     def visualize_solution(self):
-        # TODO: Needs documentation
+        """
+        See documentation of visualize_solution function from visualization
+        """
         visualize_solution(self)
 
     def visualize_raw_data_map(self):
+        """
+       See documentation of visualize_solution function from visualization
+       """
         visualize_test_instance(
             self.scooters, self.delivery_nodes, self.bound, self.number_of_sections
         )
+
+    def get_runtime(self):
+        """
+        :return: the elapsed time in seconds to get to optimal solution in gurobi
+        """
+        return self.model.m.Runtime

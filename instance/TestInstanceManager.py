@@ -13,7 +13,7 @@ class TestInstanceManager:
         The class contains methods for fetching data, cleaning it and creating Instance instances to later be runned.
         This class also contains methods for visualizing the incoming data.
         """
-        self._data_file_path = "../test_data/bigquery-results.csv"
+        self._data_file_path = "test_data/bigquery-results.csv"
         self._data = self.get_data()
         self._bound = (
             59.9112,
@@ -146,9 +146,18 @@ class TestInstanceManager:
 
 if __name__ == "__main__":
     manager = TestInstanceManager()
-    parameter_list = [(2, 4), (2, 5), (3, 3)]
+    parameter_list = [(2, 2)]
     manager.create_multiple_instances(parameter_list)
-    instance = manager.get_instance((2, 4))
-    instance.run()
-    instance.model.print_solution()
-    instance.visualize_solution()
+    for instance_key in manager.instances.keys():
+        instance = manager.get_instance(instance_key)
+        print("-------------------------------")
+        print(
+            f"Starting instance {instance_key} ({len(instance.model_input.locations)} locations)"
+        )
+        print("-------------------------------")
+        instance.run()
+        print(
+            f"{instance_key} ({len(instance.model_input.locations)} locations): {instance.get_runtime()} secs"
+        )
+        print("-------------------------------")
+        instance.visualize_solution()

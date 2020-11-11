@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from instance.helpers import create_sections
+from visualization.helpers import create_node_dict, get_label
 
 
 # Global variables
@@ -63,7 +64,7 @@ def visualize_solution(instance):
     # add vehicle and node info to plot
     colors = add_vehicle_node_info(instance, ax1)
 
-    node_dict = instance.create_node_dict()
+    node_dict = create_node_dict(instance)
     graph, labels, node_border, node_color = make_graph(node_dict)
     pos = nx.get_node_attributes(graph, "pos")
 
@@ -72,7 +73,7 @@ def visualize_solution(instance):
         if node_dict[p]["label"] != depot:
             s = "r=" + str(round(instance.model.get_parameters().reward[i], 2))
             for k in range(instance.model_input.num_service_vehicles):
-                if instance.model.p[(i, k)].x > 0:
+                if (i, k) in instance.model.p.keys() and instance.model.p[(i, k)].x > 0:
                     s += "\n p_%s=%s" % (k + 1, int(instance.model.p[(i, k)].x))
             ax1.text(
                 pos[i][0] + 0.035,
@@ -218,7 +219,7 @@ def display_edge_plot(instance, s_edge_labels: dict, ax):
 
     ax.axis("off")
     # draw nodes
-    node_dict = instance.create_node_dict()
+    node_dict = create_node_dict(instance)
     graph, labels, node_border, node_color = make_graph(node_dict)
 
     # draw edges and set label (time cost and inventory)
