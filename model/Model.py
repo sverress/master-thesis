@@ -21,6 +21,13 @@ class Model:
         self.cart_loc_loc_v = list(
             product(self._.locations, self._.locations, self._.service_vehicles)
         )
+        self.cart_loc_v_not_depot = list(
+            product([loc for loc in self._.locations if loc != self._.depot], self._.service_vehicles)
+        )
+        self.cart_loc_v_scooters = list(
+            product([loc for loc in self._.locations if loc in self._.scooters], self._.service_vehicles)
+        )
+
 
         # Init variables
 
@@ -29,9 +36,9 @@ class Model:
         # b_iv - 1 if location i is visited by service vehicle v- 0 otherwise
         self.y = self.m.addVars(self.cart_loc_v, vtype=GRB.BINARY, name="y")
         # p_iv - 1 if service vehicle v picks up a scooter at location i - 0 otherwise
-        self.p = self.m.addVars(self.cart_loc_v, vtype=GRB.BINARY, name="p")
+        self.p = self.m.addVars(self.cart_loc_v_scooters, vtype=GRB.BINARY, name="p")
         # u_iv - position of location i for service vehicle v route
-        self.u = self.m.addVars(self.cart_loc_v, vtype=GRB.INTEGER, name="u")
+        self.u = self.m.addVars(self.cart_loc_v_not_depot, vtype=GRB.INTEGER, name="u")
         # l_iv - load (number of scooters) when entering location i
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.INTEGER, name="l")
         self.setup()
@@ -45,11 +52,10 @@ class Model:
 
     def set_objective(self):
         self.m.setObjective(
-            gp.quicksum(self._.reward[i] * self.y[(i, v)] for i, v in self.cart_loc_v)
+            gp.quicksum(self._.reward[i] * self.y[(i, v)] for i, v in self.cart_loc_v_not_depot)
             - gp.quicksum(
                 self._.reward[i] * self.p[(i, v)]
-                for i, v in self.cart_loc_v
-                if i in self._.scooters
+                for i, v in self.cart_loc_v_scooters
             ),
             GRB.MAXIMIZE,
         )
@@ -59,8 +65,7 @@ class Model:
         self.m.addConstr(
             gp.quicksum(
                 self.x[(self._.depot, j, v)]
-                for j, v in self.cart_loc_v
-                if j != self._.depot
+                for j, v in self.cart_loc_v_not_depot
             )
             == self._.num_service_vehicles,
             "must_visit_depot_first",
@@ -68,8 +73,7 @@ class Model:
         self.m.addConstr(
             gp.quicksum(
                 self.x[(i, self._.depot, v)]
-                for i, v in self.cart_loc_v
-                if i != self._.depot
+                for i, v in self.cart_loc_v_not_depot
             )
             == self._.num_service_vehicles,
             "must_visit_depot_end",
@@ -183,7 +187,7 @@ class Model:
 
         # Add constraints (11):
         self.m.addConstrs(
-            (0 <= self.l[(i, v)] for i, v in self.cart_loc_v if i != self._.depot),
+            (0 <= self.l[(i, v)] for i, v in self.cart_loc_v_not_depot),
             "vehicle_capacity_cap_noneg",
         )
         self.m.addConstrs(
@@ -205,22 +209,20 @@ class Model:
         self.m.addConstrs(
             (
                 self.l[(i, v)] - self._.Q_s[v] * (1 - self.x[(0, i, v)]) <= 0
-                for i, v in self.cart_loc_v
-                if i != self._.depot
+                for i, v in self.cart_loc_v_not_depot
             ),
             "vehicle_capacity_depot_out",
         )
 
         # Add constraints (14):
         self.m.addConstrs(
-            (2 <= self.u[(i, v)] for i, v in self.cart_loc_v if i != self._.depot),
+            (2 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot),
             "subtours_1",
         )
         self.m.addConstrs(
             (
                 self.u[(i, v)] <= self._.num_locations
-                for i, v in self.cart_loc_v
-                if i != self._.depot
+                for i, v in self.cart_loc_v_not_depot
             ),
             "subtours_2",
         )
@@ -231,7 +233,7 @@ class Model:
                 self.u[i, v] - self.u[j, v] + 1
                 <= (self._.num_locations - 1) * (1 - self.x[i, j, v])
                 for i, j, v in self.cart_loc_loc_v
-                if i != self._.depot
+                if i != self._.depot and j != self._.depot
             ),
             "subtours_3",
         )
