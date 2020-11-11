@@ -1,6 +1,6 @@
 from model.Model import Model, ModelInput
 import pandas as pd
-from visualization.solution_visualizer import (
+from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
 )
