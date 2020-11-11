@@ -1,8 +1,9 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
+from instance.helpers import create_sections
 import random
 import math
+
+from instance.Instance import Instance
 
 
 class TestInstanceManager:
@@ -20,7 +21,6 @@ class TestInstanceManager:
             10.7027,
             10.7772,
         )  # (lat_min, lat_max, lon_min, lon_max) Area in Oslo
-        self._epsilon = 0.000001  # Just a small number
         self._random_state = 1
         random.seed(self._random_state)
         self.instances = (
@@ -46,7 +46,7 @@ class TestInstanceManager:
             num_of_scooters, random_state=self._random_state
         )[["lat", "lon", "battery"]]
 
-        sections, sections_coordinates = self.create_sections(num_of_sections)
+        sections, sections_coordinates = create_sections(num_of_sections, self._bound)
         delivery_nodes = []
         for bound_coordinates in sections_coordinates:
             delivery_nodes = delivery_nodes + self.create_delivery_nodes(
@@ -54,12 +54,23 @@ class TestInstanceManager:
             )
         delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon"])
         lat_min, lat_max, lon_min, lon_max = self._bound
-        depot = (lat_max - lat_min) / 2, (lon_max - lon_min) / 2
+        depot = lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
         num_of_car_service_vehicles = math.ceil(num_of_scooters / 10)
-        service_vehicles = {"car": (num_of_car_service_vehicles, 10, 30)}
+        service_vehicles = {
+            "car": (num_of_car_service_vehicles, 10, 30),
+            "bike": (0, 0, 5,),
+            # Zero bikes at init to fix key value error in visualization
+        }
         if num_of_scooters % 10 > 5:
             service_vehicles["bike"] = (1, 0, 5)
-        return scooters, delivery_nodes, depot, service_vehicles
+        return Instance(
+            scooters,
+            delivery_nodes,
+            depot,
+            service_vehicles,
+            num_of_sections,
+            self._bound,
+        )
 
     def create_multiple_instances(self, instances_parameters: list):
         """
@@ -107,36 +118,6 @@ class TestInstanceManager:
             & (geospatial_data["lat"] <= lat_max)
         ]
 
-    def create_sections(self, number_of_sections: int):
-        """
-        Generate lat lon coordinates for the boundaries of sections
-        :param number_of_sections: integer
-        :return: tuple(dataframe with lat lon as columns containing the boundaries of the sections,
-        list of coordinates defining all zones generated)
-        """
-        lat_min, lat_max, lon_min, lon_max = self._bound
-        lon_length = lon_max - lon_min
-        lat_length = lat_max - lat_min
-        section_limits = pd.DataFrame()
-        section_limits["lon"] = np.arange(
-            lon_min, lon_max + self._epsilon, lon_length / number_of_sections
-        )
-        section_limits["lat"] = np.arange(
-            lat_min, lat_max + self._epsilon, lat_length / number_of_sections
-        )
-        section_coordinates = []
-        for j in range(1, number_of_sections + 1):
-            for i in range(1, number_of_sections + 1):
-                section_coordinates.append(
-                    (
-                        section_limits["lat"][j - 1],
-                        section_limits["lat"][j],
-                        section_limits["lon"][i - 1],
-                        section_limits["lon"][i],
-                    )
-                )
-        return section_limits, section_coordinates
-
     @staticmethod
     def create_delivery_nodes(scooters, coordinates, optimal_number):
         """
@@ -154,61 +135,29 @@ class TestInstanceManager:
             for i in range(optimal_number - len(filtered_df))
         ]
 
-    def visualize_test_data(
-        self, scooters: pd.DataFrame, delivery_nodes: pd.DataFrame, num_of_sections: int
-    ):
-        """
-        Generates a visual representation of the scooters and delivery nodes with a map in the background
-        :param scooters: dataframe for location of scooters
-        :param delivery_nodes: dataframe for location of delivery nodes
-        :param num_of_sections: number of section in each dimension
-        """
-        lat_min, lat_max, lon_min, lon_max = self._bound
-        fig, ax = plt.subplots()
-
-        ax.scatter(scooters["lon"], scooters["lat"], zorder=1, alpha=0.4, s=10)
-
-        ax.set_xlim(lon_min, lon_max)
-        ax.set_ylim(lat_min, lat_max)
-
-        sections, section_coordinated = self.create_sections(num_of_sections)
-        ax.set_xticks(sections["lon"])
-        ax.set_yticks(sections["lat"])
-        ax.grid()
-
-        ax.scatter(
-            delivery_nodes["lon"],
-            delivery_nodes["lat"],
-            zorder=1,
-            alpha=0.4,
-            s=10,
-            c="r",
-        )
-
-        oslo = plt.imread("test_data/oslo.png")
-        ax.imshow(
-            oslo,
-            zorder=0,
-            extent=(lon_min, lon_max, lat_min, lat_max),
-            aspect="equal",
-            alpha=0.4,
-        )
-
-        plt.show()
-
-    def visualize_instance(self, instance_id: tuple):
+    def get_instance(self, instance_id: tuple):
         """
         Fetch the instance from the instance id given and use the visualize_test_data function to show this instance
         :param instance_id: tuple(number of sections, number of scooters pr section)
         :return: 
         """
-        num_of_sections, num_of_scooters_pr_section = instance_id
-        scooters, delivery_nodes, depot, service_vehicles = self.instances[instance_id]
-        self.visualize_test_data(scooters, delivery_nodes, num_of_sections)
+        return self.instances[instance_id]
 
 
 if __name__ == "__main__":
     manager = TestInstanceManager()
-    parameter_list = [(2, 4), (2, 5), (3, 3)]
+    parameter_list = [(2, 2)]
     manager.create_multiple_instances(parameter_list)
-    manager.visualize_instance((3, 3))
+    for instance_key in manager.instances.keys():
+        instance = manager.get_instance(instance_key)
+        print("-------------------------------")
+        print(
+            f"Starting instance {instance_key} ({len(instance.model_input.locations)} locations)"
+        )
+        print("-------------------------------")
+        instance.run()
+        print(
+            f"{instance_key} ({len(instance.model_input.locations)} locations): {instance.get_runtime()} secs"
+        )
+        print("-------------------------------")
+        instance.visualize_solution()
