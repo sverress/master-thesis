@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+from instance.helpers import create_sections
 
 
 # Global variables
@@ -154,7 +155,7 @@ def add_vehicle_node_info(instance, ax):
     np.random.seed(10)
     colors = [
         "#%06X" % np.random.randint(0, 0xFFFFFF)
-        for i in range(instance.num_service_vehicles)
+        for i in range(instance.model_input.num_service_vehicles)
     ]
 
     # adding vehicle color description
@@ -274,3 +275,40 @@ def convert_geographic_to_cart(nodes):
         output[key] = nodes[(i, j)]
 
     return output
+
+
+def visualize_test_instance(scooters, delivery_nodes, bound, num_of_sections):
+    """
+    Generates a visual representation of the scooters and delivery nodes with a map in the background
+    :param scooters: dataframe for location of scooters
+    :param delivery_nodes: dataframe for location of delivery nodes
+    :param bound: tuple of lat_min, lat_max, lon_min, lon_max defining the the rectangle to look at
+    :param num_of_sections: number of section in each dimension
+    """
+    lat_min, lat_max, lon_min, lon_max = bound
+    fig, ax = plt.subplots()
+
+    ax.scatter(scooters["lon"], scooters["lat"], zorder=1, alpha=0.4, s=10)
+
+    ax.set_xlim(lon_min, lon_max)
+    ax.set_ylim(lat_min, lat_max)
+
+    sections, cords = create_sections(num_of_sections, bound)
+    ax.set_xticks(sections["lon"])
+    ax.set_yticks(sections["lat"])
+    ax.grid()
+
+    ax.scatter(
+        delivery_nodes["lon"], delivery_nodes["lat"], zorder=1, alpha=0.4, s=10, c="r",
+    )
+
+    oslo = plt.imread("test_data/oslo.png")
+    ax.imshow(
+        oslo,
+        zorder=0,
+        extent=(lon_min, lon_max, lat_min, lat_max),
+        aspect="equal",
+        alpha=0.4,
+    )
+
+    plt.show()
