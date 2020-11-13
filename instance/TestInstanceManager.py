@@ -3,6 +3,7 @@ from instance.helpers import create_sections
 import random
 import math
 import json
+import os
 from itertools import product
 from instance.Instance import Instance
 
@@ -28,6 +29,46 @@ def read_test_instances():
             ranges.append(range(data[key], data[key] + 1))
 
     return list(product(*ranges))
+
+
+def saved_models_to_excel():
+    data = {
+        "zones": [],
+        "nodes_per_zone": [],
+        "number_of_vehicles": [],
+        "T_max": [],
+        "Solution time": [],
+        "Gap": [],
+    }
+    zones, nodes_per_zone, number_of_vehicles, T_max, solution_time, gap = (
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
+    for root, dirs, files in os.walk("../saved models/", topdown=True):
+        for file in files:
+            with open(root + file) as file_path:
+                model = json.load(file_path)
+            model_param = file.split("_")
+            zones.append(model_param[1])
+            nodes_per_zone.append(model_param[2])
+            number_of_vehicles.append(model_param[3])
+            T_max.append(model_param[4])
+            solution_time.append(model["SolutionInfo"]["Runtime"])
+            gap.append(model["SolutionInfo"]["MIPGap"])
+
+    data["zones"] = zones
+    data["nodes_per_zone"] = nodes_per_zone
+    data["number_of_vehicles"] = number_of_vehicles
+    data["T_max"] = T_max
+    data["Solution time"] = solution_time
+    data["Gap"] = gap
+
+    df = pd.DataFrame(data)
+    df.to_csv("model_info.csv")
 
 
 class TestInstanceManager:
@@ -201,3 +242,4 @@ if __name__ == "__main__":
         print("-------------------------------")
         instance.visualize_solution()
         save_instance(instance, parameter_list)
+    saved_models_to_excel()
