@@ -30,11 +30,15 @@ def visualize_solution(instance):
         if node_dict[p]["label"] != DEPOT:
             s = "r=" + str(round(instance.model.get_parameters().reward[i], 2))
             for k in range(instance.model_input.num_service_vehicles):
-                if (i, k) in instance.model.p.keys() and instance.model.p[(i, k)].x > 0:
+                if (
+                    (i, k) in instance.model.p.keys()
+                    and instance.model.p[(i, k)].x > 0
+                    and instance.model.y[(i, k)].x > 0
+                ):
                     s += "\n p_%s=%s" % (k + 1, int(instance.model.p[(i, k)].x))
             x, y = pos[i]
             ax1.text(
-                x + 0.035, y, s, weight="bold", horizontalalignment="left",
+                x - 0.035, y, s, weight="bold", horizontalalignment="right",
             )
     edge_labels = {}
 
@@ -44,15 +48,16 @@ def visualize_solution(instance):
         if instance.model.x[key].x > 0:
             graph.add_edge(from_node, to_node, color=colors[vehicle_id], width=2)
             edge_labels[(from_node, to_node)] = (
-                "T = "
-                + str(
-                    round(
-                        instance.model.get_parameters().time_cost[(from_node, to_node)],
-                        2,
-                    )
-                )
-                + ", L_%d = %d"
-                % (vehicle_id + 1, int(instance.model.l[(from_node, vehicle_id)].x))
+                # "T = "
+                # + str(
+                #    round(
+                #        instance.model.get_parameters().time_cost[(from_node, to_node)],
+                #        2,
+                #    )
+                # )
+                # + ", " +
+                "L_%d = %d"
+                % (vehicle_id + 1, int(instance.model.l[(to_node, vehicle_id)].x))
             )
 
     # set edge color for solution
@@ -94,8 +99,8 @@ def visualize_solution(instance):
     legend_text = ["Depot", "Scooter", "Delivery"]
 
     for i in range(len(legend_text)):
-        ax1.scatter(1.2, 1 - 0.05 * i, s=100, c=legend_color[i], marker="o", alpha=0.7)
-        ax1.annotate(legend_text[i], (1.22, 0.992 - 0.05 * i))
+        ax1.scatter(1.1, 1 - 0.05 * i, s=100, c=legend_color[i], marker="o", alpha=0.7)
+        ax1.annotate(legend_text[i], (1.12, 0.992 - 0.05 * i))
 
     # show figure
     plt.show()

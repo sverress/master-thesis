@@ -14,6 +14,8 @@ class Instance:
         depot: tuple,
         service_vehicles: dict,
         number_of_sections: int,
+        T_max: int,
+        computational_limit: int,
         bound: tuple,
     ):
         """
@@ -37,8 +39,10 @@ class Instance:
         self.bound = bound
 
         # Model
-        self.model_input = ModelInput(scooters, delivery_nodes, depot, service_vehicles)
-        self.model = Model(self.model_input)
+        self.model_input = ModelInput(
+            scooters, delivery_nodes, depot, service_vehicles, T_max
+        )
+        self.model = Model(self.model_input, computational_limit)
         self.number_of_sections = number_of_sections
 
     def run(self):

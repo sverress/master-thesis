@@ -2,8 +2,32 @@ import pandas as pd
 from instance.helpers import create_sections
 import random
 import math
-
+import json
+from itertools import product
 from instance.Instance import Instance
+
+
+def save_instance(instance_solution, parameters):
+    """
+    Function to save gurobi models, file name represents: model_nodes per zone_Tmax_#vehicles_computational limit
+    :param instance_solution: Instance object for a given instance of the problem
+    :param parameters: Tuple of instance specifications, used to save model/file
+    """
+    file_path = "../saved models/model_%d_%d_%d_%d_%d.json" % (parameters[0])
+    instance_solution.model.m.write(file_path)
+
+
+def read_test_instances():
+    with open("../test_instances.json") as json_file:
+        data = json.load(json_file)
+    ranges = []
+    for key in data:
+        if type(data[key]) is list:
+            ranges.append(range(data[key][0], data[key][1] + 1, data[key][2]))
+        else:
+            ranges.append(range(data[key], data[key] + 1))
+
+    return list(product(*ranges))
 
 
 class TestInstanceManager:
@@ -13,7 +37,7 @@ class TestInstanceManager:
         The class contains methods for fetching data, cleaning it and creating Instance instances to later be runned.
         This class also contains methods for visualizing the incoming data.
         """
-        self._data_file_path = "test_data/bigquery-results.csv"
+        self._data_file_path = "../test_data/bigquery-results.csv"
         self._data = self.get_data()
         self._bound = (
             59.9112,
@@ -28,7 +52,12 @@ class TestInstanceManager:
         )  # Instances indexed by (num_of_sections, num_of_scooters_per_section)
 
     def create_test_instance(
-        self, num_of_sections: int, num_of_scooters_per_section: int,
+        self,
+        num_of_sections: int,
+        num_of_scooters_per_section: int,
+        num_of_vehicles: int,
+        T_max: int,
+        computational_limit: int,
     ):
         """
         Creates necessary data structures to create a new ModelInput object.
@@ -55,20 +84,20 @@ class TestInstanceManager:
         delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon"])
         lat_min, lat_max, lon_min, lon_max = self._bound
         depot = lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
-        num_of_car_service_vehicles = math.ceil(num_of_scooters / 10)
+        num_of_car_service_vehicles = math.ceil(num_of_vehicles / 2)
+        num_of_bike_service_vehicles = math.floor(num_of_vehicles / 2)
         service_vehicles = {
-            "car": (num_of_car_service_vehicles, 10, 30),
-            "bike": (0, 0, 5,),
-            # Zero bikes at init to fix key value error in visualization
+            "car": (num_of_car_service_vehicles, 5, 10),
+            "bike": (num_of_bike_service_vehicles, 0, 3),
         }
-        if num_of_scooters % 10 > 5:
-            service_vehicles["bike"] = (1, 0, 5)
         return Instance(
             scooters,
             delivery_nodes,
             depot,
             service_vehicles,
             num_of_sections,
+            T_max,
+            computational_limit,
             self._bound,
         )
 
@@ -79,9 +108,19 @@ class TestInstanceManager:
         ex: [(2,3)] -> add one instance with 2 sections and 3 scooters pr section
         """
         for parameters in instances_parameters:
-            num_of_sections, num_of_scooters_per_section = parameters
+            (
+                num_of_sections,
+                num_of_scooters_per_section,
+                num_of_vehicles,
+                T_max,
+                computational_limit,
+            ) = parameters
             self.instances[parameters] = self.create_test_instance(
-                num_of_sections, num_of_scooters_per_section
+                num_of_sections,
+                num_of_scooters_per_section,
+                num_of_vehicles,
+                T_max,
+                computational_limit,
             )
 
     def set_random_state(self, new_state: int):
@@ -146,7 +185,7 @@ class TestInstanceManager:
 
 if __name__ == "__main__":
     manager = TestInstanceManager()
-    parameter_list = [(2, 2)]
+    parameter_list = read_test_instances()
     manager.create_multiple_instances(parameter_list)
     for instance_key in manager.instances.keys():
         instance = manager.get_instance(instance_key)
@@ -161,3 +200,4 @@ if __name__ == "__main__":
         )
         print("-------------------------------")
         instance.visualize_solution()
+        save_instance(instance, parameter_list)

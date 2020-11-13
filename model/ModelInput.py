@@ -14,6 +14,7 @@ class ModelInput:
         delivery_nodes_list: pd.DataFrame,
         depot_location: tuple,
         service_vehicles_dict: dict,
+        T_max: int,
     ):
         """
         Creating all input to the gurobi model
@@ -46,7 +47,7 @@ class ModelInput:
         self.time_cost = self.compute_time_matrix(
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
-        self.T_max = 60 * 0.8  # Duration of shift in minutes
+        self.T_max = T_max  # Duration of shift in minutes
         self.Q_b = []
         self.Q_s = []
         for vehicle_type in service_vehicles_dict.keys():
