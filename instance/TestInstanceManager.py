@@ -4,7 +4,7 @@ import math
 
 from instance.helpers import create_sections
 from instance.Instance import Instance
-from model.StandardModel import StandardModel
+from model.AlternativeModel import AlternativeModel
 
 
 class TestInstanceManager:
@@ -29,7 +29,7 @@ class TestInstanceManager:
         )  # Instances indexed by (num_of_sections, num_of_scooters_per_section)
 
     def create_test_instance(
-        self, num_of_sections: int, num_of_scooters_per_section: int,
+        self, num_of_sections: int, num_of_scooters_per_section: int, model_class
     ):
         """
         Creates necessary data structures to create a new ModelInput object.
@@ -47,13 +47,24 @@ class TestInstanceManager:
             num_of_scooters, random_state=self._random_state
         )[["lat", "lon", "battery"]]
 
+        scooters["zone"] = -1
+
         sections, sections_coordinates = create_sections(num_of_sections, self._bound)
         delivery_nodes = []
-        for bound_coordinates in sections_coordinates:
+        for i, bound_coordinates in enumerate(sections_coordinates):
+            scooters.loc[
+                self.filter_data_lat_lon(scooters, bound_coordinates, True), "zone"
+            ] = i  # Set zone id
             delivery_nodes = delivery_nodes + self.create_delivery_nodes(
-                scooters, bound_coordinates, num_of_scooters_per_section
+                scooters, bound_coordinates, num_of_scooters_per_section, [i]
             )
-        delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon"])
+        delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon", "zone"])
+        # Giving dataframes same index as they will have in mathematical model
+        scooters.index = range(1, len(scooters) + 1)
+        delivery_nodes.index = range(
+            len(scooters) + 1, len(scooters) + len(delivery_nodes) + 1
+        )
+        # Creating deopot node in the middle of bound
         lat_min, lat_max, lon_min, lon_max = self._bound
         depot = lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
         num_of_car_service_vehicles = math.ceil(num_of_scooters / 10)
@@ -71,7 +82,7 @@ class TestInstanceManager:
             service_vehicles,
             num_of_sections,
             self._bound,
-            StandardModel,
+            model_class,
         )
 
     def create_multiple_instances(self, instances_parameters: list):
@@ -81,10 +92,7 @@ class TestInstanceManager:
         ex: [(2,3)] -> add one instance with 2 sections and 3 scooters pr section
         """
         for parameters in instances_parameters:
-            num_of_sections, num_of_scooters_per_section = parameters
-            self.instances[parameters] = self.create_test_instance(
-                num_of_sections, num_of_scooters_per_section
-            )
+            self.instances[parameters] = self.create_test_instance(*parameters)
 
     def set_random_state(self, new_state: int):
         """
@@ -106,22 +114,28 @@ class TestInstanceManager:
         return df
 
     @staticmethod
-    def filter_data_lat_lon(geospatial_data: pd.DataFrame, coordinates: tuple):
+    def filter_data_lat_lon(
+        geospatial_data: pd.DataFrame, coordinates: tuple, only_expression=False
+    ):
         """
         :param geospatial_data: dataframe with lat lon columns
         :param coordinates: tuple with a size of four to define area to include locations from
+        :param only_expression: if only expression should be returned
         :return: new dataframe containing locations within the given coordinates
         """
         lat_min, lat_max, lon_min, lon_max = coordinates
-        return geospatial_data[
+        expression = (
             (lon_min <= geospatial_data["lon"])
             & (geospatial_data["lon"] <= lon_max)
             & (lat_min <= geospatial_data["lat"])
             & (geospatial_data["lat"] <= lat_max)
-        ]
+        )
+        return expression if only_expression else geospatial_data.loc[expression]
 
     @staticmethod
-    def create_delivery_nodes(scooters, coordinates, optimal_number):
+    def create_delivery_nodes(
+        scooters, coordinates, optimal_number, additional_cols: list
+    ):
         """
         Generates delivery nodes for a zone. The number of generated delivery nodes is the difference between the
         optimal state and the number of scooters in the area. The nodes are now generated randomly within the zone.
@@ -133,7 +147,11 @@ class TestInstanceManager:
         lat_min, lat_max, lon_min, lon_max = coordinates
         filtered_df = TestInstanceManager.filter_data_lat_lon(scooters, coordinates)
         return [
-            (random.uniform(lat_min, lat_max), random.uniform(lon_min, lon_max))
+            (
+                random.uniform(lat_min, lat_max),
+                random.uniform(lon_min, lon_max),
+                *additional_cols,
+            )
             for i in range(optimal_number - len(filtered_df))
         ]
 
@@ -148,7 +166,7 @@ class TestInstanceManager:
 
 if __name__ == "__main__":
     manager = TestInstanceManager()
-    parameter_list = [(2, 2)]
+    parameter_list = [(2, 5, AlternativeModel)]
     manager.create_multiple_instances(parameter_list)
     for instance_key in manager.instances.keys():
         instance = manager.get_instance(instance_key)
