@@ -1,9 +1,10 @@
 import pandas as pd
-from instance.helpers import create_sections
 import random
 import math
 
+from instance.helpers import create_sections
 from instance.Instance import Instance
+from model.StandardModel import StandardModel
 
 
 class TestInstanceManager:
@@ -70,6 +71,7 @@ class TestInstanceManager:
             service_vehicles,
             num_of_sections,
             self._bound,
+            StandardModel,
         )
 
     def create_multiple_instances(self, instances_parameters: list):

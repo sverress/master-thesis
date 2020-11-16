@@ -1,5 +1,6 @@
-from model.Model import Model, ModelInput
 import pandas as pd
+
+from model.BaseModel import ModelInput
 from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
@@ -15,6 +16,7 @@ class Instance:
         service_vehicles: dict,
         number_of_sections: int,
         bound: tuple,
+        model_class,
     ):
         """
         Wrapper class for a Model class. Contains both raw input data and model input data
@@ -38,7 +40,7 @@ class Instance:
 
         # Model
         self.model_input = ModelInput(scooters, delivery_nodes, depot, service_vehicles)
-        self.model = Model(self.model_input)
+        self.model = model_class(self.model_input)
         self.number_of_sections = number_of_sections
 
     def run(self):

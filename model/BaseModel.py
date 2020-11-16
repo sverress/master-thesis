@@ -1,12 +1,13 @@
 import gurobipy as gp
 from gurobipy import GRB
 from itertools import product
-import pandas as pd
 import os
+from abc import ABC, abstractmethod
+
 from model.ModelInput import ModelInput
 
 
-class Model:
+class BaseModel(ABC):
     def __init__(self, input: ModelInput):
         """
         Formulation of mathematical problem in gurobi framework
@@ -22,12 +23,17 @@ class Model:
             product(self._.locations, self._.locations, self._.service_vehicles)
         )
         self.cart_loc_v_not_depot = list(
-            product([loc for loc in self._.locations if loc != self._.depot], self._.service_vehicles)
+            product(
+                [loc for loc in self._.locations if loc != self._.depot],
+                self._.service_vehicles,
+            )
         )
         self.cart_loc_v_scooters = list(
-            product([loc for loc in self._.locations if loc in self._.scooters], self._.service_vehicles)
+            product(
+                [loc for loc in self._.locations if loc in self._.scooters],
+                self._.service_vehicles,
+            )
         )
-
 
         # Init variables
 
@@ -50,30 +56,22 @@ class Model:
         self.set_objective()
         self.set_constraints()
 
+    @abstractmethod
     def set_objective(self):
-        self.m.setObjective(
-            gp.quicksum(self._.reward[i] * self.y[(i, v)] for i, v in self.cart_loc_v_not_depot)
-            - gp.quicksum(
-                self._.reward[i] * self.p[(i, v)]
-                for i, v in self.cart_loc_v_scooters
-            ),
-            GRB.MAXIMIZE,
-        )
+        pass
 
     def set_constraints(self):
         # Add constraints (2): guarantee that each service vehicle starts and ends in at the depot.
         self.m.addConstr(
             gp.quicksum(
-                self.x[(self._.depot, j, v)]
-                for j, v in self.cart_loc_v_not_depot
+                self.x[(self._.depot, j, v)] for j, v in self.cart_loc_v_not_depot
             )
             == self._.num_service_vehicles,
             "must_visit_depot_first",
         )
         self.m.addConstr(
             gp.quicksum(
-                self.x[(i, self._.depot, v)]
-                for i, v in self.cart_loc_v_not_depot
+                self.x[(i, self._.depot, v)] for i, v in self.cart_loc_v_not_depot
             )
             == self._.num_service_vehicles,
             "must_visit_depot_end",
@@ -216,8 +214,7 @@ class Model:
 
         # Add constraints (14):
         self.m.addConstrs(
-            (2 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot),
-            "subtours_1",
+            (2 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot), "subtours_1",
         )
         self.m.addConstrs(
             (
@@ -257,24 +254,3 @@ class Model:
                 print(line)
         if delete_file:
             os.remove("model.lp")
-
-
-if __name__ == "__main__":
-    scooters = pd.DataFrame(
-        [
-            [59.914928, 10.747932, 21.0],
-            [59.913464, 10.732058, 53.0],
-            [59.915516, 10.775063, 69.0],
-            [59.932115, 10.712367, 10.0],
-        ],
-        columns=["lat", "lon", "battery"],
-    )
-    delivery = pd.DataFrame(
-        [[59.937612, 10.785628], [59.922692, 10.728357]], columns=["lat", "lon"],
-    )
-
-    depot = (59.91151, 10.763182)
-    service_vehicles = {"car": (1, 3, 10), "bike": (1, 0, 4)}
-    model = Model(ModelInput(scooters, delivery, depot, service_vehicles))
-    model.optimize_model()
-    model.print_solution()
