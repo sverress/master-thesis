@@ -4,6 +4,7 @@ from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
 )
+import pickle
 
 
 class Instance:
@@ -55,11 +56,11 @@ class Instance:
         """
         self.model.optimize_model()
 
-    def visualize_solution(self):
+    def visualize_solution(self, save=False):
         """
         See documentation of visualize_solution function from visualization
         """
-        visualize_solution(self)
+        visualize_solution(self, save)
 
     def visualize_raw_data_map(self):
         """
@@ -75,15 +76,18 @@ class Instance:
         """
         return self.model.m.Runtime
 
-    def save_instance(self):
+    def save_model(self):
         """
         Function to save gurobi models, file name represents: zones per axis_nodes per zone_Tmax_#vehicles_computational limit
         """
-        file_path = "saved models/model_%d_%d_%d_%d_%d.json" % (
+        file_path = "saved models/" + self.get_model_name() + ".json"
+        self.model.m.write(file_path)
+
+    def get_model_name(self):
+        return "model_%d_%d_%d_%d_%d" % (
             self.number_of_sections,
             len(self.scooters) / (self.number_of_sections * 2),
             self.service_vehicles["car"][0] + self.service_vehicles["bike"][0],
             self.T_max,
             self.computational_limit,
         )
-        self.model.m.write(file_path)

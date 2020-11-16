@@ -180,6 +180,6 @@ if __name__ == "__main__":
             f"{instance_key} ({len(instance.model_input.locations)} locations): {instance.get_runtime()} secs"
         )
         print("-------------------------------")
-        instance.visualize_solution()
-        instance.save_instance()
+        instance.visualize_solution(True)
+        instance.save_model()
     save_models_to_excel()

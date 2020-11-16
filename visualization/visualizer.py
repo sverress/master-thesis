@@ -4,13 +4,14 @@ from instance.helpers import create_sections
 from visualization.helpers import *
 
 
-def visualize_solution(instance):
+def visualize_solution(instance, save):
     """
     Visualize a solution from the model. The visualization is divided into two frames.
     Frame one: All nodes (with corresponding reward and p-value, if its picked up),
     directed edges (with corresponding time to travel that edges as well as inventory for vehicle i on that edge)
     info about vehicles
     Frame two: Edges that are not included in solution and corresponding time to travel that edge
+    :param save: bool - if model should be displayed or saved
     :param instance: Instance object for a given solution
     """
 
@@ -34,7 +35,6 @@ def visualize_solution(instance):
             if node_dict[p]["label"] != DEPOT:
                 s = "r=" + str(round(instance.model.get_parameters().reward[i], 2))
                 for k in range(instance.model_input.num_service_vehicles):
-                    print(instance.model.p, i, k)
                     if (
                         (i, k) in instance.model.p.keys()
                         and instance.model.p[(i, k)].x > 0
@@ -113,8 +113,11 @@ def visualize_solution(instance):
         ax1.scatter(1.1, 1 - 0.05 * i, s=100, c=legend_color[i], marker="o", alpha=0.7)
         ax1.annotate(legend_text[i], (1.12, 0.992 - 0.05 * i))
 
-    # show figure
-    plt.show()
+    # show or save figure
+    if save:
+        plt.savefig("saved models fig/" + instance.get_model_name() + ".png")
+    else:
+        plt.show()
 
 
 def visualize_test_instance(scooters, delivery_nodes, bound, num_of_sections):
