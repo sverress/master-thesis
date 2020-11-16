@@ -26,6 +26,8 @@ class Instance:
         :param depot: (lat, lon)
         :param service_vehicles: dict - ["type"]: (#numbers, scooter capacity, battery capacity)
         :param number_of_sections: int number_of_sections
+        :param T_max: int - time limit for vehicles
+        :param computational_limit: int - max solution time for model
         :param bound: tuple that defines the bound of the geographical area in play
         """
 
@@ -34,6 +36,8 @@ class Instance:
         self.delivery_nodes = delivery_nodes
         self.depot = depot
         self.service_vehicles = service_vehicles
+        self.T_max = T_max
+        self.computational_limit = computational_limit
 
         # Context
         self.bound = bound
@@ -70,3 +74,16 @@ class Instance:
         :return: the elapsed time in seconds to get to optimal solution in gurobi
         """
         return self.model.m.Runtime
+
+    def save_instance(self):
+        """
+        Function to save gurobi models, file name represents: zones per axis_nodes per zone_Tmax_#vehicles_computational limit
+        """
+        file_path = "saved models/model_%d_%d_%d_%d_%d.json" % (
+            self.number_of_sections,
+            len(self.scooters) / (self.number_of_sections * 2),
+            self.service_vehicles["car"][0] + self.service_vehicles["bike"][0],
+            self.T_max,
+            self.computational_limit,
+        )
+        self.model.m.write(file_path)

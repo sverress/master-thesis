@@ -2,6 +2,6 @@
 	"zones_per_axis": 2,
 	"nodes_per_zone": [1,2,1],
 	"number_of_vehicles": [1,2,1],
-	"T max": [10,20,10],
+	"T max": [5,15,5],
 	"time_limit": 10
 }

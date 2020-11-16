@@ -1,74 +1,12 @@
 import pandas as pd
-from instance.helpers import create_sections
+from instance.helpers import (
+    create_sections,
+    load_test_instances_from_json,
+    save_models_to_excel,
+)
 import random
 import math
-import json
-import os
-from itertools import product
 from instance.Instance import Instance
-
-
-def save_instance(instance_solution, parameters):
-    """
-    Function to save gurobi models, file name represents: model_nodes per zone_Tmax_#vehicles_computational limit
-    :param instance_solution: Instance object for a given instance of the problem
-    :param parameters: Tuple of instance specifications, used to save model/file
-    """
-    file_path = "../saved models/model_%d_%d_%d_%d_%d.json" % (parameters[0])
-    instance_solution.model.m.write(file_path)
-
-
-def read_test_instances():
-    with open("../test_instances.json") as json_file:
-        data = json.load(json_file)
-    ranges = []
-    for key in data:
-        if type(data[key]) is list:
-            ranges.append(range(data[key][0], data[key][1] + 1, data[key][2]))
-        else:
-            ranges.append(range(data[key], data[key] + 1))
-
-    return list(product(*ranges))
-
-
-def saved_models_to_excel():
-    data = {
-        "zones": [],
-        "nodes_per_zone": [],
-        "number_of_vehicles": [],
-        "T_max": [],
-        "Solution time": [],
-        "Gap": [],
-    }
-    zones, nodes_per_zone, number_of_vehicles, T_max, solution_time, gap = (
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-    )
-    for root, dirs, files in os.walk("../saved models/", topdown=True):
-        for file in files:
-            with open(root + file) as file_path:
-                model = json.load(file_path)
-            model_param = file.split("_")
-            zones.append(model_param[1])
-            nodes_per_zone.append(model_param[2])
-            number_of_vehicles.append(model_param[3])
-            T_max.append(model_param[4])
-            solution_time.append(model["SolutionInfo"]["Runtime"])
-            gap.append(model["SolutionInfo"]["MIPGap"])
-
-    data["zones"] = zones
-    data["nodes_per_zone"] = nodes_per_zone
-    data["number_of_vehicles"] = number_of_vehicles
-    data["T_max"] = T_max
-    data["Solution time"] = solution_time
-    data["Gap"] = gap
-
-    df = pd.DataFrame(data)
-    df.to_csv("model_info.csv")
 
 
 class TestInstanceManager:
@@ -78,7 +16,7 @@ class TestInstanceManager:
         The class contains methods for fetching data, cleaning it and creating Instance instances to later be runned.
         This class also contains methods for visualizing the incoming data.
         """
-        self._data_file_path = "../test_data/bigquery-results.csv"
+        self._data_file_path = "test_data/bigquery-results.csv"
         self._data = self.get_data()
         self._bound = (
             59.9112,
@@ -108,6 +46,9 @@ class TestInstanceManager:
         :param num_of_sections: number of sections at each x and y axis. ex. 3 gives 9 zones
         :param num_of_scooters_per_section: this is the number of scooters per zone and is also considered the optimal
         state at the time of writing
+        :param num_of_vehicles:
+        :param T_max:
+        :param computational_limit:
         :return: Input arguments to ModelInput class
         """
         num_of_scooters = num_of_scooters_per_section * num_of_sections ** 2
@@ -142,12 +83,12 @@ class TestInstanceManager:
             self._bound,
         )
 
-    def create_multiple_instances(self, instances_parameters: list):
+    def create_multiple_instances(self):
         """
-        Generates multiple instances and stores them to the instances dict
-        :param instances_parameters: list of instance parameters.
-        ex: [(2,3)] -> add one instance with 2 sections and 3 scooters pr section
+        Generates multiple instances and stores them to the instances dict.
+        Instance parameters are loaded from json file
         """
+        instances_parameters = load_test_instances_from_json()
         for parameters in instances_parameters:
             (
                 num_of_sections,
@@ -226,9 +167,8 @@ class TestInstanceManager:
 
 if __name__ == "__main__":
     manager = TestInstanceManager()
-    parameter_list = read_test_instances()
-    manager.create_multiple_instances(parameter_list)
-    for instance_key in manager.instances.keys():
+    manager.create_multiple_instances()
+    for i, instance_key in enumerate(manager.instances.keys()):
         instance = manager.get_instance(instance_key)
         print("-------------------------------")
         print(
@@ -241,5 +181,5 @@ if __name__ == "__main__":
         )
         print("-------------------------------")
         instance.visualize_solution()
-        save_instance(instance, parameter_list)
-    saved_models_to_excel()
+        instance.save_instance()
+    save_models_to_excel()
