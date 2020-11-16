@@ -4,11 +4,11 @@ from itertools import product
 import os
 from abc import ABC, abstractmethod
 
-from model.ModelInput import ModelInput
+from model.BaseModelInput import BaseModelInput
 
 
 class BaseModel(ABC):
-    def __init__(self, input: ModelInput):
+    def __init__(self, input: BaseModelInput):
         """
         Formulation of mathematical problem in gurobi framework
         :param input: ModelInput object with input variables for the model
@@ -58,6 +58,11 @@ class BaseModel(ABC):
 
     @abstractmethod
     def set_objective(self):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_input_class():
         pass
 
     def set_constraints(self):

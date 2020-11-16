@@ -1,6 +1,7 @@
 import pandas as pd
 
-from model.BaseModel import ModelInput
+from model.StandardModel import StandardModelInput
+
 from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
@@ -39,7 +40,9 @@ class Instance:
         self.bound = bound
 
         # Model
-        self.model_input = ModelInput(scooters, delivery_nodes, depot, service_vehicles)
+        self.model_input = model_class.get_input_class()(
+            scooters, delivery_nodes, depot, service_vehicles
+        )
         self.model = model_class(self.model_input)
         self.number_of_sections = number_of_sections
 
