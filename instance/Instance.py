@@ -50,7 +50,7 @@ class Instance:
         self.model_input = model_class.get_input_class()(
             scooters, delivery_nodes, depot, service_vehicles, T_max
         )
-        self.model = model_class(self.model_input, computational_limit)
+        self.model = model_class(self.model_input, time_limit=computational_limit)
         self.number_of_sections = number_of_sections
 
     def run(self):

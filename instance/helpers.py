@@ -163,3 +163,8 @@ def save_models_to_excel():
         writer, float_format="%.5f", sheet_name=str(time.strftime("%d-%m %H.%M")),
     )
     writer.save()
+
+
+def get_center_of_bound(bound):
+    lat_min, lat_max, lon_min, lon_max = bound
+    return lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2

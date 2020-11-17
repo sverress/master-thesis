@@ -1,7 +1,6 @@
 from gurobipy import GRB
 import gurobipy as gp
 
-from instance.TestInstanceManager import TestInstanceManager
 from model.BaseModel import BaseModel
 from model.BaseModelInput import BaseModelInput
 
@@ -16,9 +15,6 @@ class StandardModelInput(BaseModelInput):
 
 
 class StandardModel(BaseModel):
-    def __init__(self, model_input: StandardModelInput):
-        super().__init__(model_input)
-
     @staticmethod
     def get_input_class():
         return StandardModelInput
@@ -33,11 +29,3 @@ class StandardModel(BaseModel):
             ),
             GRB.MAXIMIZE,
         )
-
-
-if __name__ == "__main__":
-    manager = TestInstanceManager()
-    instance = manager.create_test_instance(2, 4, StandardModel)
-    instance.run()
-    instance.model.print_solution()
-    instance.visualize_solution()
