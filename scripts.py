@@ -1,8 +1,8 @@
-from instance.TestInstanceManager import TestInstanceManager
+from instance.InstanceManager import InstanceManager
 from instance.helpers import save_models_to_excel
 
 if __name__ == "__main__":
-    manager = TestInstanceManager()
+    manager = InstanceManager()
     manager.create_multiple_instances()
     for instance_key in manager.instances.keys():
         instance = manager.get_instance(instance_key)

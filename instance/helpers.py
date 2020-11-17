@@ -50,12 +50,13 @@ def load_test_parameters_from_json():
     with open("instance/test_instances.json") as json_file:
         data = json.load(json_file)
     ranges = []
-    for key in data["ranges"]:
-        if type(data[key]) is list:
-            parameter_min, parameter_max, parameter_increment = data[key]
+    param = data["ranges"]
+    for key in param:
+        if type(param[key]) is list:
+            parameter_min, parameter_max, parameter_increment = param[key]
             ranges.append(range(parameter_min, parameter_max + 1, parameter_increment))
         else:
-            parameter = data[key]
+            parameter = param[key]
             ranges.append(range(parameter, parameter + 1))
 
     range_list = list(product(*ranges))
@@ -70,8 +71,8 @@ def load_test_parameters_from_json():
     ) in range_list:
         instance_list.append(
             {
-                "zones_per_axis": zones_per_axis,
-                "nodes_per_zone": nodes_per_zone,
+                "number_of_sections": zones_per_axis,
+                "number_of_scooter_per_section": nodes_per_zone,
                 "number_of_vehicles": number_of_vehicles,
                 "T_max": T_max,
                 "time_limit": time_limit,
