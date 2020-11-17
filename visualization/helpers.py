@@ -216,13 +216,6 @@ def convert_geographic_to_cart(nodes, bound):
     :return: Dictionary of nodes [cart_x, cart_y]: type
     """
     lat_min, lat_max, lon_min, lon_max = bound
-    # lat = [lat for lat, lon in nodes.keys()]
-    # lon = [lon for lat, lon in nodes.keys()]
-    # delta_lat = max(lat) - min(lat)
-    # delta_lon = max(lon) - min(lon)
-    # zero_lat = min(lat) / delta_lat
-    # zero_lon = min(lon) / delta_lon
-
     delta_lat = lat_max - lat_min
     delta_lon = lon_max - lon_min
     zero_lat = lat_min / delta_lat
