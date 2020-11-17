@@ -1,7 +1,5 @@
 import pandas as pd
 
-from model.StandardModel import StandardModelInput
-
 from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,

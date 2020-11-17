@@ -4,7 +4,6 @@ import math
 
 from instance.helpers import create_sections
 from instance.Instance import Instance
-from model.AlternativeModel import AlternativeModel
 
 
 class TestInstanceManager:
@@ -162,22 +161,3 @@ class TestInstanceManager:
         :return: 
         """
         return self.instances[instance_id]
-
-
-if __name__ == "__main__":
-    manager = TestInstanceManager()
-    parameter_list = [(2, 5, AlternativeModel)]
-    manager.create_multiple_instances(parameter_list)
-    for instance_key in manager.instances.keys():
-        instance = manager.get_instance(instance_key)
-        print("-------------------------------")
-        print(
-            f"Starting instance {instance_key} ({len(instance.model_input.locations)} locations)"
-        )
-        print("-------------------------------")
-        instance.run()
-        print(
-            f"{instance_key} ({len(instance.model_input.locations)} locations): {instance.get_runtime()} secs"
-        )
-        print("-------------------------------")
-        instance.visualize_solution()

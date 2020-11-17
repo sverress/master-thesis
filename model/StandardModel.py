@@ -1,7 +1,7 @@
 from gurobipy import GRB
-import pandas as pd
 import gurobipy as gp
 
+from instance.TestInstanceManager import TestInstanceManager
 from model.BaseModel import BaseModel
 from model.BaseModelInput import BaseModelInput
 
@@ -16,6 +16,9 @@ class StandardModelInput(BaseModelInput):
 
 
 class StandardModel(BaseModel):
+    def __init__(self, model_input: StandardModelInput):
+        super().__init__(model_input)
+
     @staticmethod
     def get_input_class():
         return StandardModelInput
@@ -33,21 +36,8 @@ class StandardModel(BaseModel):
 
 
 if __name__ == "__main__":
-    scooters = pd.DataFrame(
-        [
-            [59.914928, 10.747932, 21.0],
-            [59.913464, 10.732058, 53.0],
-            [59.915516, 10.775063, 69.0],
-            [59.932115, 10.712367, 10.0],
-        ],
-        columns=["lat", "lon", "battery"],
-    )
-    delivery = pd.DataFrame(
-        [[59.937612, 10.785628], [59.922692, 10.728357]], columns=["lat", "lon"],
-    )
-
-    depot = (59.91151, 10.763182)
-    service_vehicles = {"car": (1, 3, 10), "bike": (1, 0, 4)}
-    model = StandardModel(BaseModelInput(scooters, delivery, depot, service_vehicles))
-    model.optimize_model()
-    model.print_solution()
+    manager = TestInstanceManager()
+    instance = manager.create_test_instance(2, 4, StandardModel)
+    instance.run()
+    instance.model.print_solution()
+    instance.visualize_solution()

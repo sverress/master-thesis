@@ -4,17 +4,15 @@ from itertools import product
 import os
 from abc import ABC, abstractmethod
 
-from model.BaseModelInput import BaseModelInput
-
 
 class BaseModel(ABC):
-    def __init__(self, input: BaseModelInput):
+    def __init__(self, model_input, setup=True):
         """
         Formulation of mathematical problem in gurobi framework
-        :param input: ModelInput object with input variables for the model
+        :param model_input: ModelInput object with input variables for the model
         """
         self.m = gp.Model("TOP")
-        self._ = input
+        self._ = model_input
 
         # Cartesian Products
         self.cart_locs = list(product(self._.locations, repeat=2))
@@ -47,7 +45,8 @@ class BaseModel(ABC):
         self.u = self.m.addVars(self.cart_loc_v_not_depot, vtype=GRB.INTEGER, name="u")
         # l_iv - load (number of scooters) when entering location i
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.INTEGER, name="l")
-        self.setup()
+        if setup:
+            self.setup()
 
     def get_parameters(self):
         return self._
