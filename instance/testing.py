@@ -6,4 +6,7 @@ from model.StandardModel import StandardModel
 
 if __name__ == "__main__":
     manager = InstanceManager()
-    instance = manager.create_test_instance(2, 5, 2, 20, 50, StandardModel)
+    instance = manager.create_test_instance(2, 3, 2, 20, 50, StandardModel)
+    instance.visualize_raw_data_map()
+    instance.run()
+    instance.visualize_solution()

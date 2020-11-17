@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
-import math
+from itertools import product
+
 
 # Global variables
 DEPOT, SUPPLY, DELIVERY = "Depot", "S", "D"
@@ -35,14 +36,14 @@ def create_node_dict(instance):
     return output
 
 
-def make_graph(nodes: dict):
+def make_graph(nodes: dict, bound):
     """
     Creates a networkx graph of the input nodes. Adds label to the nodes
     :param nodes: dictionary of nodes [lat, lon]: "label"
     :return: networkx graph, list of node labels, list of nodes border color, list of nodes color
     """
     # Converts geographical coordinates to cartesian with lim [0,1] for visualization reasons
-    nodes = convert_geographic_to_cart(nodes)
+    nodes = convert_geographic_to_cart(nodes, bound)
 
     # make graph object
     graph = nx.DiGraph()
@@ -96,13 +97,14 @@ def add_vehicle_node_info(instance, ax):
         else:
             s = "Vehicle %d (%s)" % (i + 1, "Bike")
         ax.text(
-            -0.25,
+            -0.05,
             1 - 0.03 * i,
             s,
             transform=ax.transAxes,
             c=colors[i],
             fontsize=10,
             weight="bold",
+            horizontalalignment="left",
             verticalalignment="top",
         )
 
@@ -127,11 +129,12 @@ def add_vehicle_node_info(instance, ax):
 
     # place a text box in upper left in axes coords
     ax.text(
-        -0.25,
+        -0.05,
         1 - 0.03 * (len(colors) + 1),
         cons,
         transform=ax.transAxes,
         fontsize=10,
+        horizontalalignment="left",
         verticalalignment="top",
         bbox=props,
     )
@@ -206,22 +209,47 @@ def display_edge_plot(instance, ax, s_edge_labels={}):
         e.set_linestyle("dashed")
 
 
-def convert_geographic_to_cart(nodes):
+def convert_geographic_to_cart(nodes, bound):
     """
     Function to convert geographical coordinates to cartesian
     :param nodes: Dictionary of nodes [lat,lon]: type
     :return: Dictionary of nodes [cart_x, cart_y]: type
     """
-    lat = [lat for lat, lon in nodes.keys()]
-    lon = [lon for lat, lon in nodes.keys()]
-    delta_lat = max(lat) - min(lat)
-    delta_lon = max(lon) - min(lon)
-    zero_lat = min(lat) / delta_lat
-    zero_lon = min(lon) / delta_lon
+    lat_min, lat_max, lon_min, lon_max = bound
+    # lat = [lat for lat, lon in nodes.keys()]
+    # lon = [lon for lat, lon in nodes.keys()]
+    # delta_lat = max(lat) - min(lat)
+    # delta_lon = max(lon) - min(lon)
+    # zero_lat = min(lat) / delta_lat
+    # zero_lon = min(lon) / delta_lon
+
+    delta_lat = lat_max - lat_min
+    delta_lon = lon_max - lon_min
+    zero_lat = lat_min / delta_lat
+    zero_lon = lon_min / delta_lon
+
     output = {}
 
     for i, j in nodes.keys():
-        key = ((i / delta_lat - zero_lat), (j / delta_lon - zero_lon))
+        key = ((j / delta_lon - zero_lon), (i / delta_lat - zero_lat))
         output[key] = nodes[(i, j)]
 
     return output
+
+
+def add_zones(number_of_zones, ax):
+    """
+    Function to add zones to solution plot
+    :param number_of_zones: int - number of per axis
+    :param ax: subplot
+    """
+    axis_interval = float(1 / number_of_zones)
+    xy = list(
+        product(
+            np.arange(axis_interval, 1, axis_interval),
+            np.arange(axis_interval, 1, axis_interval),
+        )
+    )
+    for x, y in xy:
+        ax.axhline(x, xmax=0.93, color="black")
+        ax.axvline(y, ymax=0.95, color="black")

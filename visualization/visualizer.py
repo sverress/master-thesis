@@ -6,7 +6,7 @@ from instance.helpers import create_sections
 from visualization.helpers import *
 
 
-def visualize_solution(instance, save):
+def visualize_solution(instance, bound, save):
     """
     Visualize a solution from the model. The visualization is divided into two frames.
     Frame one: All nodes (with corresponding reward and p-value, if its picked up),
@@ -19,6 +19,7 @@ def visualize_solution(instance, save):
 
     # generate plot and subplots
     fig, ax1 = plt.subplots(1, 1, figsize=(20, 9.7))
+    fig.tight_layout(pad=1.0)
     ax1.set_title("Model solution", fontweight="bold")
 
     # removed second plot, but stored if we want to use it for later.
@@ -28,7 +29,7 @@ def visualize_solution(instance, save):
     colors = add_vehicle_node_info(instance, ax1)
 
     node_dict = create_node_dict(instance)
-    graph, labels, node_border, node_color = make_graph(node_dict)
+    graph, labels, node_border, node_color = make_graph(node_dict, bound)
     pos = nx.get_node_attributes(graph, "pos")
 
     # check to handle infeasible models
@@ -114,8 +115,11 @@ def visualize_solution(instance, save):
     legend_text = ["Depot", "Scooter", "Delivery"]
 
     for i in range(len(legend_text)):
-        ax1.scatter(1.1, 1 - 0.05 * i, s=100, c=legend_color[i], marker="o", alpha=0.7)
-        ax1.annotate(legend_text[i], (1.12, 0.992 - 0.05 * i))
+        ax1.scatter(1.01, 1 - 0.05 * i, s=100, c=legend_color[i], marker="o", alpha=0.7)
+        ax1.annotate(legend_text[i], (1.015, 0.995 - 0.05 * i))
+
+    # adding zones to plot
+    add_zones(instance.number_of_sections, ax1)
 
     # show or save figure
     if save:

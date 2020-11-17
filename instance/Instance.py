@@ -63,7 +63,7 @@ class Instance:
         """
         See documentation of visualize_solution function from visualization
         """
-        visualize_solution(self, save)
+        visualize_solution(self, self.bound, save)
 
     def visualize_raw_data_map(self):
         """
