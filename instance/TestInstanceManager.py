@@ -2,8 +2,9 @@ import pandas as pd
 import random
 import math
 
-from instance.helpers import create_sections
+from instance.helpers import create_sections, load_test_parameters_from_json
 from instance.Instance import Instance
+from model.StandardModel import StandardModel
 
 
 class TestInstanceManager:
@@ -28,7 +29,13 @@ class TestInstanceManager:
         )  # Instances indexed by (num_of_sections, num_of_scooters_per_section)
 
     def create_test_instance(
-        self, num_of_sections: int, num_of_scooters_per_section: int, model_class
+        self,
+        num_of_sections: int,
+        num_of_scooters_per_section: int,
+        num_of_vehicles: int,
+        T_max: int,
+        computational_limit: int,
+        model_class,
     ):
         """
         Creates necessary data structures to create a new ModelInput object.
@@ -38,6 +45,10 @@ class TestInstanceManager:
         :param num_of_sections: number of sections at each x and y axis. ex. 3 gives 9 zones
         :param num_of_scooters_per_section: this is the number of scooters per zone and is also considered the optimal
         state at the time of writing
+        :param num_of_vehicles:
+        :param T_max: maximum time for each service vehicle
+        :param computational_limit: time limit of the optimization step
+        :param model_class: class of the model to be computed
         :return: Input arguments to ModelInput class
         """
         num_of_scooters = num_of_scooters_per_section * num_of_sections ** 2
@@ -63,35 +74,37 @@ class TestInstanceManager:
         delivery_nodes.index = range(
             len(scooters) + 1, len(scooters) + len(delivery_nodes) + 1
         )
-        # Creating deopot node in the middle of bound
+        # Creating depot node in the middle of bound
         lat_min, lat_max, lon_min, lon_max = self._bound
         depot = lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
-        num_of_car_service_vehicles = math.ceil(num_of_scooters / 10)
+        num_of_car_service_vehicles = math.ceil(num_of_vehicles / 2)
+        num_of_bike_service_vehicles = math.floor(num_of_vehicles / 2)
         service_vehicles = {
-            "car": (num_of_car_service_vehicles, 10, 30),
-            "bike": (0, 0, 5,),
-            # Zero bikes at init to fix key value error in visualization
+            "car": (num_of_car_service_vehicles, 5, 10),
+            "bike": (num_of_bike_service_vehicles, 0, 3),
         }
-        if num_of_scooters % 10 > 5:
-            service_vehicles["bike"] = (1, 0, 5)
         return Instance(
             scooters,
             delivery_nodes,
             depot,
             service_vehicles,
             num_of_sections,
+            T_max,
+            computational_limit,
             self._bound,
             model_class,
         )
 
-    def create_multiple_instances(self, instances_parameters: list):
+    def create_multiple_instances(self):
         """
-        Generates multiple instances and stores them to the instances dict
-        :param instances_parameters: list of instance parameters.
-        ex: [(2,3)] -> add one instance with 2 sections and 3 scooters pr section
+        Generates multiple instances and stores them to the instances dict.
+        Instance parameters are loaded from json file
         """
+        instances_parameters = load_test_parameters_from_json()
         for parameters in instances_parameters:
-            self.instances[parameters] = self.create_test_instance(*parameters)
+            # TODO: Should be possible to choose what model type to use in json config
+            instance_parameters = *parameters, StandardModel
+            self.instances[parameters] = self.create_test_instance(*instance_parameters)
 
     def set_random_state(self, new_state: int):
         """

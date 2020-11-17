@@ -6,13 +6,17 @@ from abc import ABC, abstractmethod
 
 
 class BaseModel(ABC):
-    def __init__(self, model_input, setup=True):
+    def __init__(self, model_input, setup=True, time_limit=None):
         """
         Formulation of mathematical problem in gurobi framework
         :param model_input: ModelInput object with input variables for the model
         """
         self.m = gp.Model("TOP")
         self._ = model_input
+
+        # Setting a computational time limit for the model
+        if time_limit:
+            self.m.Params.TimeLimit = time_limit
 
         # Cartesian Products
         self.cart_locs = list(product(self._.locations, repeat=2))
@@ -37,7 +41,7 @@ class BaseModel(ABC):
 
         # x_ijv - 1 if, for service vehicle v, visit to location i is followed by a visit to location j- 0 otherwise
         self.x = self.m.addVars(self.cart_loc_loc_v, vtype=GRB.BINARY, name="x")
-        # b_iv - 1 if location i is visited by service vehicle v- 0 otherwise
+        # y_iv - 1 if location i is visited by service vehicle v- 0 otherwise
         self.y = self.m.addVars(self.cart_loc_v, vtype=GRB.BINARY, name="y")
         # p_iv - 1 if service vehicle v picks up a scooter at location i - 0 otherwise
         self.p = self.m.addVars(self.cart_loc_v_scooters, vtype=GRB.BINARY, name="p")

@@ -130,3 +130,7 @@ dmypy.json
 # Mac
 .idea/
 .DS_Store
+
+# Saved models
+/saved models
+/saved models fig

@@ -1,5 +1,6 @@
 import numpy as np
 import networkx as nx
+import math
 
 # Global variables
 DEPOT, SUPPLY, DELIVERY = "Depot", "S", "D"
@@ -138,11 +139,11 @@ def add_vehicle_node_info(instance, ax):
     return colors
 
 
-def display_edge_plot(instance, s_edge_labels: dict, ax):
+def display_edge_plot(instance, ax, s_edge_labels={}):
     """
     Function to display second plot of edges not included in solution
     :param instance: Instance object for a given solution
-    :param s_edge_labels: Dictionary of edges used in solution
+    :param s_edge_labels: Dictionary of edges used in solution, default empty for infeasible solutions
     :param ax: Subplot
     """
 
@@ -151,15 +152,34 @@ def display_edge_plot(instance, s_edge_labels: dict, ax):
     node_dict = create_node_dict(instance)
     graph, labels, node_border, node_color = make_graph(node_dict)
 
-    # draw edges and set label (time cost and inventory)
     edge_labels = {}
-    for x in instance.model.x:
-        from_node, to_node, vehicle_id = x
-        if instance.model.x[x].x == 0:
+
+    # check to handle infeasible models
+    if instance.is_feasible():
+        # draw edges and set label (time cost and inventory)
+        for x in instance.model.x:
+            from_node, to_node, vehicle_id = x
+            if instance.model.x[x].x == 0:
+                if (
+                    from_node != to_node
+                    and not s_edge_labels.keys().__contains__((from_node, to_node))
+                    and not s_edge_labels.keys().__contains__((to_node, from_node))
+                ):
+                    graph.add_edge(from_node, to_node, color="grey", width=1, alpha=0.2)
+                    edge_labels[(from_node, to_node)] = "t = " + str(
+                        round(
+                            instance.model.get_parameters().time_cost[
+                                (from_node, to_node)
+                            ],
+                            2,
+                        )
+                    )
+    else:
+        for x in instance.model.x:
+            from_node, to_node, vehicle_id = x
             if (
-                from_node != to_node
-                and not s_edge_labels.keys().__contains__((from_node, to_node))
-                and not s_edge_labels.keys().__contains__((to_node, from_node))
+                vehicle_id == 0
+                and instance.model.get_parameters().time_cost[(from_node, to_node)] > 0
             ):
                 graph.add_edge(from_node, to_node, color="grey", width=1, alpha=0.2)
                 edge_labels[(from_node, to_node)] = "t = " + str(
