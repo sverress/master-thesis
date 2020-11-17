@@ -1,12 +1,10 @@
 import pandas as pd
-from instance.helpers import (
-    create_sections,
-    load_test_parameters_from_json,
-    save_models_to_excel,
-)
 import random
 import math
+
+from instance.helpers import create_sections, load_test_parameters_from_json
 from instance.Instance import Instance
+from model.StandardModel import StandardModel
 
 
 class TestInstanceManager:
@@ -37,6 +35,7 @@ class TestInstanceManager:
         num_of_vehicles: int,
         T_max: int,
         computational_limit: int,
+        model_class,
     ):
         """
         Creates necessary data structures to create a new ModelInput object.
@@ -47,8 +46,9 @@ class TestInstanceManager:
         :param num_of_scooters_per_section: this is the number of scooters per zone and is also considered the optimal
         state at the time of writing
         :param num_of_vehicles:
-        :param T_max:
-        :param computational_limit:
+        :param T_max: maximum time for each service vehicle
+        :param computational_limit: time limit of the optimization step
+        :param model_class: class of the model to be computed
         :return: Input arguments to ModelInput class
         """
         num_of_scooters = num_of_scooters_per_section * num_of_sections ** 2
@@ -57,13 +57,24 @@ class TestInstanceManager:
             num_of_scooters, random_state=self._random_state
         )[["lat", "lon", "battery"]]
 
+        scooters["zone"] = -1
+
         sections, sections_coordinates = create_sections(num_of_sections, self._bound)
         delivery_nodes = []
-        for bound_coordinates in sections_coordinates:
+        for i, bound_coordinates in enumerate(sections_coordinates):
+            scooters.loc[
+                self.filter_data_lat_lon(scooters, bound_coordinates, True), "zone"
+            ] = i  # Set zone id
             delivery_nodes = delivery_nodes + self.create_delivery_nodes(
-                scooters, bound_coordinates, num_of_scooters_per_section
+                scooters, bound_coordinates, num_of_scooters_per_section, [i]
             )
-        delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon"])
+        delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon", "zone"])
+        # Giving dataframes same index as they will have in mathematical model
+        scooters.index = range(1, len(scooters) + 1)
+        delivery_nodes.index = range(
+            len(scooters) + 1, len(scooters) + len(delivery_nodes) + 1
+        )
+        # Creating depot node in the middle of bound
         lat_min, lat_max, lon_min, lon_max = self._bound
         depot = lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
         num_of_car_service_vehicles = math.ceil(num_of_vehicles / 2)
@@ -81,6 +92,7 @@ class TestInstanceManager:
             T_max,
             computational_limit,
             self._bound,
+            model_class,
         )
 
     def create_multiple_instances(self):
@@ -90,20 +102,9 @@ class TestInstanceManager:
         """
         instances_parameters = load_test_parameters_from_json()
         for parameters in instances_parameters:
-            (
-                num_of_sections,
-                num_of_scooters_per_section,
-                num_of_vehicles,
-                T_max,
-                computational_limit,
-            ) = parameters
-            self.instances[parameters] = self.create_test_instance(
-                num_of_sections,
-                num_of_scooters_per_section,
-                num_of_vehicles,
-                T_max,
-                computational_limit,
-            )
+            # TODO: Should be possible to choose what model type to use in json config
+            instance_parameters = *parameters, StandardModel
+            self.instances[parameters] = self.create_test_instance(*instance_parameters)
 
     def set_random_state(self, new_state: int):
         """
@@ -125,22 +126,28 @@ class TestInstanceManager:
         return df
 
     @staticmethod
-    def filter_data_lat_lon(geospatial_data: pd.DataFrame, coordinates: tuple):
+    def filter_data_lat_lon(
+        geospatial_data: pd.DataFrame, coordinates: tuple, only_expression=False
+    ):
         """
         :param geospatial_data: dataframe with lat lon columns
         :param coordinates: tuple with a size of four to define area to include locations from
+        :param only_expression: if only expression should be returned
         :return: new dataframe containing locations within the given coordinates
         """
         lat_min, lat_max, lon_min, lon_max = coordinates
-        return geospatial_data[
+        expression = (
             (lon_min <= geospatial_data["lon"])
             & (geospatial_data["lon"] <= lon_max)
             & (lat_min <= geospatial_data["lat"])
             & (geospatial_data["lat"] <= lat_max)
-        ]
+        )
+        return expression if only_expression else geospatial_data.loc[expression]
 
     @staticmethod
-    def create_delivery_nodes(scooters, coordinates, optimal_number):
+    def create_delivery_nodes(
+        scooters, coordinates, optimal_number, additional_cols: list
+    ):
         """
         Generates delivery nodes for a zone. The number of generated delivery nodes is the difference between the
         optimal state and the number of scooters in the area. The nodes are now generated randomly within the zone.
@@ -152,7 +159,11 @@ class TestInstanceManager:
         lat_min, lat_max, lon_min, lon_max = coordinates
         filtered_df = TestInstanceManager.filter_data_lat_lon(scooters, coordinates)
         return [
-            (random.uniform(lat_min, lat_max), random.uniform(lon_min, lon_max))
+            (
+                random.uniform(lat_min, lat_max),
+                random.uniform(lon_min, lon_max),
+                *additional_cols,
+            )
             for i in range(optimal_number - len(filtered_df))
         ]
 
@@ -163,23 +174,3 @@ class TestInstanceManager:
         :return: 
         """
         return self.instances[instance_id]
-
-
-if __name__ == "__main__":
-    manager = TestInstanceManager()
-    manager.create_multiple_instances()
-    for i, instance_key in enumerate(manager.instances.keys()):
-        instance = manager.get_instance(instance_key)
-        print("-------------------------------")
-        print(
-            f"Starting instance {instance_key} ({len(instance.model_input.locations)} locations)"
-        )
-        print("-------------------------------")
-        instance.run()
-        print(
-            f"{instance_key} ({len(instance.model_input.locations)} locations): {instance.get_runtime()} secs"
-        )
-        print("-------------------------------")
-        instance.visualize_solution(True)
-        instance.save_model()
-    save_models_to_excel()

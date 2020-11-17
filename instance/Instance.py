@@ -1,10 +1,10 @@
-from model.Model import Model, ModelInput
 import pandas as pd
+import math
+
 from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
 )
-import math
 
 
 class Instance:
@@ -18,6 +18,7 @@ class Instance:
         T_max: int,
         computational_limit: int,
         bound: tuple,
+        model_class,
     ):
         """
         Wrapper class for a Model class. Contains both raw input data and model input data
@@ -44,10 +45,10 @@ class Instance:
         self.bound = bound
 
         # Model
-        self.model_input = ModelInput(
+        self.model_input = model_class.get_input_class()(
             scooters, delivery_nodes, depot, service_vehicles, T_max
         )
-        self.model = Model(self.model_input, computational_limit)
+        self.model = model_class(self.model_input, computational_limit)
         self.number_of_sections = number_of_sections
 
     def run(self):

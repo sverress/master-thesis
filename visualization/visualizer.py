@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import math
 from instance.helpers import create_sections
 from visualization.helpers import *
 

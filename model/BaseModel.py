@@ -1,19 +1,18 @@
 import gurobipy as gp
 from gurobipy import GRB
 from itertools import product
-import pandas as pd
 import os
-from model.ModelInput import ModelInput
+from abc import ABC, abstractmethod
 
 
-class Model:
-    def __init__(self, input: ModelInput, time_limit=None):
+class BaseModel(ABC):
+    def __init__(self, model_input, setup=True, time_limit=None):
         """
         Formulation of mathematical problem in gurobi framework
-        :param input: ModelInput object with input variables for the model
+        :param model_input: ModelInput object with input variables for the model
         """
         self.m = gp.Model("TOP")
-        self._ = input
+        self._ = model_input
 
         # Setting a computational time limit for the model
         if time_limit:
@@ -50,7 +49,8 @@ class Model:
         self.u = self.m.addVars(self.cart_loc_v_not_depot, vtype=GRB.INTEGER, name="u")
         # l_iv - load (number of scooters) when entering location i
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.INTEGER, name="l")
-        self.setup()
+        if setup:
+            self.setup()
 
     def get_parameters(self):
         return self._
@@ -59,16 +59,14 @@ class Model:
         self.set_objective()
         self.set_constraints()
 
+    @abstractmethod
     def set_objective(self):
-        self.m.setObjective(
-            gp.quicksum(
-                self._.reward[i] * self.y[(i, v)] for i, v in self.cart_loc_v_not_depot
-            )
-            - gp.quicksum(
-                self._.reward[i] * self.p[(i, v)] for i, v in self.cart_loc_v_scooters
-            ),
-            GRB.MAXIMIZE,
-        )
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def get_input_class():
+        pass
 
     def set_constraints(self):
         # Add constraints (2): guarantee that each service vehicle starts and ends in at the depot.
@@ -264,24 +262,3 @@ class Model:
                 print(line)
         if delete_file:
             os.remove("model.lp")
-
-
-if __name__ == "__main__":
-    scooters = pd.DataFrame(
-        [
-            [59.914928, 10.747932, 21.0],
-            [59.913464, 10.732058, 53.0],
-            [59.915516, 10.775063, 69.0],
-            [59.932115, 10.712367, 10.0],
-        ],
-        columns=["lat", "lon", "battery"],
-    )
-    delivery = pd.DataFrame(
-        [[59.937612, 10.785628], [59.922692, 10.728357]], columns=["lat", "lon"],
-    )
-
-    depot = (59.91151, 10.763182)
-    service_vehicles = {"car": (1, 5, 10), "bike": (1, 0, 4)}
-    model = Model(ModelInput(scooters, delivery, depot, service_vehicles))
-    model.optimize_model()
-    model.print_solution()

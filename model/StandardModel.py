@@ -1,0 +1,43 @@
+from gurobipy import GRB
+import gurobipy as gp
+
+from instance.TestInstanceManager import TestInstanceManager
+from model.BaseModel import BaseModel
+from model.BaseModelInput import BaseModelInput
+
+
+class StandardModelInput(BaseModelInput):
+    def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
+        return (
+            [0.0]
+            + [1 - x / 100 for x in scooter_list["battery"]]
+            + [1.0] * len(delivery_nodes_list.index)
+        )  # Reward for visiting location i (uniform distribution). Eks for 3 locations [0, 0.33, 0.66]
+
+
+class StandardModel(BaseModel):
+    def __init__(self, model_input: StandardModelInput):
+        super().__init__(model_input)
+
+    @staticmethod
+    def get_input_class():
+        return StandardModelInput
+
+    def set_objective(self):
+        self.m.setObjective(
+            gp.quicksum(
+                self._.reward[i] * self.y[(i, v)] for i, v in self.cart_loc_v_not_depot
+            )
+            - gp.quicksum(
+                self._.reward[i] * self.p[(i, v)] for i, v in self.cart_loc_v_scooters
+            ),
+            GRB.MAXIMIZE,
+        )
+
+
+if __name__ == "__main__":
+    manager = TestInstanceManager()
+    instance = manager.create_test_instance(2, 4, StandardModel)
+    instance.run()
+    instance.model.print_solution()
+    instance.visualize_solution()
