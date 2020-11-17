@@ -1,3 +1,5 @@
+import errno
+import os
 from model.Model import Model, ModelInput
 import pandas as pd
 from visualization.visualizer import (
@@ -80,8 +82,17 @@ class Instance:
         """
         Function to save gurobi models, file name represents: zones per axis_nodes per zone_Tmax_#vehicles_computational limit
         """
-        file_path = "saved models/" + self.get_model_name() + ".json"
-        self.model.m.write(file_path)
+
+        try:
+            os.makedirs("saved_models")
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        file_path_solution = "saved_models/" + self.get_model_name() + ".json"
+        file_path_params = "saved_models/" + self.get_model_name() + ".sol"
+        self.model.m.write(file_path_solution)
+        self.model.m.write(file_path_params)
 
     def get_model_name(self):
         return "model_%d_%d_%d_%d_%d" % (

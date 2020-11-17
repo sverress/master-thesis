@@ -1,3 +1,6 @@
+import errno
+import os
+
 import matplotlib.pyplot as plt
 import math
 from instance.helpers import create_sections
@@ -16,9 +19,11 @@ def visualize_solution(instance, save):
     """
 
     # generate plot and subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 9.7))
+    fig, ax1 = plt.subplots(1, 1, figsize=(20, 9.7))
     ax1.set_title("Model solution", fontweight="bold")
-    ax2.set_title("Edges not included in solution", fontweight="bold")
+
+    # removed second plot, but stored if we want to use it for later.
+    # ax2.set_title("Edges not included in solution", fontweight="bold")
 
     # add vehicle and node info to plot
     colors = add_vehicle_node_info(instance, ax1)
@@ -81,10 +86,10 @@ def visualize_solution(instance, save):
         )
 
         # second plot for nodes/edges not in solution
-        display_edge_plot(instance, ax2, edge_labels)
+        # display_edge_plot(instance, ax2, edge_labels)
     else:
         ax1.set_title("Model is Infeasible", fontweight="bold")
-        display_edge_plot(instance, ax2)
+        # display_edge_plot(instance, ax2)
 
     # set edge color for solution
     edges = graph.edges()
@@ -115,7 +120,12 @@ def visualize_solution(instance, save):
 
     # show or save figure
     if save:
-        plt.savefig("saved models fig/" + instance.get_model_name() + ".png")
+        try:
+            os.makedirs("saved_models_fig")
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        plt.savefig("saved_models_fig/" + instance.get_model_name() + ".png")
     else:
         plt.show()
 

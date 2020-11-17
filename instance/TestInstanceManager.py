@@ -163,23 +163,3 @@ class TestInstanceManager:
         :return: 
         """
         return self.instances[instance_id]
-
-
-if __name__ == "__main__":
-    manager = TestInstanceManager()
-    manager.create_multiple_instances()
-    for i, instance_key in enumerate(manager.instances.keys()):
-        instance = manager.get_instance(instance_key)
-        print("-------------------------------")
-        print(
-            f"Starting instance {instance_key} ({len(instance.model_input.locations)} locations)"
-        )
-        print("-------------------------------")
-        instance.run()
-        print(
-            f"{instance_key} ({len(instance.model_input.locations)} locations): {instance.get_runtime()} secs"
-        )
-        print("-------------------------------")
-        instance.visualize_solution(True)
-        instance.save_model()
-    save_models_to_excel()
