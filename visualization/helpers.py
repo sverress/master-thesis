@@ -155,7 +155,7 @@ def display_edge_plot(instance, ax, s_edge_labels={}):
     edge_labels = {}
 
     # check to handle infeasible models
-    if instance.model.m.MIPGap != math.inf:
+    if instance.is_feasible():
         # draw edges and set label (time cost and inventory)
         for x in instance.model.x:
             from_node, to_node, vehicle_id = x

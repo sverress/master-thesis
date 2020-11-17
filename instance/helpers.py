@@ -42,7 +42,7 @@ def create_sections(number_of_sections: int, bound: tuple):
     return section_limits, section_coordinates
 
 
-def load_test_instances_from_json():
+def load_test_parameters_from_json():
     """
     Loads parameters for computational_study from json file and makes all combinations of these.
     :return list - all combinations of parameters from json file

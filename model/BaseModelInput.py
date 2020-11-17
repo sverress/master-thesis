@@ -1,9 +1,10 @@
 import pandas as pd
 from math import sqrt, pi, sin, cos, atan2
 from itertools import product
+from abc import ABC, abstractmethod
 
 
-class ModelInput:
+class BaseModelInput(ABC):
     """
     Sets, Constants, and Parameters for a model instance
     """
@@ -40,11 +41,7 @@ class ModelInput:
         self.num_service_vehicles = len(self.service_vehicles)
 
         # Parameters
-        self.reward = (
-            [0.0]
-            + [1 - x / 100 for x in scooter_list["battery"]]
-            + [1.0] * len(delivery_nodes_list.index)
-        )  # Reward for visiting location i (uniform distribution). Eks for 3 locations [0, 0.33, 0.66]
+        self.reward = self.compute_reward_matrix(scooter_list, delivery_nodes_list)
         self.time_cost = self.compute_time_matrix(
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
@@ -56,6 +53,10 @@ class ModelInput:
             for i in range(num_vehicles):
                 self.Q_b.append(battery_cap)
                 self.Q_s.append(scooter_cap)
+
+    @abstractmethod
+    def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
+        pass
 
     def compute_time_matrix(self, scooters, delivery_nodes, depot):
         """
@@ -73,7 +74,7 @@ class ModelInput:
         )
 
         return {
-            (i, j): ModelInput.compute_distance(
+            (i, j): BaseModelInput.compute_distance(
                 locations[i][0], locations[i][1], locations[j][0], locations[j][1]
             )
             / (20 * (1000 / 60))

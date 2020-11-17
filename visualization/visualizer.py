@@ -2,7 +2,6 @@ import errno
 import os
 
 import matplotlib.pyplot as plt
-import math
 from instance.helpers import create_sections
 from visualization.helpers import *
 
@@ -33,7 +32,7 @@ def visualize_solution(instance, save):
     pos = nx.get_node_attributes(graph, "pos")
 
     # check to handle infeasible models
-    if instance.model.m.MIPGap != math.inf:
+    if instance.is_feasible():
 
         # adding reward and type color to nodes
         for i, p in enumerate(node_dict.keys()):  # i is number in node list
