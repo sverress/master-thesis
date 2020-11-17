@@ -28,7 +28,7 @@ def visualize_solution(instance, save):
     pos = nx.get_node_attributes(graph, "pos")
 
     # check to handle infeasible models
-    if instance.model.m.MIPGap != math.inf:
+    if instance.is_feasible():
 
         # adding reward and type color to nodes
         for i, p in enumerate(node_dict.keys()):  # i is number in node list

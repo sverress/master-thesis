@@ -4,7 +4,7 @@ from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
 )
-import pickle
+import math
 
 
 class Instance:
@@ -91,3 +91,6 @@ class Instance:
             self.T_max,
             self.computational_limit,
         )
+
+    def is_feasible(self):
+        return self.model.m.MIPGap != math.inf

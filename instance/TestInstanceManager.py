@@ -1,7 +1,7 @@
 import pandas as pd
 from instance.helpers import (
     create_sections,
-    load_test_instances_from_json,
+    load_test_parameters_from_json,
     save_models_to_excel,
 )
 import random
@@ -88,7 +88,7 @@ class TestInstanceManager:
         Generates multiple instances and stores them to the instances dict.
         Instance parameters are loaded from json file
         """
-        instances_parameters = load_test_instances_from_json()
+        instances_parameters = load_test_parameters_from_json()
         for parameters in instances_parameters:
             (
                 num_of_sections,
