@@ -1,0 +1,7 @@
+{
+	"zones_per_axis": 2,
+	"nodes_per_zone": [1,1,1],
+	"number_of_vehicles": [1,1,1],
+	"T max": [5,5,5],
+	"time_limit": 10
+}

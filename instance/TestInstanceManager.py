@@ -1,8 +1,11 @@
 import pandas as pd
-from instance.helpers import create_sections
+from instance.helpers import (
+    create_sections,
+    load_test_parameters_from_json,
+    save_models_to_excel,
+)
 import random
 import math
-
 from instance.Instance import Instance
 
 
@@ -28,7 +31,12 @@ class TestInstanceManager:
         )  # Instances indexed by (num_of_sections, num_of_scooters_per_section)
 
     def create_test_instance(
-        self, num_of_sections: int, num_of_scooters_per_section: int,
+        self,
+        num_of_sections: int,
+        num_of_scooters_per_section: int,
+        num_of_vehicles: int,
+        T_max: int,
+        computational_limit: int,
     ):
         """
         Creates necessary data structures to create a new ModelInput object.
@@ -38,6 +46,9 @@ class TestInstanceManager:
         :param num_of_sections: number of sections at each x and y axis. ex. 3 gives 9 zones
         :param num_of_scooters_per_section: this is the number of scooters per zone and is also considered the optimal
         state at the time of writing
+        :param num_of_vehicles:
+        :param T_max:
+        :param computational_limit:
         :return: Input arguments to ModelInput class
         """
         num_of_scooters = num_of_scooters_per_section * num_of_sections ** 2
@@ -55,33 +66,43 @@ class TestInstanceManager:
         delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon"])
         lat_min, lat_max, lon_min, lon_max = self._bound
         depot = lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
-        num_of_car_service_vehicles = math.ceil(num_of_scooters / 10)
+        num_of_car_service_vehicles = math.ceil(num_of_vehicles / 2)
+        num_of_bike_service_vehicles = math.floor(num_of_vehicles / 2)
         service_vehicles = {
-            "car": (num_of_car_service_vehicles, 10, 30),
-            "bike": (0, 0, 5,),
-            # Zero bikes at init to fix key value error in visualization
+            "car": (num_of_car_service_vehicles, 5, 10),
+            "bike": (num_of_bike_service_vehicles, 0, 3),
         }
-        if num_of_scooters % 10 > 5:
-            service_vehicles["bike"] = (1, 0, 5)
         return Instance(
             scooters,
             delivery_nodes,
             depot,
             service_vehicles,
             num_of_sections,
+            T_max,
+            computational_limit,
             self._bound,
         )
 
-    def create_multiple_instances(self, instances_parameters: list):
+    def create_multiple_instances(self):
         """
-        Generates multiple instances and stores them to the instances dict
-        :param instances_parameters: list of instance parameters.
-        ex: [(2,3)] -> add one instance with 2 sections and 3 scooters pr section
+        Generates multiple instances and stores them to the instances dict.
+        Instance parameters are loaded from json file
         """
+        instances_parameters = load_test_parameters_from_json()
         for parameters in instances_parameters:
-            num_of_sections, num_of_scooters_per_section = parameters
+            (
+                num_of_sections,
+                num_of_scooters_per_section,
+                num_of_vehicles,
+                T_max,
+                computational_limit,
+            ) = parameters
             self.instances[parameters] = self.create_test_instance(
-                num_of_sections, num_of_scooters_per_section
+                num_of_sections,
+                num_of_scooters_per_section,
+                num_of_vehicles,
+                T_max,
+                computational_limit,
             )
 
     def set_random_state(self, new_state: int):
@@ -146,9 +167,8 @@ class TestInstanceManager:
 
 if __name__ == "__main__":
     manager = TestInstanceManager()
-    parameter_list = [(2, 2)]
-    manager.create_multiple_instances(parameter_list)
-    for instance_key in manager.instances.keys():
+    manager.create_multiple_instances()
+    for i, instance_key in enumerate(manager.instances.keys()):
         instance = manager.get_instance(instance_key)
         print("-------------------------------")
         print(
@@ -160,4 +180,6 @@ if __name__ == "__main__":
             f"{instance_key} ({len(instance.model_input.locations)} locations): {instance.get_runtime()} secs"
         )
         print("-------------------------------")
-        instance.visualize_solution()
+        instance.visualize_solution(True)
+        instance.save_model()
+    save_models_to_excel()

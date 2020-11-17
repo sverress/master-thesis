@@ -14,6 +14,7 @@ class ModelInput:
         delivery_nodes_list: pd.DataFrame,
         depot_location: tuple,
         service_vehicles_dict: dict,
+        T_max: int,
     ):
         """
         Creating all input to the gurobi model
@@ -21,6 +22,7 @@ class ModelInput:
         :param delivery_nodes_list: list of list - [[lat,lon]*m]
         :param depot_location: tuple - (lat,lon)
         :param service_vehicles_dict: dict - ["type"]: (#numbers, scooter capacity, battery capacity)
+        :param T_max: time limit for vehicles
         """
 
         # Sets
@@ -46,7 +48,7 @@ class ModelInput:
         self.time_cost = self.compute_time_matrix(
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
-        self.T_max = 60 * 0.8  # Duration of shift in minutes
+        self.T_max = T_max  # Duration of shift in minutes
         self.Q_b = []
         self.Q_s = []
         for vehicle_type in service_vehicles_dict.keys():
@@ -56,6 +58,14 @@ class ModelInput:
                 self.Q_s.append(scooter_cap)
 
     def compute_time_matrix(self, scooters, delivery_nodes, depot):
+        """
+        Computes the time matrix for edges in the network. Time in minutes, calculated by
+        euclidean distance and avg vehicle speed of 20 km/h
+        :param scooters: pandas DataFrame of all scooters
+        :param delivery_nodes: pandas DataFrame of all delivery nodes
+        :param depot: tuple
+        :return: time matrix all-all
+        """
         locations = (
             [depot]
             + list(zip(scooters["lat"], scooters["lon"]))

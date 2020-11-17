@@ -7,13 +7,17 @@ from model.ModelInput import ModelInput
 
 
 class Model:
-    def __init__(self, input: ModelInput):
+    def __init__(self, input: ModelInput, time_limit=None):
         """
         Formulation of mathematical problem in gurobi framework
         :param input: ModelInput object with input variables for the model
         """
         self.m = gp.Model("TOP")
         self._ = input
+
+        # Setting a computational time limit for the model
+        if time_limit:
+            self.m.Params.TimeLimit = time_limit
 
         # Cartesian Products
         self.cart_locs = list(product(self._.locations, repeat=2))
@@ -22,18 +26,23 @@ class Model:
             product(self._.locations, self._.locations, self._.service_vehicles)
         )
         self.cart_loc_v_not_depot = list(
-            product([loc for loc in self._.locations if loc != self._.depot], self._.service_vehicles)
+            product(
+                [loc for loc in self._.locations if loc != self._.depot],
+                self._.service_vehicles,
+            )
         )
         self.cart_loc_v_scooters = list(
-            product([loc for loc in self._.locations if loc in self._.scooters], self._.service_vehicles)
+            product(
+                [loc for loc in self._.locations if loc in self._.scooters],
+                self._.service_vehicles,
+            )
         )
-
 
         # Init variables
 
         # x_ijv - 1 if, for service vehicle v, visit to location i is followed by a visit to location j- 0 otherwise
         self.x = self.m.addVars(self.cart_loc_loc_v, vtype=GRB.BINARY, name="x")
-        # b_iv - 1 if location i is visited by service vehicle v- 0 otherwise
+        # y_iv - 1 if location i is visited by service vehicle v- 0 otherwise
         self.y = self.m.addVars(self.cart_loc_v, vtype=GRB.BINARY, name="y")
         # p_iv - 1 if service vehicle v picks up a scooter at location i - 0 otherwise
         self.p = self.m.addVars(self.cart_loc_v_scooters, vtype=GRB.BINARY, name="p")
@@ -52,10 +61,11 @@ class Model:
 
     def set_objective(self):
         self.m.setObjective(
-            gp.quicksum(self._.reward[i] * self.y[(i, v)] for i, v in self.cart_loc_v_not_depot)
+            gp.quicksum(
+                self._.reward[i] * self.y[(i, v)] for i, v in self.cart_loc_v_not_depot
+            )
             - gp.quicksum(
-                self._.reward[i] * self.p[(i, v)]
-                for i, v in self.cart_loc_v_scooters
+                self._.reward[i] * self.p[(i, v)] for i, v in self.cart_loc_v_scooters
             ),
             GRB.MAXIMIZE,
         )
@@ -64,16 +74,14 @@ class Model:
         # Add constraints (2): guarantee that each service vehicle starts and ends in at the depot.
         self.m.addConstr(
             gp.quicksum(
-                self.x[(self._.depot, j, v)]
-                for j, v in self.cart_loc_v_not_depot
+                self.x[(self._.depot, j, v)] for j, v in self.cart_loc_v_not_depot
             )
             == self._.num_service_vehicles,
             "must_visit_depot_first",
         )
         self.m.addConstr(
             gp.quicksum(
-                self.x[(i, self._.depot, v)]
-                for i, v in self.cart_loc_v_not_depot
+                self.x[(i, self._.depot, v)] for i, v in self.cart_loc_v_not_depot
             )
             == self._.num_service_vehicles,
             "must_visit_depot_end",
@@ -216,8 +224,7 @@ class Model:
 
         # Add constraints (14):
         self.m.addConstrs(
-            (2 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot),
-            "subtours_1",
+            (2 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot), "subtours_1",
         )
         self.m.addConstrs(
             (
@@ -274,7 +281,7 @@ if __name__ == "__main__":
     )
 
     depot = (59.91151, 10.763182)
-    service_vehicles = {"car": (1, 3, 10), "bike": (1, 0, 4)}
+    service_vehicles = {"car": (1, 5, 10), "bike": (1, 0, 4)}
     model = Model(ModelInput(scooters, delivery, depot, service_vehicles))
     model.optimize_model()
     model.print_solution()
