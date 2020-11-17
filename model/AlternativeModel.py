@@ -15,7 +15,9 @@ class AlternativeModelInput(BaseModelInput):
         delivery_nodes_list: pd.DataFrame,
         depot_location: tuple,
         service_vehicles_dict: dict,
+        T_max: int,
     ):
+
         self.Z = sorted(scooter_list.zone.unique())
         self.L_z = [
             list(
@@ -29,7 +31,11 @@ class AlternativeModelInput(BaseModelInput):
             x / 100 for x in scooter_list["battery"]
         ]  # Battery level of scooter at location i
         super().__init__(
-            scooter_list, delivery_nodes_list, depot_location, service_vehicles_dict
+            scooter_list,
+            delivery_nodes_list,
+            depot_location,
+            service_vehicles_dict,
+            T_max,
         )
 
     def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
@@ -44,9 +50,9 @@ class AlternativeModelInput(BaseModelInput):
 
 
 class AlternativeModel(BaseModel):
-    def __init__(self, model_input: AlternativeModelInput):
-        super().__init__(model_input, setup=False)
+    def __init__(self, model_input, setup=True, time_limit=None):
         # x_ijv - 1 if, for service vehicle v, visit to location i is followed by a visit to location j- 0 otherwise
+        super().__init__(model_input, setup=False, time_limit=time_limit)
         self.cart_k_z = [
             (k, z) for z in self._.Z for k in range(len(self._.L_z[z]) + 1)
         ]

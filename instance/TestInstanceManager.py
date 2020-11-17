@@ -49,7 +49,7 @@ class TestInstanceManager:
         :param T_max: maximum time for each service vehicle
         :param computational_limit: time limit of the optimization step
         :param model_class: class of the model to be computed
-        :return: Input arguments to ModelInput class
+        :return: Instance object
         """
         num_of_scooters = num_of_scooters_per_section * num_of_sections ** 2
         filtered_scooters = self.filter_data_lat_lon(self._data, self._bound)
