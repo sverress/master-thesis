@@ -2,14 +2,15 @@
 A file for testing stuff without dealing with circular imports
 """
 import argparse
-from instance.TestInstanceManager import TestInstanceManager
+from instance.InstanceManager import InstanceManager
 from model.StandardModel import StandardModel
 from model.AlternativeModel import AlternativeModel
 
 
 def run_model(model_class):
-    manager = TestInstanceManager()
-    instance = manager.create_test_instance(2, 4, 2, 10, 10, model_class)
+    manager = InstanceManager()
+    instance = manager.create_test_instance(3, 10, 2, 20, 3, model_class)
+    instance.visualize_raw_data_map()
     instance.run()
     instance.model.print_solution()
     instance.visualize_solution()

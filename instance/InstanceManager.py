@@ -2,12 +2,12 @@ import pandas as pd
 import random
 import math
 
-from instance.helpers import create_sections, load_test_parameters_from_json
+from instance.helpers import *
 from instance.Instance import Instance
 from model.StandardModel import StandardModel
 
 
-class TestInstanceManager:
+class InstanceManager:
     def __init__(self):
         """
         Class for creating multiple test instances from a given EnTur Dataset snapshot.
@@ -59,24 +59,16 @@ class TestInstanceManager:
 
         scooters["zone"] = -1
 
-        sections, sections_coordinates = create_sections(num_of_sections, self._bound)
-        delivery_nodes = []
-        for i, bound_coordinates in enumerate(sections_coordinates):
-            scooters.loc[
-                self.filter_data_lat_lon(scooters, bound_coordinates, True), "zone"
-            ] = i  # Set zone id
-            delivery_nodes = delivery_nodes + self.create_delivery_nodes(
-                scooters, bound_coordinates, num_of_scooters_per_section, [i]
-            )
-        delivery_nodes = pd.DataFrame(delivery_nodes, columns=["lat", "lon", "zone"])
+        delivery_nodes = self.create_all_delivery_nodes(
+            num_of_sections, scooters, num_of_scooters_per_section
+        )
         # Giving dataframes same index as they will have in mathematical model
         scooters.index = range(1, len(scooters) + 1)
         delivery_nodes.index = range(
             len(scooters) + 1, len(scooters) + len(delivery_nodes) + 1
         )
         # Creating depot node in the middle of bound
-        lat_min, lat_max, lon_min, lon_max = self._bound
-        depot = lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
+        depot = get_center_of_bound(self._bound)
         num_of_car_service_vehicles = math.ceil(num_of_vehicles / 2)
         num_of_bike_service_vehicles = math.floor(num_of_vehicles / 2)
         service_vehicles = {
@@ -156,12 +148,17 @@ class TestInstanceManager:
         :param optimal_number: the optimal number of scooters in this zone
         :return: list of tuples with lat lon of the generated delivery locations
         """
-        lat_min, lat_max, lon_min, lon_max = coordinates
-        filtered_df = TestInstanceManager.filter_data_lat_lon(scooters, coordinates)
+        distance = 0.002
+        filtered_df = InstanceManager.filter_data_lat_lon(scooters, coordinates)
+        center_lat, center_lon = get_center_of_bound(coordinates)
+
+        def get_deviation():
+            return random.uniform(-distance, distance)
+
         return [
             (
-                random.uniform(lat_min, lat_max),
-                random.uniform(lon_min, lon_max),
+                center_lat + get_deviation(),
+                center_lon + get_deviation(),
                 *additional_cols,
             )
             for i in range(optimal_number - len(filtered_df))
@@ -174,3 +171,17 @@ class TestInstanceManager:
         :return: 
         """
         return self.instances[instance_id]
+
+    def create_all_delivery_nodes(
+        self, num_of_sections, scooters, num_of_scooters_per_section
+    ):
+        sections, sections_coordinates = create_sections(num_of_sections, self._bound)
+        delivery_nodes = []
+        for i, bound_coordinates in enumerate(sections_coordinates):
+            scooters.loc[
+                self.filter_data_lat_lon(scooters, bound_coordinates, True), "zone"
+            ] = i  # Set zone id
+            delivery_nodes = delivery_nodes + self.create_delivery_nodes(
+                scooters, bound_coordinates, num_of_scooters_per_section, [i]
+            )
+        return pd.DataFrame(delivery_nodes, columns=["lat", "lon", "zone"])
