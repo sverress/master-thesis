@@ -52,6 +52,7 @@ def visualize_solution(instance, bound, save):
                 ax1.text(
                     x - 0.01, y + 0.01, s, weight="bold", horizontalalignment="left",
                 )
+
         edge_labels = {}
 
         # adding edges
