@@ -34,6 +34,19 @@ class BaseModelInput(ABC):
         self.delivery = self.locations[len(scooter_list.index) + 1 :]
         self.service_vehicles = range(sum(x[0] for x in service_vehicles_dict.values()))
         self.depot = 0
+        self.Z = sorted(scooter_list.zone.unique())
+        self.L_z = [
+            list(
+                scooter_list.loc[scooter_list["zone"] == i].index.union(
+                    delivery_nodes_list.loc[delivery_nodes_list["zone"] == i].index
+                )
+            )
+            for i in self.Z
+        ]
+        # Zones with delivery locations
+        self.Z_demand = [
+            z for z in self.Z if not all([i in self.scooters for i in self.L_z[z]])
+        ]
 
         # Constants
         self.num_scooters = len(scooter_list)
@@ -46,6 +59,9 @@ class BaseModelInput(ABC):
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
         self.T_max = T_max  # Duration of shift in minutes
+        self.B = [0.0] + [
+            x / 100 for x in scooter_list["battery"]
+        ]  # Battery level of scooter at location i
         self.Q_b = []
         self.Q_s = []
         for vehicle_type in service_vehicles_dict.keys():

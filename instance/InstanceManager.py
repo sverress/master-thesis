@@ -99,7 +99,7 @@ class InstanceManager:
             t_max = (
                 (sum_of_travel_time / (number_of_iterations * num_of_vehicles))
                 * 0.5  # Tuned parameter
-                * kwargs.get("T_max", 0.50)
+                * kwargs.get("T_max", 0.70)
             )
         else:
             t_max = kwargs.get("T_max")
