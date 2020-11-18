@@ -43,14 +43,14 @@ class InstanceManager:
         state at the time of writing
         :return: Instance object
         """
-        num_of_scooters = number_of_scooters_per_section * number_of_sections ** 2
-        num_of_vehicles = kwargs.get(
-            "number_of_vehicles", math.ceil(num_of_scooters / 10)
+        number_of_scooters = number_of_scooters_per_section * number_of_sections ** 2
+        number_of_vehicles = kwargs.get(
+            "number_of_vehicles", math.ceil(number_of_scooters / 10)
         )
 
         filtered_scooters = self.filter_data_lat_lon(self._data, self._bound)
         scooters = filtered_scooters.sample(
-            num_of_scooters, random_state=self._random_state
+            number_of_scooters, random_state=self._random_state
         )[["lat", "lon", "battery"]]
 
         scooters["zone"] = -1
@@ -65,18 +65,20 @@ class InstanceManager:
         )
         # Creating depot node in the middle of bound
         depot = get_center_of_bound(self._bound)
-        num_of_car_service_vehicles = math.ceil(num_of_vehicles / 2)
-        num_of_bike_service_vehicles = math.floor(num_of_vehicles / 2)
+        number_of_car_service_vehicles = math.ceil(number_of_vehicles / 2)
+        number_of_bike_service_vehicles = math.floor(number_of_vehicles / 2)
         service_vehicles = {
             "car": (
-                num_of_car_service_vehicles,
-                math.ceil(len(delivery_nodes) / num_of_car_service_vehicles),
+                number_of_car_service_vehicles,
+                math.ceil(len(delivery_nodes) / number_of_car_service_vehicles),
                 int(len(scooters) * (3 / 4)),
             ),
-            "bike": (num_of_bike_service_vehicles, 0, int(len(scooters) * (1 / 4))),
+            "bike": (number_of_bike_service_vehicles, 0, int(len(scooters) * (1 / 4))),
         }
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
+        number_of_zones = len(scooters.zone.unique())
+        optimal_state = [number_of_scooters_per_section] * number_of_zones
         if is_percent_t_max or kwargs.get("T_max") is None:
             # Combine all locations in one dataframe
             all_locations = pd.concat(
@@ -101,7 +103,7 @@ class InstanceManager:
                     )
                     previous_cords = current_cords
             t_max = (
-                (sum_of_travel_time / (number_of_iterations * num_of_vehicles))
+                (sum_of_travel_time / (number_of_iterations * number_of_vehicles))
                 * 0.75  # Tuned parameter
                 * kwargs.get("T_max", 0.70)
             )
@@ -112,6 +114,7 @@ class InstanceManager:
             delivery_nodes,
             depot,
             service_vehicles,
+            optimal_state,
             number_of_sections,
             t_max,
             kwargs.get("time_limit", 10),

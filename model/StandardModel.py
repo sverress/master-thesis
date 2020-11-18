@@ -25,7 +25,7 @@ class StandardModel(BaseModel):
                 self._.reward[i] * self.y[(i, v)] for i, v in self.cart_loc_v_not_depot
             )
             - gp.quicksum(
-                (1 - self._.reward[i]) * self.p[(i, v)]
+                self._.battery_level[i] * self.p[(i, v)]
                 for i, v in self.cart_loc_v_scooters
             ),
             GRB.MAXIMIZE,

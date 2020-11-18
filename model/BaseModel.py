@@ -100,7 +100,8 @@ class BaseModel(ABC):
         #  Ensure that each vehicle capacity is not exceeded
         self.m.addConstrs(
             (
-                gp.quicksum(self.y[(k, v)] for k in self._.scooters) <= self._.Q_b[v]
+                gp.quicksum(self.y[(k, v)] for k in self._.scooters)
+                <= self._.battery_capacity[v]
                 for v in self._.service_vehicles
             ),
             "battery_capacity",
@@ -131,7 +132,7 @@ class BaseModel(ABC):
                     self._.time_cost[(i, j)] * self.x[(i, j, v)]
                     for i, j in self.cart_locs
                 )
-                <= self._.T_max
+                <= self._.shift_duration
                 for v in self._.service_vehicles
             ),
             "time_constraints",
@@ -142,13 +143,24 @@ class BaseModel(ABC):
             (
                 gp.quicksum(
                     self.p[(i, v)]
-                    for i in self._.L_z[z]
+                    for i in self._.zone_scooters[z]
                     if i in self._.scooters
                     for v in self._.service_vehicles
                 )
                 == 0
-                for z in self._.Z_demand
+                for z in self._.demand_zones
             )
+        )
+
+        # Ensure that we cannot pick up more than the excess scooters in a zone
+        self.m.addConstrs(
+            gp.quicksum(
+                self.p[(i, v)]
+                for v in self._.service_vehicles
+                for i in self._.zone_scooters[z]
+            )
+            <= self._.deviation_from_optimal_state[z]
+            for z in self._.supply_zones
         )
 
         # Scooter capacity management
@@ -157,7 +169,7 @@ class BaseModel(ABC):
                 self.l[(i, v)]
                 + self.p[(i, v)]
                 - self.l[(j, v)]
-                - self._.Q_s[v] * (1 - self.x[(i, j, v)])
+                - self._.scooter_capacity[v] * (1 - self.x[(i, j, v)])
                 <= 0
                 for i, j, v in self.cart_loc_loc_v
                 if i in self._.scooters and j != i
@@ -170,7 +182,7 @@ class BaseModel(ABC):
                 self.l[(i, v)]
                 + self.p[(i, v)]
                 - self.l[(j, v)]
-                + self._.Q_s[v] * (1 - self.x[(i, j, v)])
+                + self._.scooter_capacity[v] * (1 - self.x[(i, j, v)])
                 >= 0
                 for i, j, v in self.cart_loc_loc_v
                 if i in self._.scooters and j != i
@@ -183,7 +195,7 @@ class BaseModel(ABC):
                 self.l[(i, v)]
                 - self.y[(i, v)]
                 - self.l[(j, v)]
-                - self._.Q_s[v] * (1 - self.x[(i, j, v)])
+                - self._.scooter_capacity[v] * (1 - self.x[(i, j, v)])
                 <= 0
                 for i, j, v in self.cart_loc_loc_v
                 if i in self._.delivery and j != i
@@ -196,7 +208,7 @@ class BaseModel(ABC):
                 self.l[(i, v)]
                 - self.y[(i, v)]
                 - self.l[(j, v)]
-                + self._.Q_s[v] * (1 - self.x[(i, j, v)])
+                + self._.scooter_capacity[v] * (1 - self.x[(i, j, v)])
                 >= 0
                 for i, j, v in self.cart_loc_loc_v
                 if i in self._.delivery and j != i
@@ -210,7 +222,7 @@ class BaseModel(ABC):
         )
         self.m.addConstrs(
             (
-                self.l[(i, v)] <= self._.Q_b[v]
+                self.l[(i, v)] <= self._.battery_capacity[v]
                 for i, v in self.cart_loc_v
                 if i != self._.depot
             ),
@@ -224,7 +236,8 @@ class BaseModel(ABC):
 
         self.m.addConstrs(
             (
-                self.l[(i, v)] - self._.Q_s[v] * (1 - self.x[(0, i, v)]) <= 0
+                self.l[(i, v)] - self._.scooter_capacity[v] * (1 - self.x[(0, i, v)])
+                <= 0
                 for i, v in self.cart_loc_v_not_depot
             ),
             "vehicle_capacity_depot_out",

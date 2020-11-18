@@ -15,6 +15,7 @@ class BaseModelInput(ABC):
         delivery_nodes_list: pd.DataFrame,
         depot_location: tuple,
         service_vehicles_dict: dict,
+        optimal_state: list,
         T_max: int,
     ):
         """
@@ -23,6 +24,7 @@ class BaseModelInput(ABC):
         :param delivery_nodes_list: list of list - [[lat,lon]*m]
         :param depot_location: tuple - (lat,lon)
         :param service_vehicles_dict: dict - ["type"]: (#numbers, scooter capacity, battery capacity)
+        :param optimal_state: list of optimal state for each zone of the problem
         :param T_max: time limit for vehicles
         """
 
@@ -34,19 +36,22 @@ class BaseModelInput(ABC):
         self.delivery = self.locations[len(scooter_list.index) + 1 :]
         self.service_vehicles = range(sum(x[0] for x in service_vehicles_dict.values()))
         self.depot = 0
-        self.Z = sorted(scooter_list.zone.unique())
-        self.L_z = [
+        self.zones = sorted(scooter_list.zone.unique())
+        self.zone_scooters = [
             list(
                 scooter_list.loc[scooter_list["zone"] == i].index.union(
                     delivery_nodes_list.loc[delivery_nodes_list["zone"] == i].index
                 )
             )
-            for i in self.Z
+            for i in self.zones
         ]
-        # Zones with delivery locations
-        self.Z_demand = [
-            z for z in self.Z if not all([i in self.scooters for i in self.L_z[z]])
-        ]
+        self.demand_zones = [
+            z
+            for z in self.zones
+            if not all([i in self.scooters for i in self.zone_scooters[z]])
+        ]  # Zones with delivery locations
+
+        self.supply_zones = [z for z in self.zones if z not in self.demand_zones]
 
         # Constants
         self.num_scooters = len(scooter_list)
@@ -58,17 +63,21 @@ class BaseModelInput(ABC):
         self.time_cost = self.compute_time_matrix(
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
-        self.T_max = T_max  # Duration of shift in minutes
-        self.B = [0.0] + [
+        self.shift_duration = T_max  # Duration of shift in minutes
+        self.battery_level = [0.0] + [
             x / 100 for x in scooter_list["battery"]
         ]  # Battery level of scooter at location i
-        self.Q_b = []
-        self.Q_s = []
+        self.battery_capacity = []
+        self.scooter_capacity = []
         for vehicle_type in service_vehicles_dict.keys():
             num_vehicles, scooter_cap, battery_cap = service_vehicles_dict[vehicle_type]
             for i in range(num_vehicles):
-                self.Q_b.append(battery_cap)
-                self.Q_s.append(scooter_cap)
+                self.battery_capacity.append(battery_cap)
+                self.scooter_capacity.append(scooter_cap)
+        self.deviation_from_optimal_state = [
+            len(self.zone_scooters[z]) - the_optimal_state
+            for z, the_optimal_state in enumerate(optimal_state)
+        ]
 
         # Battery level of scooter at location i
         self.B = [0.0] + [x / 100 for x in scooter_list["battery"]]

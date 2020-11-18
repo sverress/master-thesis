@@ -12,8 +12,8 @@ class AlternativeModelInput(BaseModelInput):
         r_kz = {}
         alpha = 1.1
         beta = 1.3
-        for z in self.Z:
-            k_max = len(self.L_z[z])
+        for z in self.zones:
+            k_max = len(self.zone_scooters[z])
             for k in range(0, k_max + 1):
                 r_kz[(k, z)] = alpha * log(beta * k + 1) + 1
         return r_kz
@@ -24,7 +24,9 @@ class AlternativeModel(BaseModel):
         # x_ijv - 1 if, for service vehicle v, visit to location i is followed by a visit to location j- 0 otherwise
         super().__init__(model_input, setup=False, time_limit=time_limit)
         self.cart_k_z = [
-            (k, z) for z in self._.Z for k in range(len(self._.L_z[z]) + 1)
+            (k, z)
+            for z in self._.zones
+            for k in range(len(self._.zone_scooters[z]) + 1)
         ]
         self.w = self.m.addVars(self.cart_k_z, vtype=GRB.BINARY, name="w")
         self.setup()
@@ -39,7 +41,8 @@ class AlternativeModel(BaseModel):
                 self._.reward[(k, z)] * self.w[(k, z)] for k, z in self.cart_k_z
             )
             - gp.quicksum(
-                self._.B[i] * self.y[(i, v)] for i, v in self.cart_loc_v_scooters
+                self._.battery_level[i] * self.y[(i, v)]
+                for i, v in self.cart_loc_v_scooters
             ),
             GRB.MAXIMIZE,
         )
@@ -50,26 +53,31 @@ class AlternativeModel(BaseModel):
         # Adding the additional constraints
         self.m.addConstrs(
             (
-                gp.quicksum(k * self.w[(k, z)] for k in range(len(self._.L_z[z]) + 1))
+                gp.quicksum(
+                    k * self.w[(k, z)] for k in range(len(self._.zone_scooters[z]) + 1)
+                )
                 == gp.quicksum(
                     self.y[(i, v)]
                     for v in self._.service_vehicles
-                    for i in self._.L_z[z]
+                    for i in self._.zone_scooters[z]
                 )
                 - gp.quicksum(
                     self.p[(i, v)]
                     for v in self._.service_vehicles
-                    for i in self._.L_z[z]
+                    for i in self._.zone_scooters[z]
                     if i in self._.scooters
                 )
-                for z in self._.Z
+                for z in self._.zones
             ),
             "force_w_1",
         )
         self.m.addConstrs(
             (
-                gp.quicksum(self.w[(k, z)] for k in range(len(self._.L_z[z]) + 1)) <= 1
-                for z in self._.Z
+                gp.quicksum(
+                    self.w[(k, z)] for k in range(len(self._.zone_scooters[z]) + 1)
+                )
+                <= 1
+                for z in self._.zones
             ),
             "force_w_2",
         )
