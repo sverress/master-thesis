@@ -110,8 +110,8 @@ def add_vehicle_node_info(instance, ax):
     cons = (
         f"Vehicle constraint:\nTime = %d h %d m \n\nCar capacity:\nBattery = %d \nScooters = %d"
         % (
-            int(instance.model.get_parameters().T_max / 60),
-            instance.model.get_parameters().T_max % 60,
+            int(instance.model.get_parameters().shift_duration / 60),
+            instance.model.get_parameters().shift_duration % 60,
             car_battery_cap,
             car_scooter_cap,
         )
