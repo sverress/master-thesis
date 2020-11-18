@@ -6,7 +6,7 @@ from instance.helpers import create_sections
 from visualization.helpers import *
 
 
-def visualize_solution(instance, bound, save):
+def visualize_solution(instance, save, edge_plot=False):
     """
     Visualize a solution from the model. The visualization is divided into two frames.
     Frame one: All nodes (with corresponding reward and p-value, if its picked up),
@@ -15,21 +15,26 @@ def visualize_solution(instance, bound, save):
     Frame two: Edges that are not included in solution and corresponding time to travel that edge
     :param save: bool - if model should be displayed or saved
     :param instance: Instance object for a given solution
+    :param edge_plot: bool - true if edge plot should be displayed
     """
 
     # generate plot and subplots
-    fig, ax1 = plt.subplots(1, 1, figsize=(20, 9.7))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 9.7))
     fig.tight_layout(pad=1.0)
-    # ax1.set_title("Model solution", fontweight="bold")
+    ax1.set_title("Model solution", fontweight="bold")
 
     # removed second plot, but stored if we want to use it for later.
-    # ax2.set_title("Edges not included in solution", fontweight="bold")
+    if edge_plot:
+        ax2.set_title("Edges not included in solution", fontweight="bold")
+    else:
+        ax2.set_visible(False)
+        ax1.change_geometry(1, 1, 1)
 
     # add vehicle and node info to plot
     colors = add_vehicle_node_info(instance, ax1)
 
     node_dict = create_node_dict(instance)
-    graph, labels, node_border, node_color = make_graph(node_dict, bound)
+    graph, labels, node_border, node_color = make_graph(node_dict, instance.bound)
     pos = nx.get_node_attributes(graph, "pos")
 
     # check to handle infeasible models
@@ -75,6 +80,29 @@ def visualize_solution(instance, bound, save):
                     % (vehicle_id + 1, int(instance.model.l[(to_node, vehicle_id)].x))
                 )
 
+        # second plot for nodes/edges not in solution
+        if edge_plot:
+            display_edge_plot(instance, ax2, edge_labels)
+
+        # set edge color for solution
+        edges = graph.edges()
+        e_colors = [graph[u][v]["color"] for u, v in edges]
+        e_weights = [graph[u][v]["width"] for u, v in edges]
+
+        # draw solution graph
+        nx.draw(
+            graph,
+            pos,
+            node_color=node_color,
+            edgecolors=node_border,
+            edge_color=e_colors,
+            width=e_weights,
+            node_size=400,
+            alpha=0.7,
+            with_labels=False,
+            ax=ax1,
+        )
+
         nx.draw_networkx_edge_labels(
             graph, pos, edge_labels=edge_labels, font_size=8, ax=ax1
         )
@@ -88,30 +116,8 @@ def visualize_solution(instance, bound, save):
             ax=ax1,
         )
 
-        # second plot for nodes/edges not in solution
-        # display_edge_plot(instance, ax2, edge_labels)
     else:
         ax1.set_title("Model is Infeasible", fontweight="bold")
-        # display_edge_plot(instance, ax2)
-
-    # set edge color for solution
-    edges = graph.edges()
-    e_colors = [graph[u][v]["color"] for u, v in edges]
-    e_weights = [graph[u][v]["width"] for u, v in edges]
-
-    # draw solution graph
-    nx.draw(
-        graph,
-        pos,
-        node_color=node_color,
-        edgecolors=node_border,
-        edge_color=e_colors,
-        width=e_weights,
-        node_size=400,
-        alpha=0.7,
-        with_labels=False,
-        ax=ax1,
-    )
 
     # add description for nodes
     legend_color = [BLUE, GREEN, RED]

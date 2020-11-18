@@ -153,7 +153,7 @@ def display_edge_plot(instance, ax, s_edge_labels={}):
     ax.axis("off")
     # draw nodes
     node_dict = create_node_dict(instance)
-    graph, labels, node_border, node_color = make_graph(node_dict)
+    graph, labels, node_border, node_color = make_graph(node_dict, instance.bound)
 
     edge_labels = {}
 

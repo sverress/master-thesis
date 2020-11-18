@@ -59,11 +59,11 @@ class Instance:
         """
         self.model.optimize_model()
 
-    def visualize_solution(self, save=False):
+    def visualize_solution(self, save=False, edge_plot=False):
         """
         See documentation of visualize_solution function from visualization
         """
-        visualize_solution(self, self.bound, save)
+        visualize_solution(self, save, edge_plot)
 
     def visualize_raw_data_map(self):
         """
@@ -90,8 +90,8 @@ class Instance:
             if e.errno != errno.EEXIST:
                 raise
 
-        file_path_solution = "saved_models/" + self.get_model_name() + ".json"
-        file_path_params = "saved_models/" + self.get_model_name() + ".sol"
+        file_path_solution = f"saved_models/{self.get_model_name()}.json"
+        file_path_params = f"saved_models/{self.get_model_name()}.sol"
         self.model.m.write(file_path_solution)
         self.model.m.write(file_path_params)
 
