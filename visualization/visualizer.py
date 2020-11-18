@@ -20,7 +20,7 @@ def visualize_solution(instance, bound, save):
     # generate plot and subplots
     fig, ax1 = plt.subplots(1, 1, figsize=(20, 9.7))
     fig.tight_layout(pad=1.0)
-    ax1.set_title("Model solution", fontweight="bold")
+    # ax1.set_title("Model solution", fontweight="bold")
 
     # removed second plot, but stored if we want to use it for later.
     # ax2.set_title("Edges not included in solution", fontweight="bold")
@@ -38,17 +38,19 @@ def visualize_solution(instance, bound, save):
         # adding reward and type color to nodes
         for i, p in enumerate(node_dict.keys()):  # i is number in node list
             if node_dict[p]["label"] != DEPOT:
-                s = "r=" + str(round(instance.model.get_parameters().reward[i], 2))
+                s = ""
+                if node_dict[p]["label"] == SUPPLY:
+                    s += "B=" + str(int(instance.model_input.B[i] * 100)) + "\n"
                 for k in range(instance.model_input.num_service_vehicles):
                     if (
                         (i, k) in instance.model.p.keys()
                         and instance.model.p[(i, k)].x > 0
                         and instance.model.y[(i, k)].x > 0
                     ):
-                        s += "\n p_%s=%s" % (k + 1, int(instance.model.p[(i, k)].x))
+                        s += "P_%s=%s" % (k + 1, int(instance.model.p[(i, k)].x))
                 x, y = pos[i]
                 ax1.text(
-                    x - 0.035, y, s, weight="bold", horizontalalignment="right",
+                    x - 0.01, y + 0.01, s, weight="bold", horizontalalignment="left",
                 )
         edge_labels = {}
 
@@ -144,7 +146,7 @@ def visualize_test_instance(scooters, delivery_nodes, bound, num_of_sections):
     lat_min, lat_max, lon_min, lon_max = bound
     fig, ax = plt.subplots()
 
-    ax.scatter(scooters["lon"], scooters["lat"], zorder=1, alpha=0.4, s=10)
+    ax.scatter(scooters["lon"], scooters["lat"], zorder=1, alpha=0.8, s=10)
 
     ax.set_xlim(lon_min, lon_max)
     ax.set_ylim(lat_min, lat_max)
@@ -153,9 +155,11 @@ def visualize_test_instance(scooters, delivery_nodes, bound, num_of_sections):
     ax.set_xticks(sections["lon"])
     ax.set_yticks(sections["lat"])
     ax.grid()
+    plt.setp(ax.get_xticklabels(), visible=False)
+    plt.setp(ax.get_yticklabels(), visible=False)
 
     ax.scatter(
-        delivery_nodes["lon"], delivery_nodes["lat"], zorder=1, alpha=0.4, s=10, c="r",
+        delivery_nodes["lon"], delivery_nodes["lat"], zorder=1, alpha=0.8, s=10, c="r",
     )
 
     oslo = plt.imread("test_data/oslo.png")
@@ -164,7 +168,7 @@ def visualize_test_instance(scooters, delivery_nodes, bound, num_of_sections):
         zorder=0,
         extent=(lon_min, lon_max, lat_min, lat_max),
         aspect="equal",
-        alpha=0.4,
+        alpha=0.6,
     )
 
     plt.show()

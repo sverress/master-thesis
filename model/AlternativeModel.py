@@ -27,9 +27,7 @@ class AlternativeModelInput(BaseModelInput):
             )
             for i in self.Z
         ]
-        self.B = [0.0] + [
-            x / 100 for x in scooter_list["battery"]
-        ]  # Battery level of scooter at location i
+
         super().__init__(
             scooter_list,
             delivery_nodes_list,
