@@ -148,8 +148,19 @@ class BaseModel(ABC):
                     for v in self._.service_vehicles
                 )
                 == 0
-                for z in self._.Z_demand
+                for z in self._.demand_zones
             )
+        )
+
+        # Ensure that we cannot pick up more than the excess scooters in a zone
+        self.m.addConstrs(
+            gp.quicksum(
+                self.p[(i, v)]
+                for v in self._.service_vehicles
+                for i in self._.zone_scooters[z]
+            )
+            <= self._.deviation_from_optimal_state[z]
+            for z in self._.supply_zones
         )
 
         # Scooter capacity management

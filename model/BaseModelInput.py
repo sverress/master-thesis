@@ -15,6 +15,7 @@ class BaseModelInput(ABC):
         delivery_nodes_list: pd.DataFrame,
         depot_location: tuple,
         service_vehicles_dict: dict,
+        optimal_state: list,
         T_max: int,
     ):
         """
@@ -23,6 +24,7 @@ class BaseModelInput(ABC):
         :param delivery_nodes_list: list of list - [[lat,lon]*m]
         :param depot_location: tuple - (lat,lon)
         :param service_vehicles_dict: dict - ["type"]: (#numbers, scooter capacity, battery capacity)
+        :param optimal_state: list of optimal state for each zone of the problem
         :param T_max: time limit for vehicles
         """
 
@@ -43,12 +45,13 @@ class BaseModelInput(ABC):
             )
             for i in self.zones
         ]
-        # Zones with delivery locations
-        self.Z_demand = [
+        self.demand_zones = [
             z
             for z in self.zones
             if not all([i in self.scooters for i in self.zone_scooters[z]])
-        ]
+        ]  # Zones with delivery locations
+
+        self.supply_zones = [z for z in self.zones if z not in self.demand_zones]
 
         # Constants
         self.num_scooters = len(scooter_list)
@@ -71,6 +74,10 @@ class BaseModelInput(ABC):
             for i in range(num_vehicles):
                 self.battery_capacity.append(battery_cap)
                 self.scooter_capacity.append(scooter_cap)
+        self.deviation_from_optimal_state = [
+            len(self.zone_scooters[z]) - the_optimal_state
+            for z, the_optimal_state in enumerate(optimal_state)
+        ]
 
     @abstractmethod
     def compute_reward_matrix(self, scooter_list, delivery_nodes_list):

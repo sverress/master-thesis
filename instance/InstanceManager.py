@@ -73,6 +73,8 @@ class InstanceManager:
         }
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
+        number_of_zones = len(scooters.zone.unique())
+        optimal_state = [number_of_scooters_per_section] * number_of_zones
         if is_percent_t_max or kwargs.get("T_max") is None:
             # Combine all locations in one dataframe
             all_locations = pd.concat(
@@ -108,6 +110,7 @@ class InstanceManager:
             delivery_nodes,
             depot,
             service_vehicles,
+            optimal_state,
             number_of_sections,
             t_max,
             kwargs.get("time_limit", 10),
