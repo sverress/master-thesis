@@ -1,7 +1,13 @@
 {
-	"zones_per_axis": 2,
-	"nodes_per_zone": [1,1,1],
+	"model": {
+		"model_type": "standard",
+		"T_max_is_percentage": true
+	},
+	"ranges": {
+	"number_of_sections": 2,
+	"number_of_scooter_per_section": [1,1,1],
 	"number_of_vehicles": [1,1,1],
-	"T max": [5,5,5],
-	"time_limit": 10
+	"T_max": 70,
+	"time_limit": 300
+	}
 }

@@ -79,6 +79,9 @@ class BaseModelInput(ABC):
             for z, the_optimal_state in enumerate(optimal_state)
         ]
 
+        # Battery level of scooter at location i
+        self.B = [0.0] + [x / 100 for x in scooter_list["battery"]]
+
     @abstractmethod
     def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
         pass
