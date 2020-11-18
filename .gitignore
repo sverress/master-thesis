@@ -134,3 +134,6 @@ dmypy.json
 # Saved models
 /saved models
 /saved models fig
+
+# All testing files
+**/testing.py

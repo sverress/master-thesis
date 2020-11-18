@@ -5,6 +5,8 @@ import math
 from instance.helpers import *
 from instance.Instance import Instance
 from model.StandardModel import StandardModel
+from model.AlternativeModel import AlternativeModel
+from model.BaseModelInput import BaseModelInput
 
 
 class InstanceManager:
@@ -29,29 +31,23 @@ class InstanceManager:
         )  # Instances indexed by (num_of_sections, num_of_scooters_per_section)
 
     def create_test_instance(
-        self,
-        num_of_sections: int,
-        num_of_scooters_per_section: int,
-        num_of_vehicles: int,
-        T_max: int,
-        computational_limit: int,
-        model_class,
+        self, number_of_sections: int, number_of_scooters_per_section: int, **kwargs
     ):
         """
         Creates necessary data structures to create a new ModelInput object.
 
         TODO: This methods input parameters are only related to zones and number of nodes.
         TODO: Other parameters should be added optionally
-        :param num_of_sections: number of sections at each x and y axis. ex. 3 gives 9 zones
-        :param num_of_scooters_per_section: this is the number of scooters per zone and is also considered the optimal
+        :param number_of_sections: number of sections at each x and y axis. ex. 3 gives 9 zones
+        :param number_of_scooters_per_section: this is the number of scooters per zone and is also considered the optimal
         state at the time of writing
-        :param num_of_vehicles:
-        :param T_max: maximum time for each service vehicle
-        :param computational_limit: time limit of the optimization step
-        :param model_class: class of the model to be computed
         :return: Instance object
         """
-        num_of_scooters = num_of_scooters_per_section * num_of_sections ** 2
+        num_of_scooters = number_of_scooters_per_section * number_of_sections ** 2
+        num_of_vehicles = kwargs.get(
+            "number_of_vehicles", math.ceil(num_of_scooters / 10)
+        )
+
         filtered_scooters = self.filter_data_lat_lon(self._data, self._bound)
         scooters = filtered_scooters.sample(
             num_of_scooters, random_state=self._random_state
@@ -60,7 +56,7 @@ class InstanceManager:
         scooters["zone"] = -1
 
         delivery_nodes = self.create_all_delivery_nodes(
-            num_of_sections, scooters, num_of_scooters_per_section
+            number_of_sections, scooters, number_of_scooters_per_section
         )
         # Giving dataframes same index as they will have in mathematical model
         scooters.index = range(1, len(scooters) + 1)
@@ -75,16 +71,50 @@ class InstanceManager:
             "car": (num_of_car_service_vehicles, 5, 10),
             "bike": (num_of_bike_service_vehicles, 0, 3),
         }
+
+        is_percent_t_max = kwargs.get("T_max_is_percentage", True)
+        if is_percent_t_max or kwargs.get("T_max") is None:
+            # Combine all locations in one dataframe
+            all_locations = pd.concat(
+                (
+                    pd.DataFrame([list(depot)], columns=["lat", "lon"]),
+                    scooters[["lat", "lon"]],
+                    delivery_nodes[["lat", "lon"]],
+                )
+            )
+            sum_of_travel_time = 0.0
+            number_of_iterations = 5
+            for k in range(number_of_iterations):
+                dataset = all_locations.sample(frac=1)
+                previous_cords = dataset.iloc[0]
+                for i in range(1, len(all_locations)):
+                    current_cords = dataset.iloc[i]
+                    sum_of_travel_time += BaseModelInput.compute_distance(
+                        previous_cords["lat"],
+                        previous_cords["lon"],
+                        current_cords["lat"],
+                        current_cords["lon"],
+                    )
+                    previous_cords = current_cords
+            t_max = (
+                (sum_of_travel_time / (number_of_iterations * num_of_vehicles))
+                * 0.5  # Tuned parameter
+                * kwargs.get("T_max", 0.50)
+            )
+        else:
+            t_max = kwargs.get("T_max")
         return Instance(
             scooters,
             delivery_nodes,
             depot,
             service_vehicles,
-            num_of_sections,
-            T_max,
-            computational_limit,
+            number_of_sections,
+            t_max,
+            kwargs.get("time_limit", 10),
             self._bound,
-            model_class,
+            AlternativeModel
+            if kwargs.get("model_type", "standard") == "alternative"
+            else StandardModel,
         )
 
     def create_multiple_instances(self):

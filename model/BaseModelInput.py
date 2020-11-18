@@ -77,20 +77,22 @@ class BaseModelInput(ABC):
             (i, j): BaseModelInput.compute_distance(
                 locations[i][0], locations[i][1], locations[j][0], locations[j][1]
             )
-            / (20 * (1000 / 60))
             for i, j in list(product(self.locations, repeat=2))
         }
 
     @staticmethod
-    def compute_distance(lat1, lon1, lat2, lon2):
+    def compute_distance(lat1, lon1, lat2, lon2, speed=20):
         """
         Compute the distance between two points in meters
         :param lat1: Coordinate 1 lat
         :param lon1: Coordinate 1 lon
         :param lat2: Coordinate 2 lat
         :param lon2: Coordinate 2 lon
+        :param speed: speed of service vehicle in kilometers per hour
         :return: Meters between coordinates
         """
+        minutes_in_an_hour = 60
+
         radius = 6378.137
         d_lat = lat2 * pi / 180 - lat1 * pi / 180
         d_lon = lon2 * pi / 180 - lon1 * pi / 180
@@ -99,4 +101,4 @@ class BaseModelInput(ABC):
         ) * sin(d_lon / 2) * sin(d_lon / 2)
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         d = radius * c
-        return d * 1000
+        return (minutes_in_an_hour * d) / speed

@@ -2,7 +2,6 @@ import pandas as pd
 from gurobipy import GRB
 import gurobipy as gp
 
-from instance.InstanceManager import InstanceManager
 from model.BaseModel import BaseModel
 from model.BaseModelInput import BaseModelInput
 from math import log
@@ -103,11 +102,3 @@ class AlternativeModel(BaseModel):
             ),
             "force_w_2",
         )
-
-
-if __name__ == "__main__":
-    manager = InstanceManager()
-    instance = manager.create_test_instance(2, 2, AlternativeModel)
-    instance.run()
-    instance.visualize_raw_data_map()
-    instance.model.print_solution()
