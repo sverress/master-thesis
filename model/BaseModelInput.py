@@ -70,6 +70,9 @@ class BaseModelInput(ABC):
                 self.Q_b.append(battery_cap)
                 self.Q_s.append(scooter_cap)
 
+        # Battery level of scooter at location i
+        self.B = [0.0] + [x / 100 for x in scooter_list["battery"]]
+
     @abstractmethod
     def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
         pass

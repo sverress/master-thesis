@@ -132,8 +132,8 @@ dmypy.json
 .DS_Store
 
 # Saved models
-/saved models
-/saved models fig
+/saved_models
+/saved_models_fig
 
 # All testing files
 **/testing.py

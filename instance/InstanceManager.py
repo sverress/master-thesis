@@ -68,8 +68,12 @@ class InstanceManager:
         num_of_car_service_vehicles = math.ceil(num_of_vehicles / 2)
         num_of_bike_service_vehicles = math.floor(num_of_vehicles / 2)
         service_vehicles = {
-            "car": (num_of_car_service_vehicles, 5, 10),
-            "bike": (num_of_bike_service_vehicles, 0, 3),
+            "car": (
+                num_of_car_service_vehicles,
+                math.ceil(len(delivery_nodes) / num_of_car_service_vehicles),
+                int(len(scooters) * (3 / 4)),
+            ),
+            "bike": (num_of_bike_service_vehicles, 0, int(len(scooters) * (1 / 4))),
         }
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
@@ -98,7 +102,7 @@ class InstanceManager:
                     previous_cords = current_cords
             t_max = (
                 (sum_of_travel_time / (number_of_iterations * num_of_vehicles))
-                * 0.5  # Tuned parameter
+                * 0.75  # Tuned parameter
                 * kwargs.get("T_max", 0.70)
             )
         else:
