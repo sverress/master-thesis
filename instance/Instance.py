@@ -17,6 +17,7 @@ class Instance:
         delivery_nodes: pd.DataFrame,
         depot: tuple,
         service_vehicles: dict,
+        optimal_state: list,
         number_of_sections: int,
         T_max: int,
         computational_limit: int,
@@ -30,6 +31,7 @@ class Instance:
         :param delivery_nodes: dataframe with lat lon of delivery nodes
         :param depot: (lat, lon)
         :param service_vehicles: dict - ["type"]: (#numbers, scooter capacity, battery capacity)
+        :param optimal_state: list of optimal state for each zone of the problem
         :param number_of_sections: int number_of_sections
         :param T_max: int - time limit for vehicles
         :param computational_limit: int - max solution time for model
@@ -49,7 +51,7 @@ class Instance:
 
         # Model
         self.model_input = model_class.get_input_class()(
-            scooters, delivery_nodes, depot, service_vehicles, T_max
+            scooters, delivery_nodes, depot, service_vehicles, optimal_state, T_max
         )
         self.model = model_class(self.model_input, time_limit=computational_limit)
         self.number_of_sections = number_of_sections
