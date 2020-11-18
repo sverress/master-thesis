@@ -4,9 +4,11 @@ from itertools import product
 import os
 from abc import ABC, abstractmethod
 
+from model.BaseModelInput import BaseModelInput
+
 
 class BaseModel(ABC):
-    def __init__(self, model_input, setup=True, time_limit=None):
+    def __init__(self, model_input: BaseModelInput, setup=True, time_limit=None):
         """
         Formulation of mathematical problem in gurobi framework
         :param model_input: ModelInput object with input variables for the model
@@ -69,7 +71,7 @@ class BaseModel(ABC):
         pass
 
     def set_constraints(self):
-        # Add constraints (2): guarantee that each service vehicle starts and ends in at the depot.
+        #  guarantee that each service vehicle starts and ends in at the depot.
         self.m.addConstr(
             gp.quicksum(
                 self.x[(self._.depot, j, v)] for j, v in self.cart_loc_v_not_depot
@@ -85,7 +87,7 @@ class BaseModel(ABC):
             "must_visit_depot_end",
         )
 
-        # Add constraints (3): ensure that every location is visited at most once.
+        #  Ensure that every location is visited at most once.
         self.m.addConstrs(
             (
                 gp.quicksum(self.y[(k, v)] for v in self._.service_vehicles) <= 1
@@ -95,7 +97,7 @@ class BaseModel(ABC):
             "only_one_visit_pr_scooter",
         )
 
-        # Add constraints (4): ensure that each vehicle capacity is not exceeded
+        #  Ensure that each vehicle capacity is not exceeded
         self.m.addConstrs(
             (
                 gp.quicksum(self.y[(k, v)] for k in self._.scooters) <= self._.Q_b[v]
@@ -104,7 +106,7 @@ class BaseModel(ABC):
             "battery_capacity",
         )
 
-        # Add constraints (5): guarantee the connectivity of each service vehicle path
+        #  guarantee the connectivity of each service vehicle path
         self.m.addConstrs(
             (
                 gp.quicksum(self.x[(i, k, v)] for i in self._.locations)
@@ -122,7 +124,7 @@ class BaseModel(ABC):
             "connectivity_out",
         )
 
-        # Add constraints (6): ensure that the length of the paths does not exceed the shift
+        #  Ensure that the length of the paths does not exceed the shift
         self.m.addConstrs(
             (
                 gp.quicksum(
@@ -135,7 +137,21 @@ class BaseModel(ABC):
             "time_constraints",
         )
 
-        # Add constraints (7):
+        # Ensure that no scooters can be picked up in a demand zone
+        self.m.addConstrs(
+            (
+                gp.quicksum(
+                    self.p[(i, v)]
+                    for i in self._.L_z[z]
+                    if i in self._.scooters
+                    for v in self._.service_vehicles
+                )
+                == 0
+                for z in self._.Z_demand
+            )
+        )
+
+        # Scooter capacity management
         self.m.addConstrs(
             (
                 self.l[(i, v)]
@@ -149,7 +165,6 @@ class BaseModel(ABC):
             "vehicle_capacity_pick_up_less",
         )
 
-        # Add constraints (8):
         self.m.addConstrs(
             (
                 self.l[(i, v)]
@@ -163,7 +178,6 @@ class BaseModel(ABC):
             "vehicle_capacity_pick_up_greater",
         )
 
-        # Add constraints (9):
         self.m.addConstrs(
             (
                 self.l[(i, v)]
@@ -177,7 +191,6 @@ class BaseModel(ABC):
             "vehicle_capacity_delivery_less",
         )
 
-        # Add constraints (10):
         self.m.addConstrs(
             (
                 self.l[(i, v)]
@@ -191,7 +204,6 @@ class BaseModel(ABC):
             "vehicle_capacity_delivery_greater",
         )
 
-        # Add constraints (11):
         self.m.addConstrs(
             (0 <= self.l[(i, v)] for i, v in self.cart_loc_v_not_depot),
             "vehicle_capacity_cap_noneg",
@@ -205,13 +217,11 @@ class BaseModel(ABC):
             "vehicle_capacity_cap",
         )
 
-        # Add constraints (12):
         self.m.addConstrs(
             (self.l[(0, v)] == 0 for v in self._.service_vehicles),
             "vehicle_capacity_depot_in",
         )
 
-        # Add constraints (13):
         self.m.addConstrs(
             (
                 self.l[(i, v)] - self._.Q_s[v] * (1 - self.x[(0, i, v)]) <= 0
@@ -220,7 +230,7 @@ class BaseModel(ABC):
             "vehicle_capacity_depot_out",
         )
 
-        # Add constraints (14):
+        # Subtour elimination
         self.m.addConstrs(
             (2 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot), "subtours_1",
         )
@@ -232,7 +242,6 @@ class BaseModel(ABC):
             "subtours_2",
         )
 
-        # Add constraints (15):
         self.m.addConstrs(
             (
                 self.u[i, v] - self.u[j, v] + 1

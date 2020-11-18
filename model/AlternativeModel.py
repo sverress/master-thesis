@@ -2,40 +2,12 @@ import pandas as pd
 from gurobipy import GRB
 import gurobipy as gp
 
-from instance.InstanceManager import InstanceManager
 from model.BaseModel import BaseModel
 from model.BaseModelInput import BaseModelInput
 from math import log
 
 
 class AlternativeModelInput(BaseModelInput):
-    def __init__(
-        self,
-        scooter_list: pd.DataFrame,
-        delivery_nodes_list: pd.DataFrame,
-        depot_location: tuple,
-        service_vehicles_dict: dict,
-        T_max: int,
-    ):
-
-        self.Z = sorted(scooter_list.zone.unique())
-        self.L_z = [
-            list(
-                scooter_list.loc[scooter_list["zone"] == i].index.union(
-                    delivery_nodes_list.loc[delivery_nodes_list["zone"] == i].index
-                )
-            )
-            for i in self.Z
-        ]
-
-        super().__init__(
-            scooter_list,
-            delivery_nodes_list,
-            depot_location,
-            service_vehicles_dict,
-            T_max,
-        )
-
     def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
         r_kz = {}
         alpha = 1.1
@@ -101,11 +73,3 @@ class AlternativeModel(BaseModel):
             ),
             "force_w_2",
         )
-
-
-if __name__ == "__main__":
-    manager = InstanceManager()
-    instance = manager.create_test_instance(2, 2, AlternativeModel)
-    instance.run()
-    instance.visualize_raw_data_map()
-    instance.model.print_solution()

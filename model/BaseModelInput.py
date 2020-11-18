@@ -34,6 +34,19 @@ class BaseModelInput(ABC):
         self.delivery = self.locations[len(scooter_list.index) + 1 :]
         self.service_vehicles = range(sum(x[0] for x in service_vehicles_dict.values()))
         self.depot = 0
+        self.Z = sorted(scooter_list.zone.unique())
+        self.L_z = [
+            list(
+                scooter_list.loc[scooter_list["zone"] == i].index.union(
+                    delivery_nodes_list.loc[delivery_nodes_list["zone"] == i].index
+                )
+            )
+            for i in self.Z
+        ]
+        # Zones with delivery locations
+        self.Z_demand = [
+            z for z in self.Z if not all([i in self.scooters for i in self.L_z[z]])
+        ]
 
         # Constants
         self.num_scooters = len(scooter_list)
@@ -46,6 +59,9 @@ class BaseModelInput(ABC):
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
         self.T_max = T_max  # Duration of shift in minutes
+        self.B = [0.0] + [
+            x / 100 for x in scooter_list["battery"]
+        ]  # Battery level of scooter at location i
         self.Q_b = []
         self.Q_s = []
         for vehicle_type in service_vehicles_dict.keys():
@@ -80,20 +96,22 @@ class BaseModelInput(ABC):
             (i, j): BaseModelInput.compute_distance(
                 locations[i][0], locations[i][1], locations[j][0], locations[j][1]
             )
-            / (20 * (1000 / 60))
             for i, j in list(product(self.locations, repeat=2))
         }
 
     @staticmethod
-    def compute_distance(lat1, lon1, lat2, lon2):
+    def compute_distance(lat1, lon1, lat2, lon2, speed=20):
         """
         Compute the distance between two points in meters
         :param lat1: Coordinate 1 lat
         :param lon1: Coordinate 1 lon
         :param lat2: Coordinate 2 lat
         :param lon2: Coordinate 2 lon
+        :param speed: speed of service vehicle in kilometers per hour
         :return: Meters between coordinates
         """
+        minutes_in_an_hour = 60
+
         radius = 6378.137
         d_lat = lat2 * pi / 180 - lat1 * pi / 180
         d_lon = lon2 * pi / 180 - lon1 * pi / 180
@@ -102,4 +120,4 @@ class BaseModelInput(ABC):
         ) * sin(d_lon / 2) * sin(d_lon / 2)
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         d = radius * c
-        return d * 1000
+        return (minutes_in_an_hour * d) / speed
