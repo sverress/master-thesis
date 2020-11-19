@@ -29,6 +29,9 @@ class InstanceManager:
         self.instances = (
             {}
         )  # Instances indexed by (num_of_sections, num_of_scooters_per_section)
+        self.time_stamp = time.strftime(
+            "%d-%m %H.%M"
+        )  # so same time stamp is used for all instances when saving
 
     def create_test_instance(
         self, number_of_sections: int, number_of_scooters_per_section: int, **kwargs

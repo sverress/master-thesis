@@ -64,11 +64,13 @@ class Instance:
         """
         self.model.optimize_model()
 
-    def visualize_solution(self, save=False, edge_plot=False):
+    def visualize_solution(
+        self, save=False, edge_plot=False, time_stamp=time.strftime("%d-%m %H.%M")
+    ):
         """
         See documentation of visualize_solution function from visualization
         """
-        visualize_solution(self, save, edge_plot)
+        visualize_solution(self, save, edge_plot, time_stamp)
 
     def visualize_raw_data_map(self):
         """
@@ -84,11 +86,11 @@ class Instance:
         """
         return self.model.m.Runtime
 
-    def save_model_and_instance(self):
+    def save_model_and_instance(self, time_stamp):
         """
         Function to save gurobi models, file name represents: zones per axis_nodes per zone_Tmax_#vehicles_computational limit
         """
-        path = "saved_models/" + time.strftime("%d-%m %H.%M")
+        path = "saved_models/" + time_stamp
         try:
             os.makedirs(path)
         except OSError as e:
