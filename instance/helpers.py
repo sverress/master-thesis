@@ -90,6 +90,21 @@ def save_models_to_excel():
     Iterates through all saved_models and store the information in an excel sheet.
     Saved information: zones, nodes per zone, # vehicles, T_max, solution time, GAP
     """
+    try:
+        os.makedirs("computational_study")
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    book = load_workbook("computational_study/comp_study_summary.xlsx")
+    writer = pd.ExcelWriter(
+        "computational_study/comp_study_summary.xlsx", engine="openpyxl"
+    )
+    writer.book = book
+    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+
+    sheets = [ws.title for ws in book.worksheets]
+
     (
         zones,
         nodes_per_zone,
@@ -101,18 +116,20 @@ def save_models_to_excel():
         objective_value,
     ) = ([], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
-        for file in files:
-            with open(root + file) as file_path:
-                model = json.load(file_path)
-            model_param = file.split("_")
-            zones.append(int(model_param[1]))
-            nodes_per_zone.append(int(model_param[2]))
-            number_of_vehicles.append(int(model_param[3]))
-            T_max.append(int(model_param[4]))
-            visit_list.append(model["Visit Percentage"])
-            solution_time.append(float(model["SolutionInfo"]["Runtime"]))
-            gap.append(float(model["SolutionInfo"]["MIPGap"]))
-            objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
+        if len(dirs) == 0:
+            if root.split("/")[-1] not in sheets:
+                for file in files:
+                    with open(f"{root}/{file}") as file_path:
+                        model = json.load(file_path)
+                    model_param = file.split("_")
+                    zones.append(int(model_param[1]))
+                    nodes_per_zone.append(int(model_param[2]))
+                    number_of_vehicles.append(int(model_param[3]))
+                    T_max.append(int(model_param[4]))
+                    visit_list.append(model["Visit Percentage"])
+                    solution_time.append(float(model["SolutionInfo"]["Runtime"]))
+                    gap.append(float(model["SolutionInfo"]["MIPGap"]))
+                    objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
 
     df = pd.DataFrame(
         list(
@@ -139,18 +156,6 @@ def save_models_to_excel():
         ],
     )
 
-    try:
-        os.makedirs("computational_study")
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-    book = load_workbook("computational_study/comp_study_summary.xlsx")
-    writer = pd.ExcelWriter(
-        "computational_study/comp_study_summary.xlsx", engine="openpyxl"
-    )
-    writer.book = book
-    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
     df.to_excel(
         writer, float_format="%.5f", sheet_name=str(time.strftime("%d-%m %H.%M")),
     )
