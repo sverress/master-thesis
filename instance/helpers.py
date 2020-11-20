@@ -1,4 +1,4 @@
-import csv
+import tsp
 import errno
 import numpy as np
 import pandas as pd
@@ -165,3 +165,9 @@ def save_models_to_excel():
 def get_center_of_bound(bound):
     lat_min, lat_max, lon_min, lon_max = bound
     return lat_min + (lat_max - lat_min) / 2, lon_min + (lon_max - lon_min) / 2
+
+
+def calculate_tsp(number_of_nodes, time_matrix):
+    node_range = range(number_of_nodes)
+    dist = tsp.tsp(node_range, time_matrix)[0]
+    print(dist)

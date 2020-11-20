@@ -5,7 +5,7 @@
 	},
 	"ranges": {
 	"number_of_sections": 2,
-	"number_of_scooter_per_section": [5,5,1],
+	"number_of_scooter_per_section": [15,15,1],
 	"number_of_vehicles": [2,2,1],
 	"T_max": 20,
 	"time_limit": 2

@@ -86,6 +86,9 @@ class Instance:
         """
         return self.model.m.Runtime
 
+    def get_number_of_nodes(self):
+        return len(self.scooters) + len(self.delivery_nodes) + 1
+
     def save_model_and_instance(self, time_stamp):
         """
         Function to save gurobi models, file name represents: zones per axis_nodes per zone_Tmax_#vehicles_computational limit
