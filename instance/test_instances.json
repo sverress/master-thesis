@@ -1,13 +1,13 @@
 {
 	"model": {
 		"model_type": "standard",
-		"T_max_is_percentage": false
+		"T_max_is_percentage": true
 	},
 	"ranges": {
 	"number_of_sections": 2,
-	"number_of_scooter_per_section": [15,15,1],
-	"number_of_vehicles": [2,2,1],
-	"T_max": 20,
-	"time_limit": 2
+	"number_of_scooter_per_section": [4,4,1],
+	"number_of_vehicles": [3,3,1],
+	"T_max": 0.6,
+	"time_limit": 60
 	}
 }

@@ -6,7 +6,6 @@ from instance.helpers import *
 from instance.Instance import Instance
 from model.StandardModel import StandardModel
 from model.AlternativeModel import AlternativeModel
-from model.BaseModelInput import BaseModelInput
 
 
 class InstanceManager:
@@ -24,7 +23,7 @@ class InstanceManager:
             10.7027,
             10.7772,
         )  # (lat_min, lat_max, lon_min, lon_max) Area in Oslo
-        self._random_state = 1
+        self._random_state = 10
         random.seed(self._random_state)
         self.instances = (
             {}
@@ -52,8 +51,8 @@ class InstanceManager:
         )
 
         filtered_scooters = self.filter_data_lat_lon(self._data, self._bound)
-        scooters = filtered_scooters.sample(
-            number_of_scooters, random_state=self._random_state
+        scooters = filtered_scooters[filtered_scooters.battery != 100].sample(
+            number_of_scooters
         )[["lat", "lon", "battery"]]
 
         scooters["zone"] = -1
@@ -83,33 +82,7 @@ class InstanceManager:
         number_of_zones = len(scooters.zone.unique())
         optimal_state = [number_of_scooters_per_section] * number_of_zones
         if is_percent_t_max or kwargs.get("T_max") is None:
-            # Combine all locations in one dataframe
-            all_locations = pd.concat(
-                (
-                    pd.DataFrame([list(depot)], columns=["lat", "lon"]),
-                    scooters[["lat", "lon"]],
-                    delivery_nodes[["lat", "lon"]],
-                )
-            )
-            sum_of_travel_time = 0.0
-            number_of_iterations = 5
-            for k in range(number_of_iterations):
-                dataset = all_locations.sample(frac=1)
-                previous_cords = dataset.iloc[0]
-                for i in range(1, len(all_locations)):
-                    current_cords = dataset.iloc[i]
-                    sum_of_travel_time += BaseModelInput.compute_distance(
-                        previous_cords["lat"],
-                        previous_cords["lon"],
-                        current_cords["lat"],
-                        current_cords["lon"],
-                    )
-                    previous_cords = current_cords
-            t_max = (
-                (sum_of_travel_time / (number_of_iterations * number_of_vehicles))
-                * 0.75  # Tuned parameter
-                * kwargs.get("T_max", 0.70)
-            )
+            t_max = kwargs.get("T_max")
         else:
             t_max = kwargs.get("T_max")
         return Instance(

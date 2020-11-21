@@ -245,11 +245,12 @@ class BaseModel(ABC):
 
         # Subtour elimination
         self.m.addConstrs(
-            (2 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot), "subtours_1",
+            (0 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot), "subtours_1",
         )
         self.m.addConstrs(
             (
-                self.u[(i, v)] <= self._.num_locations
+                self.u[(i, v)] + 1
+                <= gp.quicksum(self.x[j, k, v] for j, k in self.cart_locs if j != k)
                 for i, v in self.cart_loc_v_not_depot
             ),
             "subtours_2",
