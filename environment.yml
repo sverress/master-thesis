@@ -11,6 +11,3 @@ dependencies:
   - matplotlib
   - pandas
   - openpyxl
-  - pip
-  - pip:
-      - tsp
