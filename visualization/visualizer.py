@@ -1,12 +1,15 @@
 import errno
 import os
-
+import time
+from matplotlib import gridspec
 import matplotlib.pyplot as plt
 from instance.helpers import create_sections
 from visualization.helpers import *
 
 
-def visualize_solution(instance, save, edge_plot=False):
+def visualize_solution(
+    instance, save, edge_plot=False, time_stamp=time.strftime("%d-%m %H.%M")
+):
     """
     Visualize a solution from the model. The visualization is divided into two frames.
     Frame one: All nodes (with corresponding reward and p-value, if its picked up),
@@ -16,19 +19,34 @@ def visualize_solution(instance, save, edge_plot=False):
     :param save: bool - if model should be displayed or saved
     :param instance: Instance object for a given solution
     :param edge_plot: bool - true if edge plot should be displayed
+    :param time_stamp: str - time stamp when instance manager was created (to get the right folder to save figure in)
     """
 
     # generate plot and subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 9.7))
+    fig = plt.figure(figsize=(20, 9.7))
     fig.tight_layout(pad=1.0)
-    ax1.set_title("Model solution", fontweight="bold")
 
     # removed second plot, but stored if we want to use it for later.
     if edge_plot:
-        ax2.set_title("Edges not included in solution", fontweight="bold")
+        spec = gridspec.GridSpec(
+            ncols=2, nrows=1, width_ratios=[1, 8, 8], wspace=0, hspace=0
+        )
+        ax1 = fig.add_subplot(spec[0])
+        ax1.axis("off")
+        ax2 = fig.add_subplot(spec[1])
+        ax3 = fig.add_subplot(spec[2])
+        ax2.set_title(
+            f"Model solution ({instance.model.to_string(False)})", fontweight="bold"
+        )
+        ax3.set_title("Edges not included in solution", fontweight="bold")
     else:
-        ax2.set_visible(False)
-        ax1.change_geometry(1, 1, 1)
+        spec = gridspec.GridSpec(ncols=2, nrows=1, width_ratios=[1, 16])
+        ax1 = fig.add_subplot(spec[0])
+        ax1.axis("off")
+        ax2 = fig.add_subplot(spec[1])
+        ax2.set_title(
+            f"Model solution ({instance.model.to_string(False)})", fontweight="bold"
+        )
 
     # add vehicle and node info to plot
     colors = add_vehicle_node_info(instance, ax1)
@@ -44,6 +62,7 @@ def visualize_solution(instance, save, edge_plot=False):
         for i, p in enumerate(node_dict.keys()):  # i is number in node list
             if node_dict[p]["label"] != DEPOT:
                 s = ""
+                pad = 0
                 if node_dict[p]["label"] == SUPPLY:
                     s += "B=" + str(int(instance.model_input.B[i] * 100)) + "\n"
                 for k in range(instance.model_input.num_service_vehicles):
@@ -53,9 +72,15 @@ def visualize_solution(instance, save, edge_plot=False):
                         and instance.model.y[(i, k)].x > 0
                     ):
                         s += "P_%s=%s" % (k + 1, int(instance.model.p[(i, k)].x))
+                        pad = 0.012
                 x, y = pos[i]
-                ax1.text(
-                    x - 0.01, y + 0.01, s, weight="bold", horizontalalignment="left",
+                ax2.text(
+                    x - 0.01,
+                    y + pad + 0.01,
+                    s,
+                    fontsize=8,
+                    weight="bold",
+                    horizontalalignment="left",
                 )
 
         edge_labels = {}
@@ -82,7 +107,7 @@ def visualize_solution(instance, save, edge_plot=False):
 
         # second plot for nodes/edges not in solution
         if edge_plot:
-            display_edge_plot(instance, ax2, edge_labels)
+            display_edge_plot(instance, ax3, edge_labels)
 
         # set edge color for solution
         edges = graph.edges()
@@ -97,48 +122,50 @@ def visualize_solution(instance, save, edge_plot=False):
             edgecolors=node_border,
             edge_color=e_colors,
             width=e_weights,
-            node_size=400,
+            node_size=300,
             alpha=0.7,
             with_labels=False,
-            ax=ax1,
+            ax=ax2,
         )
 
         nx.draw_networkx_edge_labels(
-            graph, pos, edge_labels=edge_labels, font_size=8, ax=ax1
+            graph, pos, edge_labels=edge_labels, font_size=8, ax=ax2
         )
         nx.draw_networkx_labels(
             graph,
             pos,
             labels,
-            font_size=14,
+            font_size=10,
             font_color="white",
             font_weight="bold",
-            ax=ax1,
+            ax=ax2,
         )
 
     else:
-        ax1.set_title("Model is Infeasible", fontweight="bold")
+        ax2.set_title("Model is Infeasible", fontweight="bold")
 
     # add description for nodes
     legend_color = [BLUE, GREEN, RED]
     legend_text = ["Depot", "Scooter", "Delivery"]
 
     for i in range(len(legend_text)):
-        ax1.scatter(1.01, 1 - 0.05 * i, s=100, c=legend_color[i], marker="o", alpha=0.7)
-        ax1.annotate(legend_text[i], (1.015, 0.995 - 0.05 * i))
+        ax2.scatter(1.01, 1 - 0.05 * i, s=100, c=legend_color[i], marker="o", alpha=0.7)
+        ax2.annotate(legend_text[i], (1.017, 0.993 - 0.05 * i))
 
     # adding zones to plot
-    add_zones(instance.number_of_sections, ax1)
+    add_zones(instance.number_of_sections, ax2)
 
     # show or save figure
     if save:
         try:
-            os.makedirs("saved_models_fig")
+            os.makedirs(f"saved_models_fig/{time_stamp}")
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
-        plt.savefig("saved_models_fig/" + instance.get_model_name() + ".png")
+        plt.tight_layout()
+        plt.savefig(f"saved_models_fig/{time_stamp}/{instance.get_model_name()}.png")
     else:
+        plt.tight_layout()
         plt.show()
 
 

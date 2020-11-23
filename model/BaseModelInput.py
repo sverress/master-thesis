@@ -1,4 +1,5 @@
 import pandas as pd
+import tsp
 from math import sqrt, pi, sin, cos, atan2
 from itertools import product
 from abc import ABC, abstractmethod
@@ -17,6 +18,7 @@ class BaseModelInput(ABC):
         service_vehicles: tuple,
         optimal_state: list,
         T_max: int,
+        is_percent_t_max: bool,
     ):
         """
         Creating all input to the gurobi model
@@ -65,7 +67,12 @@ class BaseModelInput(ABC):
         self.time_cost = self.compute_time_matrix(
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
-        self.shift_duration = T_max  # Duration of shift in minutes
+        if is_percent_t_max:
+            self.shift_duration = T_max * self.calculate_tsp(
+                len(self.locations), self.time_cost
+            )
+        else:
+            self.shift_duration = T_max  # Duration of shift in minutes
         self.battery_level = [0.0] + [
             x / 100 for x in scooter_list["battery"]
         ]  # Battery level of scooter at location i
@@ -127,3 +134,9 @@ class BaseModelInput(ABC):
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         d = radius * c
         return (minutes_in_an_hour * d) / speed
+
+    @staticmethod
+    def calculate_tsp(number_of_nodes, time_matrix):
+        node_range = range(number_of_nodes)
+        dist, route_list = tsp.tsp(node_range, time_matrix, 10)
+        return dist

@@ -48,9 +48,11 @@ class BaseModel(ABC):
         # p_iv - 1 if service vehicle v picks up a scooter at location i - 0 otherwise
         self.p = self.m.addVars(self.cart_loc_v_scooters, vtype=GRB.BINARY, name="p")
         # u_iv - position of location i for service vehicle v route
-        self.u = self.m.addVars(self.cart_loc_v_not_depot, vtype=GRB.INTEGER, name="u")
+        self.u = self.m.addVars(
+            self.cart_loc_v_not_depot, vtype=GRB.CONTINUOUS, name="u"
+        )
         # l_iv - load (number of scooters) when entering location i
-        self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.INTEGER, name="l")
+        self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.CONTINUOUS, name="l")
         if setup:
             self.setup()
 
@@ -63,6 +65,10 @@ class BaseModel(ABC):
 
     @abstractmethod
     def set_objective(self):
+        pass
+
+    @abstractmethod
+    def to_string(self, short_name=True):
         pass
 
     @staticmethod
@@ -245,14 +251,12 @@ class BaseModel(ABC):
 
         # Subtour elimination
         self.m.addConstrs(
-            (2 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot), "subtours_1",
-        )
-        self.m.addConstrs(
             (
-                self.u[(i, v)] <= self._.num_locations
+                self.u[(i, v)]
+                <= gp.quicksum(self.x[j, k, v] for j, k in self.cart_locs if j != k)
                 for i, v in self.cart_loc_v_not_depot
             ),
-            "subtours_2",
+            "subtours_1",
         )
 
         self.m.addConstrs(
@@ -262,7 +266,7 @@ class BaseModel(ABC):
                 for i, j, v in self.cart_loc_loc_v
                 if i != self._.depot and j != self._.depot
             ),
-            "subtours_3",
+            "subtours_2",
         )
 
     def optimize_model(self):

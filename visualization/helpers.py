@@ -95,9 +95,9 @@ def add_vehicle_node_info(instance, ax):
 
     # adding vehicle color description
     for i in range(len(colors)):
-        s = f"Vehicle{(i + 1)}"
+        s = f"Vehicle {(i + 1)}"
         ax.text(
-            -0.05,
+            0,
             1 - 0.03 * i,
             s,
             transform=ax.transAxes,
@@ -123,7 +123,7 @@ def add_vehicle_node_info(instance, ax):
 
     # place a text box in upper left in axes coords
     ax.text(
-        -0.05,
+        0,
         1 - 0.03 * (len(colors) + 1),
         cons,
         transform=ax.transAxes,
@@ -239,4 +239,4 @@ def add_zones(number_of_zones, ax):
     )
     for x, y in xy:
         ax.axhline(x, xmax=0.93, color="black")
-        ax.axvline(y, ymax=0.95, color="black")
+        ax.axvline(y, ymax=0.98, color="black")

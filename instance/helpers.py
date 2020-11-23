@@ -1,4 +1,3 @@
-import csv
 import errno
 import numpy as np
 import pandas as pd
@@ -56,13 +55,19 @@ def load_test_parameters_from_json():
             parameter_min, parameter_max, parameter_increment = param[key]
             ranges.append(range(parameter_min, parameter_max + 1, parameter_increment))
         elif type(param[key]) is float:
+
             parameter = param[key]
             ranges.append([parameter])
         else:
             parameter = param[key]
             ranges.append(range(parameter, parameter + 1))
 
-    range_list = list(product(*ranges))
+    models = data["model"]["model_type"]
+    if type(models) is not list:
+        range_list = list(product(*ranges, (models,)))
+    else:
+        range_list = list(product(*ranges, models))
+
     instance_list = []
     for (
         zones_per_axis,
@@ -70,6 +75,7 @@ def load_test_parameters_from_json():
         number_of_vehicles,
         T_max,
         time_limit,
+        model_type,
     ) in range_list:
         instance_list.append(
             {
@@ -78,7 +84,7 @@ def load_test_parameters_from_json():
                 "number_of_vehicles": number_of_vehicles,
                 "T_max": T_max,
                 "time_limit": time_limit,
-                "model_type": data["model"]["model_type"],
+                "model_type": model_type,
                 "T_max_is_percentage": data["model"]["T_max_is_percentage"],
             }
         )
@@ -90,55 +96,6 @@ def save_models_to_excel():
     Iterates through all saved_models and store the information in an excel sheet.
     Saved information: zones, nodes per zone, # vehicles, T_max, solution time, GAP
     """
-    (
-        zones,
-        nodes_per_zone,
-        number_of_vehicles,
-        T_max,
-        solution_time,
-        gap,
-        visit_list,
-        objective_value,
-    ) = ([], [], [], [], [], [], [], [])
-    for root, dirs, files in os.walk("saved_models/", topdown=True):
-        for file in files:
-            with open(root + file) as file_path:
-                model = json.load(file_path)
-            model_param = file.split("_")
-            zones.append(int(model_param[1]))
-            nodes_per_zone.append(int(model_param[2]))
-            number_of_vehicles.append(int(model_param[3]))
-            T_max.append(int(model_param[4]))
-            visit_list.append(model["Visit Percentage"])
-            solution_time.append(float(model["SolutionInfo"]["Runtime"]))
-            gap.append(float(model["SolutionInfo"]["MIPGap"]))
-            objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
-
-    df = pd.DataFrame(
-        list(
-            zip(
-                zones,
-                nodes_per_zone,
-                number_of_vehicles,
-                T_max,
-                solution_time,
-                gap,
-                visit_list,
-                objective_value,
-            )
-        ),
-        columns=[
-            "Zones",
-            "Nodes per zone",
-            "Number of vehicles",
-            "T_max",
-            "Solution time",
-            "Gap",
-            "Visit Percentage",
-            "Obj value",
-        ],
-    )
-
     try:
         os.makedirs("computational_study")
     except OSError as e:
@@ -151,6 +108,64 @@ def save_models_to_excel():
     )
     writer.book = book
     writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+
+    sheets = [ws.title for ws in book.worksheets]
+
+    (
+        zones,
+        nodes_per_zone,
+        number_of_vehicles,
+        T_max,
+        solution_time,
+        gap,
+        visit_list,
+        objective_value,
+        model_type,
+    ) = ([], [], [], [], [], [], [], [], [])
+    for root, dirs, files in os.walk("saved_models/", topdown=True):
+        if len(dirs) == 0:
+            if root.split("/")[-1] not in sheets:
+                for file in files:
+                    with open(f"{root}/{file}") as file_path:
+                        model = json.load(file_path)
+                    model_param = file.split("_")
+                    zones.append(int(model_param[1]))
+                    nodes_per_zone.append(int(model_param[2]))
+                    number_of_vehicles.append(int(model_param[3]))
+                    T_max.append(int(model_param[4]))
+                    visit_list.append(model["Visit Percentage"])
+                    solution_time.append(float(model["SolutionInfo"]["Runtime"]))
+                    gap.append(float(model["SolutionInfo"]["MIPGap"]))
+                    objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
+                    model_type.append(model["Instance"]["model_class"])
+
+    df = pd.DataFrame(
+        list(
+            zip(
+                zones,
+                nodes_per_zone,
+                number_of_vehicles,
+                T_max,
+                solution_time,
+                gap,
+                visit_list,
+                objective_value,
+                model_type,
+            )
+        ),
+        columns=[
+            "Zones",
+            "Nodes per zone",
+            "Number of vehicles",
+            "T_max",
+            "Solution time",
+            "Gap",
+            "Visit percent",
+            "Obj value",
+            "Model type",
+        ],
+    )
+
     df.to_excel(
         writer, float_format="%.5f", sheet_name=str(time.strftime("%d-%m %H.%M")),
     )
