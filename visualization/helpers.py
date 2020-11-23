@@ -95,7 +95,7 @@ def add_vehicle_node_info(instance, ax):
 
     # adding vehicle color description
     for i in range(len(colors)):
-        s = f"Vehicle{(i + 1)}"
+        s = f"Vehicle {(i + 1)}"
         ax.text(
             0,
             1 - 0.03 * i,
