@@ -1,4 +1,3 @@
-import pandas as pd
 import random
 import math
 
@@ -7,6 +6,7 @@ from instance.Instance import Instance
 from model.StandardModel import StandardModel
 from model.AlternativeModel import AlternativeModel
 from model.BaseModelInput import BaseModelInput
+from model.SymmetryModel import SymmetryModel
 
 
 class InstanceManager:
@@ -109,6 +109,7 @@ class InstanceManager:
             )
         else:
             t_max = kwargs.get("T_max")
+
         return Instance(
             scooters,
             delivery_nodes,
@@ -119,10 +120,16 @@ class InstanceManager:
             t_max,
             kwargs.get("time_limit", 10),
             self._bound,
-            AlternativeModel
-            if kwargs.get("model_type", "standard") == "alternative"
-            else StandardModel,
+            InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
         )
+
+    @staticmethod
+    def get_model_types():
+        return {
+            "alternative": AlternativeModel,
+            "standard": StandardModel,
+            "symmetry": SymmetryModel,
+        }
 
     def create_multiple_instances(self):
         """
