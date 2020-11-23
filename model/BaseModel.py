@@ -116,7 +116,7 @@ class BaseModel(ABC):
         #  guarantee the connectivity of each service vehicle path
         self.m.addConstrs(
             (
-                gp.quicksum(self.x[(i, k, v)] for i in self._.locations if i != k)
+                gp.quicksum(self.x[(i, k, v)] for i in self._.locations)
                 == self.y[(k, v)]
                 for k, v in self.cart_loc_v
             ),

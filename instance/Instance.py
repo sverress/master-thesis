@@ -4,7 +4,6 @@ import pandas as pd
 import math
 import json
 import time
-from model.StandardModel import StandardModel
 from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
@@ -145,14 +144,8 @@ class Instance:
 
     def get_model_name(self):
         num_of_service_vehicles, scooter_cap, battery_cap = self.service_vehicles
-        return "model_%d_%d_%d_%d_%d_%s" % (
-            self.number_of_sections,
-            len(self.scooters) / (self.number_of_sections * 2),
-            num_of_service_vehicles,
-            self.T_max,
-            self.computational_limit,
-            self.model.to_string(),
-        )
+        scooters_per_section = len(self.scooters) / (self.number_of_sections * 2)
+        return f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_{self.T_max}_{self.computational_limit}_{self.model.to_string}"
 
     def is_feasible(self):
         return self.model.m.MIPGap != math.inf
