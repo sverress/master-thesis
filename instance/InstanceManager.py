@@ -79,7 +79,7 @@ class InstanceManager:
         }
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
-        t_max = kwargs.get("T_max")
+        t_max = kwargs.get("T_max", 0.6 if is_percent_t_max else 60)
         number_of_zones = len(scooters.zone.unique())
         optimal_state = [number_of_scooters_per_section] * number_of_zones
         return Instance(
@@ -105,7 +105,6 @@ class InstanceManager:
         """
         instances_parameters = load_test_parameters_from_json()
         for i, parameters in enumerate(instances_parameters):
-            # TODO: Should be possible to choose what model type to use in json config
             self.instances[i] = self.create_test_instance(**parameters)
 
     def set_random_state(self, new_state: int):

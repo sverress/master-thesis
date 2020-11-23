@@ -35,14 +35,18 @@ def visualize_solution(
         ax1.axis("off")
         ax2 = fig.add_subplot(spec[1])
         ax3 = fig.add_subplot(spec[2])
-        ax2.set_title("Model solution", fontweight="bold")
+        ax2.set_title(
+            f"Model solution ({instance.model.to_string(False)})", fontweight="bold"
+        )
         ax3.set_title("Edges not included in solution", fontweight="bold")
     else:
         spec = gridspec.GridSpec(ncols=2, nrows=1, width_ratios=[1, 16])
         ax1 = fig.add_subplot(spec[0])
         ax1.axis("off")
         ax2 = fig.add_subplot(spec[1])
-        ax2.set_title("Model solution", fontweight="bold")
+        ax2.set_title(
+            f"Model solution ({instance.model.to_string(False)})", fontweight="bold"
+        )
 
     # add vehicle and node info to plot
     colors = add_vehicle_node_info(instance, ax1)

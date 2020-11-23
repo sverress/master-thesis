@@ -31,6 +31,9 @@ class AlternativeModel(BaseModel):
         self.w = self.m.addVars(self.cart_k_z, vtype=GRB.BINARY, name="w")
         self.setup()
 
+    def to_string(self, short_name=True):
+        return "A" if short_name else "Alternative"
+
     @staticmethod
     def get_input_class():
         return AlternativeModelInput

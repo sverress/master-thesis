@@ -141,5 +141,5 @@ class BaseModelInput(ABC):
     @staticmethod
     def calculate_tsp(number_of_nodes, time_matrix):
         node_range = range(number_of_nodes)
-        dist = tsp.tsp(node_range, time_matrix, 10)[0]
+        dist, route_list = tsp.tsp(node_range, time_matrix, 10)
         return dist

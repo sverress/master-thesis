@@ -4,7 +4,7 @@ import pandas as pd
 import math
 import json
 import time
-
+from model.StandardModel import StandardModel
 from visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
@@ -134,7 +134,7 @@ class Instance:
             "T_max": self.T_max,
             "computational_limit": self.computational_limit,
             "bound": self.bound,
-            "model_class": self.model.__class__.__name__,
+            "model_class": self.model.to_string(False),
         }
 
     def get_model_variables(self):
@@ -144,12 +144,13 @@ class Instance:
         return variables
 
     def get_model_name(self):
-        return "model_%d_%d_%d_%d_%d" % (
+        return "model_%d_%d_%d_%d_%d_%s" % (
             self.number_of_sections,
             len(self.scooters) / (self.number_of_sections * 2),
             self.service_vehicles["car"][0] + self.service_vehicles["bike"][0],
             self.T_max,
             self.computational_limit,
+            self.model.to_string(),
         )
 
     def is_feasible(self):

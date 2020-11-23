@@ -1,4 +1,3 @@
-import tsp
 import errno
 import numpy as np
 import pandas as pd
@@ -56,13 +55,19 @@ def load_test_parameters_from_json():
             parameter_min, parameter_max, parameter_increment = param[key]
             ranges.append(range(parameter_min, parameter_max + 1, parameter_increment))
         elif type(param[key]) is float:
+
             parameter = param[key]
             ranges.append([parameter])
         else:
             parameter = param[key]
             ranges.append(range(parameter, parameter + 1))
 
-    range_list = list(product(*ranges))
+    models = data["model"]["model_type"]
+    if type(models) is not list:
+        range_list = list(product(*ranges, (models,)))
+    else:
+        range_list = list(product(*ranges, models))
+
     instance_list = []
     for (
         zones_per_axis,
@@ -70,6 +75,7 @@ def load_test_parameters_from_json():
         number_of_vehicles,
         T_max,
         time_limit,
+        model_type,
     ) in range_list:
         instance_list.append(
             {
@@ -78,7 +84,7 @@ def load_test_parameters_from_json():
                 "number_of_vehicles": number_of_vehicles,
                 "T_max": T_max,
                 "time_limit": time_limit,
-                "model_type": data["model"]["model_type"],
+                "model_type": model_type,
                 "T_max_is_percentage": data["model"]["T_max_is_percentage"],
             }
         )
@@ -114,7 +120,8 @@ def save_models_to_excel():
         gap,
         visit_list,
         objective_value,
-    ) = ([], [], [], [], [], [], [], [])
+        model_type,
+    ) = ([], [], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
         if len(dirs) == 0:
             if root.split("/")[-1] not in sheets:
@@ -130,6 +137,7 @@ def save_models_to_excel():
                     solution_time.append(float(model["SolutionInfo"]["Runtime"]))
                     gap.append(float(model["SolutionInfo"]["MIPGap"]))
                     objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
+                    model_type.append(model["Instance"]["model_class"])
 
     df = pd.DataFrame(
         list(
@@ -142,6 +150,7 @@ def save_models_to_excel():
                 gap,
                 visit_list,
                 objective_value,
+                model_type,
             )
         ),
         columns=[
@@ -151,8 +160,9 @@ def save_models_to_excel():
             "T_max",
             "Solution time",
             "Gap",
-            "Visit Percentage",
+            "Visit percent",
             "Obj value",
+            "Model type",
         ],
     )
 

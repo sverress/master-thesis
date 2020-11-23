@@ -67,6 +67,10 @@ class BaseModel(ABC):
     def set_objective(self):
         pass
 
+    @abstractmethod
+    def to_string(self, short_name=True):
+        pass
+
     @staticmethod
     @abstractmethod
     def get_input_class():
@@ -112,7 +116,7 @@ class BaseModel(ABC):
         #  guarantee the connectivity of each service vehicle path
         self.m.addConstrs(
             (
-                gp.quicksum(self.x[(i, k, v)] for i in self._.locations)
+                gp.quicksum(self.x[(i, k, v)] for i in self._.locations if i != k)
                 == self.y[(k, v)]
                 for k, v in self.cart_loc_v
             ),
@@ -247,15 +251,12 @@ class BaseModel(ABC):
 
         # Subtour elimination
         self.m.addConstrs(
-            (0 <= self.u[(i, v)] for i, v in self.cart_loc_v_not_depot), "subtours_1",
-        )
-        self.m.addConstrs(
             (
-                self.u[(i, v)] + 1
+                self.u[(i, v)]
                 <= gp.quicksum(self.x[j, k, v] for j, k in self.cart_locs if j != k)
                 for i, v in self.cart_loc_v_not_depot
             ),
-            "subtours_2",
+            "subtours_1",
         )
 
         self.m.addConstrs(
@@ -265,7 +266,7 @@ class BaseModel(ABC):
                 for i, j, v in self.cart_loc_loc_v
                 if i != self._.depot and j != self._.depot
             ),
-            "subtours_3",
+            "subtours_2",
         )
 
     def optimize_model(self):

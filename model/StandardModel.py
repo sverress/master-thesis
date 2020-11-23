@@ -19,6 +19,9 @@ class StandardModel(BaseModel):
     def get_input_class():
         return StandardModelInput
 
+    def to_string(self, short_name=True):
+        return "S" if short_name else "Standard"
+
     def set_objective(self):
         self.m.setObjective(
             gp.quicksum(
