@@ -16,7 +16,7 @@ class Instance:
         scooters: pd.DataFrame,
         delivery_nodes: pd.DataFrame,
         depot: tuple,
-        service_vehicles: dict,
+        service_vehicles: tuple,
         optimal_state: list,
         number_of_sections: int,
         T_max: int,
@@ -115,10 +115,11 @@ class Instance:
             json.dump(data, jsonFile)
 
     def get_model_name(self):
+        num_of_service_vehicles, scooter_cap, battery_cap = self.service_vehicles
         return "model_%d_%d_%d_%d_%d" % (
             self.number_of_sections,
             len(self.scooters) / (self.number_of_sections * 2),
-            self.service_vehicles["car"][0] + self.service_vehicles["bike"][0],
+            num_of_service_vehicles,
             self.T_max,
             self.computational_limit,
         )
