@@ -21,6 +21,7 @@ class Instance:
         optimal_state: list,
         number_of_sections: int,
         T_max: int,
+        is_percent_t_max,
         computational_limit: int,
         bound: tuple,
         model_class,
@@ -53,7 +54,13 @@ class Instance:
 
         # Model
         self.model_input = model_class.get_input_class()(
-            scooters, delivery_nodes, depot, service_vehicles, optimal_state, T_max
+            scooters,
+            delivery_nodes,
+            depot,
+            service_vehicles,
+            optimal_state,
+            T_max,
+            is_percent_t_max,
         )
         self.model = model_class(self.model_input, time_limit=computational_limit)
         self.number_of_sections = number_of_sections

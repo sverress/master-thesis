@@ -52,7 +52,7 @@ class InstanceManager:
 
         filtered_scooters = self.filter_data_lat_lon(self._data, self._bound)
         scooters = filtered_scooters[filtered_scooters.battery != 100].sample(
-            number_of_scooters
+            number_of_scooters, random_state=self._random_state
         )[["lat", "lon", "battery"]]
 
         scooters["zone"] = -1
@@ -79,12 +79,9 @@ class InstanceManager:
         }
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
+        t_max = kwargs.get("T_max")
         number_of_zones = len(scooters.zone.unique())
         optimal_state = [number_of_scooters_per_section] * number_of_zones
-        if is_percent_t_max or kwargs.get("T_max") is None:
-            t_max = kwargs.get("T_max")
-        else:
-            t_max = kwargs.get("T_max")
         return Instance(
             scooters,
             delivery_nodes,
@@ -93,6 +90,7 @@ class InstanceManager:
             optimal_state,
             number_of_sections,
             t_max,
+            is_percent_t_max,
             kwargs.get("time_limit", 10),
             self._bound,
             AlternativeModel

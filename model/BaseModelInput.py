@@ -18,6 +18,7 @@ class BaseModelInput(ABC):
         service_vehicles_dict: dict,
         optimal_state: list,
         T_max: int,
+        is_percent_t_max: bool,
     ):
         """
         Creating all input to the gurobi model
@@ -64,7 +65,7 @@ class BaseModelInput(ABC):
         self.time_cost = self.compute_time_matrix(
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
-        if T_max <= 1:
+        if is_percent_t_max:
             self.shift_duration = T_max * self.calculate_tsp(
                 len(self.locations), self.time_cost
             )

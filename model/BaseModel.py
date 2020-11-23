@@ -48,9 +48,11 @@ class BaseModel(ABC):
         # p_iv - 1 if service vehicle v picks up a scooter at location i - 0 otherwise
         self.p = self.m.addVars(self.cart_loc_v_scooters, vtype=GRB.BINARY, name="p")
         # u_iv - position of location i for service vehicle v route
-        self.u = self.m.addVars(self.cart_loc_v_not_depot, vtype=GRB.INTEGER, name="u")
+        self.u = self.m.addVars(
+            self.cart_loc_v_not_depot, vtype=GRB.CONTINUOUS, name="u"
+        )
         # l_iv - load (number of scooters) when entering location i
-        self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.INTEGER, name="l")
+        self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.CONTINUOUS, name="l")
         if setup:
             self.setup()
 

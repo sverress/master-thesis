@@ -8,6 +8,6 @@
 	"number_of_scooter_per_section": [4,4,1],
 	"number_of_vehicles": [3,3,1],
 	"T_max": 0.6,
-	"time_limit": 60
+	"time_limit": 6
 	}
 }
