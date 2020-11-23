@@ -1,6 +1,6 @@
 import random
 import math
-
+import copy
 from instance.helpers import *
 from instance.Instance import Instance
 from model.StandardModel import StandardModel
@@ -24,11 +24,14 @@ class InstanceManager:
             10.7027,
             10.7772,
         )  # (lat_min, lat_max, lon_min, lon_max) Area in Oslo
-        self._random_state = 1
+        self._random_state = 10
         random.seed(self._random_state)
         self.instances = (
             {}
         )  # Instances indexed by (num_of_sections, num_of_scooters_per_section)
+        self.time_stamp = time.strftime(
+            "%d-%m %H.%M"
+        )  # so same time stamp is used for all instances when saving
 
     def create_test_instance(
         self, number_of_sections: int, number_of_scooters_per_section: int, **kwargs
@@ -43,13 +46,23 @@ class InstanceManager:
         state at the time of writing
         :return: Instance object
         """
+
         number_of_scooters = number_of_scooters_per_section * number_of_sections ** 2
         number_of_vehicles = kwargs.get(
             "number_of_vehicles", math.ceil(number_of_scooters / 10)
         )
 
         filtered_scooters = self.filter_data_lat_lon(self._data, self._bound)
-        scooters = filtered_scooters.sample(
+
+        seed = kwargs.get("seed", -1)
+        if seed == -1:
+            random.seed()
+            self._random_state = random.randint(0, 10000)
+        else:
+            self._random_state = seed
+        random.seed(self._random_state)
+
+        scooters = filtered_scooters[filtered_scooters.battery != 100].sample(
             number_of_scooters, random_state=self._random_state
         )[["lat", "lon", "battery"]]
 
@@ -72,50 +85,24 @@ class InstanceManager:
         )  # number of vehicles, scooter capacity, battery capacity
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
+        t_max = kwargs.get("T_max", 0.6 if is_percent_t_max else 60)
         number_of_zones = len(scooters.zone.unique())
         optimal_state = [number_of_scooters_per_section] * number_of_zones
-        if is_percent_t_max or kwargs.get("T_max") is None:
-            # Combine all locations in one dataframe
-            all_locations = pd.concat(
-                (
-                    pd.DataFrame([list(depot)], columns=["lat", "lon"]),
-                    scooters[["lat", "lon"]],
-                    delivery_nodes[["lat", "lon"]],
-                )
-            )
-            sum_of_travel_time = 0.0
-            number_of_iterations = 5
-            for k in range(number_of_iterations):
-                dataset = all_locations.sample(frac=1)
-                previous_cords = dataset.iloc[0]
-                for i in range(1, len(all_locations)):
-                    current_cords = dataset.iloc[i]
-                    sum_of_travel_time += BaseModelInput.compute_distance(
-                        previous_cords["lat"],
-                        previous_cords["lon"],
-                        current_cords["lat"],
-                        current_cords["lon"],
-                    )
-                    previous_cords = current_cords
-            t_max = (
-                (sum_of_travel_time / (number_of_iterations * number_of_vehicles))
-                * 0.75  # Tuned parameter
-                * kwargs.get("T_max", 0.70)
-            )
-        else:
-            t_max = kwargs.get("T_max")
-
-        return Instance(
-            scooters,
-            delivery_nodes,
-            depot,
-            service_vehicles,
-            optimal_state,
-            number_of_sections,
-            t_max,
-            kwargs.get("time_limit", 10),
-            self._bound,
-            InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
+        return (
+            Instance(
+                scooters,
+                delivery_nodes,
+                depot,
+                service_vehicles,
+                optimal_state,
+                number_of_sections,
+                t_max,
+                is_percent_t_max,
+                kwargs.get("time_limit", 10),
+                self._bound,
+                InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
+            ),
+            self._random_state,
         )
 
     @staticmethod
@@ -132,9 +119,24 @@ class InstanceManager:
         Instance parameters are loaded from json file
         """
         instances_parameters = load_test_parameters_from_json()
+        previous_parameters_without_model = None
+        previous_seed = 0
         for i, parameters in enumerate(instances_parameters):
-            # TODO: Should be possible to choose what model type to use in json config
-            self.instances[i] = self.create_test_instance(**parameters)
+            current_parameters_without_model = copy.deepcopy(parameters)
+            del current_parameters_without_model["model_type"]
+
+            if current_parameters_without_model == previous_parameters_without_model:
+                parameters["seed"] = previous_seed
+                self.instances[i], previous_seed = self.create_test_instance(
+                    **parameters
+                )
+            else:
+                self.instances[i], previous_seed = self.create_test_instance(
+                    **parameters
+                )
+
+            previous_parameters_without_model = parameters
+            del previous_parameters_without_model["model_type"]
 
     def set_random_state(self, new_state: int):
         """
