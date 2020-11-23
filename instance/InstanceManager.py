@@ -137,10 +137,9 @@ class InstanceManager:
         Instance parameters are loaded from json file
         """
         instances_parameters = load_test_parameters_from_json()
-        for parameters in instances_parameters:
+        for i, parameters in enumerate(instances_parameters):
             # TODO: Should be possible to choose what model type to use in json config
-            instance_parameters = *parameters, StandardModel
-            self.instances[parameters] = self.create_test_instance(*instance_parameters)
+            self.instances[i] = self.create_test_instance(**parameters)
 
     def set_random_state(self, new_state: int):
         """
