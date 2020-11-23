@@ -15,7 +15,7 @@ class BaseModelInput(ABC):
         scooter_list: pd.DataFrame,
         delivery_nodes_list: pd.DataFrame,
         depot_location: tuple,
-        service_vehicles_dict: dict,
+        service_vehicles: tuple,
         optimal_state: list,
         T_max: int,
         is_percent_t_max: bool,
@@ -25,10 +25,12 @@ class BaseModelInput(ABC):
         :param scooter_list: list of list - [[lat,lon,battery]*n]
         :param delivery_nodes_list: list of list - [[lat,lon]*m]
         :param depot_location: tuple - (lat,lon)
-        :param service_vehicles_dict: dict - ["type"]: (#numbers, scooter capacity, battery capacity)
+        :param service_vehicles: tuple - (# of scooters, scooter capacity, battery capacity)
         :param optimal_state: list of optimal state for each zone of the problem
         :param T_max: time limit for vehicles
         """
+        # Unpack service vehicle information
+        num_of_service_vehicles, scooter_cap, battery_cap = service_vehicles
 
         # Sets
         self.locations = range(
@@ -36,7 +38,7 @@ class BaseModelInput(ABC):
         )
         self.scooters = self.locations[1 : len(scooter_list.index) + 1]
         self.delivery = self.locations[len(scooter_list.index) + 1 :]
-        self.service_vehicles = range(sum(x[0] for x in service_vehicles_dict.values()))
+        self.service_vehicles = range(num_of_service_vehicles)
         self.depot = 0
         self.zones = sorted(scooter_list.zone.unique())
         self.zone_scooters = [
@@ -58,7 +60,7 @@ class BaseModelInput(ABC):
         # Constants
         self.num_scooters = len(scooter_list)
         self.num_locations = len(self.locations)
-        self.num_service_vehicles = len(self.service_vehicles)
+        self.num_service_vehicles = num_of_service_vehicles
 
         # Parameters
         self.reward = self.compute_reward_matrix(scooter_list, delivery_nodes_list)
@@ -74,13 +76,8 @@ class BaseModelInput(ABC):
         self.battery_level = [0.0] + [
             x / 100 for x in scooter_list["battery"]
         ]  # Battery level of scooter at location i
-        self.battery_capacity = []
-        self.scooter_capacity = []
-        for vehicle_type in service_vehicles_dict.keys():
-            num_vehicles, scooter_cap, battery_cap = service_vehicles_dict[vehicle_type]
-            for i in range(num_vehicles):
-                self.battery_capacity.append(battery_cap)
-                self.scooter_capacity.append(scooter_cap)
+        self.battery_capacity = [battery_cap] * self.num_service_vehicles
+        self.scooter_capacity = [scooter_cap] * self.num_service_vehicles
         self.deviation_from_optimal_state = [
             len(self.zone_scooters[z]) - the_optimal_state
             for z, the_optimal_state in enumerate(optimal_state)

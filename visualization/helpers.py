@@ -87,15 +87,15 @@ def add_vehicle_node_info(instance, ax):
         for i in range(instance.model_input.num_service_vehicles)
     ]
 
-    num_of_cars, car_scooter_cap, car_battery_cap = instance.service_vehicles["car"]
-    num_of_bikes, bike_scooter_cap, bike_battery_cap = instance.service_vehicles["bike"]
+    (
+        num_of_service_vehicles,
+        service_vehicles_scooter_cap,
+        service_vehicles_battery_cap,
+    ) = instance.service_vehicles
 
     # adding vehicle color description
     for i in range(len(colors)):
-        if i < num_of_cars:
-            s = "Vehicle %d (%s)" % (i + 1, "Car")
-        else:
-            s = "Vehicle %d (%s)" % (i + 1, "Bike")
+        s = f"Vehicle{(i + 1)}"
         ax.text(
             0,
             1 - 0.03 * i,
@@ -114,16 +114,10 @@ def add_vehicle_node_info(instance, ax):
         % (
             int(instance.model.get_parameters().shift_duration / 60),
             instance.model.get_parameters().shift_duration % 60,
-            car_battery_cap,
-            car_scooter_cap,
+            service_vehicles_battery_cap,
+            service_vehicles_scooter_cap,
         )
     )
-
-    if num_of_bikes > 0:
-        cons += f"\n\nBike capacity:\nBattery = %d \nScooters = %d" % (
-            bike_battery_cap,
-            bike_scooter_cap,
-        )
 
     props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
 

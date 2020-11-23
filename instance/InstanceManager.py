@@ -67,16 +67,11 @@ class InstanceManager:
         )
         # Creating depot node in the middle of bound
         depot = get_center_of_bound(self._bound)
-        number_of_car_service_vehicles = math.ceil(number_of_vehicles / 2)
-        number_of_bike_service_vehicles = math.floor(number_of_vehicles / 2)
-        service_vehicles = {
-            "car": (
-                number_of_car_service_vehicles,
-                math.ceil(len(delivery_nodes) / number_of_car_service_vehicles),
-                int(len(scooters) * (3 / 4)),
-            ),
-            "bike": (number_of_bike_service_vehicles, 0, int(len(scooters) * (1 / 4))),
-        }
+        service_vehicles = (
+            number_of_vehicles,
+            math.ceil(len(delivery_nodes) / number_of_vehicles),
+            math.ceil(len(scooters) / number_of_vehicles),
+        )  # number of vehicles, scooter capacity, battery capacity
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
         t_max = kwargs.get("T_max", 0.6 if is_percent_t_max else 60)
