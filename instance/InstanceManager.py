@@ -1,7 +1,6 @@
-import pandas as pd
 import random
 import math
-
+import copy
 from instance.helpers import *
 from instance.Instance import Instance
 from model.StandardModel import StandardModel
@@ -45,12 +44,22 @@ class InstanceManager:
         state at the time of writing
         :return: Instance object
         """
+
         number_of_scooters = number_of_scooters_per_section * number_of_sections ** 2
         number_of_vehicles = kwargs.get(
             "number_of_vehicles", math.ceil(number_of_scooters / 10)
         )
 
         filtered_scooters = self.filter_data_lat_lon(self._data, self._bound)
+
+        seed = kwargs.get("seed", -1)
+        if seed == -1:
+            random.seed()
+            self._random_state = random.randint(0, 10000)
+        else:
+            self._random_state = seed
+        random.seed(self._random_state)
+
         scooters = filtered_scooters[filtered_scooters.battery != 100].sample(
             number_of_scooters, random_state=self._random_state
         )[["lat", "lon", "battery"]]
@@ -77,20 +86,23 @@ class InstanceManager:
         t_max = kwargs.get("T_max", 0.6 if is_percent_t_max else 60)
         number_of_zones = len(scooters.zone.unique())
         optimal_state = [number_of_scooters_per_section] * number_of_zones
-        return Instance(
-            scooters,
-            delivery_nodes,
-            depot,
-            service_vehicles,
-            optimal_state,
-            number_of_sections,
-            t_max,
-            is_percent_t_max,
-            kwargs.get("time_limit", 10),
-            self._bound,
-            AlternativeModel
-            if kwargs.get("model_type", "standard") == "alternative"
-            else StandardModel,
+        return (
+            Instance(
+                scooters,
+                delivery_nodes,
+                depot,
+                service_vehicles,
+                optimal_state,
+                number_of_sections,
+                t_max,
+                is_percent_t_max,
+                kwargs.get("time_limit", 10),
+                self._bound,
+                AlternativeModel
+                if kwargs.get("model_type", "standard") == "alternative"
+                else StandardModel,
+            ),
+            self._random_state,
         )
 
     def create_multiple_instances(self):
@@ -99,8 +111,24 @@ class InstanceManager:
         Instance parameters are loaded from json file
         """
         instances_parameters = load_test_parameters_from_json()
+        previous_parameters_without_model = None
+        previous_seed = 0
         for i, parameters in enumerate(instances_parameters):
-            self.instances[i] = self.create_test_instance(**parameters)
+            current_parameters_without_model = copy.deepcopy(parameters)
+            del current_parameters_without_model["model_type"]
+
+            if current_parameters_without_model == previous_parameters_without_model:
+                parameters["seed"] = previous_seed
+                self.instances[i], previous_seed = self.create_test_instance(
+                    **parameters
+                )
+            else:
+                self.instances[i], previous_seed = self.create_test_instance(
+                    **parameters
+                )
+
+            previous_parameters_without_model = parameters
+            del previous_parameters_without_model["model_type"]
 
     def set_random_state(self, new_state: int):
         """
