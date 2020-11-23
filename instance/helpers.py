@@ -55,12 +55,14 @@ def load_test_parameters_from_json():
         if type(param[key]) is list:
             parameter_min, parameter_max, parameter_increment = param[key]
             ranges.append(range(parameter_min, parameter_max + 1, parameter_increment))
+        elif type(param[key]) is float:
+            parameter = param[key]
+            ranges.append([parameter])
         else:
             parameter = param[key]
             ranges.append(range(parameter, parameter + 1))
 
     range_list = list(product(*ranges))
-
     instance_list = []
     for (
         zones_per_axis,
@@ -72,7 +74,7 @@ def load_test_parameters_from_json():
         instance_list.append(
             {
                 "number_of_sections": zones_per_axis,
-                "number_of_scooter_per_section": nodes_per_zone,
+                "number_of_scooters_per_section": nodes_per_zone,
                 "number_of_vehicles": number_of_vehicles,
                 "T_max": T_max,
                 "time_limit": time_limit,
@@ -100,28 +102,17 @@ def save_models_to_excel():
     ) = ([], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
         for file in files:
-            if file.endswith(".json"):
-                with open(root + file) as file_path:
-                    model = json.load(file_path)
-                model_param = file.split("_")
-                zones.append(int(model_param[1]))
-                nodes_per_zone.append(int(model_param[2]))
-                number_of_vehicles.append(int(model_param[3]))
-                T_max.append(int(model_param[4]))
-                solution_time.append(float(model["SolutionInfo"]["Runtime"]))
-                gap.append(float(model["SolutionInfo"]["MIPGap"]))
-            if file.endswith(".sol"):
-                with open(root + file) as csv_file:
-                    reader = csv.reader(
-                        (line.replace("  ", " ") for line in csv_file), delimiter=" "
-                    )
-                    next(reader)  # skip header
-                    objective_value.append(float(next(reader)[4]))
-                    y_list = []
-                    for var, value in reader:
-                        if var.startswith("y") and var[2] != "0":
-                            y_list.append(int(value))
-                visit_list.append(sum(y_list) / len(y_list))
+            with open(root + file) as file_path:
+                model = json.load(file_path)
+            model_param = file.split("_")
+            zones.append(int(model_param[1]))
+            nodes_per_zone.append(int(model_param[2]))
+            number_of_vehicles.append(int(model_param[3]))
+            T_max.append(int(model_param[4]))
+            visit_list.append(model["Visit Percentage"])
+            solution_time.append(float(model["SolutionInfo"]["Runtime"]))
+            gap.append(float(model["SolutionInfo"]["MIPGap"]))
+            objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
 
     df = pd.DataFrame(
         list(

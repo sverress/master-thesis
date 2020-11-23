@@ -2,6 +2,7 @@ import errno
 import os
 import pandas as pd
 import math
+import json
 
 from visualization.visualizer import (
     visualize_solution,
@@ -93,9 +94,25 @@ class Instance:
                 raise
 
         file_path_solution = f"saved_models/{self.get_model_name()}.json"
-        file_path_params = f"saved_models/{self.get_model_name()}.sol"
         self.model.m.write(file_path_solution)
-        self.model.m.write(file_path_params)
+
+        with open(file_path_solution, "r") as jsonFile:
+            data = json.load(jsonFile)
+
+        visits = sum(
+            [
+                self.model.y[key].x
+                for key in self.model.y
+                if 0 < key[0] <= self.model_input.num_scooters
+                and self.model.y[key].x > 0
+            ]
+        )
+        visit_percentage = visits / self.model_input.num_scooters
+
+        data["Visit Percentage"] = visit_percentage
+
+        with open(file_path_solution, "w") as jsonFile:
+            json.dump(data, jsonFile)
 
     def get_model_name(self):
         return "model_%d_%d_%d_%d_%d" % (
