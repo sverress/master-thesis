@@ -17,7 +17,7 @@ def run_from_json():
 
 
 def plot_function():
-    rate = 0.99
+    rate = 0.80
     x = np.arange(start=0, stop=10, step=1)
     y = x * rate ** x
     plt.scatter(x, y, s=4, c="black")
