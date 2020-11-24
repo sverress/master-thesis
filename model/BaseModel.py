@@ -8,7 +8,7 @@ from model.BaseModelInput import BaseModelInput
 
 
 class BaseModel(ABC):
-    def __init__(self, model_input: BaseModelInput, setup=True, time_limit=None):
+    def __init__(self, model_input: BaseModelInput, **kwargs):
         """
         Formulation of mathematical problem in gurobi framework
         :param model_input: ModelInput object with input variables for the model
@@ -17,8 +17,8 @@ class BaseModel(ABC):
         self._ = model_input
 
         # Setting a computational time limit for the model
-        if time_limit:
-            self.m.Params.TimeLimit = time_limit
+        if kwargs.get("time_limit", None):
+            self.m.Params.TimeLimit = kwargs.get("time_limit", None)
 
         # Cartesian Products
         self.cart_locs = list(product(self._.locations, repeat=2))
@@ -53,7 +53,8 @@ class BaseModel(ABC):
         )
         # l_iv - load (number of scooters) when entering location i
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.CONTINUOUS, name="l")
-        if setup:
+        self.symmetry = kwargs.get("symmetry", None)
+        if kwargs.get("setup", True):
             self.setup()
 
     def get_parameters(self):
@@ -221,14 +222,9 @@ class BaseModel(ABC):
             ),
             "vehicle_capacity_delivery_greater",
         )
-
-        self.m.addConstrs(
-            (0 <= self.l[(i, v)] for i, v in self.cart_loc_v_not_depot),
-            "vehicle_capacity_cap_noneg",
-        )
         self.m.addConstrs(
             (
-                self.l[(i, v)] <= self._.battery_capacity[v]
+                self.l[(i, v)] <= self._.scooter_capacity[v]
                 for i, v in self.cart_loc_v
                 if i != self._.depot
             ),
@@ -236,13 +232,14 @@ class BaseModel(ABC):
         )
 
         self.m.addConstrs(
-            (self.l[(0, v)] == 0 for v in self._.service_vehicles),
+            (self.l[(self._.depot, v)] == 0 for v in self._.service_vehicles),
             "vehicle_capacity_depot_in",
         )
 
         self.m.addConstrs(
             (
-                self.l[(i, v)] - self._.scooter_capacity[v] * (1 - self.x[(0, i, v)])
+                self.l[(i, v)]
+                - self._.scooter_capacity[v] * (1 - self.x[(self._.depot, i, v)])
                 <= 0
                 for i, v in self.cart_loc_v_not_depot
             ),
@@ -268,6 +265,10 @@ class BaseModel(ABC):
             ),
             "subtours_2",
         )
+        if self.symmetry:
+            # Adding symmetry constraints
+            for i, constr in enumerate(self.get_symmetry_constraints()[self.symmetry]):
+                self.m.addConstrs(constr, f"symmetry{i}")
 
     def optimize_model(self):
         self.m.optimize()
@@ -276,7 +277,7 @@ class BaseModel(ABC):
         # Print solution
         for v in self.m.getVars():
             if v.x > 0:
-                print(f"{v.varName}: {int(v.x)}")
+                print(f"{v.varName}: {v.x}")
         print(f"Obj: {self.m.objVal}")
 
         print(f"Obj: {self.m.objVal}")
@@ -288,3 +289,58 @@ class BaseModel(ABC):
                 print(line)
         if delete_file:
             os.remove("model.lp")
+
+    def get_symmetry_constraints(self):
+        return {
+            "number_of_arcs": [
+                (
+                    (
+                        gp.quicksum(self.x[(i, j, v)] for i, j in self.cart_locs)
+                        >= gp.quicksum(self.x[(i, j, v + 1)] for i, j in self.cart_locs)
+                    )
+                    for v in range(self._.num_service_vehicles - 1)
+                )
+            ],
+            "number_of_visits": [
+                (
+                    (
+                        gp.quicksum(self.y[(i, v)] for i in self._.locations)
+                        >= gp.quicksum(self.y[(i, v + 1)] for i in self._.locations)
+                    )
+                    for v in range(self._.num_service_vehicles - 1)
+                )
+            ],
+            "total_time_used": [
+                (
+                    (
+                        gp.quicksum(
+                            self._.time_cost[(i, j)] * self.x[(i, j, v)]
+                            for i, j in self.cart_locs
+                        )
+                        >= gp.quicksum(
+                            self._.time_cost[(i, j)] * self.x[(i, j, v + 1)]
+                            for i, j in self.cart_locs
+                        )
+                    )
+                    for v in range(self._.num_service_vehicles - 1)
+                )
+            ],
+            "advanced": [
+                (
+                    gp.quicksum(self.y[(i, v)] for v in range(i)) <= 1
+                    for i in range(1, self._.num_service_vehicles + 1)
+                ),
+                (
+                    self.y[(i, v)]
+                    <= gp.quicksum(
+                        self.y[(p, s)]
+                        for p in range(v - 1, i)
+                        for s in range(v - 1, min(p, self._.num_service_vehicles))
+                    )
+                    for i in self._.locations
+                    if i not in [0, 1]
+                    for v in self._.service_vehicles
+                    if v != 0
+                ),
+            ],
+        }

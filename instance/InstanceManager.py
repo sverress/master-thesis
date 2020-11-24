@@ -5,8 +5,6 @@ from instance.helpers import *
 from instance.Instance import Instance
 from model.StandardModel import StandardModel
 from model.AlternativeModel import AlternativeModel
-from model.BaseModelInput import BaseModelInput
-from model.SymmetryModel import SymmetryModel
 
 
 class InstanceManager:
@@ -101,6 +99,7 @@ class InstanceManager:
                 kwargs.get("time_limit", 10),
                 self._bound,
                 InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
+                symmetry=kwargs.get("symmetry", "number_of_arcs"),
             ),
             self._random_state,
         )
@@ -110,7 +109,6 @@ class InstanceManager:
         return {
             "alternative": AlternativeModel,
             "standard": StandardModel,
-            "symmetry": SymmetryModel,
         }
 
     def create_multiple_instances(self):
