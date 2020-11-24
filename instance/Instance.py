@@ -166,7 +166,9 @@ class Instance:
         return self.model.m.MIPGap != math.inf
 
     def deviation_from_optimal_state(self):
-        optimal_state = self.model_input.num_scooters / (self.number_of_sections * 2)
+        optimal_state = self.calculate_optimal_state(
+            self.model_input.num_scooters, self.number_of_sections
+        )
         deviation = 0
         for z in self.model_input.zones:
             battery_in_zone = 0
@@ -174,15 +176,12 @@ class Instance:
                 battery = 0
                 visited = False
                 for v in self.model_input.service_vehicles:
-                    if (
-                        s <= self.model_input.num_scooters
-                        and self.model.p[(s, v)].x == 1
-                    ):
+                    if s in self.model_input.sscooters and self.model.p[(s, v)].x == 1:
                         visited = True
                     elif self.model.y[(s, v)].x == 1:
                         visited = True
                         battery += 1
-                if not visited and s <= self.model_input.num_scooters:
+                if not visited and s in self.model_input.sscooters:
                     battery += self.model_input.battery_level[s]
 
                 battery_in_zone += battery
@@ -192,16 +191,22 @@ class Instance:
         return deviation
 
     def deviation_before(self):
-        optimal_state = self.model_input.num_scooters / (self.number_of_sections * 2)
+        optimal_state = self.calculate_optimal_state(
+            self.model_input.num_scooters, self.number_of_sections
+        )
         deviation = 0
         for z in self.model_input.zones:
             battery_in_zone = sum(
                 [
                     self.model_input.battery_level[s]
                     for s in self.model_input.zone_scooters[z]
-                    if s <= self.model_input.num_scooters
+                    if s in self.model_input.scooters
                 ]
             )
             deviation += abs(optimal_state - battery_in_zone)
 
         return deviation
+
+    @staticmethod
+    def calculate_optimal_state(number_of_scooters, number_of_sections):
+        return number_of_scooters / (number_of_sections ** 2)
