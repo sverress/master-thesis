@@ -266,9 +266,11 @@ class BaseModel(ABC):
             "subtours_2",
         )
         if self.symmetry:
-            # Adding symmetry constraints
-            for i, constr in enumerate(self.get_symmetry_constraints()[self.symmetry]):
-                self.m.addConstrs(constr, f"symmetry{i}")
+            for symmetry_cons in self.symmetry:
+                for i, constr in enumerate(
+                    self.get_symmetry_constraints()[symmetry_cons]
+                ):
+                    self.m.addConstrs(constr, f"symmetry{i}")
 
     def optimize_model(self):
         self.m.optimize()
@@ -346,7 +348,7 @@ class BaseModel(ABC):
             "arcs_less_than_num_nodes": [
                 (
                     gp.quicksum(self.x[(i, j, v)] for i, j, v in self.cart_loc_loc_v)
-                    <= self._.num_locations
+                    <= self._.num_locations + self._.num_service_vehicles
                     for i in range(1)
                 )
             ],

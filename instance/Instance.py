@@ -83,12 +83,20 @@ class Instance:
         """
         visualize_solution(self, save, edge_plot, time_stamp)
 
-    def visualize_raw_data_map(self):
+    def visualize_raw_data_map(
+        self, model_name="", save=False, time_stamp=time.strftime("%d-%m %H.%M")
+    ):
         """
        See documentation of visualize_solution function from visualization
        """
         visualize_test_instance(
-            self.scooters, self.delivery_nodes, self.bound, self.number_of_sections
+            self.scooters,
+            self.delivery_nodes,
+            self.bound,
+            self.number_of_sections,
+            model_name,
+            save,
+            time_stamp,
         )
 
     def get_runtime(self):
@@ -118,9 +126,11 @@ class Instance:
             data = json.load(jsonFile)
 
         visits = [self.model.y[key].x for key in self.model.y if 0 < key[0]]
-        visit_percentage = sum(visits) / len(visits)
+        visit_percentage = sum(visits) / (len(self.model_input.locations) - 1)
 
         data["Visit Percentage"] = visit_percentage
+        data["Deviation Before"] = self.deviation_before()
+        data["Deviation After"] = self.deviation_from_optimal_state()
         data["Instance"] = self.instance_to_dict()
         data["Variables"] = self.get_model_variables()
 
@@ -149,8 +159,54 @@ class Instance:
 
     def get_model_name(self):
         num_of_service_vehicles, scooter_cap, battery_cap = self.service_vehicles
-        scooters_per_section = len(self.scooters) / (self.number_of_sections * 2)
-        return f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_{self.T_max}_{self.computational_limit}_{self.model.to_string}"
+        scooters_per_section = int(len(self.scooters) / (self.number_of_sections * 2))
+        return f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_{int(self.model_input.shift_duration)}_{self.computational_limit}_{self.model.to_string()}"
 
     def is_feasible(self):
         return self.model.m.MIPGap != math.inf
+
+    def deviation_from_optimal_state(self):
+        optimal_state = self.calculate_optimal_state(
+            self.model_input.num_scooters, self.number_of_sections
+        )
+        deviation = 0
+        for z in self.model_input.zones:
+            battery_in_zone = 0
+            for s in self.model_input.zone_scooters[z]:
+                battery = 0
+                visited = False
+                for v in self.model_input.service_vehicles:
+                    if s in self.model_input.sscooters and self.model.p[(s, v)].x == 1:
+                        visited = True
+                    elif self.model.y[(s, v)].x == 1:
+                        visited = True
+                        battery += 1
+                if not visited and s in self.model_input.scooters:
+                    battery += self.model_input.battery_level[s]
+
+                battery_in_zone += battery
+
+            deviation += abs(optimal_state - battery_in_zone)
+
+        return deviation
+
+    def deviation_before(self):
+        optimal_state = self.calculate_optimal_state(
+            self.model_input.num_scooters, self.number_of_sections
+        )
+        deviation = 0
+        for z in self.model_input.zones:
+            battery_in_zone = sum(
+                [
+                    self.model_input.battery_level[s]
+                    for s in self.model_input.zone_scooters[z]
+                    if s in self.model_input.scooters
+                ]
+            )
+            deviation += abs(optimal_state - battery_in_zone)
+
+        return deviation
+
+    @staticmethod
+    def calculate_optimal_state(number_of_scooters, number_of_sections):
+        return number_of_scooters / (number_of_sections ** 2)

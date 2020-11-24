@@ -1,9 +1,8 @@
+from math import log
 from gurobipy import GRB
 import gurobipy as gp
-
 from model.BaseModel import BaseModel
 from model.BaseModelInput import BaseModelInput
-from math import log
 
 
 class AlternativeModelInput(BaseModelInput):
