@@ -137,3 +137,6 @@ dmypy.json
 
 # All testing files
 **/testing.py
+
+# computational study results
+computational_study/
