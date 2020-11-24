@@ -102,7 +102,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
-
+    if not os.path.isfile("computational_study/comp_study_summary.xlsx"):
+        pd.DataFrame().to_excel("computational_study/comp_study_summary.xlsx")
     book = load_workbook("computational_study/comp_study_summary.xlsx")
     writer = pd.ExcelWriter(
         "computational_study/comp_study_summary.xlsx", engine="openpyxl"
