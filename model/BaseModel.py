@@ -343,4 +343,11 @@ class BaseModel(ABC):
                     if v != 0
                 ),
             ],
+            "arcs_less_than_num_nodes": [
+                (
+                    gp.quicksum(self.x[(i, j, v)] for i, j, v in self.cart_loc_loc_v)
+                    <= self._.num_locations
+                    for i in range(1)
+                )
+            ],
         }
