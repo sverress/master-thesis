@@ -352,4 +352,11 @@ class BaseModel(ABC):
                     for i in range(1)
                 )
             ],
+            "arcs_less_than_capacity": [
+                (
+                    gp.quicksum(self.x[(i, j, v)] for i, j in self._.locations)
+                    <= self._.battery_capacity + 2 * (self._.scooter_capacity + 1)
+                    for v in self._.service_vehicles
+                )
+            ],
         }
