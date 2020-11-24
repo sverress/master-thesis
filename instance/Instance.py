@@ -181,7 +181,7 @@ class Instance:
                     elif self.model.y[(s, v)].x == 1:
                         visited = True
                         battery += 1
-                if not visited and s in self.model_input.sscooters:
+                if not visited and s in self.model_input.scooters:
                     battery += self.model_input.battery_level[s]
 
                 battery_in_zone += battery
