@@ -24,6 +24,7 @@ class Instance:
         computational_limit: int,
         bound: tuple,
         model_class,
+        **kwargs,
     ):
         """
         Wrapper class for a Model class. Contains both raw input data and model input data
@@ -61,7 +62,11 @@ class Instance:
             T_max,
             is_percent_t_max,
         )
-        self.model = model_class(self.model_input, time_limit=computational_limit)
+        self.model = model_class(
+            self.model_input,
+            time_limit=computational_limit,
+            symmetry=kwargs.get("symmetry", None),
+        )
         self.number_of_sections = number_of_sections
 
     def run(self):

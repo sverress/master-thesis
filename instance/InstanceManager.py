@@ -98,12 +98,18 @@ class InstanceManager:
                 is_percent_t_max,
                 kwargs.get("time_limit", 10),
                 self._bound,
-                AlternativeModel
-                if kwargs.get("model_type", "standard") == "alternative"
-                else StandardModel,
+                InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
+                symmetry=kwargs.get("symmetry", "number_of_arcs"),
             ),
             self._random_state,
         )
+
+    @staticmethod
+    def get_model_types():
+        return {
+            "alternative": AlternativeModel,
+            "standard": StandardModel,
+        }
 
     def create_multiple_instances(self):
         """

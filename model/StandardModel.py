@@ -15,6 +15,9 @@ class StandardModelInput(BaseModelInput):
 
 
 class StandardModel(BaseModel):
+    def setup(self):
+        super().setup()
+
     @staticmethod
     def get_input_class():
         return StandardModelInput
