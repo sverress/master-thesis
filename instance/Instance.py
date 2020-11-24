@@ -83,12 +83,20 @@ class Instance:
         """
         visualize_solution(self, save, edge_plot, time_stamp)
 
-    def visualize_raw_data_map(self):
+    def visualize_raw_data_map(
+        self, model_name="", save=False, time_stamp=time.strftime("%d-%m %H.%M")
+    ):
         """
        See documentation of visualize_solution function from visualization
        """
         visualize_test_instance(
-            self.scooters, self.delivery_nodes, self.bound, self.number_of_sections
+            self.scooters,
+            self.delivery_nodes,
+            self.bound,
+            self.number_of_sections,
+            model_name,
+            save,
+            time_stamp,
         )
 
     def get_runtime(self):
