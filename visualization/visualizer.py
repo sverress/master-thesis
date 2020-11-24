@@ -102,7 +102,10 @@ def visualize_solution(
                     )
                     + ", "
                     + "L_%d = %d"
-                    % (vehicle_id + 1, int(instance.model.l[(to_node, vehicle_id)].x))
+                    % (
+                        vehicle_id + 1,
+                        round(instance.model.l[(to_node, vehicle_id)].x),
+                    )
                 )
 
         # second plot for nodes/edges not in solution
@@ -169,13 +172,24 @@ def visualize_solution(
         plt.show()
 
 
-def visualize_test_instance(scooters, delivery_nodes, bound, num_of_sections):
+def visualize_test_instance(
+    scooters,
+    delivery_nodes,
+    bound,
+    num_of_sections,
+    instance_name="",
+    save=False,
+    time_stamp=time.strftime("%d-%m %H.%M"),
+):
     """
     Generates a visual representation of the scooters and delivery nodes with a map in the background
     :param scooters: dataframe for location of scooters
     :param delivery_nodes: dataframe for location of delivery nodes
     :param bound: tuple of lat_min, lat_max, lon_min, lon_max defining the the rectangle to look at
     :param num_of_sections: number of section in each dimension
+    :param instance_name: str - name of instance
+    :param time_stamp: str - time stamp of manager of instance
+    :param save: bool - if save or visualize
     """
     lat_min, lat_max, lon_min, lon_max = bound
     fig, ax = plt.subplots()
@@ -205,4 +219,14 @@ def visualize_test_instance(scooters, delivery_nodes, bound, num_of_sections):
         alpha=0.6,
     )
 
-    plt.show()
+    if save:
+        try:
+            os.makedirs(f"saved_models_fig/{time_stamp}")
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+        plt.tight_layout()
+        plt.savefig(f"saved_models_fig/{time_stamp}/{instance_name}_r.png")
+    else:
+        plt.tight_layout()
+        plt.show()
