@@ -11,9 +11,9 @@ def run_from_json():
     for instance_key in manager.instances.keys():
         instance = manager.get_instance(instance_key)
         instance.run()
-        instance.visualize_solution()
-        instance.save_model()
-    save_models_to_excel()
+        instance.visualize_solution(save=True, time_stamp=manager.time_stamp)
+        instance.save_model_and_instance(time_stamp=manager.time_stamp)
+    save_models_to_excel(timestamp=manager.time_stamp)
 
 
 def plot_function():

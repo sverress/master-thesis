@@ -176,7 +176,7 @@ class Instance:
                 battery = 0
                 visited = False
                 for v in self.model_input.service_vehicles:
-                    if s in self.model_input.sscooters and self.model.p[(s, v)].x == 1:
+                    if s in self.model_input.scooters and self.model.p[(s, v)].x == 1:
                         visited = True
                     elif self.model.y[(s, v)].x == 1:
                         visited = True
