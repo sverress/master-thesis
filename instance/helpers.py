@@ -86,6 +86,7 @@ def load_test_parameters_from_json():
                 "time_limit": time_limit,
                 "model_type": model_type,
                 "T_max_is_percentage": data["model"]["T_max_is_percentage"],
+                "symmetry": data["symmetry"],
             }
         )
     return instance_list
