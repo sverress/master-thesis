@@ -1,14 +1,14 @@
 {
 	"model": {
 		"model_type": "standard",
-		"T_max_is_percentage": false
+		"T_max_is_percentage": true
 	},
-	"symmetry": ["total_time_used", "arcs_less_than_num_nodes"],
+	"symmetry": ["number_of_visits", "subtour_in_set"],
 	"ranges": {
 	"number_of_sections": 2,
-	"number_of_scooter_per_section": [3,3,1],
+	"number_of_scooter_per_section": [5,5,1],
 	"number_of_vehicles": [2,2,1],
-	"T_max": 23,
-	"time_limit": 10
+	"T_max": 0.6,
+	"time_limit": 60
 	}
 }

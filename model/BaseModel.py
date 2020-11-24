@@ -1,6 +1,6 @@
 import gurobipy as gp
 from gurobipy import GRB
-from itertools import product
+from itertools import product, combinations
 import os
 from abc import ABC, abstractmethod
 
@@ -38,6 +38,9 @@ class BaseModel(ABC):
                 self._.service_vehicles,
             )
         )
+
+        # Subset
+        self.subset_of_three = list(combinations(self._.locations[1:], 3))
 
         # Init variables
 
@@ -345,11 +348,23 @@ class BaseModel(ABC):
                     if v != 0
                 ),
             ],
-            "arcs_less_than_num_nodes": [
+            "subtour_in_set": [
                 (
-                    gp.quicksum(self.x[(i, j, v)] for i, j, v in self.cart_loc_loc_v)
-                    <= self._.num_locations + self._.num_service_vehicles
-                    for i in range(1)
-                )
+                    gp.quicksum(self.x[(i, j, v)] for v in self._.service_vehicles)
+                    + gp.quicksum(self.x[(j, i, v)] for v in self._.service_vehicles)
+                    <= 1
+                    for i, j in self.cart_locs
+                    if i < j
+                ),
+                (
+                    gp.quicksum(
+                        self.x[(i, j, v)]
+                        for i in s
+                        for j in s
+                        for v in self._.service_vehicles
+                    )
+                    <= len(s) - 1
+                    for s in self.subset_of_three
+                ),
             ],
         }

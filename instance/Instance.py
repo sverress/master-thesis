@@ -166,9 +166,7 @@ class Instance:
         return self.model.m.MIPGap != math.inf
 
     def deviation_from_optimal_state(self):
-        optimal_state = self.calculate_optimal_state(
-            self.model_input.num_scooters, self.number_of_sections
-        )
+        optimal_state = self.calculate_optimal_state()
         deviation = 0
         for z in self.model_input.zones:
             battery_in_zone = 0
@@ -176,7 +174,7 @@ class Instance:
                 battery = 0
                 visited = False
                 for v in self.model_input.service_vehicles:
-                    if s in self.model_input.sscooters and self.model.p[(s, v)].x == 1:
+                    if s in self.model_input.scooters and self.model.p[(s, v)].x == 1:
                         visited = True
                     elif self.model.y[(s, v)].x == 1:
                         visited = True
@@ -191,9 +189,7 @@ class Instance:
         return deviation
 
     def deviation_before(self):
-        optimal_state = self.calculate_optimal_state(
-            self.model_input.num_scooters, self.number_of_sections
-        )
+        optimal_state = self.calculate_optimal_state()
         deviation = 0
         for z in self.model_input.zones:
             battery_in_zone = sum(
@@ -207,6 +203,5 @@ class Instance:
 
         return deviation
 
-    @staticmethod
-    def calculate_optimal_state(number_of_scooters, number_of_sections):
-        return number_of_scooters / (number_of_sections ** 2)
+    def calculate_optimal_state(self):
+        return self.model_input.num_scooters / (self.number_of_sections ** 2)
