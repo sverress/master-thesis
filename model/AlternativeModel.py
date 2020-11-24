@@ -1,21 +1,30 @@
 import pandas as pd
 from gurobipy import GRB
 import gurobipy as gp
-
 from model.BaseModel import BaseModel
 from model.BaseModelInput import BaseModelInput
-from math import log
 
 
 class AlternativeModelInput(BaseModelInput):
     def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
         r_kz = {}
-        alpha = 1.1
-        beta = 1.3
+        optimal_state = self.num_scooters / len(self.zones)
         for z in self.zones:
             k_max = len(self.zone_scooters[z])
+            battery_in_zone = sum(
+                [
+                    scooter_list.battery.get(i) / 100
+                    for i in self.zone_scooters[z]
+                    if i not in self.delivery
+                ]
+            )
             for k in range(0, k_max + 1):
-                r_kz[(k, z)] = alpha * log(beta * k + 1) + 1
+                if k == 0:
+                    r_kz[(k, z)] = 0
+                else:
+                    r_kz[(k, z)] = (
+                        max(0, (optimal_state - battery_in_zone) / (k_max - k + 1)) + 1
+                    )
         return r_kz
 
 
@@ -43,8 +52,9 @@ class AlternativeModel(BaseModel):
             gp.quicksum(
                 self._.reward[(k, z)] * self.w[(k, z)] for k, z in self.cart_k_z
             )
+            + gp.quicksum(self.p[(i, v)] for i, v in self.cart_loc_v_scooters)
             - gp.quicksum(
-                self._.battery_level[i] * self.y[(i, v)]
+                (self._.battery_level[i] * self.y[(i, v)])
                 for i, v in self.cart_loc_v_scooters
             ),
             GRB.MAXIMIZE,

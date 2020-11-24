@@ -91,7 +91,7 @@ def load_test_parameters_from_json():
     return instance_list
 
 
-def save_models_to_excel():
+def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
     """
     Iterates through all saved_models and store the information in an excel sheet.
     Saved information: zones, nodes per zone, # vehicles, T_max, solution time, GAP
@@ -121,7 +121,9 @@ def save_models_to_excel():
         visit_list,
         objective_value,
         model_type,
-    ) = ([], [], [], [], [], [], [], [], [])
+        deviation_before,
+        deviation_after,
+    ) = ([], [], [], [], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
         if len(dirs) == 0:
             if root.split("/")[-1] not in sheets:
@@ -134,6 +136,8 @@ def save_models_to_excel():
                     number_of_vehicles.append(int(model_param[3]))
                     T_max.append(int(model_param[4]))
                     visit_list.append(model["Visit Percentage"])
+                    deviation_before.append(model["Deviation Before"])
+                    deviation_after.append(model["Deviation After"])
                     solution_time.append(float(model["SolutionInfo"]["Runtime"]))
                     gap.append(float(model["SolutionInfo"]["MIPGap"]))
                     objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
@@ -149,6 +153,8 @@ def save_models_to_excel():
                 solution_time,
                 gap,
                 visit_list,
+                deviation_before,
+                deviation_after,
                 objective_value,
                 model_type,
             )
@@ -161,13 +167,15 @@ def save_models_to_excel():
             "Solution time",
             "Gap",
             "Visit percent",
+            "Deviation before",
+            "Deviation after",
             "Obj value",
             "Model type",
         ],
     )
 
     df.to_excel(
-        writer, float_format="%.5f", sheet_name=str(time.strftime("%d-%m %H.%M")),
+        writer, float_format="%.5f", sheet_name=str(timestamp),
     )
     writer.save()
 

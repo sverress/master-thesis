@@ -102,7 +102,10 @@ def visualize_solution(
                     )
                     + ", "
                     + "L_%d = %d"
-                    % (vehicle_id + 1, int(instance.model.l[(to_node, vehicle_id)].x))
+                    % (
+                        vehicle_id + 1,
+                        round(instance.model.l[(to_node, vehicle_id)].x),
+                    )
                 )
 
         # second plot for nodes/edges not in solution
