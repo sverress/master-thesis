@@ -1,6 +1,6 @@
 {
 	"model": {
-		"model_type": ["standard", "alternative"],
+		"model_type": ["standard","alternative"],
 		"T_max_is_percentage": true
 	},
 	"constraints": {
@@ -9,9 +9,9 @@
 	},
 	"ranges": {
 	"number_of_sections": 2,
-	"number_of_scooter_per_section": [4,8,4],
-	"number_of_vehicles": [1,3,2],
-	"T_max": [0.4,0.8,0.4],
-	"time_limit": 3
+	"number_of_scooter_per_section": [3,6,3],
+	"number_of_vehicles": [1,2,1],
+	"T_max": [0.4,0.6,0.3],
+	"time_limit": 2
 	}
 }
