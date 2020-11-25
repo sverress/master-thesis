@@ -18,7 +18,7 @@ class AlternativeModelInput(BaseModelInput):
 
 
 class AlternativeModel(BaseModel):
-    def __init__(self, model_input, setup=True, time_limit=None):
+    def __init__(self, model_input, setup=True, time_limit=None, **kwargs):
         # x_ijv - 1 if, for service vehicle v, visit to location i is followed by a visit to location j- 0 otherwise
         super().__init__(model_input, setup=False, time_limit=time_limit)
         self.cart_k_z = [

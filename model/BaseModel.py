@@ -269,11 +269,8 @@ class BaseModel(ABC):
             "subtours_2",
         )
         if self.symmetry:
-            for symmetry_cons in self.symmetry:
-                for i, constr in enumerate(
-                    self.get_symmetry_constraints()[symmetry_cons]
-                ):
-                    self.m.addConstrs(constr, f"symmetry{i}_{symmetry_cons}")
+            for i, constr in enumerate(self.get_symmetry_constraints()[self.symmetry]):
+                self.m.addConstrs(constr, f"symmetry{i}_{constr}")
         if self.subtour:
             for i, constr in enumerate(self.get_subtour_constraints()[self.subtour]):
                 self.m.addConstrs(constr, f"{self.subtour}_{i}")

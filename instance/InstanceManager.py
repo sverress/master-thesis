@@ -99,9 +99,9 @@ class InstanceManager:
                 kwargs.get("time_limit", 10),
                 self._bound,
                 InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
+                seed=self._random_state,
                 subtour=kwargs.get("subtour", None),
                 symmetry=kwargs.get("symmetry", None),
-                seed=self._random_state,
             ),
             self._random_state,
         )
@@ -113,12 +113,12 @@ class InstanceManager:
             "standard": StandardModel,
         }
 
-    def create_multiple_instances(self):
+    def create_multiple_instances(self, run_test=False):
         """
         Generates multiple instances and stores them to the instances dict.
         Instance parameters are loaded from json file
         """
-        instances_parameters = load_test_parameters_from_json()
+        instances_parameters = load_test_parameters_from_json(run_test)
         previous_parameters = None
         previous_seed = np.random.randint(0, 1000)
         for i, parameters in enumerate(instances_parameters):

@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def run_from_json():
+def run_from_json(run_test=False):
     manager = InstanceManager()
-    manager.create_multiple_instances()
+    manager.create_multiple_instances(run_test)
     for instance in manager.instances.values():
         instance.visualize_raw_data_map(
             instance.get_model_name(), False, manager.time_stamp
@@ -20,6 +20,14 @@ def run_from_json():
         instance.model.print_solution()
         instance.save_model_and_instance(manager.time_stamp)
     save_models_to_excel(manager.time_stamp)
+
+
+def run_project_test():
+    """
+    Function to run a test on the project. Recommend to change timelimit on TSP to have a faster test.
+    The test should take around 5 minutes (64 tests)
+    """
+    run_from_json(True)
 
 
 def plot_function():
@@ -59,3 +67,5 @@ if __name__ == "__main__":
         run_from_json()
     if program == "plot":
         plot_function()
+    if program == "test":
+        run_project_test()

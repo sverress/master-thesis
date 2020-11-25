@@ -41,13 +41,17 @@ def create_sections(number_of_sections: int, bound: tuple):
     return section_limits, section_coordinates
 
 
-def load_test_parameters_from_json():
+def load_test_parameters_from_json(run_test=False):
     """
     Loads parameters for computational_study from json file and makes all combinations of these.
     :return list - all combinations of parameters from json file
     """
-    with open("instance/test_instances.json") as json_file:
-        data = json.load(json_file)
+    if run_test:
+        with open("project_test.json") as json_file:
+            data = json.load(json_file)
+    else:
+        with open("instance/test_instances.json") as json_file:
+            data = json.load(json_file)
     ranges = []
     param = data["ranges"]
     for key in param:
@@ -76,21 +80,13 @@ def load_test_parameters_from_json():
 
     constraints = data["constraints"]
     constraint_list = []
-    previous_list = []
     for constraint_name in constraints:
         constraint = constraints[constraint_name]
         constraint_list.append(constraint)
-        # if type(constraint) is not list:
-        #    constraint_list = list(product(*previous_list, (constraint,)))
-        # else:
-        #    constraint_list = list(product(*previous_list, constraint))
-        # previous_list = constraint_list
 
     models = data["model"]["model_type"]
     if type(models) is not list:
-        # range_model_list = list(product(*ranges, (models,)))
         input_list = list(product(*ranges, (models,), *constraint_list))
-        # range_model_list = list(product(*ranges, models))
     else:
         input_list = list(product(*ranges, models, *constraint_list))
 
