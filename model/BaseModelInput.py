@@ -19,6 +19,7 @@ class BaseModelInput(ABC):
         optimal_state: list,
         T_max: int,
         is_percent_t_max: bool,
+        number_of_zones: int,
     ):
         """
         Creating all input to the gurobi model
@@ -31,7 +32,6 @@ class BaseModelInput(ABC):
         """
         # Unpack service vehicle information
         num_of_service_vehicles, scooter_cap, battery_cap = service_vehicles
-
         # Sets
         self.locations = range(
             1 + len(scooter_list.index) + len(delivery_nodes_list.index)
@@ -40,7 +40,7 @@ class BaseModelInput(ABC):
         self.delivery = self.locations[len(scooter_list.index) + 1 :]
         self.service_vehicles = range(num_of_service_vehicles)
         self.depot = 0
-        self.zones = sorted(scooter_list.zone.unique())
+        self.zones = range(number_of_zones)
         self.zone_scooters = [
             list(
                 scooter_list.loc[scooter_list["zone"] == i].index.union(

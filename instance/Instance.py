@@ -19,8 +19,9 @@ class Instance:
         service_vehicles: tuple,
         optimal_state: list,
         number_of_sections: int,
+        number_of_zones: int,
         T_max: int,
-        is_percent_t_max,
+        is_percent_t_max: bool,
         computational_limit: int,
         bound: tuple,
         model_class,
@@ -39,15 +40,17 @@ class Instance:
         :param computational_limit: int - max solution time for model
         :param bound: tuple that defines the bound of the geographical area in play
         """
-
         # Save raw data
         self.scooters = scooters
         self.delivery_nodes = delivery_nodes
         self.depot = depot
         self.service_vehicles = service_vehicles
         self.T_max = T_max
+        self.is_percent_T_max = is_percent_t_max
         self.computational_limit = computational_limit
         self.optimal_state = optimal_state
+        self.number_of_sections = number_of_sections
+        self.number_of_zones = number_of_zones
 
         # Context
         self.bound = bound
@@ -61,13 +64,14 @@ class Instance:
             optimal_state,
             T_max,
             is_percent_t_max,
+            self.number_of_zones,
         )
         self.model = model_class(
             self.model_input,
             time_limit=computational_limit,
             symmetry=kwargs.get("symmetry", None),
+            subtour=kwargs.get("subtour", None),
         )
-        self.number_of_sections = number_of_sections
 
     def run(self):
         """
@@ -134,6 +138,16 @@ class Instance:
         data["Instance"] = self.instance_to_dict()
         data["Variables"] = self.get_model_variables()
 
+        if self.model.symmetry:
+            data["Symmetry Constraint"] = self.model.symmetry
+        else:
+            data["Symmetry Constraint"] = "None"
+
+        if self.model.subtour:
+            data["Subtour in set"] = "True"
+        else:
+            data["Subtour in set"] = "False"
+
         with open(file_path_solution, "w") as jsonFile:
             json.dump(data, jsonFile)
 
@@ -145,7 +159,8 @@ class Instance:
             "service_vehicles": self.service_vehicles,
             "optimal_state": self.optimal_state,
             "number_of_sections": self.number_of_sections,
-            "T_max": self.T_max,
+            "T_max": self.model_input.shift_duration,
+            "is_percent_T_max": (self.is_percent_T_max, self.T_max),
             "computational_limit": self.computational_limit,
             "bound": self.bound,
             "model_class": self.model.to_string(False),
@@ -160,7 +175,16 @@ class Instance:
     def get_model_name(self):
         num_of_service_vehicles, scooter_cap, battery_cap = self.service_vehicles
         scooters_per_section = int(len(self.scooters) / (self.number_of_sections * 2))
-        return f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_{int(self.model_input.shift_duration)}_{self.computational_limit}_{self.model.to_string()}"
+        if not self.model.symmetry:
+            symmetry = "None"
+        else:
+            symmetry = self.model.symmetry
+        if not self.model.subtour:
+            subtour = "None"
+        else:
+            subtour = self.model.subtour
+
+        return f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_{int(self.model_input.shift_duration)}_{self.computational_limit}_{self.model.to_string()}_{symmetry}_{subtour}"
 
     def is_feasible(self):
         return self.model.m.MIPGap != math.inf

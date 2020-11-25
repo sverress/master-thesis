@@ -53,20 +53,46 @@ def load_test_parameters_from_json():
     for key in param:
         if type(param[key]) is list:
             parameter_min, parameter_max, parameter_increment = param[key]
-            ranges.append(range(parameter_min, parameter_max + 1, parameter_increment))
+            if (
+                type(parameter_min) is float
+                or type(parameter_max) is float
+                or type(parameter_increment) is float
+            ):
+                ranges.append(
+                    np.arange(
+                        parameter_min, (parameter_max + 0.0001), parameter_increment,
+                    )
+                )
+            else:
+                ranges.append(
+                    range(parameter_min, parameter_max + 1, parameter_increment)
+                )
         elif type(param[key]) is float:
-
             parameter = param[key]
             ranges.append([parameter])
         else:
             parameter = param[key]
             ranges.append(range(parameter, parameter + 1))
 
+    constraints = data["constraints"]
+    constraint_list = []
+    previous_list = []
+    for constraint_name in constraints:
+        constraint = constraints[constraint_name]
+        constraint_list.append(constraint)
+        # if type(constraint) is not list:
+        #    constraint_list = list(product(*previous_list, (constraint,)))
+        # else:
+        #    constraint_list = list(product(*previous_list, constraint))
+        # previous_list = constraint_list
+
     models = data["model"]["model_type"]
     if type(models) is not list:
-        range_list = list(product(*ranges, (models,)))
+        # range_model_list = list(product(*ranges, (models,)))
+        input_list = list(product(*ranges, (models,), *constraint_list))
+        # range_model_list = list(product(*ranges, models))
     else:
-        range_list = list(product(*ranges, models))
+        input_list = list(product(*ranges, models, *constraint_list))
 
     instance_list = []
     for (
@@ -76,7 +102,9 @@ def load_test_parameters_from_json():
         T_max,
         time_limit,
         model_type,
-    ) in range_list:
+        subtour,
+        symmetry,
+    ) in input_list:
         instance_list.append(
             {
                 "number_of_sections": zones_per_axis,
@@ -85,8 +113,9 @@ def load_test_parameters_from_json():
                 "T_max": T_max,
                 "time_limit": time_limit,
                 "model_type": model_type,
+                "subtour": subtour,
+                "symmetry": symmetry,
                 "T_max_is_percentage": data["model"]["T_max_is_percentage"],
-                "symmetry": data["symmetry"],
             }
         )
     return instance_list
@@ -118,6 +147,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
         nodes_per_zone,
         number_of_vehicles,
         T_max,
+        percent_t_max,
         solution_time,
         gap,
         visit_list,
@@ -125,7 +155,9 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
         model_type,
         deviation_before,
         deviation_after,
-    ) = ([], [], [], [], [], [], [], [], [], [], [])
+        symmetry_cons,
+        subtour_cons,
+    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
         if len(dirs) == 0:
             if root.split("/")[-1] not in sheets:
@@ -144,6 +176,14 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                     gap.append(float(model["SolutionInfo"]["MIPGap"]))
                     objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
                     model_type.append(model["Instance"]["model_class"])
+                    symmetry_cons.append(model["Symmetry Constraint"])
+                    subtour_cons.append(model["Subtour in set"])
+
+                    is_percent_T_max, percent = model["Instance"]["is_percent_T_max"]
+                    if is_percent_T_max:
+                        percent_t_max.append(percent)
+                    else:
+                        percent_t_max.append(0)
 
     df = pd.DataFrame(
         list(
@@ -152,6 +192,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                 nodes_per_zone,
                 number_of_vehicles,
                 T_max,
+                percent_t_max,
                 solution_time,
                 gap,
                 visit_list,
@@ -159,6 +200,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                 deviation_after,
                 objective_value,
                 model_type,
+                symmetry_cons,
+                subtour_cons,
             )
         ),
         columns=[
@@ -166,6 +209,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
             "Nodes per zone",
             "Number of vehicles",
             "T_max",
+            "Percent T_max",
             "Solution time",
             "Gap",
             "Visit percent",
@@ -173,6 +217,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
             "Deviation after",
             "Obj value",
             "Model type",
+            "Symmetry Constraint",
+            "Subtour in set",
         ],
     )
 

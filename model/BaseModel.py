@@ -57,6 +57,7 @@ class BaseModel(ABC):
         # l_iv - load (number of scooters) when entering location i
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.CONTINUOUS, name="l")
         self.symmetry = kwargs.get("symmetry", None)
+        self.subtour = kwargs.get("subtour", None)
         if kwargs.get("setup", True):
             self.setup()
 
@@ -161,7 +162,6 @@ class BaseModel(ABC):
                 for z in self._.demand_zones
             )
         )
-
         # Ensure that we cannot pick up more than the excess scooters in a zone
         self.m.addConstrs(
             gp.quicksum(
@@ -273,7 +273,10 @@ class BaseModel(ABC):
                 for i, constr in enumerate(
                     self.get_symmetry_constraints()[symmetry_cons]
                 ):
-                    self.m.addConstrs(constr, f"symmetry{i}")
+                    self.m.addConstrs(constr, f"symmetry{i}_{symmetry_cons}")
+        if self.subtour:
+            for i, constr in enumerate(self.get_subtour_constraints()[self.subtour]):
+                self.m.addConstrs(constr, f"{self.subtour}_{i}")
 
     def optimize_model(self):
         self.m.optimize()
@@ -348,6 +351,10 @@ class BaseModel(ABC):
                     if v != 0
                 ),
             ],
+        }
+
+    def get_subtour_constraints(self):
+        return {
             "subtour_in_set": [
                 (
                     gp.quicksum(self.x[(i, j, v)] for v in self._.service_vehicles)
