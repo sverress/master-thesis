@@ -101,6 +101,7 @@ class InstanceManager:
                 InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
                 subtour=kwargs.get("subtour", None),
                 symmetry=kwargs.get("symmetry", None),
+                seed=self._random_state,
             ),
             self._random_state,
         )

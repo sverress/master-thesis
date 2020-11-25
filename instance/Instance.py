@@ -51,6 +51,7 @@ class Instance:
         self.optimal_state = optimal_state
         self.number_of_sections = number_of_sections
         self.number_of_zones = number_of_zones
+        self.seed = kwargs.get("seed", None)
 
         # Context
         self.bound = bound
@@ -103,6 +104,11 @@ class Instance:
             time_stamp,
         )
 
+    def print_instance(self):
+        print("\n-------------- INSTANCE --------------\n")
+        print(self.get_model_name(True))
+        print("\n--------------------------------------\n")
+
     def get_runtime(self):
         """
         :return: the elapsed time in seconds to get to optimal solution in gurobi
@@ -137,6 +143,7 @@ class Instance:
         data["Deviation After"] = self.deviation_from_optimal_state()
         data["Instance"] = self.instance_to_dict()
         data["Variables"] = self.get_model_variables()
+        data["Seed"] = self.seed
 
         if self.model.symmetry:
             data["Symmetry Constraint"] = self.model.symmetry
@@ -172,7 +179,7 @@ class Instance:
             variables[var.VarName] = var.X
         return variables
 
-    def get_model_name(self):
+    def get_model_name(self, print_mode=False):
         num_of_service_vehicles, scooter_cap, battery_cap = self.service_vehicles
         scooters_per_section = int(len(self.scooters) / (self.number_of_sections * 2))
         if not self.model.symmetry:
@@ -183,8 +190,30 @@ class Instance:
             subtour = "None"
         else:
             subtour = self.model.subtour
+        if self.is_percent_T_max:
+            percent = (
+                f"T max calculated from TSP - {self.is_percent_T_max}\n"
+                + f"Shift duration as percent of TSP - {int(self.T_max*100)}%\n"
+            )
+        else:
+            percent = f"T max calculated from TSP - {self.is_percent_T_max}\n"
 
-        return f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_{int(self.model_input.shift_duration)}_{self.computational_limit}_{self.model.to_string()}_{symmetry}_{subtour}"
+        return (
+            f"Number of sections - {self.number_of_sections}\n"
+            + f"Scooters per zone - {scooters_per_section}\n"
+            + f"Number of service vehicles - {num_of_service_vehicles}\n"
+            + percent
+            + f"Shift duration - {int(self.model_input.shift_duration)}\n"
+            + f"Computational limit - {self.computational_limit}\n"
+            + f"Model type - {self.model.to_string(False)}\n"
+            + f"Symmetry constraint - {symmetry}\n"
+            + f"Subtour constraint - {subtour}\n"
+            + f"Seed - {self.seed}"
+            if print_mode
+            else f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_"
+            + f"{int(self.model_input.shift_duration)}_{self.computational_limit}_"
+            + f"{self.model.to_string()}_{symmetry}_{subtour}"
+        )
 
     def is_feasible(self):
         return self.model.m.MIPGap != math.inf

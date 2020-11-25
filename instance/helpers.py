@@ -157,7 +157,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
         deviation_after,
         symmetry_cons,
         subtour_cons,
-    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [])
+        seed,
+    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
         if len(dirs) == 0:
             if root.split("/")[-1] not in sheets:
@@ -178,6 +179,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                     model_type.append(model["Instance"]["model_class"])
                     symmetry_cons.append(model["Symmetry Constraint"])
                     subtour_cons.append(model["Subtour in set"])
+                    seed.append(model["Seed"])
 
                     is_percent_T_max, percent = model["Instance"]["is_percent_T_max"]
                     if is_percent_T_max:
@@ -202,6 +204,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                 model_type,
                 symmetry_cons,
                 subtour_cons,
+                seed,
             )
         ),
         columns=[
@@ -219,6 +222,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
             "Model type",
             "Symmetry Constraint",
             "Subtour in set",
+            "Seed",
         ],
     )
 
