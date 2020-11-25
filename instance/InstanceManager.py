@@ -63,7 +63,6 @@ class InstanceManager:
         scooters = filtered_scooters[filtered_scooters.battery != 100].sample(
             number_of_scooters, random_state=self._random_state
         )[["lat", "lon", "battery"]]
-
         scooters["zone"] = -1
 
         delivery_nodes = self.create_all_delivery_nodes(
@@ -84,7 +83,7 @@ class InstanceManager:
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
         t_max = kwargs.get("T_max", 0.6 if is_percent_t_max else 60)
-        number_of_zones = len(scooters.zone.unique())
+        number_of_zones = number_of_sections ** 2
         optimal_state = [number_of_scooters_per_section] * number_of_zones
         return (
             Instance(
@@ -94,12 +93,15 @@ class InstanceManager:
                 service_vehicles,
                 optimal_state,
                 number_of_sections,
+                number_of_zones,
                 t_max,
                 is_percent_t_max,
                 kwargs.get("time_limit", 10),
                 self._bound,
                 InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
-                symmetry=kwargs.get("symmetry", "number_of_arcs"),
+                seed=self._random_state,
+                subtour=kwargs.get("subtour", None),
+                symmetry=kwargs.get("symmetry", None),
             ),
             self._random_state,
         )
@@ -111,30 +113,34 @@ class InstanceManager:
             "standard": StandardModel,
         }
 
-    def create_multiple_instances(self):
+    def create_multiple_instances(self, run_test=False):
         """
         Generates multiple instances and stores them to the instances dict.
         Instance parameters are loaded from json file
         """
-        instances_parameters = load_test_parameters_from_json()
-        previous_parameters_without_model = None
-        previous_seed = 0
+        instances_parameters = load_test_parameters_from_json(run_test)
+        previous_parameters = None
+        previous_seed = np.random.randint(0, 1000)
         for i, parameters in enumerate(instances_parameters):
-            current_parameters_without_model = copy.deepcopy(parameters)
-            del current_parameters_without_model["model_type"]
+            current_parameters = copy.deepcopy(parameters)
+            del current_parameters["model_type"]
+            del current_parameters["subtour"]
+            del current_parameters["symmetry"]
 
-            if current_parameters_without_model == previous_parameters_without_model:
+            if current_parameters == previous_parameters:
                 parameters["seed"] = previous_seed
-                self.instances[i], previous_seed = self.create_test_instance(
+                (self.instances[i], previous_seed) = self.create_test_instance(
                     **parameters
                 )
             else:
-                self.instances[i], previous_seed = self.create_test_instance(
+                (self.instances[i], previous_seed) = self.create_test_instance(
                     **parameters
                 )
 
-            previous_parameters_without_model = parameters
-            del previous_parameters_without_model["model_type"]
+            previous_parameters = copy.deepcopy(parameters)
+            del previous_parameters["model_type"]
+            del previous_parameters["subtour"]
+            del previous_parameters["symmetry"]
 
     def set_random_state(self, new_state: int):
         """

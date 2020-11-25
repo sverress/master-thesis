@@ -12,6 +12,6 @@
 	"number_of_scooter_per_section": [4,8,4],
 	"number_of_vehicles": [1,3,2],
 	"T_max": [0.4,0.8,0.4],
-	"time_limit": 2
+	"time_limit": 3
 	}
 }

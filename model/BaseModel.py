@@ -1,6 +1,6 @@
 import gurobipy as gp
 from gurobipy import GRB
-from itertools import product
+from itertools import product, combinations
 import os
 from abc import ABC, abstractmethod
 
@@ -39,6 +39,9 @@ class BaseModel(ABC):
             )
         )
 
+        # Subset
+        self.subset_of_three = list(combinations(self._.locations[1:], 3))
+
         # Init variables
 
         # x_ijv - 1 if, for service vehicle v, visit to location i is followed by a visit to location j- 0 otherwise
@@ -54,6 +57,7 @@ class BaseModel(ABC):
         # l_iv - load (number of scooters) when entering location i
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.CONTINUOUS, name="l")
         self.symmetry = kwargs.get("symmetry", None)
+        self.subtour = kwargs.get("subtour", None)
         if kwargs.get("setup", True):
             self.setup()
 
@@ -158,7 +162,6 @@ class BaseModel(ABC):
                 for z in self._.demand_zones
             )
         )
-
         # Ensure that we cannot pick up more than the excess scooters in a zone
         self.m.addConstrs(
             gp.quicksum(
@@ -266,11 +269,11 @@ class BaseModel(ABC):
             "subtours_2",
         )
         if self.symmetry:
-            for symmetry_cons in self.symmetry:
-                for i, constr in enumerate(
-                    self.get_symmetry_constraints()[symmetry_cons]
-                ):
-                    self.m.addConstrs(constr, f"symmetry{i}")
+            for i, constr in enumerate(self.get_symmetry_constraints()[self.symmetry]):
+                self.m.addConstrs(constr, f"symmetry{i}_{constr}")
+        if self.subtour:
+            for i, constr in enumerate(self.get_subtour_constraints()[self.subtour]):
+                self.m.addConstrs(constr, f"{self.subtour}_{i}")
 
     def optimize_model(self):
         self.m.optimize()
@@ -345,11 +348,27 @@ class BaseModel(ABC):
                     if v != 0
                 ),
             ],
-            "arcs_less_than_num_nodes": [
+        }
+
+    def get_subtour_constraints(self):
+        return {
+            "subtour_in_set": [
                 (
-                    gp.quicksum(self.x[(i, j, v)] for i, j, v in self.cart_loc_loc_v)
-                    <= self._.num_locations + self._.num_service_vehicles
-                    for i in range(1)
-                )
+                    gp.quicksum(self.x[(i, j, v)] for v in self._.service_vehicles)
+                    + gp.quicksum(self.x[(j, i, v)] for v in self._.service_vehicles)
+                    <= 1
+                    for i, j in self.cart_locs
+                    if i < j
+                ),
+                (
+                    gp.quicksum(
+                        self.x[(i, j, v)]
+                        for i in s
+                        for j in s
+                        for v in self._.service_vehicles
+                    )
+                    <= len(s) - 1
+                    for s in self.subset_of_three
+                ),
             ],
         }

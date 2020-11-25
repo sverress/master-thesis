@@ -19,8 +19,9 @@ class Instance:
         service_vehicles: tuple,
         optimal_state: list,
         number_of_sections: int,
+        number_of_zones: int,
         T_max: int,
-        is_percent_t_max,
+        is_percent_t_max: bool,
         computational_limit: int,
         bound: tuple,
         model_class,
@@ -39,15 +40,18 @@ class Instance:
         :param computational_limit: int - max solution time for model
         :param bound: tuple that defines the bound of the geographical area in play
         """
-
         # Save raw data
         self.scooters = scooters
         self.delivery_nodes = delivery_nodes
         self.depot = depot
         self.service_vehicles = service_vehicles
         self.T_max = T_max
+        self.is_percent_T_max = is_percent_t_max
         self.computational_limit = computational_limit
         self.optimal_state = optimal_state
+        self.number_of_sections = number_of_sections
+        self.number_of_zones = number_of_zones
+        self.seed = kwargs.get("seed", None)
 
         # Context
         self.bound = bound
@@ -61,13 +65,14 @@ class Instance:
             optimal_state,
             T_max,
             is_percent_t_max,
+            self.number_of_zones,
         )
         self.model = model_class(
             self.model_input,
             time_limit=computational_limit,
             symmetry=kwargs.get("symmetry", None),
+            subtour=kwargs.get("subtour", None),
         )
-        self.number_of_sections = number_of_sections
 
     def run(self):
         """
@@ -98,6 +103,11 @@ class Instance:
             save,
             time_stamp,
         )
+
+    def print_instance(self):
+        print("\n-------------- INSTANCE --------------\n")
+        print(self.get_model_name(True))
+        print("\n--------------------------------------\n")
 
     def get_runtime(self):
         """
@@ -133,6 +143,17 @@ class Instance:
         data["Deviation After"] = self.deviation_from_optimal_state()
         data["Instance"] = self.instance_to_dict()
         data["Variables"] = self.get_model_variables()
+        data["Seed"] = self.seed
+
+        if self.model.symmetry:
+            data["Symmetry Constraint"] = self.model.symmetry
+        else:
+            data["Symmetry Constraint"] = "None"
+
+        if self.model.subtour:
+            data["Subtour in set"] = "True"
+        else:
+            data["Subtour in set"] = "False"
 
         with open(file_path_solution, "w") as jsonFile:
             json.dump(data, jsonFile)
@@ -145,7 +166,8 @@ class Instance:
             "service_vehicles": self.service_vehicles,
             "optimal_state": self.optimal_state,
             "number_of_sections": self.number_of_sections,
-            "T_max": self.T_max,
+            "T_max": self.model_input.shift_duration,
+            "is_percent_T_max": (self.is_percent_T_max, self.T_max),
             "computational_limit": self.computational_limit,
             "bound": self.bound,
             "model_class": self.model.to_string(False),
@@ -157,18 +179,47 @@ class Instance:
             variables[var.VarName] = var.X
         return variables
 
-    def get_model_name(self):
+    def get_model_name(self, print_mode=False):
         num_of_service_vehicles, scooter_cap, battery_cap = self.service_vehicles
         scooters_per_section = int(len(self.scooters) / (self.number_of_sections * 2))
-        return f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_{int(self.model_input.shift_duration)}_{self.computational_limit}_{self.model.to_string()}"
+        if not self.model.symmetry:
+            symmetry = "None"
+        else:
+            symmetry = self.model.symmetry
+        if not self.model.subtour:
+            subtour = "None"
+        else:
+            subtour = self.model.subtour
+        if self.is_percent_T_max:
+            percent = (
+                f"T max calculated from TSP - {self.is_percent_T_max}\n"
+                + f"Shift duration as percent of TSP - {int(self.T_max*100)}%\n"
+            )
+        else:
+            percent = f"T max calculated from TSP - {self.is_percent_T_max}\n"
+
+        return (
+            f"Number of sections - {self.number_of_sections}\n"
+            + f"Scooters per zone - {scooters_per_section}\n"
+            + f"Number of service vehicles - {num_of_service_vehicles}\n"
+            + percent
+            + f"Shift duration - {int(self.model_input.shift_duration)}\n"
+            + f"Computational limit - {self.computational_limit}\n"
+            + f"Model type - {self.model.to_string(False)}\n"
+            + f"Symmetry constraint - {symmetry}\n"
+            + f"Subtour constraint - {subtour}\n"
+            + f"Seed - {self.seed}"
+            if print_mode
+            else f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_"
+            + f"{int(self.model_input.shift_duration)}_{self.computational_limit}_"
+            + f"{self.model.to_string()}_{symmetry}_{subtour}"
+        )
 
     def is_feasible(self):
         return self.model.m.MIPGap != math.inf
 
     def deviation_from_optimal_state(self):
-        optimal_state = self.calculate_optimal_state(
-            self.model_input.num_scooters, self.number_of_sections
-        )
+        optimal_state = self.calculate_optimal_state()
         deviation = 0
         for z in self.model_input.zones:
             battery_in_zone = 0
@@ -191,9 +242,7 @@ class Instance:
         return deviation
 
     def deviation_before(self):
-        optimal_state = self.calculate_optimal_state(
-            self.model_input.num_scooters, self.number_of_sections
-        )
+        optimal_state = self.calculate_optimal_state()
         deviation = 0
         for z in self.model_input.zones:
             battery_in_zone = sum(
@@ -207,6 +256,5 @@ class Instance:
 
         return deviation
 
-    @staticmethod
-    def calculate_optimal_state(number_of_scooters, number_of_sections):
-        return number_of_scooters / (number_of_sections ** 2)
+    def calculate_optimal_state(self):
+        return self.model_input.num_scooters / (self.number_of_sections ** 2)
