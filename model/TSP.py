@@ -23,7 +23,7 @@ def TSP(number_of_nodes, time_matrix):
         gp.quicksum(time_matrix[(i, j)] * x[(i, j)] for i, j in cart_nodes if i != j),
         GRB.MINIMIZE,
     )
-    m.Params.TimeLimit = 2
+    m.Params.TimeLimit = 10
     m.Params.OutputFlag = 0
     m.optimize()
     return m.objVal
