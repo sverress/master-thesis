@@ -19,22 +19,23 @@ def run_from_json():
 def plot_function():
 
     beta = 0.8
-    x = np.arange(start=1, stop=9, step=1)
-    ideal_state = 8
-    sum_b = 4
+    ideal_state = 20
+    x = np.arange(start=1, stop=ideal_state, step=1)
+    sum_b = 0
     theta = 0.05
 
     y = []
     for i in x:
-        y.append(calc_r_kz(0, beta, theta, ideal_state, sum_b, i) if i == 1
-                 else calc_r_kz(y[-1], beta, theta, ideal_state, sum_b, i))
+        r = (calc_r_kz(0, beta, theta, ideal_state, sum_b, i) if i == 1
+             else calc_r_kz(y[-1], beta, theta, ideal_state, sum_b, i))
+        y.append(r if r <= i else i)
 
     plt.scatter(x, y, s=4, c="black")
     plt.xticks([i for i in range(0, len(x)+2)])
     plt.xlabel("k")
     plt.ylabel("R_kz")
-    plt.xlim(0, 10)
-    plt.ylim(0, 8)
+    plt.xlim(0, len(x)+1)
+    plt.ylim(0, len(y)+1)
     for i in x:
         plt.annotate(f" ({i}, {round(y[i-1], 2)})", (i, y[i-1]))
     plt.show()
