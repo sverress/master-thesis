@@ -98,9 +98,10 @@ def load_test_parameters_from_json(run_test=False):
         T_max,
         time_limit,
         model_type,
-        subtour,
+        valid_inequality,
         symmetry,
     ) in input_list:
+        seed = data["model"]["seed"]
         instance_list.append(
             {
                 "number_of_sections": zones_per_axis,
@@ -109,9 +110,12 @@ def load_test_parameters_from_json(run_test=False):
                 "T_max": T_max,
                 "time_limit": time_limit,
                 "model_type": model_type,
-                "subtour": subtour,
-                "symmetry": symmetry,
+                "valid_inequalities": valid_inequality
+                if type(valid_inequality) is list
+                else [valid_inequality],
+                "symmetry": symmetry if type(symmetry) is list else [symmetry],
                 "T_max_is_percentage": data["model"]["T_max_is_percentage"],
+                "seed": np.random.randint(0, 1000) if seed == "random" else seed,
             }
         )
     return instance_list
@@ -151,8 +155,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
         model_type,
         deviation_before,
         deviation_after,
+        valid_inequalities_cons,
         symmetry_cons,
-        subtour_cons,
         seed,
     ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
@@ -173,8 +177,10 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                     gap.append(float(model["SolutionInfo"]["MIPGap"]))
                     objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
                     model_type.append(model["Instance"]["model_class"])
-                    symmetry_cons.append(model["Symmetry Constraint"])
-                    subtour_cons.append(model["Subtour in set"])
+                    valid_inequalities_cons.append(
+                        str(model["Valid Inequalities"]).strip("[],")
+                    )
+                    symmetry_cons.append(str(model["Symmetry constraint"]).strip("[],"))
                     seed.append(model["Seed"])
 
                     is_percent_T_max, percent = model["Instance"]["is_percent_T_max"]
@@ -198,8 +204,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                 deviation_after,
                 objective_value,
                 model_type,
+                valid_inequalities_cons,
                 symmetry_cons,
-                subtour_cons,
                 seed,
             )
         ),
@@ -216,8 +222,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
             "Deviation after",
             "Obj value",
             "Model type",
-            "Symmetry Constraint",
-            "Subtour in set",
+            "Valid Inequalities",
+            "Symmetry constraint",
             "Seed",
         ],
     )

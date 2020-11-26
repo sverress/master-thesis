@@ -70,8 +70,8 @@ class Instance:
         self.model = model_class(
             self.model_input,
             time_limit=computational_limit,
+            valid_inequalities=kwargs.get("valid_inequalities", None),
             symmetry=kwargs.get("symmetry", None),
-            subtour=kwargs.get("subtour", None),
         )
 
     def run(self):
@@ -145,15 +145,14 @@ class Instance:
         data["Variables"] = self.get_model_variables()
         data["Seed"] = self.seed
 
+        if self.model.valid_inequalities:
+            data["Valid Inequalities"] = self.model.valid_inequalities
+        else:
+            data["Valid Inequalities"] = "None"
         if self.model.symmetry:
-            data["Symmetry Constraint"] = self.model.symmetry
+            data["Symmetry constraint"] = self.model.symmetry
         else:
-            data["Symmetry Constraint"] = "None"
-
-        if self.model.subtour:
-            data["Subtour in set"] = "True"
-        else:
-            data["Subtour in set"] = "False"
+            data["Symmetry constraint"] = "None"
 
         with open(file_path_solution, "w") as jsonFile:
             json.dump(data, jsonFile)
@@ -186,10 +185,10 @@ class Instance:
             symmetry = "None"
         else:
             symmetry = self.model.symmetry
-        if not self.model.subtour:
-            subtour = "None"
+        if not self.model.valid_inequalities:
+            valid_inequalities = "None"
         else:
-            subtour = self.model.subtour
+            valid_inequalities = self.model.valid_inequalities
         if self.is_percent_T_max:
             percent = (
                 f"T max calculated from TSP - {self.is_percent_T_max}\n"
@@ -206,13 +205,13 @@ class Instance:
             + f"Shift duration - {int(self.model_input.shift_duration)}\n"
             + f"Computational limit - {self.computational_limit}\n"
             + f"Model type - {self.model.to_string(False)}\n"
-            + f"Symmetry constraint - {symmetry}\n"
-            + f"Subtour constraint - {subtour}\n"
+            + f"Symmetry constraint - {' '.join(['%-2s,' % (x,) for x in symmetry])}\n"
+            + f"Valid Inequalities - {' '.join(['%-2s,' % (x,) for x in valid_inequalities])}\n"
             + f"Seed - {self.seed}"
             if print_mode
             else f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_"
             + f"{int(self.model_input.shift_duration)}_{self.computational_limit}_"
-            + f"{self.model.to_string()}_{symmetry}_{subtour}"
+            + f"{self.model.to_string()}_{symmetry}_{valid_inequalities}"
         )
 
     def is_feasible(self):

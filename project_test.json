@@ -4,7 +4,7 @@
 		"T_max_is_percentage": true
 	},
 	"constraints": {
-		"subtour": ["subtour_in_set", null],
+		"valid inequalities": ["subtour_in_set", null],
 		"symmetry": ["number_of_arcs", null]
 	},
 	"ranges": {
