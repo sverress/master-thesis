@@ -56,8 +56,10 @@ class BaseModel(ABC):
         )
         # l_iv - load (number of scooters) when entering location i
         self.l = self.m.addVars(self.cart_loc_v, vtype=GRB.CONTINUOUS, name="l")
-        self.symmetry = kwargs.get("symmetry", None)
-        self.subtour = kwargs.get("subtour", None)
+
+        self.symmetry = kwargs.get("symmetry", [None])
+        self.valid_inequalities = kwargs.get("valid_inequalities", [None])
+
         if kwargs.get("setup", True):
             self.setup()
 
@@ -268,12 +270,20 @@ class BaseModel(ABC):
             ),
             "subtours_2",
         )
-        if self.symmetry:
-            for i, constr in enumerate(self.get_symmetry_constraints()[self.symmetry]):
-                self.m.addConstrs(constr, f"symmetry{i}_{constr}")
-        if self.subtour:
-            for i, constr in enumerate(self.get_subtour_constraints()[self.subtour]):
-                self.m.addConstrs(constr, f"{self.subtour}_{i}")
+
+        if not self.symmetry.__contains__(None):
+            for symmetry_const in self.symmetry:
+                for i, constr in enumerate(
+                    self.get_symmetry_constraints()[symmetry_const]
+                ):
+                    self.m.addConstrs(constr, f"symmetry{i}_{constr}")
+
+        if not self.valid_inequalities.__contains__(None):
+            for valid_const in self.valid_inequalities:
+                for i, constr in enumerate(
+                    self.get_valid_inequalities_constraints()[valid_const]
+                ):
+                    self.m.addConstrs(constr, f"{valid_const}_{i}")
 
     def optimize_model(self):
         self.m.optimize()
@@ -350,9 +360,9 @@ class BaseModel(ABC):
             ],
         }
 
-    def get_subtour_constraints(self):
+    def get_valid_inequalities_constraints(self):
         return {
-            "subtour_in_set": [
+            "subtour_in_subset": [
                 (
                     gp.quicksum(self.x[(i, j, v)] for v in self._.service_vehicles)
                     + gp.quicksum(self.x[(j, i, v)] for v in self._.service_vehicles)
@@ -370,5 +380,12 @@ class BaseModel(ABC):
                     <= len(s) - 1
                     for s in self.subset_of_three
                 ),
+            ],
+            "arcs_less_then_locations": [
+                (
+                    gp.quicksum(self.x[(i, j, v)] for i, j, v in self.cart_loc_loc_v)
+                    <= self._.num_locations + self._.num_service_vehicles
+                    for i in range(1)
+                )
             ],
         }

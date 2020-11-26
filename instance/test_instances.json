@@ -1,17 +1,18 @@
 {
 	"model": {
-		"model_type": ["standard", "alternative"],
-		"T_max_is_percentage": true
+		"model_type": "standard",
+		"T_max_is_percentage": true,
+		"seed": 69
 	},
 	"constraints": {
-		"subtour": ["subtour_in_set", null],
-		"symmetry": ["number_of_arcs", null]
+		"valid inequalities": [null],
+		"symmetry": ["number_of_visits", null]
 	},
 	"ranges": {
 	"number_of_sections": 2,
-	"number_of_scooter_per_section": [4,8,4],
-	"number_of_vehicles": [1,3,2],
-	"T_max": [0.4,0.8,0.4],
-	"time_limit": 2
+	"number_of_scooter_per_section": [5,5,1],
+	"number_of_vehicles": [2,4,1],
+	"T_max": [0.4,0.4,0.2],
+	"time_limit": 120
 	}
 }

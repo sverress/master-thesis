@@ -100,7 +100,7 @@ class InstanceManager:
                 self._bound,
                 InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
                 seed=self._random_state,
-                subtour=kwargs.get("subtour", None),
+                valid_inequalities=kwargs.get("valid_inequalities", None),
                 symmetry=kwargs.get("symmetry", None),
             ),
             self._random_state,
@@ -124,7 +124,7 @@ class InstanceManager:
         for i, parameters in enumerate(instances_parameters):
             current_parameters = copy.deepcopy(parameters)
             del current_parameters["model_type"]
-            del current_parameters["subtour"]
+            del current_parameters["valid_inequalities"]
             del current_parameters["symmetry"]
 
             if current_parameters == previous_parameters:
@@ -139,7 +139,7 @@ class InstanceManager:
 
             previous_parameters = copy.deepcopy(parameters)
             del previous_parameters["model_type"]
-            del previous_parameters["subtour"]
+            del previous_parameters["valid_inequalities"]
             del previous_parameters["symmetry"]
 
     def set_random_state(self, new_state: int):

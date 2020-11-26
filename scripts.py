@@ -15,7 +15,7 @@ def run_from_json(run_test=False):
         instance.print_instance()
         instance.run()
         instance.visualize_solution(
-            False, False, manager.time_stamp
+            True, False, manager.time_stamp
         )  # save, edge_plot, time stamp
         instance.model.print_solution()
         instance.save_model_and_instance(manager.time_stamp)
