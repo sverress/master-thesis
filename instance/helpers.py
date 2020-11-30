@@ -102,6 +102,7 @@ def load_test_parameters_from_json(run_test=False):
         symmetry,
     ) in input_list:
         seed = data["model"]["seed"]
+        subsets = data["model"]["subsets"]
         instance_list.append(
             {
                 "number_of_sections": zones_per_axis,
@@ -116,6 +117,7 @@ def load_test_parameters_from_json(run_test=False):
                 "symmetry": symmetry if type(symmetry) is list else [symmetry],
                 "T_max_is_percentage": data["model"]["T_max_is_percentage"],
                 "seed": np.random.randint(0, 1000) if seed == "random" else seed,
+                "subsets": subsets if len(subsets) > 0 else None,
             }
         )
     return instance_list

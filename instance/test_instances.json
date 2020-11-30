@@ -2,17 +2,18 @@
 	"model": {
 		"model_type": "standard",
 		"T_max_is_percentage": true,
-		"seed": 69
+		"subsets": [2,5,3],
+		"seed": 222
 	},
 	"constraints": {
-		"valid inequalities": [null],
-		"symmetry": ["number_of_visits", null]
+		"valid inequalities": ["subtour_in_set", null],
+		"symmetry": [null]
 	},
 	"ranges": {
 	"number_of_sections": 2,
 	"number_of_scooter_per_section": [5,5,1],
-	"number_of_vehicles": [2,4,1],
+	"number_of_vehicles": [2,2,1],
 	"T_max": [0.4,0.4,0.2],
-	"time_limit": 120
+	"time_limit": 60
 	}
 }

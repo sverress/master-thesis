@@ -102,6 +102,7 @@ class InstanceManager:
                 seed=self._random_state,
                 valid_inequalities=kwargs.get("valid_inequalities", None),
                 symmetry=kwargs.get("symmetry", None),
+                subsets=kwargs.get("subsets", None),
             ),
             self._random_state,
         )

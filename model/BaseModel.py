@@ -40,7 +40,12 @@ class BaseModel(ABC):
         )
 
         # Subset
-        self.subset_of_three = list(combinations(self._.locations[1:], 3))
+        subset_param = kwargs.get("subsets", None)
+        if subset_param is not None:
+            min_subset, max_subset, radius = subset_param
+            self.subsets = self.create_subsets(min_subset, max_subset, radius)
+        else:
+            self.subsets = subset_param
 
         # Init variables
 
@@ -362,24 +367,27 @@ class BaseModel(ABC):
 
     def get_valid_inequalities_constraints(self):
         return {
-            "subtour_in_subset": [
+            "back_and_forth": [
                 (
                     gp.quicksum(self.x[(i, j, v)] for v in self._.service_vehicles)
                     + gp.quicksum(self.x[(j, i, v)] for v in self._.service_vehicles)
                     <= 1
                     for i, j in self.cart_locs
                     if i < j
-                ),
+                )
+            ],
+            "subtour_in_set": [
                 (
                     gp.quicksum(
                         self.x[(i, j, v)]
                         for i in s
                         for j in s
+                        if i != j
                         for v in self._.service_vehicles
                     )
                     <= len(s) - 1
-                    for s in self.subset_of_three
-                ),
+                    for s in self.subsets
+                )
             ],
             "arcs_less_then_locations": [
                 (
@@ -389,3 +397,15 @@ class BaseModel(ABC):
                 )
             ],
         }
+
+    def create_subsets(self, min_size, max_size, radius=5):
+        subsets = []
+        for i in range(min_size, max_size + 1):
+            for j in range(1, self._.num_locations):
+                sets_for_j = []
+                for k in range(j, self._.num_locations):
+                    if self._.time_cost[(j, k)] <= radius:
+                        sets_for_j.append(k)
+                if len(sets_for_j) > 0:
+                    subsets.extend(list(combinations(sets_for_j, i)))
+        return subsets

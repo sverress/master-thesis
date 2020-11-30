@@ -72,6 +72,7 @@ class Instance:
             time_limit=computational_limit,
             valid_inequalities=kwargs.get("valid_inequalities", None),
             symmetry=kwargs.get("symmetry", None),
+            subsets=kwargs.get("subsets", None),
         )
 
     def run(self):
