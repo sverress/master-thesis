@@ -9,9 +9,9 @@ def run_from_json(run_test=False):
     manager = InstanceManager()
     manager.create_multiple_instances(run_test)
     for instance in manager.instances.values():
-        # instance.visualize_raw_data_map(
-        #    instance.get_model_name(), False, manager.time_stamp
-        # )  # instance name, save, time stamp
+        instance.visualize_raw_data_map(
+            instance.get_model_name(), False, manager.time_stamp
+        )  # instance name, save, time stamp
         instance.print_instance()
         instance.run()
         instance.visualize_solution(

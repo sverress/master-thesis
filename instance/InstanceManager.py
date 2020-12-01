@@ -127,6 +127,7 @@ class InstanceManager:
             del current_parameters["model_type"]
             del current_parameters["valid_inequalities"]
             del current_parameters["symmetry"]
+            del current_parameters["seed"]
 
             if current_parameters == previous_parameters:
                 parameters["seed"] = previous_seed
@@ -142,6 +143,7 @@ class InstanceManager:
             del previous_parameters["model_type"]
             del previous_parameters["valid_inequalities"]
             del previous_parameters["symmetry"]
+            del previous_parameters["seed"]
 
     def set_random_state(self, new_state: int):
         """
