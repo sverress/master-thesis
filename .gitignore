@@ -140,3 +140,6 @@ dmypy.json
 
 # computational study results
 computational_study/
+
+# requirements
+requirements.txt
