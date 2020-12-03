@@ -77,8 +77,12 @@ class InstanceManager:
         depot = get_center_of_bound(self._bound)
         service_vehicles = (
             number_of_vehicles,
-            max([len(list(delivery_nodes.loc[delivery_nodes["zone"] == i].index)) for i in range(number_of_sections ** 2)]),
-            # math.ceil(len(delivery_nodes) / number_of_vehicles),
+            max(
+                [
+                    len(list(delivery_nodes.loc[delivery_nodes["zone"] == i].index))
+                    for i in range(number_of_sections ** 2)
+                ]
+            ),
             math.ceil(len(scooters) / number_of_vehicles),
         )  # number of vehicles, scooter capacity, battery capacity
 
