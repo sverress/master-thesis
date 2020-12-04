@@ -6,8 +6,8 @@
 		"seed": 383
 	},
 	"constraints": {
-		"valid inequalities": [null],
-		"symmetry": ["number_of_arcs","number_of_visits","total_time_used",null]
+		"valid inequalities": ["subtour_in_set", "arcs_less_then_locations",["subtour_in_set", "arcs_less_then_locations"]],
+		"symmetry": ["number_of_visits"]
 	},
 	"ranges": {
 	"number_of_sections": 2,
