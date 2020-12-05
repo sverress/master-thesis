@@ -9,13 +9,13 @@ def run_from_json(run_test=False):
     manager = InstanceManager()
     manager.create_multiple_instances(run_test)
     for instance in manager.instances.values():
-        instance.visualize_raw_data_map(
-            instance.get_model_name(), False, manager.time_stamp
-        )  # instance name, save, time stamp
+        # instance.visualize_raw_data_map(
+        #    instance.get_model_name(), False, manager.time_stamp
+        # )  # instance name, save, time stamp
         instance.print_instance()
         instance.run()
         instance.visualize_solution(
-            True, False, manager.time_stamp
+            False, False, manager.time_stamp
         )  # save, edge_plot, time stamp
         instance.model.print_solution()
         instance.save_model_and_instance(manager.time_stamp)

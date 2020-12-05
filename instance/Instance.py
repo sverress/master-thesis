@@ -141,7 +141,9 @@ class Instance:
 
         data["Visit Percentage"] = visit_percentage
         data["Deviation Before"] = self.deviation_before()
-        data["Deviation After"] = self.deviation_from_optimal_state()
+        deviation_after, deviation_after_squared = self.deviation_from_optimal_state()
+        data["Deviation After"] = deviation_after
+        data["Deviation After Squared"] = deviation_after_squared
         data["Instance"] = self.instance_to_dict()
         data["Variables"] = self.get_model_variables()
         data["Seed"] = self.seed
@@ -221,6 +223,7 @@ class Instance:
     def deviation_from_optimal_state(self):
         optimal_state = self.calculate_optimal_state()
         deviation = 0
+        deviation_squared = 0
         for z in self.model_input.zones:
             battery_in_zone = 0
             for s in self.model_input.zone_scooters[z]:
@@ -238,8 +241,9 @@ class Instance:
                 battery_in_zone += battery
 
             deviation += abs(optimal_state - battery_in_zone)
+            deviation_squared += (optimal_state - battery_in_zone) ** 2
 
-        return deviation
+        return deviation, deviation_squared
 
     def deviation_before(self):
         optimal_state = self.calculate_optimal_state()
