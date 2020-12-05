@@ -157,10 +157,11 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
         model_type,
         deviation_before,
         deviation_after,
+        deviation_after_squared,
         valid_inequalities_cons,
         symmetry_cons,
         seed,
-    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [])
+    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
         if len(dirs) == 0:
             if root.split("/")[-1] not in sheets:
@@ -175,6 +176,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                     visit_list.append(model["Visit Percentage"])
                     deviation_before.append(model["Deviation Before"])
                     deviation_after.append(model["Deviation After"])
+                    deviation_after_squared.append(model["Deviation After Squared"])
                     solution_time.append(float(model["SolutionInfo"]["Runtime"]))
                     gap.append(float(model["SolutionInfo"]["MIPGap"]))
                     objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
@@ -204,6 +206,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                 visit_list,
                 deviation_before,
                 deviation_after,
+                deviation_after_squared,
                 objective_value,
                 model_type,
                 valid_inequalities_cons,
@@ -222,6 +225,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
             "Visit percent",
             "Deviation before",
             "Deviation after",
+            "Deviation after squared",
             "Obj value",
             "Model type",
             "Valid Inequalities",

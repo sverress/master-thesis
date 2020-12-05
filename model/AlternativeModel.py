@@ -26,6 +26,7 @@ class AlternativeModel(BaseModel):
             for z in self._.zones
             for k in range(len(self._.zone_scooters[z]) + 1)
         ]
+        # 1 if k locations are visited in zone z, 0 otherwise
         self.w = self.m.addVars(self.cart_k_z, vtype=GRB.BINARY, name="w")
         self.setup()
 
