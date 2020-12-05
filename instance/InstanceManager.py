@@ -77,7 +77,7 @@ class InstanceManager:
         depot = get_center_of_bound(self._bound)
         service_vehicles = (
             number_of_vehicles,
-            math.ceil(len(delivery_nodes) / number_of_vehicles),
+            max([len(list(delivery_nodes.loc[delivery_nodes["zone"] == i].index)) for i in range(number_of_sections ** 2)]),
             math.ceil(len(scooters) / number_of_vehicles),
         )  # number of vehicles, scooter capacity, battery capacity
 
@@ -102,6 +102,7 @@ class InstanceManager:
                 seed=self._random_state,
                 valid_inequalities=kwargs.get("valid_inequalities", None),
                 symmetry=kwargs.get("symmetry", None),
+                subsets=kwargs.get("subsets", None),
             ),
             self._random_state,
         )
@@ -126,6 +127,7 @@ class InstanceManager:
             del current_parameters["model_type"]
             del current_parameters["valid_inequalities"]
             del current_parameters["symmetry"]
+            del current_parameters["seed"]
 
             if current_parameters == previous_parameters:
                 parameters["seed"] = previous_seed
@@ -141,6 +143,7 @@ class InstanceManager:
             del previous_parameters["model_type"]
             del previous_parameters["valid_inequalities"]
             del previous_parameters["symmetry"]
+            del previous_parameters["seed"]
 
     def set_random_state(self, new_state: int):
         """

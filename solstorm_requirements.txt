@@ -1,0 +1,3 @@
+###### Packages not already installed on Solstorm ######
+networkx == 2.5
+openpyxl == 3.0.5

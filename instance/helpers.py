@@ -102,6 +102,7 @@ def load_test_parameters_from_json(run_test=False):
         symmetry,
     ) in input_list:
         seed = data["model"]["seed"]
+        subsets = data["model"]["subsets"]
         instance_list.append(
             {
                 "number_of_sections": zones_per_axis,
@@ -116,6 +117,7 @@ def load_test_parameters_from_json(run_test=False):
                 "symmetry": symmetry if type(symmetry) is list else [symmetry],
                 "T_max_is_percentage": data["model"]["T_max_is_percentage"],
                 "seed": np.random.randint(0, 1000) if seed == "random" else seed,
+                "subsets": subsets if len(subsets) > 0 else None,
             }
         )
     return instance_list
@@ -155,10 +157,11 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
         model_type,
         deviation_before,
         deviation_after,
+        deviation_after_squared,
         valid_inequalities_cons,
         symmetry_cons,
         seed,
-    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [])
+    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
         if len(dirs) == 0:
             if root.split("/")[-1] not in sheets:
@@ -173,6 +176,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                     visit_list.append(model["Visit Percentage"])
                     deviation_before.append(model["Deviation Before"])
                     deviation_after.append(model["Deviation After"])
+                    deviation_after_squared.append(model["Deviation After Squared"])
                     solution_time.append(float(model["SolutionInfo"]["Runtime"]))
                     gap.append(float(model["SolutionInfo"]["MIPGap"]))
                     objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
@@ -202,6 +206,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                 visit_list,
                 deviation_before,
                 deviation_after,
+                deviation_after_squared,
                 objective_value,
                 model_type,
                 valid_inequalities_cons,
@@ -220,6 +225,7 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
             "Visit percent",
             "Deviation before",
             "Deviation after",
+            "Deviation after squared",
             "Obj value",
             "Model type",
             "Valid Inequalities",
