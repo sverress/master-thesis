@@ -5,17 +5,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def run_from_json(run_test=False):
+def run_from_json(run_test=False, visualize=True):
     manager = InstanceManager()
     manager.create_multiple_instances(run_test)
     for instance in manager.instances.values():
-        # instance.visualize_raw_data_map(
-        #    instance.get_model_name(), False, manager.time_stamp
-        # )  # instance name, save, time stamp
+        if visualize:
+            instance.visualize_raw_data_map(
+                instance.get_model_name(), False, manager.time_stamp
+            )  # instance name, save, time stamp
         instance.print_instance()
         instance.run()
         instance.visualize_solution(
-            False, False, manager.time_stamp
+            not visualize, False, manager.time_stamp
         )  # save, edge_plot, time stamp
         instance.model.print_solution()
         instance.save_model_and_instance(manager.time_stamp)
@@ -31,7 +32,6 @@ def run_project_test():
 
 
 def plot_function():
-
     beta = 0.8
     ideal_state = 20
     x = np.arange(start=1, stop=ideal_state, step=1)
@@ -54,7 +54,7 @@ def plot_function():
     plt.xlim(0, len(x) + 1)
     plt.ylim(0, len(y) + 1)
     for i in x:
-        plt.annotate(f" ({i}, {round(y[i-1], 2)})", (i, y[i - 1]))
+        plt.annotate(f" ({i}, {round(y[i - 1], 2)})", (i, y[i - 1]))
     plt.show()
 
 
@@ -64,8 +64,12 @@ def calc_r_kz(value, beta, theta, ideal_state, sum_b, x):
 
 if __name__ == "__main__":
     program = sys.argv[1]
+    try:
+        visualize = True if sys.argv[2] == "visualize" else False
+    except IndexError:
+        visualize = False
     if program == "run":
-        run_from_json()
+        run_from_json(False, visualize)
     if program == "plot":
         plot_function()
     if program == "test":
