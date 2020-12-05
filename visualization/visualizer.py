@@ -88,7 +88,7 @@ def visualize_solution(
         # adding edges
         for key in instance.model.x.keys():
             from_node, to_node, vehicle_id = key
-            if instance.model.x[key].x > 0:
+            if int(instance.model.x[key].x) > 0:
                 graph.add_edge(from_node, to_node, color=colors[vehicle_id], width=2)
                 edge_labels[(from_node, to_node)] = (
                     "T = "
