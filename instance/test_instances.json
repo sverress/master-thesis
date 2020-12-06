@@ -1,7 +1,7 @@
 {
 	"model": {
-		"model_type": "alternative",
-		"T_max_is_percentage": false,
+		"model_type": ["alternative", "standard"],
+		"T_max_is_percentage": true,
 		"subsets": [2,3,2],
 		"seed": 383
 	},
@@ -11,9 +11,9 @@
 	},
 	"ranges": {
 	"number_of_sections": 2,
-	"number_of_scooter_per_section": [3,3,1],
+	"number_of_scooter_per_section": [4,5,1],
 	"number_of_vehicles": [2,2,1],
-	"T_max": [15,15,5],
-	"time_limit": 2
+	"T_max": [0.4,0.4,0.1],
+	"time_limit": 20
 	}
 }
