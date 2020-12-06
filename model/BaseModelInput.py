@@ -62,6 +62,13 @@ class BaseModelInput(ABC):
         self.num_locations = len(self.locations)
         self.num_service_vehicles = num_of_service_vehicles
 
+        self.battery_level = [0.0] + [
+            x / 100 for x in scooter_list["battery"]
+        ]  # Battery level of scooter at location i
+
+        # Optimal state
+        self.optimal_state = optimal_state
+
         # Parameters
         self.reward = self.compute_reward_matrix(scooter_list, delivery_nodes_list)
         self.time_cost = self.compute_time_matrix(
@@ -71,9 +78,7 @@ class BaseModelInput(ABC):
             self.shift_duration = T_max * TSP(len(self.locations), self.time_cost)
         else:
             self.shift_duration = T_max  # Duration of shift in minutes
-        self.battery_level = [0.0] + [
-            x / 100 for x in scooter_list["battery"]
-        ]  # Battery level of scooter at location i
+
         self.battery_capacity = [battery_cap] * self.num_service_vehicles
         self.scooter_capacity = [scooter_cap] * self.num_service_vehicles
         self.deviation_from_optimal_state = [
@@ -81,8 +86,6 @@ class BaseModelInput(ABC):
             for z, the_optimal_state in enumerate(optimal_state)
         ]
 
-        # Battery level of scooter at location i
-        self.B = [0.0] + [x / 100 for x in scooter_list["battery"]]
 
     @abstractmethod
     def compute_reward_matrix(self, scooter_list, delivery_nodes_list):

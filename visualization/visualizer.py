@@ -64,7 +64,7 @@ def visualize_solution(
                 s = ""
                 pad = 0
                 if node_dict[p]["label"] == SUPPLY:
-                    s += "B=" + str(int(instance.model_input.B[i] * 100)) + "\n"
+                    s += "B=" + str(int(instance.model_input.battery_level[i] * 100)) + "\n"
                 for k in range(instance.model_input.num_service_vehicles):
                     if (
                         (i, k) in instance.model.p.keys()
