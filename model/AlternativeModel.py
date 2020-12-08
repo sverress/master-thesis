@@ -8,8 +8,8 @@ from model.BaseModelInput import BaseModelInput
 class AlternativeModelInput(BaseModelInput):
     def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
         r_kz = {}
-        beta = 0.8
-        theta = 0.05
+        beta = 0.7
+        theta = 0.2
 
         for z in self.zones:
             ideal_state = self.optimal_state[z]
