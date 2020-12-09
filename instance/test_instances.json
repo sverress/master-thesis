@@ -1,13 +1,13 @@
 {
 	"model": {
-		"model_type": ["alternative", "standard"],
+		"model_type": ["standard"],
 		"alternative_tuners":{
-			"theta": [0.05, 0.06, 0.01],
-			"beta": [0.8,0.9,0.1]
+			"theta": [0.05, 0.05, 0.01],
+			"beta": [0.8,0.8,0.1]
 		},
-		"T_max_is_percentage": true,
+		"T_max_is_percentage": false,
 		"subsets": [2,3,2],
-		"seed": 69
+		"seed": 383
 	},
 	"constraints": {
 		"valid inequalities": ["arcs_less_then_locations"],
@@ -15,9 +15,9 @@
 	},
 	"ranges": {
 	"number_of_sections": 2,
-	"number_of_scooter_per_section": [4,4,1],
-	"number_of_vehicles": [2,2,1],
-	"T_max": [0.4,0.4,0.1],
-	"time_limit": 10
+	"number_of_scooter_per_section": [5,5,1],
+	"number_of_vehicles": [10,10,1],
+	"T_max": [15,15,1],
+	"time_limit": 600
 	}
 }

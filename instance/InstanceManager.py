@@ -83,7 +83,7 @@ class InstanceManager:
                     for i in range(number_of_sections ** 2)
                 ]
             ),
-            math.ceil(len(scooters) / number_of_vehicles),
+            len(scooters),
         )  # number of vehicles, scooter capacity, battery capacity
 
         is_percent_t_max = kwargs.get("T_max_is_percentage", True)
