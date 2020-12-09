@@ -20,6 +20,7 @@ class BaseModelInput(ABC):
         T_max: int,
         is_percent_t_max: bool,
         number_of_zones: int,
+        **kwargs
     ):
         """
         Creating all input to the gurobi model
@@ -69,8 +70,12 @@ class BaseModelInput(ABC):
         # Optimal state
         self.optimal_state = optimal_state
 
+        # Model tuners
+        self.theta = kwargs.get("theta", 0.8)
+        self.beta = kwargs.get("beta", 0.05)
+
         # Parameters
-        self.reward = self.compute_reward_matrix(scooter_list, delivery_nodes_list)
+        self.reward = self.compute_reward_matrix()
         self.time_cost = self.compute_time_matrix(
             scooter_list, delivery_nodes_list, depot_location
         )  # Calculate distance in time between all locations
@@ -86,9 +91,8 @@ class BaseModelInput(ABC):
             for z, the_optimal_state in enumerate(optimal_state)
         ]
 
-
     @abstractmethod
-    def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
+    def compute_reward_matrix(self):
         pass
 
     def compute_time_matrix(self, scooters, delivery_nodes, depot):

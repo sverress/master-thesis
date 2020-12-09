@@ -54,6 +54,7 @@ def load_test_parameters_from_json(run_test=False):
             data = json.load(json_file)
     ranges = []
     param = data["ranges"]
+    param.update(data["model"]["alternative_tuners"])
     for key in param:
         if type(param[key]) is list:
             parameter_min, parameter_max, parameter_increment = param[key]
@@ -97,6 +98,8 @@ def load_test_parameters_from_json(run_test=False):
         number_of_vehicles,
         T_max,
         time_limit,
+        theta,
+        beta,
         model_type,
         valid_inequality,
         symmetry,
@@ -110,6 +113,8 @@ def load_test_parameters_from_json(run_test=False):
                 "number_of_vehicles": number_of_vehicles,
                 "T_max": T_max,
                 "time_limit": time_limit,
+                "theta": theta,
+                "beta": beta,
                 "model_type": model_type,
                 "valid_inequalities": valid_inequality
                 if type(valid_inequality) is list
@@ -155,13 +160,15 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
         visit_list,
         objective_value,
         model_type,
+        theta,
+        beta,
         deviation_before,
         deviation_after,
         deviation_after_squared,
         valid_inequalities_cons,
         symmetry_cons,
         seed,
-    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [])
+    ) = ([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [])
     for root, dirs, files in os.walk("saved_models/", topdown=True):
         if len(dirs) == 0:
             if root.split("/")[-1] not in sheets:
@@ -181,6 +188,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                     gap.append(float(model["SolutionInfo"]["MIPGap"]))
                     objective_value.append(float(model["SolutionInfo"]["ObjVal"]))
                     model_type.append(model["Instance"]["model_class"])
+                    theta.append(model["Instance"]["theta"])
+                    beta.append(model["Instance"]["beta"])
                     valid_inequalities_cons.append(
                         str(model["Valid Inequalities"]).strip("[],")
                     )
@@ -209,6 +218,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
                 deviation_after_squared,
                 objective_value,
                 model_type,
+                theta,
+                beta,
                 valid_inequalities_cons,
                 symmetry_cons,
                 seed,
@@ -228,6 +239,8 @@ def save_models_to_excel(timestamp=time.strftime("%d-%m %H.%M")):
             "Deviation after squared",
             "Obj value",
             "Model type",
+            "Theta",
+            "Beta",
             "Valid Inequalities",
             "Symmetry constraint",
             "Seed",

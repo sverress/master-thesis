@@ -1,4 +1,3 @@
-from math import log
 from gurobipy import GRB
 import gurobipy as gp
 from model.BaseModel import BaseModel
@@ -6,20 +5,26 @@ from model.BaseModelInput import BaseModelInput
 
 
 class AlternativeModelInput(BaseModelInput):
-    def compute_reward_matrix(self, scooter_list, delivery_nodes_list):
+    def compute_reward_matrix(self):
         r_kz = {}
-        beta = 0.8
-        theta = 0.05
 
         for z in self.zones:
             ideal_state = self.optimal_state[z]
-            sum_b = sum([self.battery_level[s] for s in self.zone_scooters[z] if s not in self.delivery])
+            sum_b = sum(
+                [
+                    self.battery_level[s]
+                    for s in self.zone_scooters[z]
+                    if s not in self.delivery
+                ]
+            )
             k_max = len(self.zone_scooters[z])
             for k in range(0, k_max + 1):
                 if k == 0:
                     r_kz[(k, z)] = 0
                 else:
-                    r = calc_r_kz(r_kz[(k-1, z)], beta, theta, ideal_state, sum_b, k)
+                    r = calc_r_kz(
+                        r_kz[(k - 1, z)], self.beta, self.theta, ideal_state, sum_b, k
+                    )
 
                     r_kz[(k, z)] = r if r <= k else k
 
