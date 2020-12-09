@@ -7,7 +7,7 @@
 		},
 		"T_max_is_percentage": true,
 		"subsets": [2,3,2],
-		"seed": 383
+		"seed": 69
 	},
 	"constraints": {
 		"valid inequalities": ["arcs_less_then_locations"],
