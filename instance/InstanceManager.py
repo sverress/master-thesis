@@ -104,6 +104,8 @@ class InstanceManager:
                 kwargs.get("time_limit", 10),
                 self._bound,
                 InstanceManager.get_model_types()[kwargs.get("model_type", "standard")],
+                theta=kwargs.get("theta", 0.05),
+                beta=kwargs.get("beta", 0.8),
                 seed=self._random_state,
                 valid_inequalities=kwargs.get("valid_inequalities", None),
                 symmetry=kwargs.get("symmetry", None),

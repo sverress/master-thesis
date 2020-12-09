@@ -66,6 +66,8 @@ class Instance:
             T_max,
             is_percent_t_max,
             self.number_of_zones,
+            theta=kwargs.get("theta", 0.05),
+            beta=kwargs.get("beta", 0.8),
         )
         self.model = model_class(
             self.model_input,
@@ -151,11 +153,11 @@ class Instance:
         if self.model.valid_inequalities:
             data["Valid Inequalities"] = self.model.valid_inequalities
         else:
-            data["Valid Inequalities"] = "None"
+            data["Valid Inequalities"] = "-"
         if self.model.symmetry:
             data["Symmetry constraint"] = self.model.symmetry
         else:
-            data["Symmetry constraint"] = "None"
+            data["Symmetry constraint"] = "-"
 
         with open(file_path_solution, "w") as jsonFile:
             json.dump(data, jsonFile)
@@ -173,6 +175,8 @@ class Instance:
             "computational_limit": self.computational_limit,
             "bound": self.bound,
             "model_class": self.model.to_string(False),
+            "theta": self.model_input.theta if self.model.to_string() == "A" else "x",
+            "beta": self.model_input.beta if self.model.to_string() == "A" else "x",
         }
 
     def get_model_variables(self):
@@ -214,7 +218,8 @@ class Instance:
             if print_mode
             else f"model_{self.number_of_sections}_{scooters_per_section}_{num_of_service_vehicles}_"
             + f"{int(self.model_input.shift_duration)}_{self.computational_limit}_"
-            + f"{self.model.to_string()}_{symmetry}_{valid_inequalities}"
+            + f"{self.model.to_string()}_{round(self.model_input.theta,4)}_{round(self.model_input.beta,3)}_"
+            f"{symmetry}_{valid_inequalities}"
         )
 
     def is_feasible(self):
