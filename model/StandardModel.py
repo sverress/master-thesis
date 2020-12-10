@@ -8,9 +8,7 @@ from model.BaseModelInput import BaseModelInput
 class StandardModelInput(BaseModelInput):
     def compute_reward_matrix(self):
         return (
-            [0.0]
-            + [1 - x / 100 for x in self.battery_level[1:]]
-            + [1.0] * len(self.delivery)
+            [0.0] + [1 - x for x in self.battery_level[1:]] + [1.0] * len(self.delivery)
         )  # Reward for visiting location i (uniform distribution). Eks for 3 locations [0, 0.33, 0.66]
 
 
