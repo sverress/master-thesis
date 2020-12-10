@@ -64,7 +64,11 @@ def visualize_solution(
                 s = ""
                 pad = 0
                 if node_dict[p]["label"] == SUPPLY:
-                    s += "B=" + str(int(instance.model_input.battery_level[i] * 100)) + "\n"
+                    s += (
+                        "B="
+                        + str(int(instance.model_input.battery_level[i] * 100))
+                        + "\n"
+                    )
                 for k in range(instance.model_input.num_service_vehicles):
                     if (
                         (i, k) in instance.model.p.keys()
@@ -88,7 +92,7 @@ def visualize_solution(
         # adding edges
         for key in instance.model.x.keys():
             from_node, to_node, vehicle_id = key
-            if int(instance.model.x[key].x) > 0:
+            if round(instance.model.x[key].x) > 0:
                 graph.add_edge(from_node, to_node, color=colors[vehicle_id], width=2)
                 edge_labels[(from_node, to_node)] = (
                     "T = "
