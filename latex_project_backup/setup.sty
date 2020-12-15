@@ -1,0 +1,267 @@
+% Author - Jon Arnt Kårstad, NTNU IV-IMT
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{packages}[2020/09/15 Packages]
+\usepackage[utf8]{inputenc} % Character encoding
+
+% ------ Contents -------
+% Appendices
+% Bibliography & References
+% Code input
+% Flow charts
+% Front matter
+% General
+% Image
+% Language
+% Main matter
+% Mathematics
+% Page setup
+% -----------------------
+
+% --- Appendices ---
+\usepackage{appendix}
+\newcommand{\addappendix}{   % Self-created command to insert appendix with predefined settings
+    \appendix
+    \pagestyle{appendix}
+    \vspace*{9mm}
+    \textbf{\Huge Appendix}
+    \addcontentsline{toc}{chapter}{Appendix}  % Add appendix name to table of contents
+    \renewcommand{\thesection}{\Alph{section}}    % Change numbering of section to upper-case letters.
+}
+
+\newcommand{\stoptocwriting}{%
+  \addtocontents{toc}{\protect\setcounter{tocdepth}{-5}}}
+\newcommand{\resumetocwriting}{%
+  \addtocontents{toc}{\protect\setcounter{tocdepth}{\arabic{tocdepth}}}}
+
+% --- Bibliography & References---  
+
+\usepackage[backend = biber,    % Recommended backend for sorting bibliography
+            style = authoryear-comp,    % Close to the 'Harvard' referencing style
+            natbib=true,
+            urldate = long,     % Long: 24th Mar. 1997 | Short: 24/03/1997
+            maxcitenames = 2,   % Number of authors in cite before replaced with 'Author#1 et al.'
+            mincitenames=1,
+            ]{biblatex}
+\addbibresource{Bibliography.bib}     % Adding our file containing the references
+\newcommand{\addbib}{
+    \newpage
+    \pagestyle{regular}
+    % Printing bibliography
+    \printbibliography
+}
+
+
+%\addbibresource{reference_2.bib} is possible if we want to add several reference files
+
+\usepackage{lipsum}
+
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage[list=true]{subcaption}
+\usepackage[nottoc]{tocbibind}  % Includes Bibliography, Index, list of Listing etc. to table of contents
+\newcommand{\source}[1]{\vspace{-4pt} \caption*{\hfill \footnotesize{Source: {#1}} } }   % Easily insert sources in images
+
+% --- Code ---
+\usepackage{minted} % Includes several programming languages and styles
+
+% --- Flow Charts ---
+% Keep in mind that you may customize these flow chart settings to fit your own preferences.
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm,
+    minimum height=2em]
+
+% --- Front matter ---
+% Front matter is located before the table of contents, e.g. preface (Norsk: forord) and has separate settings
+\newcommand{\frontmatter}{
+    \pagenumbering{roman}   % Setting page numbering to lower-case roman
+}
+% Edit title of lists (uncomment below)
+\renewcommand*\contentsname{Table of Contents}   % Rename table of contents
+\renewcommand{\listfigurename}{List of Figures}   % Rename list of figures
+\renewcommand{\listtablename}{List of Tables}  % Rename list of tables
+
+% --- General ---
+\usepackage[british]{babel}     % Defining UK English as language. This will among other things ensure that dates are displayed as 24/03/1997 rather than 03/24/1997 in the bibliography.
+\usepackage{import}     % Enable importing of sections
+\usepackage{csquotes}   % Provides international handling of quote marks. Especially useful for bibliography management using BibLaTeX
+\usepackage{hyperref}   % Hyper-references, possible to change color
+\hypersetup{    % Color of hyper-references
+    colorlinks,
+    citecolor = black,
+    filecolor = black,
+    linkcolor = black,
+    urlcolor = black
+}
+\usepackage{comment}    % Comment blocks of text
+\def\equationautorefname{Equation}  % Autoref-name for equations
+\def\figureautorefname{Figure}  % Autoref-name for figures
+\def\tableautorefname{Table}    % Autoref-name for tables
+\def\sectionautorefname{Section}    % Autoref-name for sections
+\def\subsectionautorefname{\sectionautorefname} % Autoref-name for subsections
+\def\subsubsectionautorefname{\sectionautorefname} % Autoref-name for subsubsections
+
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{10pt}{\Huge}
+\titlespacing*{\chapter}
+  {0pt}{30pt}{20pt}
+
+
+
+% --- Image ---
+\usepackage{graphicx}   % Handle images
+\usepackage{wrapfig}    % Wrap text around images
+\usepackage{float}      % Force image location using "H"
+\usepackage{url}
+\urlstyle{sf}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}   % Ruler
+\usepackage[justification=centering]{caption} % Fixing captionsource
+\newcommand*{\captionsource}[2]{%
+    \caption[{#1}]{%
+        #1%
+        \\%     
+        \textit{Source:} #2%
+    }%
+}
+
+% --- Language ---
+\usepackage{siunitx}    % Enable SI units
+
+% --- Main matter ---
+% This is the main part of the paper.
+\newcommand{\mainmatter}{
+    \newpage
+    \pagenumbering{arabic}  % Setting page numbering to normal integers
+}
+
+% --- Mathematics ---
+\usepackage{bm}     % Bold text in math mode
+\usepackage{amsmath}    %  Math formulas and improved typographical quality of their output
+\numberwithin{equation}{chapter}
+\usepackage{amssymb}    % Extended symbol collection
+\usepackage{amsthm}     % Helps define theorem-like structures
+
+% --- References ---
+\usepackage[capitalise]{cleveref}
+
+% --- Page setup ---
+\usepackage[a4paper, total={150mm, 245mm,footskip = 14mm}]{geometry}
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.8em}
+\linespread{1.6}
+
+% Customized header and footer
+\usepackage{fancyhdr,mfirstuc}
+\pagestyle{fancy}
+\fancypagestyle{plain}{
+    \setlength{\headsep}{-0.5cm}
+    \setlength{\footskip}{19mm}
+    \renewcommand{\footrulewidth}{0.1ex}
+}
+\fancypagestyle{regular}{
+    \fancyhf{}
+    \setlength{\headsep}{15pt}
+    \setlength{\topmargin}{-24pt}
+    \setlength{\footskip}{9mm}
+    \fancyhead[R]{\nouppercase{\leftmark}}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0.1ex}
+    \renewcommand{\footrulewidth}{0.1ex}
+}
+
+\fancypagestyle{appendix}{
+    \fancyhf{}
+    \setlength{\headsep}{15pt}
+    \fancyhead[R]{Appendix \nouppercase{\rightmark}}
+    \fancyfoot[C]{\thepage}
+}
+
+\fancypagestyle{clean}{
+    \fancyhf{}
+    \setlength{\headsep}{4.2cm}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
+
+\renewcommand{\headrulewidth}{0.1ex}
+\renewcommand{\footrulewidth}{0.1ex}
+\newcommand{\setregular}{
+    \pagestyle{regular}
+}
+\newcommand{\setclean}{
+    \pagestyle{clean}
+}
+
+
+
+% --- Added ---
+\usepackage{multicol}
+\usepackage{multirow}
+% http://ctan.org/pkg/xcolor
+%\usepackage[backend=biber, natbib, style=abbrvnat]{biblatex}
+
+
+\usetikzlibrary {positioning}
+\usepackage{listings}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+\definecolor {processblue}{cmyk}{0.96,0,0,0}
+\usetikzlibrary{backgrounds}
+
+\newcommand\tikzmark[1]{%
+  \tikz[remember picture,overlay]\node (#1) {};%
+}
+
+\newcommand\Connect[3][]{%
+\tikz[remember picture,overlay]
+  \draw[->,red,>=latex,#1] (#2.north east) -- ( $ (#3.north west) + (-20pt,0) $ );%
+}
+
+\newcommand*{\captionsource}[2]{%
+  \caption[{#1}]{%
+    #1% 
+    \textit{, Source: #2}% 
+  }%
+}
+
+\usepackage{pdflscape}
+\usepackage{longtable}
+
+\usepackage{chngcntr}
+\counterwithin{figure}{chapter}
+\counterwithin{table}{chapter}
+
+%thick hline
+\makeatletter
+\def\thickhline{%
+  \noalign{\ifnum0=`}\fi\hrule \@height \thickarrayrulewidth \futurelet
+   \reserved@a\@xthickhline}
+\def\@xthickhline{\ifx\reserved@a\thickhline
+               \vskip\doublerulesep
+               \vskip-\thickarrayrulewidth
+             \fi
+      \ifnum0=`{\fi}}
+\makeatother
+
+\newlength{\thickarrayrulewidth}
+\setlength{\thickarrayrulewidth}{2\arrayrulewidth}
+
+
+\usepackage{colortbl}
+
+\usepackage{tabularx,ltablex,ragged2e,booktabs,babel}
+
+%Change Abstract header
+\usepackage{abstract}
+\renewcommand{\abstractnamefont}{\normalfont\Large\bfseries}
+
+%Prevents splitting of words
+\usepackage[none]{hyphenat}

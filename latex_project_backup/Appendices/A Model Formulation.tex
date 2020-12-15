@@ -1,0 +1,88 @@
+\section{Formulation of the Standard Model}\label{formulation_standard}
+\stoptocwriting
+\subsection{Notation}
+\begin{tabular}{p{1.5cm} p{12.5cm}}
+    \textbf{Sets} & \\
+    $\mathcal{L}$ & Set of locations \\
+    $\mathcal{L}^{+}$ & Set of locations including the depot, $L \cup \{d\}$ \\
+    $\mathcal{L}^{S}$ & Set of locations with e-scooters \\
+    $\mathcal{L}^{D}$ & Set of delivery locations \\
+    $\mathcal{Z}$ & Set of zones \\
+    $\mathcal{Z}^D$ & Set of zones containing delivery locations \\
+    $\mathcal{L}_{z}$ & Set of locations in zone $z$ \\
+    $\mathcal{V}$ & Set of service vehicles \\
+    \textbf{Parameters} \\
+    $R_{i}$ & Reward for visiting location $i$ \\
+    $B_{i}$ & Battery percentage of e-scooter in location $i$ \\
+    $T_{ij}$ & Time needed to travel from location $i$ to $j$ for vehicle v\\
+    $T_{max}$ & Duration of shift \\
+    $Q^{B}$ & Battery capacity of service vehicles \\
+    $Q^{S}$ & Scooter capacity of service vehicles \\
+    $E_z$ & Excess of e-scooters in zone $z$ \\
+    \textbf{Variables} \\
+    $x_{ijv}$ & 1 if visit to location $i$ is followed by a visit to location $j$ for service vehicle $v$ - 0 otherwise \\
+    $y_{iv}$ & 1 if service vehicle $v$ visits location $i$  - 0 otherwise \\
+    $p_{iv}$ & 1 if service vehicle $v$ pick up an e-scooter at location $i$ - 0 otherwise \\
+    $l_{iv}$ & Load of service vehicle $v$ when entering location $i$ \\
+    $u_{iv}$ & Position of location $i$ in the route of service vehicle $v$ \\
+\end{tabular}
+\newpage
+\subsection{Standard Model}
+\renewcommand{\theequation}{A.\arabic{equation}}
+\setcounter{equation}{0}
+\begin{eqnarray}
+        % Objective Function
+        \max & \displaystyle\sum_{v\in \mathcal{V}} \displaystyle\sum_{i \in \mathcal{L}} R_{i}y_{iv} - \displaystyle\sum_{v\in \mathcal{V}} \displaystyle\sum_{i \in \mathcal{L}^{S}} B_{i}p_{iv} & \label{eq:objective}\\
+        % Constraints
+        % All paths need to start and end at the depot
+        \text{s.t} & \displaystyle\sum_{v\in \mathcal{V}} \displaystyle\sum_{d,j\in \mathcal{L}^+}x_{djv} = \displaystyle\sum_{v\in \mathcal{V}} \displaystyle\sum_{i,d\in \mathcal{L}^+}x_{idv} = |\mathcal{V}|  \label{eq:const_deopt}\\ 
+        % A location can only be visited once
+	    & \displaystyle\sum_{v\in \mathcal{V}}y_{iv} \leq 1 & i \in \mathcal{L} \label{eq:const_at_most_once}\\
+	    % Connectivity constraint
+	    & \displaystyle\sum_{i\in \mathcal{L}^{+}}x_{ikv} = \displaystyle\sum_{j\in \mathcal{L}^{+}}x_{kjv} = y_{kv} & k \in L^{+}, v\in \mathcal{V} \label{eq:const_connectivity}\\
+	    % Time limit constraint
+	    & \displaystyle\sum_{i,j \in \mathcal{L}} T_{ij}x_{ijv} \leq T_{max} & v\in \mathcal{V} \label{eq:const_time}\\
+	    % No pickup in zones lacking e-scooters
+	    & \displaystyle\sum_{v\in \mathcal{V}}\displaystyle\sum_{i\in \mathcal{L}_z} p_{iv} = 0  & z\in \mathcal{Z}^D \label{eq:pickup_zone}\\
+	    % Cannot pick up more than diff between |Lz| and optimal state
+    	& \displaystyle\sum_{v\in \mathcal{V}}\displaystyle\sum_{i\in \mathcal{L}_z} p_{iv} \leq E_z & z\in \mathcal{Z} \label{eq:pickup_zone_2}\\
+	    % Subtour Elimination
+	    & u_{iv} \leq \displaystyle\sum_{j \in \mathcal{L}^{+}} \displaystyle\sum_{k \in \mathcal{L}^{+}} x_{jkv} &  i\in \mathcal{L}, v\in \mathcal{V} \label{eq:const_subtour1}\\
+	    & u_{iv} - u_{jv} +1 \leq (|\mathcal{L}^{+}|-1)(1-x_{ijv})&   i,j \in \mathcal{L} \setminus\{i=j\}, v\in \mathcal{V} \label{eq:const_subtour2}\\
+	    % We cannot visit more locations then our battery capacity
+   	    & \displaystyle\sum_{i\in \mathcal{L}^{S}}y_{iv} \leq Q^{B} &   v \in \mathcal{V} \label{eq:capacity_const}\\
+	    % Vechicle capacity constraints
+	    & 0 \leq l_{iv} \leq Q^{S} & i \in \mathcal{L}, v \in \mathcal{V} \label{eq:const_vcap}\\
+	    % Handling inventory at pick-up
+	    & l_{iv} + p_{iv} - l_{jv} - Q^{S}(1-x_{ijv}) \leq 0 & i \in \mathcal{L}^{S}, j \in \mathcal{L}^{+} \setminus\{i=j\}, v \in \mathcal{V} \label{eq:const_vcap_pickup}\\
+	    & l_{iv} + p_{iv} - l_{jv} + Q^{S}(1-x_{ijv}) \geq 0 & i \in \mathcal{L}^{S}, j \in \mathcal{L}^{+} \setminus\{i=j\}, v \in \mathcal{V} \label{eq:const_vcap_pickup}\\
+	    % Handling inventory at drop-off
+	    & l_{iv} - y_{iv} - l_{jv} - Q^{S}(1-x_{ijv}) \leq 0 & i \in \mathcal{L}^{D}, j \in \mathcal{L}^{+} \setminus\{i=j\}, v \in \mathcal{V} \label{eq:const_vcap_delivery}\\
+	    & l_{iv} - y_{iv} - l_{jv} + Q^{S}(1-x_{ijv}) \geq 0 & i \in \mathcal{L}^{D}, j \in \mathcal{L}^{+} \setminus\{i=j\}, v \in \mathcal{V} \label{eq:const_vcap_delivery}\\
+	    % Handling inventory when leaving depot
+	    & l_{iv} - Q^{S}(1-x_{div}) \leq 0 & i \in \mathcal{L}, v \in \mathcal{V} \label{eq:const_vcap_depot_out}\\
+	    % Handling inventory when returning to depot
+	    & \displaystyle\sum_{d\in \mathcal{L}^+}l_{dv} = 0 & v \in \mathcal{V} \label{eq:const_vcap_depot_in}\\
+	    % Variable initialization 
+	    & x_{ijv}, y_{iv} \in {0, 1} &   i,j\in \mathcal{L}^{+}, v\in \mathcal{V} \\
+	    & p_{iv} \in {0, 1} &   i\in \mathcal{L}^{S}, v\in \mathcal{V} \\
+	    & l_{iv} \in \mathbb{R}^{+} & i\in \mathcal{L}^{+}, v\in \mathcal{V} \\
+	    & u_{iv} \in \mathbb{R}^{+} & i\in \mathcal{L}, v\in \mathcal{V} 
+\end{eqnarray}
+\newpage
+\textbf{Symmetry breaking constraints and other valid inequalities:}
+\begin{eqnarray}
+        % Symmetry breaking - arcs by vehicle 
+	    & \displaystyle\sum_{i\in \mathcal{L}^+}\displaystyle\sum_{j\in \mathcal{L}^+} x_{ijv} \geq \displaystyle\sum_{i\in \mathcal{L}^+}\displaystyle\sum_{j\in \mathcal{L}^+} x_{ij(v+1)} & v \in \mathcal{V} \setminus\{| \mathcal{V}|\} \label{eq:const_number_of_arcs}\\
+	    % Symmetry breaking - visits by vehicle
+	    & \displaystyle\sum_{i\in \mathcal{L}^+} y_{iv} \geq \displaystyle\sum_{i\in \mathcal{L}^+} y_{i(v+1)} & v \in \mathcal{V} \setminus\{| \mathcal{V}|\} \label{eq:const_number_of_visits} \\
+	    % Symmetry breaking - time used by vehicle 
+	    & \displaystyle\sum_{i\in \mathcal{L}^+}\displaystyle\sum_{j\in \mathcal{L}^+} t_{ij}x_{ijv} \geq \displaystyle\sum_{i\in \mathcal{L}^+}\displaystyle\sum_{j\in \mathcal{L}^+} t_{ij}x_{ij(v+1)} & v \in \mathcal{V} \setminus\{| \mathcal{V}|\} \label{eq:const_total_time_used}\\
+	    %Valid inequalities - back and forth 
+	    & \displaystyle\sum_{v\in \mathcal{V}} x_{ijv} + \displaystyle\sum_{v\in \mathcal{V}} x_{jiv} \leq 1 & i,j \in \mathcal{L} \label{eq:const_back_and_forth}\\
+	    %Valid inequalities - subtour in subset
+	    & \displaystyle\sum_{i\in \mathcal{L}} \displaystyle\sum_{j\in \mathcal{L}} \displaystyle\sum_{v\in \mathcal{V}} x_{ijv} \leq |\mathcal{S}|-1  & \mathcal{S} \subseteq \mathcal{L}, |\mathcal{S}|\geq 2 \label{eq:const_subtour_in_set}\\
+	    %Valid inequalities - arcs less then locations
+	    & \displaystyle\sum_{i\in \mathcal{L}} \displaystyle\sum_{j\in \mathcal{L}} \displaystyle\sum_{v\in \mathcal{V}} x_{ijv}  \leq |\mathcal{L}^{+}| + |\mathcal{V}| \label{eq:const_arcs_less_then_locations}
+\end{eqnarray}
+\resumetocwriting

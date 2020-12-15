@@ -1,0 +1,81 @@
+% Author - Jon Arnt Kårstad, NTNU IMT
+\documentclass{report}
+
+% Importing settings from our file "setup.sty"
+\usepackage{setup}
+
+% Beginning of documentx
+\begin{document}
+
+% Inserting title page
+\import{./}{title}
+
+% Defining front matter settings (Norsk: innstillinger for forord m.m.)
+\frontmatter
+
+\setclean
+
+\begin{center}
+    \textbf{\Large Preface}
+\end{center}
+This project report is a specialization project as part of our Master of Science at the department of Industrial Economics and Technology Management at the Norwegian University of Science and Technology. The report is written as a part of the course \textit{TIØ4500 - Managerial Economics and Operations Research, Specialization Project} during the fall semester of 2020. 
+
+We would like to thank our supervisor Professor Henrik Andersson for his valuable guidance throughout the project. In addition, we would like to express our sincere gratitude towards the industry operators that have provided us with helpful insight into the industry. A special thanks goes to Hans Martin Espegren for inspiring discussions on the field of optimization research and relevant domain knowledge.
+
+\newpage
+\setregular
+\begin{abstract}
+\noindent
+This report examines the rebalancing and battery swapping of electrical kick scooters (e-scooters) in a sharing system. During the day, the battery of the e-scooters are discharged and they are moved to less desirable locations. In order to maintain availability of the fleet, the operators of the sharing systems swap batteries and reposition the e-scooters during the night. The overall problem is referred to as the Static E-scooter Battery Swap Rebalancing Problem (SEBSRP). In this report, a mathematical model is introduced and implemented to solve the SEBSRP. 
+\newline
+\break
+To the best of the authors’ knowledge, the SEBSRP has not been solved before. However, the SEBSRP shares overlapping characteristics with the more analyzed problem of free-floating bike sharing systems and electrical bike sharing systems. Additionally, as the operators are not able to handle all e-scooters, the problem is similar to the Team Orienteering Problem. Consequently, research regarding these areas has been examined.  
+\newline
+\break
+Data from the public database of EnTur is used to reproduce real-world test instances from the city of Oslo. Through a computational study, test instances are processed and used to assess the complexity of the problem. The computational study reveals that the model is able to solve instances with up to 30 e-scooters. The size of solvable instances decreases as the number of service vehicles increases. Additionally, the solution time reaches a maximum when the shift duration enables the vehicles to visit around 60\% of the e-scooters. The results from running the test instances on the model provides valuable insights into how operators can utilize optimization research to improve the availability of their fleet of e-scooters.
+    
+\end{abstract}
+
+\newpage
+
+% Inserting table of contents
+\tableofcontents
+\newpage
+% Inserting list of figures & list of tables
+\listoffigures
+\newpage
+\listoftables
+
+% Defining main matter settings (Norsk: innstillinger for hoveddelen av teksten)
+\mainmatter
+
+% Introduction explaining this LaTeX-template
+\import{./Sections/}{1 Introduction}
+\newpage
+\import{./Sections/}{2 Background}
+\newpage
+\import{./Sections/}{3 Related literature review}
+\newpage
+\import{./Sections/}{4 Problem description}
+\newpage
+\import{./Sections/}{5 Mathematical model}
+\newpage
+\import{./Sections/}{6 Case study}
+\newpage
+\import{./Sections/}{7 Computational study}
+\newpage
+\import{./Sections/}{8 Concluding remarks}
+\newpage
+\import{./Sections/}{9 Future research}
+\newpage
+
+
+% Inserting appendix with separate settings
+\addappendix
+\import{./Appendices/}{A Model Formulation.tex}
+\import{./Appendices/}{B Alternative Model.tex}
+
+\addbib
+
+% End of document
+\end{document}
