@@ -1,7 +1,7 @@
 import copy
 
 import numpy as np
-from matplotlib import gridspec
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
@@ -21,8 +21,9 @@ class MarkovSim:
         self.transition_probs = (
             transition_porbs if transition_porbs else [(0.5, 0.3, 0.2), (0.3, 0.5, 0.2)]
         )
+        # (x_min, x_max, y_min, y_max)
         self.zone_boundaries = (
-            zone_boundaries if zone_boundaries else [(0, 11, 0, 5), (0, 11, 6, 11)]
+            zone_boundaries if zone_boundaries else [(0, 5, 0, 10), (5, 10, 0, 10)]
         )
 
         self.nodes = nodes if nodes else self.create_random_nodes(10)
@@ -54,24 +55,57 @@ class MarkovSim:
                 node.previous_location = copy.deepcopy(node.location)
 
     @staticmethod
-    def visualize_transition(original_state, current_state):
+    def visualize_transition(original_state, current_state, boundiries):
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(20, 9.7))
+        ax1.axis("off")
+        ax1.set_title("Before MC simulation", fontsize=16)
+        ax2.axis("off")
+        ax2.set_title("After MC simulation", fontsize=16)
+        size = 400
+        radius = np.sqrt(size) / 2.0
 
         for i, node in enumerate(original_state):
-            ax1.scatter(node.location[0], node.location[1], c="g", s=400, alpha=0.6)
-            ax1.annotate(f"{i+1}", (node.location[0], node.location[1]))
+            ax1.scatter(node.location[0], node.location[1], c="g", s=size, alpha=0.6)
+            ax1.annotate(f"{i + 1}", (node.location[0] - 0.05, node.location[1] - 0.05))
 
         for i, node in enumerate(current_state):
             if node.location == node.previous_location:
                 ax2.scatter(
-                    node.location[0], node.location[1], c="b", s=400, alpha=0.6,
+                    node.location[0], node.location[1], c="g", s=size, alpha=0.6,
                 )
 
             else:
+                x = node.location[0]
+                y = node.location[1]
+                x_p = node.previous_location[0]
+                y_p = node.previous_location[1]
+
                 ax2.scatter(
-                    node.location[0], node.location[1], c="r", s=400, alpha=0.6,
+                    x, y, c="b", s=size, alpha=0.6,
                 )
-            ax2.annotate(f"{i+1}", (node.location[0], node.location[1]))
+                ax2.scatter(
+                    x_p, y_p, c="r", s=size, alpha=0.3,
+                )
+
+                arrow = mpl.patches.FancyArrowPatch(
+                    posA=(x_p, y_p),
+                    posB=(x, y),
+                    arrowstyle="-|>",
+                    mutation_scale=20,
+                    shrinkA=radius,
+                    shrinkB=radius,
+                )
+                ax2.add_patch(arrow)
+
+            ax2.annotate(f"{i + 1}", (node.location[0] - 0.05, node.location[1] - 0.05))
+
+        for b in boundiries:
+            x1, x2 = [b[0]] * 2, [b[1]] * 2
+            y = b[2:]
+            ax1.plot(x1, y, c="black")
+            ax1.plot(x2, y, c="black")
+            ax2.plot(x1, y, c="black")
+            ax2.plot(x2, y, c="black")
 
         plt.show()
 
@@ -103,4 +137,4 @@ class Node:
 if __name__ == "__main__":
     mc = MarkovSim()
     mc.transition()
-    mc.visualize_transition(mc.previous_nodes, mc.nodes)
+    mc.visualize_transition(mc.previous_nodes, mc.nodes, mc.zone_boundaries)
