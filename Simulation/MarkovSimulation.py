@@ -63,10 +63,16 @@ class MarkovSim:
         ax2.set_title("After MC simulation", fontsize=16)
         size = 400
         radius = np.sqrt(size) / 2.0
+        alignment = "center"
 
         for i, node in enumerate(original_state):
             ax1.scatter(node.location[0], node.location[1], c="g", s=size, alpha=0.6)
-            ax1.annotate(f"{i + 1}", (node.location[0] - 0.05, node.location[1] - 0.05))
+            ax1.annotate(
+                f"{i + 1}",
+                (node.location[0], node.location[1]),
+                horizontalalignment=alignment,
+                verticalalignment=alignment,
+            )
 
         for i, node in enumerate(current_state):
             if node.location == node.previous_location:
@@ -97,7 +103,12 @@ class MarkovSim:
                 )
                 ax2.add_patch(arrow)
 
-            ax2.annotate(f"{i + 1}", (node.location[0] - 0.05, node.location[1] - 0.05))
+            ax2.annotate(
+                f"{i + 1}",
+                (node.location[0], node.location[1]),
+                horizontalalignment=alignment,
+                verticalalignment=alignment,
+            )
 
         for b in boundiries:
             x1, x2 = [b[0]] * 2, [b[1]] * 2
