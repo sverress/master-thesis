@@ -6,6 +6,8 @@ class Cluster:
         self.scooters = scooters
         self.current_state = self.__compute_current_state()
         self.ideal_state = 2
+        self.trip_intensity = 0.05
+        self.center = (scooters[0].lat, scooters[0].lon)
 
     def __compute_current_state(self):
         return sum(map(lambda scooter: scooter.battery, self.scooters))
