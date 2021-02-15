@@ -10,6 +10,12 @@ class State:
         self.vehicle = vehicle
         self.distance_matrix = self.calculate_distance_matrix()
 
+    def get_distance(self, start: Cluster, end: Cluster):
+        start_index = self.clusters.index(start)
+        end_index = self.clusters.index(end)
+
+        return self.distance_matrix[start_index][end_index]
+
     def calculate_distance_matrix(self):
         """
         Computes distance matrix for all clusters
@@ -32,6 +38,11 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
+    def print_state(self):
+        for i, cluster in enumerate(self.clusters):
+            print(f"Cluster {i+1}:")
+            print(cluster.to_string() + "\n")
+
     @staticmethod
     def haversin(lat1, lon1, lat2, lon2):
         """
@@ -40,7 +51,7 @@ class State:
         :param lon1: Coordinate 1 lon
         :param lat2: Coordinate 2 lat
         :param lon2: Coordinate 2 lon
-        :return: Meters between coordinates
+        :return: Kilometers between coordinates
         """
         radius = 6378.137
         d_lat = lat2 * pi / 180 - lat1 * pi / 180
