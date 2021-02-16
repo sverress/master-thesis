@@ -36,7 +36,7 @@ def system_simulate(state: State):
         scooter.lat = end_cluster.center[0]
         scooter.lon = end_cluster.center[1]
         trip_distance = state.get_distance(start_cluster, end_cluster)
-        scooter.change_battery(trip_distance)
+        scooter.travel(trip_distance)
         end_cluster.add_scooter(scooter)
 
     return state

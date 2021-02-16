@@ -36,7 +36,7 @@ class Cluster:
     def get_valid_scooters(self, battery_limit):
         return [s for s in self.scooters if s.battery >= battery_limit]
 
-    def to_string(self):
+    def __str__(self):
         string = ""
         for s in self.scooters:
             string += f"ID: {s.id}  Battery {round(s.battery,1)} | "

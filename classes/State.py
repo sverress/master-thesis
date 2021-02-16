@@ -34,20 +34,23 @@ class State:
                 if cluster == neighbour:
                     neighbour_distance.append(0.0)
                 else:
-                    c_center = cluster.center
-                    n_center = neighbour.center
+                    cluster_center_lat, cluster_center_lon = cluster.center
+                    neighbour_center_lat, neighbour_center_lon = neighbour.center
                     neighbour_distance.append(
                         self.haversin(
-                            c_center[0], c_center[1], n_center[0], n_center[1]
+                            cluster_center_lat,
+                            cluster_center_lon,
+                            neighbour_center_lat,
+                            neighbour_center_lon,
                         )
                     )
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
-    def print_state(self):
+    def __str__(self):
         for i, cluster in enumerate(self.clusters):
             print(f"Cluster {i+1}:")
-            print(cluster.to_string() + "\n")
+            print(cluster.__str__() + "\n")
 
     @staticmethod
     def haversin(lat1, lon1, lat2, lon2):
