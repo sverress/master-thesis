@@ -37,7 +37,7 @@ class State:
                     cluster_center_lat, cluster_center_lon = cluster.center
                     neighbour_center_lat, neighbour_center_lon = neighbour.center
                     neighbour_distance.append(
-                        self.haversin(
+                        State.haversine(
                             cluster_center_lat,
                             cluster_center_lon,
                             neighbour_center_lat,
@@ -48,12 +48,10 @@ class State:
         return distance_matrix
 
     def __str__(self):
-        for i, cluster in enumerate(self.clusters):
-            print(f"Cluster {i+1}:")
-            print(cluster.__str__() + "\n")
+        return f"State: Current cluster={self.current}"
 
     @staticmethod
-    def haversin(lat1, lon1, lat2, lon2):
+    def haversine(lat1, lon1, lat2, lon2):
         """
         Compute the distance between two points in meters
         :param lat1: Coordinate 1 lat
