@@ -5,12 +5,13 @@ from classes.Scooter import Scooter
 
 class Cluster:
     def __init__(self, scooters: [Scooter]):
+        # sorting scooters after battery percent
         self.scooters = scooters
-        self.current_state = self.__compute_current_state()
         self.ideal_state = 2
+        self.trip_intensity_per_iteration = 2
         self.center = self.__compute_center()
 
-    def __compute_current_state(self):
+    def get_current_state(self):
         return sum(map(lambda scooter: scooter.battery, self.scooters))
 
     def dist(self, cluster):
@@ -36,3 +37,15 @@ class Cluster:
             list(map(lambda scooter: (scooter.lat, scooter.lon), self.scooters))
         ).centroid
         return cluster_centroid.x, cluster_centroid.y
+
+    def add_scooter(self, scooter: Scooter):
+        self.scooters.append(scooter)
+
+    def get_valid_scooters(self, battery_limit):
+        return [s for s in self.scooters if s.battery >= battery_limit]
+
+    def __str__(self):
+        string = ""
+        for s in self.scooters:
+            string += f"ID: {s.id}  Battery {round(s.battery,1)} | "
+        return string if string != "" else "Empty cluster"

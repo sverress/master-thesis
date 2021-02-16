@@ -3,8 +3,8 @@ import os
 import time
 from matplotlib import gridspec
 import matplotlib.pyplot as plt
-from instance.helpers import create_sections
-from visualization.helpers import *
+from project_thesis.instance.helpers import create_sections
+from project_thesis.visualization.helpers import *
 
 
 def visualize_solution(

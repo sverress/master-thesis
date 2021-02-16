@@ -59,9 +59,9 @@ def generate_cluster_objects(
     for cluster_label in np.unique(cluster_labels):
         # Filter out scooters within cluster
         cluster_scooters = scooter_data[cluster_labels == cluster_label]
-        # Generate scooter objets
+        # Generate scooter objets, using index as ID
         scooters = [
-            Scooter(row["lat"], row["lon"], row["battery"])
+            Scooter(row["lat"], row["lon"], row["battery"], index)
             for index, row in cluster_scooters.iterrows()
         ]
         clusters.append(Cluster(scooters))
