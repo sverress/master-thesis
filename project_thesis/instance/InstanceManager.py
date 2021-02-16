@@ -1,10 +1,10 @@
 import random
 import math
 import copy
-from instance.helpers import *
-from instance.Instance import Instance
-from model.StandardModel import StandardModel
-from model.AlternativeModel import AlternativeModel
+from project_thesis.instance.helpers import *
+from project_thesis.instance.Instance import Instance
+from project_thesis.model.StandardModel import StandardModel
+from project_thesis.model.AlternativeModel import AlternativeModel
 
 
 class InstanceManager:

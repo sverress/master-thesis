@@ -4,7 +4,7 @@ import pandas as pd
 import math
 import json
 import time
-from visualization.visualizer import (
+from project_thesis.visualization.visualizer import (
     visualize_solution,
     visualize_test_instance,
 )

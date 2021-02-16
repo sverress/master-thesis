@@ -4,7 +4,7 @@ from itertools import product, combinations
 import os
 from abc import ABC, abstractmethod
 
-from model.BaseModelInput import BaseModelInput
+from project_thesis.model.BaseModelInput import BaseModelInput
 
 
 class BaseModel(ABC):
