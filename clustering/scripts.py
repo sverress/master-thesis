@@ -1,41 +1,34 @@
 from classes.State import State
-from classes.Scooter import Scooter
-from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
+from clustering.helpers import (
+    read_bounded_csv_file,
+    cluster_data,
+    generate_cluster_objects,
+)
+from globals import GEOSPATIAL_BOUND
 
 
 def get_initial_state() -> State:
-    cluster1 = Cluster(
-        [
-            Scooter(59.914928, 10.747932, 21.0),
-            Scooter(59.914928, 10.747932, 50.0),
-            Scooter(59.914928, 10.747932, 12.0),
-        ]
+
+    # Get dataframe from EnTur CSV file within boundary
+    entur_dataframe = read_bounded_csv_file(
+        "project_thesis/test_data/bigquery-results.csv", GEOSPATIAL_BOUND,
     )
-    cluster2 = Cluster(
-        [
-            Scooter(59.913464, 10.732058, 25.0),
-            Scooter(59.913464, 10.732058, 10.0),
-            Scooter(59.913464, 10.732058, 90.0),
-        ]
-    )
-    cluster3 = Cluster(
-        [Scooter(59.909889, 10.749138, 43.0), Scooter(59.909889, 10.749138, 2.0)]
-    )
-    cluster4 = Cluster(
-        [
-            Scooter(59.935333, 10.807996, 87.0),
-            Scooter(59.935333, 10.807996, 10.0),
-            Scooter(59.935333, 10.807996, 10.0),
-            Scooter(59.935333, 10.807996, 10.0),
-            Scooter(59.935333, 10.807996, 10.0),
-        ]
-    )
-    cluster5 = Cluster([Scooter(59.935333, 10.807996, 87.0)])
-    cluster6 = Cluster([])
-    cluster7 = Cluster([Scooter(59.905163, 10.678078, 77.0)])
-    return State(
-        [cluster7, cluster6, cluster5, cluster4, cluster3, cluster2, cluster1],
-        cluster6,
-        Vehicle(),
-    )
+
+    # Create clusters
+    cluster_labels = cluster_data(entur_dataframe)
+
+    # Structure data into objects
+    clusters = generate_cluster_objects(entur_dataframe, cluster_labels)
+
+    # Choosing first cluster as starting cluster in state
+    current_cluster = clusters[0]
+
+    # Choosing a default vehicle as the vehicle in the new state
+    vehicle = Vehicle()
+
+    return State(clusters, current_cluster, vehicle)
+
+
+if __name__ == "__main__":
+    print(get_initial_state())
