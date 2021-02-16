@@ -11,6 +11,12 @@ class State:
         self.distance_matrix = self.calculate_distance_matrix()
 
     def get_distance(self, start: Cluster, end: Cluster):
+        """
+        Calculate distance between two clusters
+        :param start: Cluster object
+        :param end: Cluster object
+        :return: int - distance in kilometers
+        """
         start_index = self.clusters.index(start)
         end_index = self.clusters.index(end)
 

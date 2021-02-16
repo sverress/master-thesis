@@ -4,7 +4,7 @@ class Scooter:
         self.lon = lon
         self.battery = battery
         self.id = id
-        self.battery_change_per_kilometer = 1.0
+        self.battery_change_per_kilometer = 5.0
 
     def change_battery(self, distance):
         self.battery -= distance * self.battery_change_per_kilometer

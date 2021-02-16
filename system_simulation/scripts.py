@@ -16,11 +16,9 @@ def system_simulate(state: State):
         number_of_trips = round(np.random.poisson(cluster.trip_intensity_per_iteration))
 
         # can't complete more trips then there is scooters with battery over min_battery
-        valid_scooters = sum(
-            [1 for scooter in cluster.scooters if scooter.battery >= min_battery]
-        )
-        if number_of_trips > valid_scooters:
-            number_of_trips = valid_scooters
+        valid_scooters = cluster.get_valid_scooters(min_battery)
+        if number_of_trips > len(valid_scooters):
+            number_of_trips = len(valid_scooters)
 
         start_cluster = cluster
         # loop to generate trips from the cluster
@@ -28,7 +26,7 @@ def system_simulate(state: State):
             # with this implementation, a trip can be within a cluster
             end_cluster = round(np.random.uniform(0, len(state.clusters) - 1))
             trips.append(
-                (start_cluster, state.clusters[end_cluster], start_cluster.scooters[j])
+                (start_cluster, state.clusters[end_cluster], valid_scooters[j])
             )
 
     # compute trip after all trips are generated to avoid handling inflow in cluster

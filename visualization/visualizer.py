@@ -23,7 +23,7 @@ def visualize_state(state: State):
 
     # add number of scooters and battery label to nodes
     for i, cluster in enumerate(state.clusters):
-        node_info = f"S = {cluster.number_of_scooters()} \nB = {round(cluster.total_battery_percent(),1)}"
+        node_info = f"S = {cluster.number_of_scooters()} \nB = {round(cluster.get_current_state(),1)}"
         x, y = pos[i]
         ax1.annotate(
             node_info, xy=(x, y + 0.03), horizontalalignment="center", fontsize=12
