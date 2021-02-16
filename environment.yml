@@ -2,6 +2,7 @@ name: master
 channels:
   - gurobi
   - defaults
+  - conda-forge
 dependencies:
   - gurobi
   - numpy
@@ -11,3 +12,6 @@ dependencies:
   - matplotlib
   - pandas
   - openpyxl
+  - scikit-learn
+  - geopy
+  - shapely
