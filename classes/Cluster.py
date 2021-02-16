@@ -1,3 +1,5 @@
+from shapely.geometry import MultiPoint
+
 from classes.Scooter import Scooter
 
 
@@ -7,7 +9,7 @@ class Cluster:
         self.scooters = scooters
         self.ideal_state = 2
         self.trip_intensity_per_iteration = 2
-        self.center = (scooters[0].lat, scooters[0].lon)
+        self.center = self.__compute_center()
 
     def get_current_state(self):
         return sum(map(lambda scooter: scooter.battery, self.scooters))
@@ -29,6 +31,12 @@ class Cluster:
 
     def number_of_scooters(self):
         return len(self.scooters)
+
+    def __compute_center(self):
+        cluster_centroid = MultiPoint(
+            list(map(lambda scooter: (scooter.lat, scooter.lon), self.scooters))
+        ).centroid
+        return cluster_centroid.x, cluster_centroid.y
 
     def add_scooter(self, scooter: Scooter):
         self.scooters.append(scooter)
