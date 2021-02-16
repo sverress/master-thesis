@@ -20,10 +20,10 @@ class Cluster:
         return 0.5 / 7  # 7 is number of clusters
 
     def number_of_possible_pickups(self):
-        if self.number_of_scooters() > self.ideal_state:
+        if self.number_of_scooters() <= self.ideal_state:
             return 0
         else:
-            return self.number_of_scooters()
+            return self.number_of_scooters() - self.ideal_state
 
     def number_of_scooters(self):
         return len(self.scooters)
