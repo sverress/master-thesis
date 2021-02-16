@@ -49,3 +49,7 @@ class Cluster:
         for s in self.scooters:
             string += f"ID: {s.id}  Battery {round(s.battery,1)} | "
         return string if string != "" else "Empty cluster"
+
+    def get_swappable_scooters(self):
+        scooters = [scooter for scooter in self.scooters if scooter.battery < 100]
+        return sorted(scooters, key=lambda scooter: scooter.battery, reverse=False)

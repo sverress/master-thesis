@@ -35,26 +35,30 @@ def get_possible_actions(state: State):
     """
     Need to figure out what actions we want to look at. The combination of pick-ups, battery swaps,
     drop-offs and next cluster is too large to try them all.
+    Improvements: - Travel only to neighbouring clusters.
     :param state: current state, State
     :return: List of object Action
     """
     actions = []
 
     current_cluster = state.current
+    # Assume that no battery swap or pick-up of scooter with 100% battery and
+    # that the scooters with the lowest battery are swapped and picked up
+    swappable_scooters = current_cluster.get_swappable_scooters()
 
-    # Delivery scooters and clusters
+    # Different combinations of battery swaps, pick-ups, drop-offs and clusters
     for cluster in state.clusters:
-        # Add action with no drop-off
+        # Edge case: Add action with no swap, pick-up or drop-off
         actions.append(Action([], [], [], cluster))
         if cluster.number_of_possible_pickups() == 0:
-            # for delivery_scooter in state.vehicle.scooter_inventory:
+            # Battery swap and drop-off
             delivery_counter = 0
             while (
                 delivery_counter < state.vehicle.scooter_inventory
                 and delivery_counter + current_cluster.number_of_scooters()
                 <= current_cluster.ideal_state
             ):
-                # No pick-ups and battery swaps, but all combinations of delivery scooters and next cluster
+                # Edge case: No pick-ups and battery swaps, but all combinations of delivery scooters and next cluster
                 actions.append(
                     Action(
                         [],
@@ -66,10 +70,80 @@ def get_possible_actions(state: State):
                         cluster,
                     )
                 )
+                # All possible battery swap combinations, combined with drop-off and next cluster combinations
+                battery_counter = 0
+                while (
+                    battery_counter < state.vehicle.battery_inventory
+                    and battery_counter < len(swappable_scooters)
+                ):
+                    actions.append(
+                        Action(
+                            [swappable_scooters[i] for i in range(battery_counter + 1)],
+                            [],
+                            [
+                                state.vehicle.scooter_inventory[i]
+                                for i in range(delivery_counter + 1)
+                            ],
+                            cluster,
+                        )
+                    )
+                    battery_counter += 1
 
+                delivery_counter += 1
+
+        # Battery swap and pick-up
         else:
-            for scooter in current_cluster.scooters:
-                pass
+
+            battery_counter = 0
+            while (
+                battery_counter < state.vehicle.battery_inventory
+                and battery_counter < len(swappable_scooters)
+            ):
+                # Edge case: No pick-ups, but all combinations of battery swaps and clusters.
+                actions.append(
+                    Action(
+                        [swappable_scooters[i] for i in range(battery_counter + 1)],
+                        [],
+                        [],
+                        cluster,
+                    )
+                )
+                battery_counter += 1
+
+            pick_up_counter = 0
+            while (
+                pick_up_counter < state.vehicle.battery_inventory
+                and pick_up_counter < len(swappable_scooters)
+            ):
+                # Edge case: No battery swaps, but all combinations of pick-ups and clusters.
+                actions.append(
+                    Action(
+                        [],
+                        [swappable_scooters[i] for i in range(pick_up_counter + 1)],
+                        [],
+                        cluster,
+                    )
+                )
+                # Combinations of battery swaps, pick-ups and clusters
+                # Pick up the scooters with lowest battery, swap the next lowest.
+                battery_counter = pick_up_counter + 1
+                while (
+                    battery_counter < state.vehicle.battery_inventory
+                    and battery_counter < len(swappable_scooters)
+                ):
+                    actions.append(
+                        Action(
+                            [
+                                swappable_scooters[i]
+                                for i in range(pick_up_counter + 1, battery_counter + 1)
+                            ],
+                            [swappable_scooters[i] for i in range(pick_up_counter + 1)],
+                            [],
+                            cluster,
+                        )
+                    )
+                    battery_counter += 1
+                pick_up_counter += 1
 
     return actions
 
