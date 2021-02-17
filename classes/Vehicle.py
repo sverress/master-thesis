@@ -6,7 +6,6 @@ class Vehicle:
         self.battery_inventory = 20
         self.scooter_inventory = []
         self.scooter_inventory_capacity = 5
-        self.speed = 30
 
     def change_batteries(self, scooters: Scooter):
         self.battery_inventory -= len(scooters)

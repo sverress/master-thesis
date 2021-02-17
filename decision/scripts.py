@@ -31,173 +31,11 @@ def get_state(action: Action, state: State):
     return state
 
 
-def get_possible_actions(state: State):
-    """
-    Need to figure out what actions we want to look at. The combination of pick-ups, battery swaps,
-    drop-offs and next cluster is too large to try them all.
-    Improvements: - Travel only to neighbouring clusters.
-    - Only perform some battery swaps, eg. even numbers
-    :param state: current state, State
-    :return: List of object Action
-    """
-    actions = []
-
-    current_cluster = state.current
-    # Assume that no battery swap or pick-up of scooter with 100% battery and
-    # that the scooters with the lowest battery are swapped and picked up
-    swappable_scooters = current_cluster.get_swappable_scooters()
-
-    # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-    for cluster in state.clusters:
-        # Next cluster cant be same as current
-        if cluster == current_cluster:
-            continue
-        # Edge case: Add action with no swap, pick-up or drop-off
-        actions.append(Action([], [], [], cluster))
-        if current_cluster.number_of_possible_pickups() == 0:
-            # Battery swap and drop-off
-            battery_counter = 0
-            while (
-                battery_counter < state.vehicle.battery_inventory
-                and battery_counter < len(swappable_scooters)
-            ):
-                # Edge case: No drop-offs, but all combinations of battery swaps and clusters.
-                actions.append(
-                    Action(
-                        [swappable_scooters[i] for i in range(battery_counter + 1)],
-                        [],
-                        [],
-                        cluster,
-                    )
-                )
-                battery_counter += 1
-            delivery_counter = 0
-            while (
-                delivery_counter < len(state.vehicle.scooter_inventory)
-                and delivery_counter + current_cluster.number_of_scooters()
-                < current_cluster.ideal_state
-            ):
-                # Edge case: No pick-ups and battery swaps, but all combinations of delivery scooters and next cluster
-                actions.append(
-                    Action(
-                        [],
-                        [],
-                        [
-                            state.vehicle.scooter_inventory[i]
-                            for i in range(delivery_counter + 1)
-                        ],
-                        cluster,
-                    )
-                )
-                # All possible battery swap combinations, combined with drop-off and next cluster combinations
-                battery_counter = 0
-                while (
-                    battery_counter < state.vehicle.battery_inventory
-                    and battery_counter < len(swappable_scooters)
-                ):
-                    actions.append(
-                        Action(
-                            [swappable_scooters[i] for i in range(battery_counter + 1)],
-                            [],
-                            [
-                                state.vehicle.scooter_inventory[i]
-                                for i in range(delivery_counter + 1)
-                            ],
-                            cluster,
-                        )
-                    )
-                    battery_counter += 1
-
-                delivery_counter += 1
-
-        # Battery swap and pick-up
-        else:
-
-            battery_counter = 0
-            while (
-                battery_counter < state.vehicle.battery_inventory
-                and battery_counter < len(swappable_scooters)
-            ):
-                # Edge case: No pick-ups, but all combinations of battery swaps and clusters.
-                actions.append(
-                    Action(
-                        [swappable_scooters[i] for i in range(battery_counter + 1)],
-                        [],
-                        [],
-                        cluster,
-                    )
-                )
-                battery_counter += 1
-
-            pick_up_counter = 0
-            while (
-                pick_up_counter < state.vehicle.battery_inventory
-                and pick_up_counter < len(swappable_scooters)
-                and pick_up_counter
-                < (len(current_cluster.scooters) - current_cluster.ideal_state)
-            ):
-                # Edge case: No battery swaps, but all combinations of pick-ups and clusters.
-                actions.append(
-                    Action(
-                        [],
-                        [swappable_scooters[i] for i in range(pick_up_counter + 1)],
-                        [],
-                        cluster,
-                    )
-                )
-                # Combinations of battery swaps, pick-ups and clusters
-                # Pick up the scooters with lowest battery, swap the next lowest.
-                battery_counter = pick_up_counter + 1
-                while (
-                    battery_counter < state.vehicle.battery_inventory
-                    and battery_counter < len(swappable_scooters)
-                ):
-                    actions.append(
-                        Action(
-                            [
-                                swappable_scooters[i]
-                                for i in range(pick_up_counter + 1, battery_counter + 1)
-                            ],
-                            [swappable_scooters[i] for i in range(pick_up_counter + 1)],
-                            [],
-                            cluster,
-                        )
-                    )
-                    battery_counter += 1
-                pick_up_counter += 1
-
-    return actions
-
-
-def get_action_time(action: Action, state: State):
-    """
-    Get the time consumed from performing an action (travel from cluster 1 to 2) in a given state.
-    Can add time for performing actions on scooters as well.
-    :param action: Action to be performed
-    :param state: current state, State
-    :return: Total time to perform action
-    """
-    return 0.25
-
-
-def get_current_reward(action: Action, state: State):
-    return
-
-
 def run(duration):
     """
-
     :param duration: shift time in minutes
-    :return:
+    :return: Total reward of 1 shift, list of all actions taken
     """
-    # Se hva som er nåværende state.
-    # For et visst antall ekstreme lovlige actions, kjøre scenario simulering
-    # for alle naboer (Hvordan definere nabo? Alle clusters?)
-    # Velge neste node for en gitt action.
-    # Sørge for at det legges til tid å reise et sted, kanskje for å utføre bytter også?
-    # Reward er reward for neste cluster og beslutningen tatt i current state.
-    # Pickup reward ikke i current, men drop-off er det.
-    # Velge neste node og action i current cluster som gir høyest reward.
 
     t = 0
     total_reward = 0
@@ -210,7 +48,7 @@ def run(duration):
         best_action = None
 
         # Find all possible actions
-        actions = get_possible_actions(state)
+        actions = state.get_possible_actions()
 
         # For every possible action
         for action in actions:
@@ -218,17 +56,25 @@ def run(duration):
             new_state = get_state(action, copy.deepcopy(state))
 
             # Estimate value of making this action
-            remaining_duration = duration - (t + get_action_time(new_state, action))
+            next_cluster_distance = state.get_distance(
+                state.current_cluster, action.next_cluster
+            )
+            remaining_duration = duration - (
+                t + action.get_action_time(next_cluster_distance)
+            )
             reward = estimate_reward(
                 new_state, remaining_duration
-            ) + get_current_reward(action, state)
+            ) + state.get_current_reward(action)
 
             if reward > max_reward:
                 max_reward = reward
                 best_action = action
 
         all_actions.append(best_action)
-        t += get_action_time(state, best_action)
+        best_next_cluster_distance = state.get_distance(
+            state.current_cluster, best_action.next_cluster
+        )
+        t += best_action.get_action_time(best_next_cluster_distance)
 
         # Perform best action
         reward = state.do_action(best_action)
@@ -241,24 +87,38 @@ def run(duration):
 
 
 if __name__ == "__main__":
-    state = get_initial_state()
-    state.vehicle.scooter_inventory = state.current.scooters[7:9]
-    state.current.scooters = state.current.scooters[:5]
-    state.clusters = state.clusters[1:3]
-    state.current.ideal_state = 6
 
+    # Create an initial state. Smaller than normal for testing purposes
+    state = get_initial_state()
+    state.vehicle.scooter_inventory = state.current_cluster.scooters[7:9]
+    state.current_cluster.scooters = state.current_cluster.scooters[:5]
+    state.clusters = state.clusters[1:2]
+    state.current_cluster.ideal_state = 2
+
+    # Print the initial state
     print(f"Scooter inventory: {len(state.vehicle.scooter_inventory)}")
     print(f"Battery inventory: {state.vehicle.battery_inventory}")
-    print(f"Number of scooters in cluster: {len(state.current.scooters)}")
-    print(f"Ideal state in cluster: {state.current.ideal_state}")
+    print(f"Number of scooters in cluster: {len(state.current_cluster.scooters)}")
+    print(f"Ideal state in cluster: {state.current_cluster.ideal_state}")
     print(f"Number of possible next clusters: {len(state.clusters)}")
 
-    actions = get_possible_actions(state)
+    # Get all possible actions.
+    actions = state.get_possible_actions()
     print("All possible actions:")
     for action in actions:
         print(
             f"Battery swap: {len(action.battery_swaps)}, Pick-ups: {len(action.pick_ups)},"
             f" Deliveries: {len(action.delivery_scooters)}, Next cluster: {action.next_cluster} "
         )
-
     print(f"Total number of actions: {len(actions)}")
+
+    """
+    # Testing get_action_time
+    best_action = actions[21]
+    next_cluster_distance = state.get_distance(
+        state.current_cluster, best_action.next_cluster
+    )
+    print(
+        f"Time to perform action: {best_action.get_action_time(next_cluster_distance)}"
+    )
+    """
