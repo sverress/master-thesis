@@ -1,5 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.cluster import KMeans
 
@@ -64,24 +63,5 @@ def generate_cluster_objects(
             Scooter(row["lat"], row["lon"], row["battery"], index)
             for index, row in cluster_scooters.iterrows()
         ]
-        clusters.append(Cluster(scooters))
+        clusters.append(Cluster(cluster_label, scooters))
     return clusters
-
-
-def plot_cluster_data(data: pd.DataFrame, cluster_centers: pd.DataFrame):
-    fig, ax = plt.subplots(figsize=[10, 6])
-    rs_scatter = ax.scatter(
-        cluster_centers["lon"],
-        cluster_centers["lat"],
-        c="#99cc99",
-        edgecolor="None",
-        alpha=0.7,
-        s=120,
-    )
-    df_scatter = ax.scatter(data["lon"], data["lat"], c="k", alpha=0.1, s=3)
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
-    ax.legend(
-        [df_scatter, rs_scatter], ["Full dataset", "Cluster centers"], loc="upper right"
-    )
-    plt.show()

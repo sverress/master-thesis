@@ -1,6 +1,9 @@
+from itertools import cycle
+
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
 from math import sqrt, pi, sin, cos, atan2
+import matplotlib.pyplot as plt
 
 
 class State:
@@ -9,6 +12,13 @@ class State:
         self.current = current
         self.vehicle = vehicle
         self.distance_matrix = self.calculate_distance_matrix()
+
+    def get_scooters(self):
+        all_scooters = []
+        for cluster in self.clusters:
+            for scooter in cluster.scooters:
+                all_scooters.append(scooter)
+        return all_scooters
 
     def get_distance(self, start: Cluster, end: Cluster):
         """
@@ -69,3 +79,46 @@ class State:
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         distance = radius * c
         return distance
+
+    def visualize_clustering(self):
+        fig, ax = plt.subplots(figsize=[10, 6])
+        colors = cycle("bgrcmyk")
+        for cluster in self.clusters:
+            scooter_locations = [
+                (scooter.lat, scooter.lon) for scooter in cluster.scooters
+            ]
+            cluster_color = next(colors)
+            df_scatter = ax.scatter(
+                [lon for lat, lon in scooter_locations],
+                [lat for lat, lon in scooter_locations],
+                c=cluster_color,
+                alpha=0.3,
+                s=3,
+            )
+            center_lat, center_lon = cluster.center
+            rs_scatter = ax.scatter(
+                center_lon,
+                center_lat,
+                c=cluster_color,
+                edgecolor="None",
+                alpha=0.5,
+                s=200,
+            )
+            ax.annotate(
+                cluster.id,
+                (center_lon, center_lat),
+                ha="center",
+                va="center",
+                weight="bold",
+            )
+        cluster_centers = [cluster.center for cluster in self.clusters]
+        ax.set_xlabel("Longitude")
+        ax.set_ylabel("Latitude")
+        if len(self.clusters) > 0:
+            # Legend will use the last cluster color. Check for clusters to avoid None object
+            ax.legend(
+                [df_scatter, rs_scatter],
+                ["Full dataset", "Cluster centers"],
+                loc="upper right",
+            )
+        plt.show()
