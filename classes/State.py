@@ -5,7 +5,7 @@ from classes.Vehicle import Vehicle
 from math import sqrt, pi, sin, cos, atan2
 import matplotlib.pyplot as plt
 
-from globals import GEOSPATIAL_BOUND
+from globals import GEOSPATIAL_BOUND, GEOSPATIAL_BOUND_NEW
 
 
 class State:
@@ -86,13 +86,13 @@ class State:
         fig, ax = plt.subplots(figsize=[10, 6])
 
         # Add image to background
-        oslo = plt.imread("project_thesis/test_data/oslo.png")
-        lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND
+        oslo = plt.imread("project_thesis/test_data/kart_oslo.png")
+        lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
         ax.imshow(
             oslo,
             zorder=0,
             extent=(lon_min, lon_max, lat_min, lat_max),
-            aspect="equal",
+            aspect="auto",
             alpha=0.6,
         )
         colors = cycle("bgrcmyk")
@@ -125,7 +125,6 @@ class State:
                 va="center",
                 weight="bold",
             )
-        cluster_centers = [cluster.center for cluster in self.clusters]
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
 
