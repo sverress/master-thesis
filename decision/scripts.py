@@ -36,6 +36,7 @@ def get_possible_actions(state: State):
     Need to figure out what actions we want to look at. The combination of pick-ups, battery swaps,
     drop-offs and next cluster is too large to try them all.
     Improvements: - Travel only to neighbouring clusters.
+    - Only perform some battery swaps, eg. even numbers
     :param state: current state, State
     :return: List of object Action
     """
@@ -48,15 +49,33 @@ def get_possible_actions(state: State):
 
     # Different combinations of battery swaps, pick-ups, drop-offs and clusters
     for cluster in state.clusters:
+        # Next cluster cant be same as current
+        if cluster == current_cluster:
+            continue
         # Edge case: Add action with no swap, pick-up or drop-off
         actions.append(Action([], [], [], cluster))
-        if cluster.number_of_possible_pickups() == 0:
+        if current_cluster.number_of_possible_pickups() == 0:
             # Battery swap and drop-off
+            battery_counter = 0
+            while (
+                battery_counter < state.vehicle.battery_inventory
+                and battery_counter < len(swappable_scooters)
+            ):
+                # Edge case: No drop-offs, but all combinations of battery swaps and clusters.
+                actions.append(
+                    Action(
+                        [swappable_scooters[i] for i in range(battery_counter + 1)],
+                        [],
+                        [],
+                        cluster,
+                    )
+                )
+                battery_counter += 1
             delivery_counter = 0
             while (
-                delivery_counter < state.vehicle.scooter_inventory
+                delivery_counter < len(state.vehicle.scooter_inventory)
                 and delivery_counter + current_cluster.number_of_scooters()
-                <= current_cluster.ideal_state
+                < current_cluster.ideal_state
             ):
                 # Edge case: No pick-ups and battery swaps, but all combinations of delivery scooters and next cluster
                 actions.append(
@@ -114,6 +133,8 @@ def get_possible_actions(state: State):
             while (
                 pick_up_counter < state.vehicle.battery_inventory
                 and pick_up_counter < len(swappable_scooters)
+                and pick_up_counter
+                < (len(current_cluster.scooters) - current_cluster.ideal_state)
             ):
                 # Edge case: No battery swaps, but all combinations of pick-ups and clusters.
                 actions.append(
@@ -156,17 +177,17 @@ def get_action_time(action: Action, state: State):
     :param state: current state, State
     :return: Total time to perform action
     """
-    pass
+    return 0.25
 
 
 def get_current_reward(action: Action, state: State):
-    pass
+    return
 
 
 def run(duration):
     """
 
-    :param duration: shift time in hours
+    :param duration: shift time in minutes
     :return:
     """
     # Se hva som er nåværende state.
@@ -197,19 +218,47 @@ def run(duration):
             new_state = get_state(action, copy.deepcopy(state))
 
             # Estimate value of making this action
-            reward = estimate_reward(new_state) + get_current_reward(action, state)
+            remaining_duration = duration - (t + get_action_time(new_state, action))
+            reward = estimate_reward(
+                new_state, remaining_duration
+            ) + get_current_reward(action, state)
 
             if reward > max_reward:
                 max_reward = reward
                 best_action = action
 
-        total_reward += max_reward
         all_actions.append(best_action)
         t += get_action_time(state, best_action)
+
+        # Perform best action
+        reward = state.do_action(best_action)
+        total_reward += reward
+
         # System simulation
-        state = system_simulate(best_action)
+        system_simulate(state)
 
     return total_reward, all_actions
 
 
-run(8)
+if __name__ == "__main__":
+    state = get_initial_state()
+    state.vehicle.scooter_inventory = state.current.scooters[7:9]
+    state.current.scooters = state.current.scooters[:5]
+    state.clusters = state.clusters[1:3]
+    state.current.ideal_state = 6
+
+    print(f"Scooter inventory: {len(state.vehicle.scooter_inventory)}")
+    print(f"Battery inventory: {state.vehicle.battery_inventory}")
+    print(f"Number of scooters in cluster: {len(state.current.scooters)}")
+    print(f"Ideal state in cluster: {state.current.ideal_state}")
+    print(f"Number of possible next clusters: {len(state.clusters)}")
+
+    actions = get_possible_actions(state)
+    print("All possible actions:")
+    for action in actions:
+        print(
+            f"Battery swap: {len(action.battery_swaps)}, Pick-ups: {len(action.pick_ups)},"
+            f" Deliveries: {len(action.delivery_scooters)}, Next cluster: {action.next_cluster} "
+        )
+
+    print(f"Total number of actions: {len(actions)}")
