@@ -8,11 +8,13 @@ from clustering.helpers import (
 from globals import GEOSPATIAL_BOUND
 
 
-def get_initial_state() -> State:
+def get_initial_state(sample_size=None) -> State:
 
     # Get dataframe from EnTur CSV file within boundary
     entur_dataframe = read_bounded_csv_file(
-        "project_thesis/test_data/bigquery-results.csv", GEOSPATIAL_BOUND,
+        "project_thesis/test_data/bigquery-results.csv",
+        GEOSPATIAL_BOUND,
+        sample_size=sample_size,
     )
 
     # Create clusters

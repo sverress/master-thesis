@@ -5,6 +5,8 @@ from classes.Vehicle import Vehicle
 from math import sqrt, pi, sin, cos, atan2
 import matplotlib.pyplot as plt
 
+from globals import GEOSPATIAL_BOUND
+
 
 class State:
     def __init__(self, clusters: [Cluster], current: Cluster, vehicle: Vehicle):
@@ -82,7 +84,19 @@ class State:
 
     def visualize_clustering(self):
         fig, ax = plt.subplots(figsize=[10, 6])
+
+        # Add image to background
+        oslo = plt.imread("project_thesis/test_data/oslo.png")
+        lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND
+        ax.imshow(
+            oslo,
+            zorder=0,
+            extent=(lon_min, lon_max, lat_min, lat_max),
+            aspect="equal",
+            alpha=0.6,
+        )
         colors = cycle("bgrcmyk")
+        # Add clusters to figure
         for cluster in self.clusters:
             scooter_locations = [
                 (scooter.lat, scooter.lon) for scooter in cluster.scooters
@@ -114,6 +128,7 @@ class State:
         cluster_centers = [cluster.center for cluster in self.clusters]
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
+
         if len(self.clusters) > 0:
             # Legend will use the last cluster color. Check for clusters to avoid None object
             ax.legend(
