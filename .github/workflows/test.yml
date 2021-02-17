@@ -1,18 +1,24 @@
-name: Python Package Using Anaconda
-
-on: [push]
+name: Run Python Tests
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  build-linux:
+  PythonTests:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    - name: Install dependencies
-      run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        $CONDA/bin/conda env update --file environment.yml --name base
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: master
+          environment-file: environment.yml
+          python-version: 3.8
+          auto-activate-base: false
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          python -m unittest discover
