@@ -33,8 +33,18 @@ class Cluster:
     def add_scooter(self, scooter: Scooter):
         self.scooters.append(scooter)
 
+    def remove_scooter(self, scooter: Scooter):
+        if self.scooters.contains(scooter):
+            self.scooters.remove(scooter)
+            return True
+        else:
+            return False
+
     def get_valid_scooters(self, battery_limit):
         return [s for s in self.scooters if s.battery >= battery_limit]
+
+    def get_swappable_scooters(self):
+        return [Scooter]
 
     def __str__(self):
         string = ""

@@ -16,3 +16,10 @@ class Vehicle:
         else:
             self.scooter_inventory.append(scooter)
             return True
+
+    def deliver_scooter(self, scooter: Scooter):
+        if scooter in self.scooter_inventory:
+            self.scooter_inventory.remove(scooter)
+            return True
+        else:
+            return False
