@@ -1,7 +1,7 @@
 from gurobipy import GRB
 import gurobipy as gp
-from model.BaseModel import BaseModel
-from model.BaseModelInput import BaseModelInput
+from project_thesis.model.BaseModel import BaseModel
+from project_thesis.model.BaseModelInput import BaseModelInput
 
 
 class AlternativeModelInput(BaseModelInput):

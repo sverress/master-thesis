@@ -1,3 +1,5 @@
+from shapely.geometry import MultiPoint
+
 from classes.Scooter import Scooter
 
 
@@ -7,7 +9,7 @@ class Cluster:
         self.scooters = scooters
         self.ideal_state = 2
         self.trip_intensity_per_iteration = 2
-        self.center = (scooters[0].lat, scooters[0].lon)
+        self.center = self.__compute_center()
 
     def get_current_state(self):
         return sum(map(lambda scooter: scooter.battery, self.scooters))
@@ -30,8 +32,19 @@ class Cluster:
     def number_of_scooters(self):
         return len(self.scooters)
 
+    def __compute_center(self):
+        cluster_centroid = MultiPoint(
+            list(map(lambda scooter: (scooter.lat, scooter.lon), self.scooters))
+        ).centroid
+        return cluster_centroid.x, cluster_centroid.y
+
     def add_scooter(self, scooter: Scooter):
         self.scooters.append(scooter)
+
+    def get_valid_scooters(self, battery_limit: float):
+        return [
+            scooter for scooter in self.scooters if scooter.battery >= battery_limit
+        ]
 
     def remove_scooter(self, scooter: Scooter):
         if self.scooters.contains(scooter):
@@ -46,8 +59,14 @@ class Cluster:
     def get_swappable_scooters(self):
         return [Scooter]
 
-    def __str__(self):
+    def print_all_scooters(self):
         string = ""
-        for s in self.scooters:
-            string += f"ID: {s.id}  Battery {round(s.battery,1)} | "
+        for scooter in self.scooters:
+            string += f"ID: {scooter.id}  Battery {round(scooter.battery, 1)} | "
         return string if string != "" else "Empty cluster"
+
+    def __str__(self):
+        return (
+            f"Cluster: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
+            f" ideal state: {self.ideal_state}"
+        )

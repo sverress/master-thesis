@@ -2,9 +2,7 @@ from classes import Cluster, State
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 import networkx as nx
-
-# Global variables
-BLUE, GREEN, RED, BLACK = "blue", "green", "red", "black"
+from globals import BLUE, BLACK, GEOSPATIAL_BOUND
 
 
 def visualize_state(state: State):
@@ -63,28 +61,27 @@ def visualize_state(state: State):
 
 
 def make_graph(clusters: [Cluster]):
-    clusters = convert_geographic_to_cart(clusters, bound=(59.9, 59.95, 10.5, 11.0))
+    cartesian_clusters = convert_geographic_to_cart(clusters, GEOSPATIAL_BOUND)
 
     # make graph object
     graph = nx.DiGraph()
-    graph.add_nodes_from([c[2] for c in clusters])
+    graph.add_nodes_from([c[2] for c in cartesian_clusters])
 
     # set node label and position in graph
     labels = {}
     node_color = []
     node_border = []
-    for i, c in enumerate(clusters):
+    for i, cartesian_cluster_coordinates in enumerate(cartesian_clusters):
         label = i + 1
         labels[i] = label
         node_color.append(BLUE)
         node_border.append(BLACK)
-        pos = (c[0], c[1])
-        graph.nodes[i]["pos"] = pos
+        graph.nodes[i]["pos"] = cartesian_cluster_coordinates
 
     return graph, labels, node_border, node_color
 
 
-def convert_geographic_to_cart(clusters, bound):
+def convert_geographic_to_cart(clusters: [Cluster], bound: [int]) -> [(int, int)]:
     lat_min, lat_max, lon_min, lon_max = bound
     delta_lat = lat_max - lat_min
     delta_lon = lon_max - lon_min
@@ -94,12 +91,11 @@ def convert_geographic_to_cart(clusters, bound):
     output = []
 
     for i, cluster in enumerate(clusters):
-        lat = cluster.center[0]
-        lon = cluster.center[1]
+        lat, lon = cluster.center
 
         y = lat / delta_lat - zero_lat
         x = lon / delta_lon - zero_lon
 
-        output.append((x, y, i))
+        output.append((x, y))
 
     return output

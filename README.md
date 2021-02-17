@@ -32,3 +32,17 @@ conda env update --prefix ./env --file environment.yml  --prune
 ```
 To remove packages just remove it from the packages.yml and run the same command. 
 This is a nice command to make a alias for.
+
+## Testing
+To run all tests run the following command in the root directory of the project
+```
+python -m unittest discover
+```
+To run only test for a specific module, run:
+```
+python -m unittest discover <module_name>
+```
+e.g.:
+```
+python -m unittest discover system_simulation
+```

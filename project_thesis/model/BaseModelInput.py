@@ -2,7 +2,7 @@ import pandas as pd
 from math import sqrt, pi, sin, cos, atan2
 from itertools import product
 from abc import ABC, abstractmethod
-from model.TSP import TSP
+from project_thesis.model.TSP import TSP
 
 
 class BaseModelInput(ABC):
