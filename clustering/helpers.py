@@ -45,16 +45,17 @@ def read_bounded_csv_file(
     return raw_data
 
 
-def cluster_data(data: pd.DataFrame) -> [int]:
+def cluster_data(data: pd.DataFrame, number_of_clusters: int) -> [int]:
     """
     Uses an clustering algorithm to group together scooters
     :param data: geospatial data containing cols ["lat", "lon"]
+    :param number_of_clusters: how many clusters to create
     :return: list of labels for input data
     """
     # Generate numpy array from dataframe
     coords = data[["lat", "lon"]].values
     # Run k-means algorithm to generate clusters
-    return KMeans(20).fit(coords).labels_
+    return KMeans(number_of_clusters).fit(coords).labels_
 
 
 def generate_cluster_objects(

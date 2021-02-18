@@ -8,7 +8,7 @@ from clustering.helpers import (
 from globals import GEOSPATIAL_BOUND, GEOSPATIAL_BOUND_NEW
 
 
-def get_initial_state(sample_size=None) -> State:
+def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
 
     # Get dataframe from EnTur CSV file within boundary
     entur_dataframe = read_bounded_csv_file(
@@ -16,7 +16,7 @@ def get_initial_state(sample_size=None) -> State:
     )
 
     # Create clusters
-    cluster_labels = cluster_data(entur_dataframe)
+    cluster_labels = cluster_data(entur_dataframe, number_of_clusters)
 
     # Structure data into objects
     clusters = generate_cluster_objects(entur_dataframe, cluster_labels)
