@@ -3,9 +3,10 @@ number_of_scooters = 10
 scooter_inventory = 4
 battery_inventory = 5
 ideal_state = 8
+scooter_inventory_capacity = 5
 
 # Variables
-pick_ups = max(number_of_scooters - ideal_state, 0)
+pick_ups = min(max(number_of_scooters - ideal_state, 0), scooter_inventory_capacity)
 swaps = min(number_of_scooters, battery_inventory)
 drop_offs = max(min(ideal_state - number_of_scooters, scooter_inventory), 0)
 

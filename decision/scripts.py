@@ -93,7 +93,7 @@ if __name__ == "__main__":
     state.vehicle.scooter_inventory = state.current_cluster.scooters[7:9]
     state.current_cluster.scooters = state.current_cluster.scooters[:5]
     state.clusters = state.clusters[1:2]
-    state.current_cluster.ideal_state = 2
+    state.current_cluster.ideal_state = 7
 
     # Print the initial state
     print(f"Scooter inventory: {len(state.vehicle.scooter_inventory)}")
