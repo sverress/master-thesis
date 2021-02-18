@@ -22,8 +22,7 @@ class Action:
         :param distance: distance in km from current cluster to next cluster
         :return: Total time to perform action in minutes
         """
-        duration = 0
-        duration += (
+        duration = (
             len(self.battery_swaps) + len(self.pick_ups) + len(self.delivery_scooters)
         ) * 2
         return duration + distance * 30 * 60

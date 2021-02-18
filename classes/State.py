@@ -102,8 +102,6 @@ class State:
                             pick_up + swap
                         ) <= len(self.current_cluster.scooters):
                             combinations.append([swap, pick_up, drop_off, cluster])
-        for i in range(len(combinations)):
-            print(combinations[i][:3])
 
         actions = []
         for combination in combinations:
@@ -120,7 +118,19 @@ class State:
         return actions
 
     def get_current_reward(self, action: Action):
-        return 1
+        reward = 0
+        # Reward for battery swaps
+        for battery_swap_scooter in action.battery_swaps:
+            reward += (100.0 - battery_swap_scooter.battery) / 100.0
+
+        # Reward for pickups
+        for pick_up_scooter in action.pick_ups:
+            reward -= pick_up_scooter.battery / 100.0
+
+        # Reward for drop-offs
+        reward += 1.0 * len(action.delivery_scooters)
+
+        return reward
 
     def __str__(self):
         return f"State: Current cluster={self.current_cluster}"

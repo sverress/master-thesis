@@ -77,8 +77,7 @@ def run(duration):
         t += best_action.get_action_time(best_next_cluster_distance)
 
         # Perform best action
-        reward = state.do_action(best_action)
-        total_reward += reward
+        total_reward += state.do_action(best_action)
 
         # System simulation
         system_simulate(state)
@@ -87,13 +86,12 @@ def run(duration):
 
 
 if __name__ == "__main__":
-
     # Create an initial state. Smaller than normal for testing purposes
     state = get_initial_state()
     state.vehicle.scooter_inventory = state.current_cluster.scooters[7:9]
     state.current_cluster.scooters = state.current_cluster.scooters[:5]
     state.clusters = state.clusters[1:2]
-    state.current_cluster.ideal_state = 7
+    state.current_cluster.ideal_state = 5
 
     # Print the initial state
     print(f"Scooter inventory: {len(state.vehicle.scooter_inventory)}")
