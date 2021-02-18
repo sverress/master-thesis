@@ -104,33 +104,16 @@ class State:
                             combinations.append([swap, pick_up, drop_off, cluster])
 
         actions = []
-        for combination in combinations:
+        for battery_swap, pick_up, drop_off, cluster in combinations:
             actions.append(
                 Action(
-                    swappable_scooters[
-                        combination[1] : combination[0] + combination[1]
-                    ],
-                    swappable_scooters[: combination[1]],
-                    self.vehicle.scooter_inventory[: combination[2]],
-                    combination[3],
+                    swappable_scooters[pick_up : battery_swap + pick_up],
+                    swappable_scooters[:pick_up],
+                    self.vehicle.scooter_inventory[:drop_off],
+                    cluster,
                 )
             )
         return actions
-
-    def get_current_reward(self, action: Action):
-        reward = 0
-        # Reward for battery swaps
-        for battery_swap_scooter in action.battery_swaps:
-            reward += (100.0 - battery_swap_scooter.battery) / 100.0
-
-        # Reward for pickups
-        for pick_up_scooter in action.pick_ups:
-            reward -= pick_up_scooter.battery / 100.0
-
-        # Reward for drop-offs
-        reward += 1.0 * len(action.delivery_scooters)
-
-        return reward
 
     def __str__(self):
         return f"State: Current cluster={self.current_cluster}"
