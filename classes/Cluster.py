@@ -4,8 +4,9 @@ from classes.Scooter import Scooter
 
 
 class Cluster:
-    def __init__(self, scooters: [Scooter]):
+    def __init__(self, cluster_id: int, scooters: [Scooter]):
         # sorting scooters after battery percent
+        self.id = cluster_id
         self.scooters = scooters
         self.ideal_state = 2
         self.trip_intensity_per_iteration = 2
