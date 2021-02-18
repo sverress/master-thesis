@@ -2,8 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 
-from classes.Cluster import Cluster
-from classes.Scooter import Scooter
+from classes import Cluster, Scooter
 
 
 def read_bounded_csv_file(
@@ -58,13 +57,30 @@ def cluster_data(data: pd.DataFrame, number_of_clusters: int) -> [int]:
     return KMeans(number_of_clusters).fit(coords).labels_
 
 
-def generate_cluster_objects(
+def scooter_movement_analysis(
     scooter_data: pd.DataFrame, cluster_labels: list
+) -> np.ndarray:
+    """
+    Based on the clusters created, based on the scooter_data i.e. cluster_labels, a matrix corresponding to the
+    probability that a scooter will move between two clusters.
+    E.g. probability_matrix[3][5] - will return the probability for a scooter of moving from cluster 3 to 5
+    probability_matrix[3][3] - will return the probability of a scooter staying in cluster 3
+    :param scooter_data: geospatial data for scooters
+    :param cluster_labels: list of labels for scooter data
+    :return: probability matrix
+    """
+    number_of_clusters = len(np.unique(cluster_labels))
+    return np.random.rand(number_of_clusters, number_of_clusters)
+
+
+def generate_cluster_objects(
+    scooter_data: pd.DataFrame, cluster_labels: list, probability_matrix: np.ndarray
 ) -> [Cluster]:
     """
     Based on cluster labels and scooter data create Scooter and Cluster objects.
     :param scooter_data: geospatial data for scooters
     :param cluster_labels: list of labels for scooter data
+    :param probability_matrix: see scooter_movement_analysis function for explanation
     :return: list of clusters
     """
     # Generate series of scooters belonging to each cluster
@@ -77,5 +93,7 @@ def generate_cluster_objects(
             Scooter(row["lat"], row["lon"], row["battery"], index)
             for index, row in cluster_scooters.iterrows()
         ]
-        clusters.append(Cluster(cluster_label, scooters))
+        clusters.append(
+            Cluster(cluster_label, scooters, probability_matrix[cluster_label])
+        )
     return clusters

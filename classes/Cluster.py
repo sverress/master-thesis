@@ -1,28 +1,28 @@
 from shapely.geometry import MultiPoint
+import numpy as np
 
 from classes.Scooter import Scooter
 
 
 class Cluster:
-    def __init__(self, cluster_id: int, scooters: [Scooter]):
-        # sorting scooters after battery percent
+    def __init__(
+        self, cluster_id: int, scooters: [Scooter], movement_probabilities: np.ndarray,
+    ):
         self.id = cluster_id
         self.scooters = scooters
         self.ideal_state = 2
         self.trip_intensity_per_iteration = 2
         self.center = self.__compute_center()
+        self.move_probabilities = movement_probabilities
 
-    def get_current_state(self):
+    def get_current_state(self) -> float:
         return sum(map(lambda scooter: scooter.battery, self.scooters))
 
-    def dist(self, cluster):
-        return 5
-
     def prob_stay(self):
-        return 0.5
+        return self.move_probabilities[self.id]
 
     def prob_leave(self, cluster):
-        return 0.5 / 7  # 7 is number of clusters
+        return self.move_probabilities[cluster.id]
 
     def number_of_possible_pickups(self):
         if self.number_of_scooters() > self.ideal_state:

@@ -1,25 +1,32 @@
-from classes.State import State
-from classes.Vehicle import Vehicle
-from clustering.helpers import (
+from classes import State, Vehicle
+from clustering.methods import (
     read_bounded_csv_file,
     cluster_data,
     generate_cluster_objects,
+    scooter_movement_analysis,
 )
-from globals import GEOSPATIAL_BOUND, GEOSPATIAL_BOUND_NEW
+from globals import GEOSPATIAL_BOUND_NEW
 
 
 def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
 
     # Get dataframe from EnTur CSV file within boundary
     entur_dataframe = read_bounded_csv_file(
-        "test_data/bigquery-results.csv", GEOSPATIAL_BOUND_NEW, sample_size=sample_size,
+        "test_data/0900-entur-snapshot.csv",
+        GEOSPATIAL_BOUND_NEW,
+        sample_size=sample_size,
     )
 
     # Create clusters
     cluster_labels = cluster_data(entur_dataframe, number_of_clusters)
 
+    # Get probability of movement from scooters in a cluster
+    probability_matrix = scooter_movement_analysis(entur_dataframe, cluster_labels)
+
     # Structure data into objects
-    clusters = generate_cluster_objects(entur_dataframe, cluster_labels)
+    clusters = generate_cluster_objects(
+        entur_dataframe, cluster_labels, probability_matrix
+    )
 
     # Choosing first cluster as starting cluster in state
     current_cluster = clusters[0]
