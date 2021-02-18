@@ -12,9 +12,7 @@ def get_initial_state(sample_size=None) -> State:
 
     # Get dataframe from EnTur CSV file within boundary
     entur_dataframe = read_bounded_csv_file(
-        "project_thesis/test_data/bigquery-results.csv",
-        GEOSPATIAL_BOUND_NEW,
-        sample_size=sample_size,
+        "test_data/bigquery-results.csv", GEOSPATIAL_BOUND_NEW, sample_size=sample_size,
     )
 
     # Create clusters

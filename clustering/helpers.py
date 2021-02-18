@@ -54,7 +54,7 @@ def cluster_data(data: pd.DataFrame) -> [int]:
     # Generate numpy array from dataframe
     coords = data[["lat", "lon"]].values
     # Run k-means algorithm to generate clusters
-    return KMeans(10).fit(coords).labels_
+    return KMeans(20).fit(coords).labels_
 
 
 def generate_cluster_objects(
