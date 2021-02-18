@@ -125,7 +125,6 @@ class State:
                 va="center",
                 weight="bold",
             )
-        cluster_centers = [cluster.center for cluster in self.clusters]
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
 
