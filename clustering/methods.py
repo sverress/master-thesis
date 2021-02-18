@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 from classes import Cluster, Scooter
+from globals import GEOSPATIAL_BOUND_NEW
 
 
 def read_bounded_csv_file(
@@ -19,7 +20,7 @@ def read_bounded_csv_file(
     :return: dataframe with scooter data
     """
     # Get EnTur data from csv file
-    raw_data = pd.read_csv(file_path, sep=separator)
+    raw_data = pd.read_csv(file_path, sep=separator).set_index("id")
     # Hardcoded boundary on data
     lat_min, lat_max, lon_min, lon_max = boundary
     # Filter out data not within boundary
@@ -70,6 +71,10 @@ def scooter_movement_analysis(
     :return: probability matrix
     """
     number_of_clusters = len(np.unique(cluster_labels))
+    delayed_data = read_bounded_csv_file(
+        "test_data/0920-entur-snapshot.csv", GEOSPATIAL_BOUND_NEW, separator=","
+    )
+
     return np.random.rand(number_of_clusters, number_of_clusters)
 
 
