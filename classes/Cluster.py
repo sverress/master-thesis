@@ -41,11 +41,6 @@ class Cluster:
     def add_scooter(self, scooter: Scooter):
         self.scooters.append(scooter)
 
-    def get_valid_scooters(self, battery_limit: float):
-        return [
-            scooter for scooter in self.scooters if scooter.battery >= battery_limit
-        ]
-
     def remove_scooter(self, scooter: Scooter):
         if self.scooters.contains(scooter):
             self.scooters.remove(scooter)
@@ -53,11 +48,13 @@ class Cluster:
         else:
             return False
 
-    def get_valid_scooters(self, battery_limit):
-        return [s for s in self.scooters if s.battery >= battery_limit]
+    def get_valid_scooters(self, battery_limit: float):
+        return [
+            scooter for scooter in self.scooters if scooter.battery >= battery_limit
+        ]
 
     def get_swappable_scooters(self):
-        return [Scooter]
+        return [s for s in self.scooters if s.battery < 100.0]
 
     def print_all_scooters(self):
         string = ""
@@ -67,6 +64,6 @@ class Cluster:
 
     def __str__(self):
         return (
-            f"Cluster: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
+            f"Cluster {id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
             f" ideal state: {self.ideal_state}"
         )

@@ -1,7 +1,5 @@
 import unittest
-
 from clustering.scripts import get_initial_state
-from system_simulation.scripts import system_simulate
 
 
 class BasicSystemSimulationTests(unittest.TestCase):
@@ -13,7 +11,7 @@ class BasicSystemSimulationTests(unittest.TestCase):
             map(lambda cluster: len(cluster.scooters), self.initial_state.clusters)
         )
 
-        after_simulation_state = system_simulate(self.initial_state)
+        after_simulation_state = self.initial_state.system_simulate()
         number_of_scooters_after = sum(
             map(lambda cluster: len(cluster.scooters), after_simulation_state.clusters)
         )
@@ -27,7 +25,7 @@ class BasicSystemSimulationTests(unittest.TestCase):
             )
         )
 
-        after_simulation_state = system_simulate(self.initial_state)
+        after_simulation_state = self.initial_state.system_simulate()
         total_battery_of_scooters_after = sum(
             map(
                 lambda cluster: sum([scooter.battery for scooter in cluster.scooters]),

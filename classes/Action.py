@@ -14,3 +14,6 @@ class Action:
         self.pick_ups = pick_ups
         self.delivery_scooters = delivery_scooters
         self.next_cluster = next_cluster
+
+    def get_action_time(self, distance: int):
+        return 10

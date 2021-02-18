@@ -1,8 +1,9 @@
 from classes import Cluster, State
-import matplotlib.pyplot as plt
 from matplotlib import gridspec
-import networkx as nx
 from globals import BLUE, BLACK, GEOSPATIAL_BOUND
+import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
 
 
 def visualize_state(state: State):
@@ -65,7 +66,7 @@ def make_graph(clusters: [Cluster]):
 
     # make graph object
     graph = nx.DiGraph()
-    graph.add_nodes_from([c[2] for c in cartesian_clusters])
+    graph.add_nodes_from([c for c in np.arange(len(cartesian_clusters))])
 
     # set node label and position in graph
     labels = {}

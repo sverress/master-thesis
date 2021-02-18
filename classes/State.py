@@ -1,6 +1,7 @@
 from classes.Action import Action
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
+from system_simulation.scripts import system_simulate
 from math import sqrt, pi, sin, cos, atan2
 
 
@@ -18,6 +19,11 @@ class State:
         :param end: Cluster object
         :return: int - distance in kilometers
         """
+        if start not in self.clusters:
+            raise ValueError("Start cluster not in state")
+        elif end not in self.clusters:
+            raise ValueError("End cluster not in state")
+
         start_index = self.clusters.index(start)
         end_index = self.clusters.index(end)
 
@@ -111,7 +117,7 @@ class State:
         return reward
 
     def __str__(self):
-        return f"State: Current cluster={self.current}"
+        return f"State: Current cluster={self.current_cluster}"
 
     @staticmethod
     def haversine(lat1, lon1, lat2, lon2):
@@ -132,3 +138,21 @@ class State:
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         distance = radius * c
         return distance
+
+    def get_neighbours(self, cluster, number_of_neighbours: int):
+        if number_of_neighbours >= len(self.clusters):
+            raise ValueError("Requesting more neighbours then there is clusters")
+
+        cluster_index = self.clusters.index(cluster)
+
+        neighbour_indices = [
+            self.distance_matrix[cluster_index].index(distance)
+            for distance in sorted(self.distance_matrix[cluster_index])[
+                1:number_of_neighbours
+            ]
+        ]
+
+        return [self.clusters[i] for i in neighbour_indices]
+
+    def system_simulate(self):
+        system_simulate(self)
