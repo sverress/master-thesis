@@ -9,7 +9,7 @@ class Cluster:
         self.id = cluster_id
         self.scooters = scooters
         self.ideal_state = 2
-        self.trip_intensity_per_iteration = 2
+        self.trip_intensity_per_iteration = 10
         self.center = self.__compute_center()
 
     def get_current_state(self):

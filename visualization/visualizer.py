@@ -1,13 +1,11 @@
-from classes import Cluster, State
+from classes import State
 from matplotlib import gridspec
-from globals import BLUE, BLACK, GEOSPATIAL_BOUND_NEW
-from itertools import cycle
+from visualization.helpers import *
 import matplotlib.pyplot as plt
 import networkx as nx
-import numpy as np
 
 
-def visualize_state(state: State):
+def visualize_state(state: State, trips=None):
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
     fig.tight_layout(pad=1.0)
@@ -28,11 +26,20 @@ def visualize_state(state: State):
 
     # add number of scooters and battery label to nodes
     for i, cluster in enumerate(state.clusters):
-        node_info = f"S = {cluster.number_of_scooters()} \nB = {round(cluster.get_current_state(),1)}"
+        node_info = f"S = {cluster.number_of_scooters()} \nB = {round(cluster.get_current_state(), 1)}"
         x, y = pos[i]
         ax1.annotate(
             node_info, xy=(x, y + 0.03), horizontalalignment="center", fontsize=12
         )
+
+    edge_labels = {}
+
+    if trips:
+        # adding edges
+        for start, end, number_of_trips in trips:
+            if number_of_trips > 0:
+                graph.add_edge(start, end, color=BLACK, width=2)
+                edge_labels[(start, end)] = f"{start+1} --> {end+1}: {number_of_trips}"
 
     # set edge color for solution
     edges = graph.edges()
@@ -53,6 +60,19 @@ def visualize_state(state: State):
         ax=ax1,
     )
 
+    if trips:
+
+        nx.draw_networkx_edge_labels(
+            graph,
+            pos,
+            edge_labels=edge_labels,
+            label_pos=0.3,
+            font_size=10,
+            verticalalignment="bottom",
+            bbox=dict(alpha=0),
+            ax=ax1,
+        )
+
     nx.draw_networkx_labels(
         graph,
         pos,
@@ -67,45 +87,5 @@ def visualize_state(state: State):
     plt.show()
 
 
-def make_graph(clusters: [Cluster]):
-    cartesian_clusters = convert_geographic_to_cart(clusters, GEOSPATIAL_BOUND_NEW)
-
-    colors = cycle("bgrcmyk")
-
-    # make graph object
-    graph = nx.DiGraph()
-    graph.add_nodes_from([c for c in np.arange(len(cartesian_clusters))])
-
-    # set node label and position in graph
-    labels = {}
-    node_color = []
-    node_border = []
-    for i, cartesian_cluster_coordinates in enumerate(cartesian_clusters):
-        cluster_color = next(colors)
-        label = i + 1
-        labels[i] = label
-        node_color.append(cluster_color)
-        node_border.append(BLACK)
-        graph.nodes[i]["pos"] = cartesian_cluster_coordinates
-
-    return graph, labels, node_border, node_color
-
-
-def convert_geographic_to_cart(clusters: [Cluster], bound: [float]) -> [(int, int)]:
-    lat_min, lat_max, lon_min, lon_max = bound
-    delta_lat = lat_max - lat_min
-    delta_lon = lon_max - lon_min
-    zero_lat = lat_min / delta_lat
-    zero_lon = lon_min / delta_lon
-
-    output = []
-
-    for i, cluster in enumerate(clusters):
-        lat, lon = cluster.center
-
-        y = lat / delta_lat - zero_lat
-        x = lon / delta_lon - zero_lon
-
-        output.append((x, y))
-
-    return output
+def visualize_simulation(state: State, trips: [(int, int, int)]):
+    visualize_state(state, trips)

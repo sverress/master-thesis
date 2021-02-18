@@ -8,6 +8,12 @@ def system_simulate(state):
     :param state: current state
     :return: new state after a simulation of the poisson process
     """
+    trip_counter = {
+        (start, end): 0
+        for start in np.arange(len(state.clusters))
+        for end in np.arange(len(state.clusters))
+        if start != end
+    }
     min_battery = 20.0
     trips = []
     for i, cluster in enumerate(state.clusters):
@@ -22,11 +28,15 @@ def system_simulate(state):
         start_cluster = cluster
         # loop to generate trips from the cluster
         for j in range(number_of_trips):
-            # with this implementation, a trip can be within a cluster
-            end_cluster = round(np.random.uniform(0, len(state.clusters) - 1))
-            trips.append(
-                (start_cluster, state.clusters[end_cluster], valid_scooters[j])
-            )
+            end_cluster = start_cluster.id
+            while start_cluster.id == end_cluster:
+                end_cluster = round(np.random.uniform(0, len(state.clusters) - 1))
+
+            if start_cluster.id != end_cluster:
+                trips.append(
+                    (start_cluster, state.clusters[end_cluster], valid_scooters[j])
+                )
+                trip_counter[(start_cluster.id, end_cluster)] += 1
 
     # compute trip after all trips are generated to avoid handling inflow in cluster
     for cluster_trips in trips:
@@ -37,3 +47,8 @@ def system_simulate(state):
         trip_distance = state.get_distance(start_cluster, end_cluster)
         scooter.travel(trip_distance)
         end_cluster.add_scooter(scooter)
+
+    return [
+        (start_end[0], start_end[1], trips)
+        for start_end, trips in list(trip_counter.items())
+    ]
