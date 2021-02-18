@@ -1,6 +1,7 @@
 from classes import Cluster, State
 from matplotlib import gridspec
-from globals import BLUE, BLACK, GEOSPATIAL_BOUND
+from globals import BLUE, BLACK, GEOSPATIAL_BOUND_NEW
+from itertools import cycle
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -15,6 +16,11 @@ def visualize_state(state: State):
     spec = gridspec.GridSpec(ncols=1, nrows=1)
     ax1 = fig.add_subplot(spec[0])
     ax1.axis("off")
+
+    oslo = plt.imread("test_data/kart_oslo.png")
+    ax1.imshow(
+        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+    )
 
     # constructs the networkx graph
     graph, labels, node_border, node_color = make_graph(state.clusters)
@@ -62,7 +68,9 @@ def visualize_state(state: State):
 
 
 def make_graph(clusters: [Cluster]):
-    cartesian_clusters = convert_geographic_to_cart(clusters, GEOSPATIAL_BOUND)
+    cartesian_clusters = convert_geographic_to_cart(clusters, GEOSPATIAL_BOUND_NEW)
+
+    colors = cycle("bgrcmyk")
 
     # make graph object
     graph = nx.DiGraph()
@@ -73,16 +81,17 @@ def make_graph(clusters: [Cluster]):
     node_color = []
     node_border = []
     for i, cartesian_cluster_coordinates in enumerate(cartesian_clusters):
+        cluster_color = next(colors)
         label = i + 1
         labels[i] = label
-        node_color.append(BLUE)
+        node_color.append(cluster_color)
         node_border.append(BLACK)
         graph.nodes[i]["pos"] = cartesian_cluster_coordinates
 
     return graph, labels, node_border, node_color
 
 
-def convert_geographic_to_cart(clusters: [Cluster], bound: [int]) -> [(int, int)]:
+def convert_geographic_to_cart(clusters: [Cluster], bound: [float]) -> [(int, int)]:
     lat_min, lat_max, lon_min, lon_max = bound
     delta_lat = lat_max - lat_min
     delta_lon = lon_max - lon_min

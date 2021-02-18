@@ -82,14 +82,12 @@ class State:
         for pick_up_scooter in action.pick_ups:
             swappable_scooters.remove(pick_up_scooter)
 
-            # Adding scooter to vehicle inventory
+            reward -= pick_up_scooter.battery / 100.0
+
+            # Picking up scooter and adding to vehicle inventory and swapping battery
             capacity_check = self.vehicle.pick_up(pick_up_scooter)
             if not capacity_check:
                 raise ValueError("Can't pick up an scooter when the vehicle is full")
-
-            # Swap battery on scooter that is picked up
-            reward -= pick_up_scooter.battery / 100.0
-            pick_up_scooter.swap_battery()
 
             # Remove scooter from current cluster
             scooter_in_cluster = self.current_cluster.remove_scooter(pick_up_scooter)
@@ -105,15 +103,21 @@ class State:
             # Calculate reward of doing the battery swap
             reward += (100.0 - battery_swap_scooter.battery) / 100.0
 
-            # Performing the battery swap
-            battery_swap_scooter.swap_battery()
+            # Decreasing vehicle battery inventory
+            battery_inventory_check = self.vehicle.change_battery(battery_swap_scooter)
 
+            if not battery_inventory_check:
+                raise ValueError(
+                    "Can't change battery when the vehicle's battery inventory is empty"
+                )
+
+        # Dropping of scooters
         for delivery_scooter in action.delivery_scooters:
             # Rewarding 1 for delivery
             reward += 1.0
 
             # Removing scooter from vehicle inventory
-            scooter_in_vehicle = self.vehicle.deliver_scooter(delivery_scooter)
+            scooter_in_vehicle = self.vehicle.drop_off(delivery_scooter)
 
             # Error if scooter not i vehicle inventory
             if not scooter_in_vehicle:

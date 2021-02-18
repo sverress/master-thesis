@@ -65,6 +65,6 @@ class Cluster:
 
     def __str__(self):
         return (
-            f"Cluster {id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
+            f"Cluster {self.id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
             f" ideal state: {self.ideal_state}"
         )
