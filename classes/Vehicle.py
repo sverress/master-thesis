@@ -9,7 +9,9 @@ class Vehicle:
 
     def change_battery(self, scooter: Scooter):
         if self.battery_inventory <= 0:
-            return False
+            raise ValueError(
+                "Can't change battery when the vehicle's battery inventory is empty"
+            )
         else:
             self.battery_inventory -= 1
             scooter.swap_battery()
@@ -17,16 +19,16 @@ class Vehicle:
 
     def pick_up(self, scooter: Scooter):
         if len(self.scooter_inventory) + 1 > self.scooter_inventory_capacity:
-            return False
+            raise ValueError("Can't pick up an scooter when the vehicle is full")
         else:
             self.scooter_inventory.append(scooter)
-            self.battery_inventory -= 1
-            scooter.swap_battery()
-            return True
+            self.change_battery(scooter)
 
     def drop_off(self, scooter: Scooter):
         if scooter in self.scooter_inventory:
             self.scooter_inventory.remove(scooter)
             return True
         else:
-            return False
+            raise ValueError(
+                "Can't deliver a scooter that isn't in the vehicle inventory"
+            )

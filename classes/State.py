@@ -134,17 +134,10 @@ class State:
             reward -= pick_up_scooter.battery / 100.0
 
             # Picking up scooter and adding to vehicle inventory and swapping battery
-            capacity_check = self.vehicle.pick_up(pick_up_scooter)
-            if not capacity_check:
-                raise ValueError("Can't pick up an scooter when the vehicle is full")
+            self.vehicle.pick_up(pick_up_scooter)
 
             # Remove scooter from current cluster
             scooter_in_cluster = self.current_cluster.remove_scooter(pick_up_scooter)
-            if not scooter_in_cluster:
-                raise ValueError(
-                    "Can't remove a scooter from a cluster its not current in"
-                )
-
             scooter_in_cluster.change_battery(None, None)
 
         # Perform all battery swaps
@@ -155,12 +148,7 @@ class State:
             reward += (100.0 - battery_swap_scooter.battery) / 100.0
 
             # Decreasing vehicle battery inventory
-            battery_inventory_check = self.vehicle.change_battery(battery_swap_scooter)
-
-            if not battery_inventory_check:
-                raise ValueError(
-                    "Can't change battery when the vehicle's battery inventory is empty"
-                )
+            self.vehicle.change_battery(battery_swap_scooter)
 
         # Dropping of scooters
         for delivery_scooter in action.delivery_scooters:
@@ -168,11 +156,7 @@ class State:
             reward += 1.0
 
             # Removing scooter from vehicle inventory
-            scooter_in_vehicle = self.vehicle.drop_off(delivery_scooter)
-
-            # Error if scooter not i vehicle inventory
-            if not scooter_in_vehicle:
-                raise ValueError("Can't deliver a scooter that ")
+            self.vehicle.drop_off(delivery_scooter)
 
             # Adding scooter to current cluster
             self.current_cluster.add_scooter(delivery_scooter)
@@ -187,7 +171,7 @@ class State:
 
         return reward
 
-    def __str__(self):
+    def __repr__(self):
         return f"State: Current cluster={self.current_cluster}"
 
     @staticmethod

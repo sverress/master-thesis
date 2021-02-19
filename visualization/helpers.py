@@ -21,7 +21,7 @@ def make_graph(clusters: [Cluster]):
     node_border = []
     for i, cartesian_cluster_coordinates in enumerate(cartesian_clusters):
         cluster_color = next(colors)
-        label = i + 1
+        label = i
         labels[i] = label
         node_color.append(cluster_color)
         node_border.append(BLACK)
@@ -149,6 +149,6 @@ def edge_label(start: int, end: int, pos: dict, number_of_trip: int):
     end_pos = pos[end]
 
     if start_pos[0] <= end_pos[0]:
-        return f"{start+1} --> {end+1}: {number_of_trip}"
+        return f"{start} --> {end}: {number_of_trip}"
     else:
-        return f"{number_of_trip} : {end+1} <-- {start+1}"
+        return f"{number_of_trip} : {end} <-- {start}"

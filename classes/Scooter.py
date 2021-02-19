@@ -16,5 +16,5 @@ class Scooter:
         self.lat = lat
         self.lon = lon
 
-    def __str__(self):
+    def __repr__(self):
         return f"ID: {self.id} B: {self.battery}"

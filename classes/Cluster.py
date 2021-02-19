@@ -44,9 +44,10 @@ class Cluster:
     def remove_scooter(self, scooter: Scooter):
         if self.scooters.contains(scooter):
             self.scooters.remove(scooter)
-            return True
         else:
-            return False
+            raise ValueError(
+                "Can't remove a scooter from a cluster its not currently in"
+            )
 
     def get_valid_scooters(self, battery_limit: float):
         return [
@@ -63,7 +64,7 @@ class Cluster:
         scooters = [scooter for scooter in self.scooters if scooter.battery < 100]
         return sorted(scooters, key=lambda scooter: scooter.battery, reverse=False)
 
-    def __str__(self):
+    def __repr__(self):
         return (
             f"Cluster {self.id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
             f" ideal state: {self.ideal_state}"
