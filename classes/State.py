@@ -6,7 +6,7 @@ from system_simulation.scripts import system_simulate
 from math import sqrt, pi, sin, cos, atan2
 import matplotlib.pyplot as plt
 
-from globals import GEOSPATIAL_BOUND, GEOSPATIAL_BOUND_NEW
+from globals import GEOSPATIAL_BOUND_NEW
 
 
 class State:
@@ -65,7 +65,7 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
-    def get_possible_actions(self):
+    def get_possible_actions(self, number_of_neighbours=1):
         """
         Need to figure out what actions we want to look at. The combination of pick-ups, battery swaps,
         drop-offs and next cluster is too large to try them all.
@@ -96,9 +96,7 @@ class State:
 
         combinations = []
         # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-        for cluster in self.get_neighbours(
-            self.current_cluster, number_of_neighbours=3
-        ):
+        for cluster in self.get_neighbours(self.current_cluster, number_of_neighbours):
             for pick_up in range(pick_ups + 1):
                 for swap in range(swaps + 1):
                     for drop_off in range(drop_offs + 1):

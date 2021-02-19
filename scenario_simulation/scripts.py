@@ -56,7 +56,7 @@ def markov_decision_process(state: State):
     # generate all trips
     for cluster in state.clusters:
         # collect n neighbours for the cluster (can be implemented with distance limit)
-        neighbours = state.get_neighbours(cluster, number_of_neighbours=5)
+        neighbours = state.get_neighbours(cluster, number_of_neighbours=3)
 
         # make the markov chain out of the cluster (includes probability of staying in the cluster)
         prob_distribution = [cluster.prob_stay()] + [
