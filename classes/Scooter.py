@@ -11,3 +11,6 @@ class Scooter:
 
     def swap_battery(self):
         self.battery = 100.0
+
+    def __str__(self):
+        return f"ID: {self.id} B: {self.battery}"

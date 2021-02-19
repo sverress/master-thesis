@@ -1,7 +1,7 @@
 from itertools import cycle
-from classes.Action import Action
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
+from classes.Action import Action
 from system_simulation.scripts import system_simulate
 from math import sqrt, pi, sin, cos, atan2
 import matplotlib.pyplot as plt
@@ -66,7 +66,59 @@ class State:
         return distance_matrix
 
     def get_possible_actions(self):
-        return Action([], [], [], Cluster([]))
+        """
+        Need to figure out what actions we want to look at. The combination of pick-ups, battery swaps,
+        drop-offs and next cluster is too large to try them all.
+        Improvements: - Travel only to neighbouring clusters.
+        - Only perform some battery swaps, eg. even numbers
+        :return: List of object Action
+        """
+
+        # Assume that no battery swap or pick-up of scooter with 100% battery and
+        # that the scooters with the lowest battery are swapped and picked up
+        swappable_scooters = self.current_cluster.get_swappable_scooters()
+
+        # Initiate constraints for battery swap, pick-up and drop-off
+        pick_ups = min(
+            max(
+                len(self.current_cluster.scooters) - self.current_cluster.ideal_state, 0
+            ),
+            self.vehicle.scooter_inventory_capacity,
+        )
+        swaps = min(len(self.current_cluster.scooters), self.vehicle.battery_inventory)
+        drop_offs = max(
+            min(
+                self.current_cluster.ideal_state - len(self.current_cluster.scooters),
+                len(self.vehicle.scooter_inventory),
+            ),
+            0,
+        )
+
+        combinations = []
+        # Different combinations of battery swaps, pick-ups, drop-offs and clusters
+        for cluster in self.clusters:
+            # Next cluster cant be same as current
+            if cluster == self.current_cluster:
+                continue
+            for pick_up in range(pick_ups + 1):
+                for swap in range(swaps + 1):
+                    for drop_off in range(drop_offs + 1):
+                        if (pick_up + swap) <= self.vehicle.battery_inventory and (
+                            pick_up + swap
+                        ) <= len(self.current_cluster.scooters):
+                            combinations.append([swap, pick_up, drop_off, cluster])
+
+        actions = []
+        for battery_swap, pick_up, drop_off, cluster in combinations:
+            actions.append(
+                Action(
+                    swappable_scooters[pick_up : battery_swap + pick_up],
+                    swappable_scooters[:pick_up],
+                    self.vehicle.scooter_inventory[:drop_off],
+                    cluster,
+                )
+            )
+        return actions
 
     def do_action(self, action: Action):
         """
