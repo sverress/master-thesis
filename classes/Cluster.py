@@ -25,10 +25,10 @@ class Cluster:
         return 0.5 / 7  # 7 is number of clusters
 
     def number_of_possible_pickups(self):
-        if self.number_of_scooters() > self.ideal_state:
+        if self.number_of_scooters() <= self.ideal_state:
             return 0
         else:
-            return self.number_of_scooters()
+            return self.number_of_scooters() - self.ideal_state
 
     def number_of_scooters(self):
         return len(self.scooters)
@@ -52,6 +52,10 @@ class Cluster:
         for scooter in self.scooters:
             string += f"ID: {scooter.id}  Battery {round(scooter.battery, 1)} | "
         return string if string != "" else "Empty cluster"
+
+    def get_swappable_scooters(self):
+        scooters = [scooter for scooter in self.scooters if scooter.battery < 100]
+        return sorted(scooters, key=lambda scooter: scooter.battery, reverse=False)
 
     def __str__(self):
         return (
