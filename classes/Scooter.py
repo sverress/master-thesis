@@ -12,5 +12,9 @@ class Scooter:
     def swap_battery(self):
         self.battery = 100.0
 
+    def change_coordinates(self, lat: float, lon: float):
+        self.lat = lat
+        self.lon = lon
+
     def __str__(self):
         return f"ID: {self.id} B: {self.battery}"

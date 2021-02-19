@@ -16,34 +16,44 @@ def system_simulate(state):
     }
     min_battery = 20.0
     trips = []
-    for i, cluster in enumerate(state.clusters):
+    for i, start_cluster in enumerate(state.clusters):
         # poisson process to select number of trips in a iteration
-        number_of_trips = round(np.random.poisson(cluster.trip_intensity_per_iteration))
+        number_of_trips = round(
+            np.random.poisson(start_cluster.trip_intensity_per_iteration)
+        )
 
         # can't complete more trips then there is scooters with battery over min_battery
-        valid_scooters = cluster.get_valid_scooters(min_battery)
+        valid_scooters = start_cluster.get_valid_scooters(min_battery)
         if number_of_trips > len(valid_scooters):
             number_of_trips = len(valid_scooters)
 
-        start_cluster = cluster
+        # collect n neighbours for the cluster (can be implemented with distance limit)
+        neighbours = state.get_neighbours(start_cluster, number_of_neighbours=3)
+
+        # make the markov chain out of the cluster
+        prob_distribution = [start_cluster.prob_leave(neigh) for neigh in neighbours]
+
+        normalized_prob_distribution = np.true_divide(
+            prob_distribution, sum(prob_distribution)
+        )
+
         # loop to generate trips from the cluster
         for j in range(number_of_trips):
-            end_cluster = start_cluster.id
-            while start_cluster.id == end_cluster:
-                end_cluster = round(np.random.uniform(0, len(state.clusters) - 1))
-
-            if start_cluster.id != end_cluster:
-                trips.append(
-                    (start_cluster, state.clusters[end_cluster], valid_scooters[j])
+            end_cluster = neighbours[
+                np.random.choice(
+                    np.arange(len(normalized_prob_distribution)),
+                    p=normalized_prob_distribution,
                 )
-                trip_counter[(start_cluster.id, end_cluster)] += 1
+            ]
+
+            trips.append((start_cluster, end_cluster, valid_scooters[j]))
+            trip_counter[(start_cluster.id, end_cluster.id)] += 1
 
     # compute trip after all trips are generated to avoid handling inflow in cluster
-    for cluster_trips in trips:
-        start_cluster, end_cluster, scooter = cluster_trips
+    for start_cluster, end_cluster, scooter in trips:
         start_cluster.scooters.remove(scooter)
-        scooter.lat = end_cluster.center[0]
-        scooter.lon = end_cluster.center[1]
+        end_cluster_lat, end_cluster_lon = end_cluster.center
+        scooter.change_coordinates(end_cluster_lat, end_cluster_lon)
         trip_distance = state.get_distance(start_cluster, end_cluster)
         scooter.travel(trip_distance)
         end_cluster.add_scooter(scooter)

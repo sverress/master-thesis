@@ -57,7 +57,7 @@ def visualize_state(state: State, trips=None):
         width=e_weights,
         node_size=1000,
         alpha=0.7,
-        with_labels=True,
+        with_labels=False,
         ax=ax1,
     )
 
@@ -66,7 +66,6 @@ def visualize_state(state: State, trips=None):
             graph,
             pos,
             edge_labels=edge_labels,
-            label_pos=0.4,
             font_size=10,
             verticalalignment=alignment,
             bbox=dict(alpha=0),

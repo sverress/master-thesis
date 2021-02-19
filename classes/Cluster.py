@@ -1,5 +1,4 @@
 from shapely.geometry import MultiPoint
-
 from classes.Scooter import Scooter
 
 
@@ -53,9 +52,6 @@ class Cluster:
         return [
             scooter for scooter in self.scooters if scooter.battery >= battery_limit
         ]
-
-    def get_swappable_scooters(self):
-        return [s for s in self.scooters if s.battery < 100.0]
 
     def print_all_scooters(self):
         string = ""

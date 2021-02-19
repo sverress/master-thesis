@@ -6,15 +6,15 @@ from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 
 if __name__ == "__main__":
-    state = get_initial_state(number_of_clusters=6)
-    print("------------ Before system simulation ------------ \n")
+    state = get_initial_state(number_of_clusters=10)
+    print("\n ------------ Before system simulation ------------ \n")
     visualize_state(state)
     for i, cluster in enumerate(state.clusters):
         print(cluster.__str__())
 
     trips = system_simulate(state)
 
-    print("------------ After system simulation ------------ \n")
+    print("\n ------------ After system simulation ------------ \n")
     visualize_simulation(state, trips)
     for cluster in state.clusters:
         print(cluster.__str__())
