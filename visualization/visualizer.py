@@ -33,13 +33,14 @@ def visualize_state(state: State, trips=None):
         )
 
     edge_labels = {}
-
+    alignment = []
     if trips:
         # adding edges
         for start, end, number_of_trips in trips:
             if number_of_trips > 0:
                 graph.add_edge(start, end, color=BLACK, width=2)
-                edge_labels[(start, end)] = f"{start+1} --> {end+1}: {number_of_trips}"
+                alignment.append(choose_label_alignment(start, end, pos))
+                edge_labels[(start, end)] = edge_label(start, end, pos, number_of_trips)
 
     # set edge color for solution
     edges = graph.edges()
@@ -56,19 +57,18 @@ def visualize_state(state: State, trips=None):
         width=e_weights,
         node_size=1000,
         alpha=0.7,
-        with_labels=False,
+        with_labels=True,
         ax=ax1,
     )
 
     if trips:
-
-        nx.draw_networkx_edge_labels(
+        alt_draw_networkx_edge_labels(
             graph,
             pos,
             edge_labels=edge_labels,
-            label_pos=0.3,
+            label_pos=0.4,
             font_size=10,
-            verticalalignment="bottom",
+            verticalalignment=alignment,
             bbox=dict(alpha=0),
             ax=ax1,
         )
