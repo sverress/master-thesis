@@ -1,7 +1,8 @@
 from itertools import cycle
-
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
+from classes.Action import Action
+from system_simulation.scripts import system_simulate
 from math import sqrt, pi, sin, cos, atan2
 import matplotlib.pyplot as plt
 
@@ -11,7 +12,7 @@ from globals import GEOSPATIAL_BOUND_NEW
 class State:
     def __init__(self, clusters: [Cluster], current: Cluster, vehicle: Vehicle):
         self.clusters = clusters
-        self.current = current
+        self.current_cluster = current
         self.vehicle = vehicle
         self.distance_matrix = self.calculate_distance_matrix()
 
@@ -38,8 +39,13 @@ class State:
         Calculate distance between two clusters
         :param start: Cluster object
         :param end: Cluster object
-        :return: int - distance in kilometers
+        :return: float - distance in kilometers
         """
+        if start not in self.clusters:
+            raise ValueError("Start cluster not in state")
+        elif end not in self.clusters:
+            raise ValueError("End cluster not in state")
+
         start_index = self.clusters.index(start)
         end_index = self.clusters.index(end)
 
@@ -70,8 +76,114 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
-    def __str__(self):
-        return f"State: Current cluster={self.current}"
+    def get_possible_actions(self, number_of_neighbours=1):
+        """
+        Need to figure out what actions we want to look at. The combination of pick-ups, battery swaps,
+        drop-offs and next cluster is too large to try them all.
+        Improvements: - Travel only to neighbouring clusters.
+        - Only perform some battery swaps, eg. even numbers
+        :return: List of object Action
+        """
+
+        # Assume that no battery swap or pick-up of scooter with 100% battery and
+        # that the scooters with the lowest battery are swapped and picked up
+        swappable_scooters = self.current_cluster.get_swappable_scooters()
+
+        # Initiate constraints for battery swap, pick-up and drop-off
+        pick_ups = min(
+            max(
+                len(self.current_cluster.scooters) - self.current_cluster.ideal_state, 0
+            ),
+            self.vehicle.scooter_inventory_capacity,
+        )
+        swaps = min(len(self.current_cluster.scooters), self.vehicle.battery_inventory)
+        drop_offs = max(
+            min(
+                self.current_cluster.ideal_state - len(self.current_cluster.scooters),
+                len(self.vehicle.scooter_inventory),
+            ),
+            0,
+        )
+
+        combinations = []
+        # Different combinations of battery swaps, pick-ups, drop-offs and clusters
+        for cluster in self.get_neighbours(self.current_cluster, number_of_neighbours):
+            for pick_up in range(pick_ups + 1):
+                for swap in range(swaps + 1):
+                    for drop_off in range(drop_offs + 1):
+                        if (pick_up + swap) <= self.vehicle.battery_inventory and (
+                            pick_up + swap
+                        ) <= len(self.current_cluster.scooters):
+                            combinations.append([swap, pick_up, drop_off, cluster])
+
+        actions = []
+        for battery_swap, pick_up, drop_off, cluster in combinations:
+            actions.append(
+                Action(
+                    swappable_scooters[pick_up : battery_swap + pick_up],
+                    swappable_scooters[:pick_up],
+                    self.vehicle.scooter_inventory[:drop_off],
+                    cluster,
+                )
+            )
+        return actions
+
+    def do_action(self, action: Action):
+        """
+        Performs an action on the state -> changing the state + calculates the reward
+        :param action: Action - action to be performed on the state
+        :return: float - reward for doing the action on the state
+        """
+        reward = 0
+        # Retrieve all scooters that you can change battery on (and therefor also pick up)
+        swappable_scooters = self.current_cluster.get_swappable_scooters()
+
+        # Perform all pickups
+        for pick_up_scooter in action.pick_ups:
+            swappable_scooters.remove(pick_up_scooter)
+
+            reward -= pick_up_scooter.battery / 100.0
+
+            # Picking up scooter and adding to vehicle inventory and swapping battery
+            self.vehicle.pick_up(pick_up_scooter)
+
+            # Remove scooter from current cluster
+            scooter_in_cluster = self.current_cluster.remove_scooter(pick_up_scooter)
+            scooter_in_cluster.change_battery(None, None)
+
+        # Perform all battery swaps
+        for battery_swap_scooter in action.battery_swaps:
+            swappable_scooters.remove(battery_swap_scooter)
+
+            # Calculate reward of doing the battery swap
+            reward += (100.0 - battery_swap_scooter.battery) / 100.0
+
+            # Decreasing vehicle battery inventory
+            self.vehicle.change_battery(battery_swap_scooter)
+
+        # Dropping of scooters
+        for delivery_scooter in action.delivery_scooters:
+            # Rewarding 1 for delivery
+            reward += 1.0
+
+            # Removing scooter from vehicle inventory
+            self.vehicle.drop_off(delivery_scooter)
+
+            # Adding scooter to current cluster
+            self.current_cluster.add_scooter(delivery_scooter)
+
+            lat, lon = self.current_cluster.center
+
+            # Changing coordinates of scooter
+            delivery_scooter.change_coordinates(lat, lon)
+
+        # Moving the state/vehicle from this to next cluster
+        self.current_cluster = action.next_cluster
+
+        return reward
+
+    def __repr__(self):
+        return f"State: Current cluster={self.current_cluster}"
 
     @staticmethod
     def haversine(lat1, lon1, lat2, lon2):
@@ -147,3 +259,21 @@ class State:
                 loc="upper right",
             )
         plt.show()
+
+    def get_neighbours(self, cluster, number_of_neighbours: int):
+        if number_of_neighbours >= len(self.clusters):
+            raise ValueError("Requesting more neighbours then there is clusters")
+
+        cluster_index = self.clusters.index(cluster)
+
+        neighbour_indices = [
+            self.distance_matrix[cluster_index].index(distance)
+            for distance in sorted(self.distance_matrix[cluster_index])[
+                1 : number_of_neighbours + 1
+            ]
+        ]
+
+        return [self.clusters[i] for i in neighbour_indices]
+
+    def system_simulate(self):
+        system_simulate(self)

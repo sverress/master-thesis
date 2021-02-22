@@ -19,6 +19,7 @@ Change directory into the root directory and run the following command:
 ```
 conda env create --prefix ./env -f environment.yml
 ```
+
 This command creates a conda environment at ./env in your current directory with all the required packages for the project.
 PS: To remove the awful looking path on the left when activating your environment run `conda config --set env_prompt '({name})'`
 when the environment is active. You need to restart your terminal to see this change. 
@@ -30,6 +31,13 @@ when the environment is active. You need to restart your terminal to see this ch
 ```
 conda env update --prefix ./env --file environment.yml  --prune
 ```
+
+If the conda environment is located outside the project, run the following command: 
+```
+conda env update master --file environment.yml  --prune
+```
+
+
 To remove packages just remove it from the packages.yml and run the same command. 
 This is a nice command to make a alias for.
 
