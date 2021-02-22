@@ -61,6 +61,10 @@ def visualize_cluster_flow(state: State, flows: [(int, int, int)]):
 def visualize_scooter_simulation(
     current_state: State, next_state: State, action: Action, trips,
 ):
+
+    node_size = 200
+    font_size = 10
+
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
 
@@ -113,8 +117,7 @@ def visualize_scooter_simulation(
         all_current_cluster_ids,
     )
 
-    node_size = 100
-    font_size = 8
+    add_scooter_id(all_current_scooters, graph, ax2)
 
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax2)
 
@@ -126,20 +129,22 @@ def visualize_scooter_simulation(
 
     number_of_current_scooters = len(all_current_scooters)
 
+    add_scooter_id(all_current_scooters, next_graph, ax3)
+
     for i, trip in enumerate(trips):
         start, end, scooter = trip
+        x, y = cartesian_coordinates[i]
         previous_label = all_current_scooters_id.index(scooter.id)
         next_graph.add_node(number_of_current_scooters + i)
         labels[number_of_current_scooters + i] = previous_label
         node_color.append(COLORS[end.id])
         node_color[previous_label] = "black"
         node_border.append(BLACK)
-        next_graph.nodes[number_of_current_scooters + i]["pos"] = cartesian_coordinates[
-            i
-        ]
+        next_graph.nodes[number_of_current_scooters + i]["pos"] = (x, y)
         next_graph.add_edge(
             previous_label, number_of_current_scooters + i, color=BLACK, width=1
         )
+        ax3.text(x, y + 0.015, f"{scooter.id}", horizontalalignment="center")
 
     display_graph(
         next_graph, node_color, node_border, node_size, labels, font_size, ax3,

@@ -218,6 +218,14 @@ def add_flow_edges(graph, flows):
     return edge_labels, alignment
 
 
+def add_scooter_id(scooters, graph, ax):
+    pos = nx.get_node_attributes(graph, "pos")
+
+    for i, scooter in enumerate(scooters):
+        x, y = pos[i]
+        ax.text(x, y + 0.015, f"{scooter.id}", horizontalalignment="center")
+
+
 def alt_draw_networkx_edge_labels(
     G,
     edge_labels=None,
