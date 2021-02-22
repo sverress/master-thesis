@@ -1,20 +1,16 @@
 import unittest
-
-from clustering.scripts import get_initial_state
 from decision.scripts import *
 
 
 class BasicDecisionTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.initial_state = get_initial_state()
-
     def test_battery_swaps(self):
+        self.initial_state = get_initial_state(sample_size=100, number_of_clusters=2)
+
         # Modify initial state. 5 battery swaps possible.
         self.initial_state.vehicle.scooter_inventory = []
         self.initial_state.current_cluster.scooters = self.initial_state.current_cluster.scooters[
             :5
         ]
-        self.initial_state.clusters = self.initial_state.clusters[:2]
         self.initial_state.current_cluster.ideal_state = 5
 
         # Get all possible actions
@@ -28,12 +24,13 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEquals(self.initial_state.do_action(actions[-1]), 1.0)
 
     def test_pick_ups(self):
+        self.initial_state = get_initial_state(sample_size=100, number_of_clusters=2)
+
         # Modify initial state. 5 battery swaps and 2 pick ups possible
         self.initial_state.vehicle.scooter_inventory = []
         self.initial_state.current_cluster.scooters = self.initial_state.current_cluster.scooters[
             :5
         ]
-        self.initial_state.clusters = self.initial_state.clusters[1:2]
         self.initial_state.current_cluster.ideal_state = 3
 
         # Get all possible actions
@@ -47,6 +44,7 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEquals(self.initial_state.do_action(actions[-1]), 2.0)
 
     def test_deliveries(self):
+        self.initial_state = get_initial_state(sample_size=100, number_of_clusters=2)
         # Modify initial state. 5 battery swaps and 2 drop-offs possible
         self.initial_state.vehicle.scooter_inventory = self.initial_state.current_cluster.scooters[
             7:9
@@ -54,7 +52,6 @@ class BasicDecisionTests(unittest.TestCase):
         self.initial_state.current_cluster.scooters = self.initial_state.current_cluster.scooters[
             :5
         ]
-        self.initial_state.clusters = self.initial_state.clusters[1:2]
         self.initial_state.current_cluster.ideal_state = 7
 
         # Get all possible actions
@@ -68,14 +65,13 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEquals(self.initial_state.do_action(actions[-1]), 3.0)
 
     def test_number_of_actions_clusters(self):
+        self.initial_state = get_initial_state(sample_size=100, number_of_clusters=6)
         # Modify initial state. 5 battery swaps and 2 drop-offs possible
         self.initial_state.vehicle.scooter_inventory = []
         self.initial_state.current_cluster.scooters = []
-        self.initial_state.clusters = self.initial_state.clusters[1:6]
-        self.initial_state.current_cluster.ideal_state = 5
 
         # Get all possible actions
-        actions = self.initial_state.get_possible_actions()
+        actions = self.initial_state.get_possible_actions(number_of_neighbours=5)
 
         self.assertEqual(len(actions), 5)
 
