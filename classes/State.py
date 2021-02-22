@@ -5,6 +5,7 @@ from classes.Action import Action
 from system_simulation.scripts import system_simulate
 from math import sqrt, pi, sin, cos, atan2
 import matplotlib.pyplot as plt
+import numpy as np
 
 from globals import GEOSPATIAL_BOUND_NEW
 
@@ -277,3 +278,7 @@ class State:
 
     def system_simulate(self):
         system_simulate(self)
+
+    def set_probability_matrix(self, probability_matrix: np.ndarray):
+        for cluster in self.clusters:
+            cluster.set_move_probabilities(probability_matrix[cluster.id])

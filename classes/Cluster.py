@@ -24,7 +24,7 @@ class Cluster:
             )
 
     def prob_leave(self, cluster):
-        if self.move_probabilities:
+        if self.move_probabilities is not None:
             return self.move_probabilities[cluster.id]
         else:
             raise ValueError(

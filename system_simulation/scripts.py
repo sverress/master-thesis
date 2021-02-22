@@ -34,7 +34,10 @@ def system_simulate(state):
         prob_distribution = [start_cluster.prob_leave(neigh) for neigh in neighbours]
 
         normalized_prob_distribution = np.true_divide(
-            prob_distribution, sum(prob_distribution)
+            prob_distribution,
+            sum(prob_distribution),
+            out=np.zeros_like(prob_distribution),
+            where=sum(prob_distribution) != 0,
         )
 
         # loop to generate trips from the cluster

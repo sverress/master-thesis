@@ -36,6 +36,8 @@ def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
         initial_state, entur_dataframe, cluster_labels
     )
 
+    initial_state.set_probability_matrix(probability_matrix)
+
     return initial_state
 
 
