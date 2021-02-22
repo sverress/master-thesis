@@ -52,14 +52,11 @@ class State:
                 if cluster == neighbour:
                     neighbour_distance.append(0.0)
                 else:
-                    (
-                        cluster_center_lat,
-                        cluster_center_lon,
-                    ) = cluster.location.get_location()
+                    (cluster_center_lat, cluster_center_lon,) = cluster.get_location()
                     (
                         neighbour_center_lat,
                         neighbour_center_lon,
-                    ) = neighbour.location.get_location()
+                    ) = neighbour.get_location()
                     neighbour_distance.append(
                         State.haversine(
                             cluster_center_lat,
@@ -146,7 +143,7 @@ class State:
             self.current_cluster.remove_scooter(pick_up_scooter)
 
             # Set scooter coordinates to None
-            pick_up_scooter.change_coordinates(None, None)
+            pick_up_scooter.set_coordinates(None, None)
 
         # Perform all battery swaps
         for battery_swap_scooter in action.battery_swaps:
@@ -214,8 +211,7 @@ class State:
         # Add clusters to figure
         for cluster in self.clusters:
             scooter_locations = [
-                (scooter.location.get_lat(), scooter.location.get_lon())
-                for scooter in cluster.scooters
+                (scooter.get_lat(), scooter.get_lon()) for scooter in cluster.scooters
             ]
             cluster_color = next(colors)
             df_scatter = ax.scatter(
@@ -225,7 +221,7 @@ class State:
                 alpha=0.3,
                 s=3,
             )
-            center_lat, center_lon = cluster.location.get_location()
+            center_lat, center_lon = cluster.get_location()
             rs_scatter = ax.scatter(
                 center_lon,
                 center_lat,
