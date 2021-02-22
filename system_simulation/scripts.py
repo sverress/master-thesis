@@ -28,7 +28,7 @@ def system_simulate(state):
             number_of_trips = len(valid_scooters)
 
         # collect n neighbours for the cluster (can be implemented with distance limit)
-        neighbours = state.get_neighbours(start_cluster, number_of_neighbours=3)
+        neighbours = state.get_neighbours(start_cluster, number_of_neighbours=2)
 
         # make the markov chain out of the cluster
         prob_distribution = [start_cluster.prob_leave(neigh) for neigh in neighbours]
@@ -52,7 +52,7 @@ def system_simulate(state):
     # compute trip after all trips are generated to avoid handling inflow in cluster
     for start_cluster, end_cluster, scooter in trips:
         start_cluster.scooters.remove(scooter)
-        end_cluster_lat, end_cluster_lon = end_cluster.center
+        end_cluster_lat, end_cluster_lon = end_cluster.get_location()
         scooter.change_coordinates(end_cluster_lat, end_cluster_lon)
         trip_distance = state.get_distance(start_cluster, end_cluster)
         scooter.travel(trip_distance)

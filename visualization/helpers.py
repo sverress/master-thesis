@@ -1,4 +1,4 @@
-from classes import Cluster
+from matplotlib import gridspec
 from globals import BLACK, GEOSPATIAL_BOUND_NEW
 from itertools import cycle
 import networkx as nx
@@ -6,8 +6,87 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def make_graph(clusters: [Cluster]):
-    cartesian_clusters = convert_geographic_to_cart(clusters, GEOSPATIAL_BOUND_NEW)
+def display_graph(graph, node_color, node_border, node_size, labels, font_size, ax):
+    pos = nx.get_node_attributes(graph, "pos")
+
+    # set edge color for solution
+    edges = graph.edges()
+    edge_colors = [graph[u][v]["color"] for u, v in edges]
+    edge_weights = [graph[u][v]["width"] for u, v in edges]
+
+    # draw solution graph
+    nx.draw(
+        graph,
+        pos,
+        node_color=node_color,
+        edgecolors=node_border,
+        edge_color=edge_colors,
+        width=edge_weights,
+        node_size=node_size,
+        alpha=0.7,
+        with_labels=False,
+        ax=ax,
+    )
+
+    nx.draw_networkx_labels(
+        graph,
+        pos,
+        labels,
+        font_size=font_size,
+        font_color="white",
+        font_weight="bold",
+        ax=ax,
+    )
+
+
+def plot_vehicle_info(current_vehicle, next_vehicle, ax):
+    # vehicle info box
+    current_vehicle_info = (
+        f"Current Vehicle:\n Cap - {current_vehicle.scooter_inventory_capacity}\n"
+        f" Battery - {current_vehicle.battery_inventory}\n"
+        f" Scooters:"
+    )
+
+    for scooter in current_vehicle.scooter_inventory:
+        current_vehicle_info += f"  {scooter}\n"
+
+    next_vehicle_info = (
+        f"Next Vehicle:\n Cap - {next_vehicle.scooter_inventory_capacity}\n"
+        f" Battery - {next_vehicle.battery_inventory}\n"
+        f" Scooters:"
+    )
+
+    for scooter in next_vehicle.scooter_inventory:
+        next_vehicle_info += f"  {scooter}\n"
+
+    props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
+
+    # place a text box in upper left in axes coords
+    ax.text(
+        0,
+        0.9,
+        current_vehicle_info,
+        transform=ax.transAxes,
+        fontsize=10,
+        horizontalalignment="left",
+        verticalalignment="top",
+        bbox=props,
+    )
+
+    ax.text(
+        0,
+        0.8,
+        next_vehicle_info,
+        transform=ax.transAxes,
+        fontsize=10,
+        horizontalalignment="left",
+        verticalalignment="top",
+        bbox=props,
+    )
+
+
+def make_graph(coordinates: [(float, float)]):
+    cartesian_clusters = convert_geographic_to_cart(coordinates, GEOSPATIAL_BOUND_NEW)
 
     colors = cycle("bgrcmyk")
 
@@ -30,7 +109,9 @@ def make_graph(clusters: [Cluster]):
     return graph, labels, node_border, node_color
 
 
-def convert_geographic_to_cart(clusters: [Cluster], bound: [float]) -> [(int, int)]:
+def convert_geographic_to_cart(
+    coordinates: [(float, float)], bound: [float]
+) -> [(int, int)]:
     lat_min, lat_max, lon_min, lon_max = bound
     delta_lat = lat_max - lat_min
     delta_lon = lon_max - lon_min
@@ -39,9 +120,7 @@ def convert_geographic_to_cart(clusters: [Cluster], bound: [float]) -> [(int, in
 
     output = []
 
-    for i, cluster in enumerate(clusters):
-        lat, lon = cluster.center
-
+    for lat, lon in coordinates:
         y = lat / delta_lat - zero_lat
         x = lon / delta_lon - zero_lon
 
@@ -50,9 +129,69 @@ def convert_geographic_to_cart(clusters: [Cluster], bound: [float]) -> [(int, in
     return output
 
 
+def choose_label_alignment(start: int, end: int, pos: dict):
+    start_pos = pos[start]
+    end_pos = pos[end]
+
+    if start_pos[0] <= end_pos[0]:
+        return "top"
+    else:
+        return "bottom"
+
+
+def edge_label(start: int, end: int, pos: dict, number_of_trip: int):
+    start_pos = pos[start]
+    end_pos = pos[end]
+
+    if start_pos[0] <= end_pos[0]:
+        return f"{start} --> {end}: {number_of_trip}"
+    else:
+        return f"{number_of_trip} : {end} <-- {start}"
+
+
+def create_standard_state_plot():
+    fig = plt.figure(figsize=(20, 9.7))
+
+    # creating subplots
+    spec = gridspec.GridSpec(figure=fig, ncols=1, nrows=1)
+    ax = fig.add_subplot(spec[0])
+    ax.axis("off")
+
+    oslo = plt.imread("test_data/kart_oslo.png")
+    ax.imshow(
+        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+    )
+
+    return fig, ax
+
+
+def add_cluster_info(state, graph, ax):
+    pos = nx.get_node_attributes(graph, "pos")
+    # add number of scooters and battery label to nodes
+    for i, cluster in enumerate(state.clusters):
+        node_info = f"S = {cluster.number_of_scooters()} \nB = {round(cluster.get_current_state(), 1)}"
+        x, y = pos[i]
+        ax.annotate(
+            node_info, xy=(x, y + 0.03), horizontalalignment="center", fontsize=12
+        )
+
+
+def add_edges(graph, trips):
+    pos = nx.get_node_attributes(graph, "pos")
+    edge_labels = {}
+    alignment = []
+    # adding edges
+    for start, end, number_of_trips in trips:
+        if number_of_trips > 0:
+            graph.add_edge(start, end, color=BLACK, width=2)
+            alignment.append(choose_label_alignment(start, end, pos))
+            edge_labels[(start, end)] = edge_label(start, end, pos, number_of_trips)
+
+    return edge_labels, alignment
+
+
 def alt_draw_networkx_edge_labels(
     G,
-    pos,
     edge_labels=None,
     label_pos=0.5,
     font_size=10,
@@ -65,6 +204,7 @@ def alt_draw_networkx_edge_labels(
     rotate=True,
     **kwds,
 ):
+    pos = nx.get_node_attributes(G, "pos")
     if ax is None:
         ax = plt.gca()
     if edge_labels is None:
@@ -132,23 +272,3 @@ def alt_draw_networkx_edge_labels(
         text_items[(n1, n2)] = t
 
     return text_items
-
-
-def choose_label_alignment(start: int, end: int, pos: dict):
-    start_pos = pos[start]
-    end_pos = pos[end]
-
-    if start_pos[0] <= end_pos[0]:
-        return "top"
-    else:
-        return "bottom"
-
-
-def edge_label(start: int, end: int, pos: dict, number_of_trip: int):
-    start_pos = pos[start]
-    end_pos = pos[end]
-
-    if start_pos[0] <= end_pos[0]:
-        return f"{start} --> {end}: {number_of_trip}"
-    else:
-        return f"{number_of_trip} : {end} <-- {start}"

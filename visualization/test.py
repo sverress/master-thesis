@@ -8,7 +8,7 @@ from visualization.visualizer import *
 if __name__ == "__main__":
     state = get_initial_state(sample_size=100, number_of_clusters=10)
     print("\n ------------ Before system simulation ------------ \n")
-    visualize_state(state)
+    state.visualize()
     for i, cluster in enumerate(state.clusters):
         print(cluster)
 

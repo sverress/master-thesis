@@ -3,8 +3,11 @@ from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
 from classes.Action import Action
 from system_simulation.scripts import system_simulate
+from visualization.visualizer import visualize_state
 from math import sqrt, pi, sin, cos, atan2
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
+
 
 from globals import GEOSPATIAL_BOUND_NEW
 
@@ -52,8 +55,11 @@ class State:
                 if cluster == neighbour:
                     neighbour_distance.append(0.0)
                 else:
-                    cluster_center_lat, cluster_center_lon = cluster.center
-                    neighbour_center_lat, neighbour_center_lon = neighbour.center
+                    cluster_center_lat, cluster_center_lon = cluster.get_location()
+                    (
+                        neighbour_center_lat,
+                        neighbour_center_lon,
+                    ) = neighbour.get_location()
                     neighbour_distance.append(
                         State.haversine(
                             cluster_center_lat,
@@ -221,7 +227,7 @@ class State:
                 alpha=0.3,
                 s=3,
             )
-            center_lat, center_lon = cluster.center
+            center_lat, center_lon = cluster.get_location()
             rs_scatter = ax.scatter(
                 center_lon,
                 center_lat,
@@ -266,3 +272,6 @@ class State:
 
     def system_simulate(self):
         system_simulate(self)
+
+    def visualize(self):
+        visualize_state(self)
