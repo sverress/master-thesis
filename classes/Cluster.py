@@ -1,5 +1,7 @@
 from shapely.geometry import MultiPoint
-from classes.Scooter import Scooter
+from classes import Scooter, Location
+from globals import CLUSTER_CENTER_DELTA
+import numpy as np
 
 
 class Cluster:
@@ -9,7 +11,7 @@ class Cluster:
         self.scooters = scooters
         self.ideal_state = 2
         self.trip_intensity_per_iteration = 10
-        self.center = self.__compute_center()
+        self.location = self.__compute_center()
 
     def get_current_state(self):
         return sum(map(lambda scooter: scooter.battery, self.scooters))
@@ -36,13 +38,19 @@ class Cluster:
         cluster_centroid = MultiPoint(
             list(map(lambda scooter: (scooter.lat, scooter.lon), self.scooters))
         ).centroid
-        return cluster_centroid.x, cluster_centroid.y
+        return Location(cluster_centroid.x, cluster_centroid.y)
 
     def add_scooter(self, scooter: Scooter):
+        # Adding scooter to scooter list
         self.scooters.append(scooter)
+        # Changing coordinates of scooter to this location + some delta
+        delta = np.random.uniform(-CLUSTER_CENTER_DELTA, CLUSTER_CENTER_DELTA)
+        scooter.change_coordinates(
+            self.location.get_lat() + delta, self.location.get_lon() + delta
+        )
 
     def remove_scooter(self, scooter: Scooter):
-        if self.scooters.contains(scooter):
+        if scooter in self.scooters:
             self.scooters.remove(scooter)
         else:
             raise ValueError(
