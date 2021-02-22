@@ -5,7 +5,7 @@ from classes.Vehicle import Vehicle
 from math import sqrt, pi, sin, cos, atan2
 import matplotlib.pyplot as plt
 
-from globals import GEOSPATIAL_BOUND, GEOSPATIAL_BOUND_NEW
+from globals import GEOSPATIAL_BOUND_NEW
 
 
 class State:
@@ -14,6 +14,17 @@ class State:
         self.current = current
         self.vehicle = vehicle
         self.distance_matrix = self.calculate_distance_matrix()
+
+    def get_cluster_by_lat_lon(self, lat: float, lon: float):
+        """
+        :param lat: lat location of scooter
+        :param lon:
+        :return:
+        """
+        return max(
+            self.clusters,
+            key=lambda cluster: State.haversine(lat, lon, *cluster.center),
+        )
 
     def get_scooters(self):
         all_scooters = []

@@ -11,3 +11,6 @@ class Scooter:
 
     def swap_battery(self):
         self.battery = 100.0
+
+    def __repr__(self):
+        return f"{self.id}: battery: {self.battery}"

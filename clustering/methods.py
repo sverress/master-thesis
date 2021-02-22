@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 
-from classes import Cluster, Scooter
+from classes import State, Scooter, Cluster
 from globals import GEOSPATIAL_BOUND_NEW
 
 
@@ -20,7 +20,7 @@ def read_bounded_csv_file(
     :return: dataframe with scooter data
     """
     # Get EnTur data from csv file
-    raw_data = pd.read_csv(file_path, sep=separator).set_index("id")
+    raw_data = pd.read_csv(file_path, sep=separator)
     # Hardcoded boundary on data
     lat_min, lat_max, lon_min, lon_max = boundary
     # Filter out data not within boundary
@@ -59,33 +59,66 @@ def cluster_data(data: pd.DataFrame, number_of_clusters: int) -> [int]:
 
 
 def scooter_movement_analysis(
-    scooter_data: pd.DataFrame, cluster_labels: list
+    state: State, scooter_data: pd.DataFrame, cluster_labels: list
 ) -> np.ndarray:
     """
     Based on the clusters created, based on the scooter_data i.e. cluster_labels, a matrix corresponding to the
     probability that a scooter will move between two clusters.
     E.g. probability_matrix[3][5] - will return the probability for a scooter of moving from cluster 3 to 5
     probability_matrix[3][3] - will return the probability of a scooter staying in cluster 3
+    :param state: list of generated clusters
     :param scooter_data: geospatial data for scooters
     :param cluster_labels: list of labels for scooter data
     :return: probability matrix
     """
-    number_of_clusters = len(np.unique(cluster_labels))
+    # Adding cluster labels to scooter data
+    scooter_data["cluster_id"] = cluster_labels
+    # Fetching snapshot 20 minutes after original snapshot
     delayed_data = read_bounded_csv_file(
         "test_data/0920-entur-snapshot.csv", GEOSPATIAL_BOUND_NEW, separator=","
     )
+    # Join tables on scooter id
+    merged_tables = pd.merge(
+        left=scooter_data, right=delayed_data, left_on="id", right_on="id", how="inner"
+    )
+    # Filtering out scooters that has moved during the 20 minutes
+    moved_scooters = merged_tables[
+        merged_tables["battery_x"] != merged_tables["battery_y"]
+    ]
+    # Initialize probability_matrix with number of scooters in each cluster
+    number_of_clusters = len(np.unique(cluster_labels))
+    probability_matrix = np.array(
+        [[cluster.number_of_scooters() for cluster in state.clusters]]
+        * number_of_clusters,
+        dtype="float32",
+    )
+    # Create counter for every combination of cluster
+    move_count = np.zeros((number_of_clusters, number_of_clusters), dtype="int32")
+    for index, row in moved_scooters.iterrows():
+        # Find the nearest cluster the scooter now belongs to
+        new_cluster = state.get_cluster_by_lat_lon(row["lat_y"], row["lon_y"])
+        # Increase the counter for every visit
+        move_count[row["cluster_id"]][new_cluster.id] += 1
 
-    return np.random.rand(number_of_clusters, number_of_clusters)
+    # Calculate number of scooter who stayed in each zone
+    for cluster_id in cluster_labels:
+        # Calculation: # of scooters in cluster from beginning - # of scooters leaving cluster
+        move_count[cluster_id][cluster_id] = probability_matrix[cluster_id][
+            cluster_id
+        ] - sum(move_count[cluster_id][np.arange(number_of_clusters) != cluster_id])
+        # np.arange(number_of_clusters) != cluster_id => all indices except cluster_id
+    probability_matrix = move_count / probability_matrix
+    return probability_matrix
 
 
 def generate_cluster_objects(
-    scooter_data: pd.DataFrame, cluster_labels: list, probability_matrix: np.ndarray
+    scooter_data: pd.DataFrame, cluster_labels: list
 ) -> [Cluster]:
     """
     Based on cluster labels and scooter data create Scooter and Cluster objects.
+    Cluster class generates cluster center
     :param scooter_data: geospatial data for scooters
     :param cluster_labels: list of labels for scooter data
-    :param probability_matrix: see scooter_movement_analysis function for explanation
     :return: list of clusters
     """
     # Generate series of scooters belonging to each cluster
@@ -98,7 +131,5 @@ def generate_cluster_objects(
             Scooter(row["lat"], row["lon"], row["battery"], index)
             for index, row in cluster_scooters.iterrows()
         ]
-        clusters.append(
-            Cluster(cluster_label, scooters, probability_matrix[cluster_label])
-        )
+        clusters.append(Cluster(cluster_label, scooters))
     return clusters

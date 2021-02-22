@@ -5,24 +5,35 @@ from classes.Scooter import Scooter
 
 
 class Cluster:
-    def __init__(
-        self, cluster_id: int, scooters: [Scooter], movement_probabilities: np.ndarray,
-    ):
+    def __init__(self, cluster_id: int, scooters: [Scooter]):
         self.id = cluster_id
         self.scooters = scooters
         self.ideal_state = 2
         self.trip_intensity_per_iteration = 2
         self.center = self.__compute_center()
-        self.move_probabilities = movement_probabilities
+        self.move_probabilities = None
 
     def get_current_state(self) -> float:
         return sum(map(lambda scooter: scooter.battery, self.scooters))
 
     def prob_stay(self):
-        return self.move_probabilities[self.id]
+        if self.move_probabilities:
+            return self.move_probabilities[self.id]
+        else:
+            raise ValueError(
+                "Move probabilities matrix not initialized. Please set in set_move_probabilities_function"
+            )
 
     def prob_leave(self, cluster):
-        return self.move_probabilities[cluster.id]
+        if self.move_probabilities:
+            return self.move_probabilities[cluster.id]
+        else:
+            raise ValueError(
+                "Move probabilities matrix not initialized. Please set in set_move_probabilities_function"
+            )
+
+    def set_move_probabilities(self, move_probabilities: np.ndarray):
+        self.move_probabilities = move_probabilities
 
     def number_of_possible_pickups(self):
         if self.number_of_scooters() > self.ideal_state:
