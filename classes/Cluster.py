@@ -1,5 +1,6 @@
 from shapely.geometry import MultiPoint
-from classes import Scooter, Location
+from classes import Scooter
+from classes.Location import Location
 from globals import CLUSTER_CENTER_DELTA
 import numpy as np
 
@@ -36,7 +37,15 @@ class Cluster:
 
     def __compute_center(self):
         cluster_centroid = MultiPoint(
-            list(map(lambda scooter: (scooter.lat, scooter.lon), self.scooters))
+            list(
+                map(
+                    lambda scooter: (
+                        scooter.location.get_lat(),
+                        scooter.location.get_lon(),
+                    ),
+                    self.scooters,
+                )
+            )
         ).centroid
         return Location(cluster_centroid.x, cluster_centroid.y)
 

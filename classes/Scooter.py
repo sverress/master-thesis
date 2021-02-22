@@ -1,4 +1,4 @@
-from classes import Location
+from classes.Location import Location
 
 
 class Scooter:
