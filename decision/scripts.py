@@ -24,7 +24,7 @@ def run(duration):
         best_action = None
 
         # Find all possible actions
-        actions = state.get_possible_actions()
+        actions = state.get_possible_actions(number_of_neighbours=3)
 
         # For every possible action
         for action in actions:

@@ -60,7 +60,7 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
-    def get_possible_actions(self):
+    def get_possible_actions(self, number_of_neighbours=1):
         """
         Need to figure out what actions we want to look at. The combination of pick-ups, battery swaps,
         drop-offs and next cluster is too large to try them all.
@@ -95,8 +95,8 @@ class State:
             # Next cluster cant be same as current
             if cluster == self.current_cluster:
                 continue
-            for pick_up in range(pick_ups + 1):
-                for swap in range(swaps + 1):
+            for swap in range(swaps + 1):
+                for pick_up in range(pick_ups + 1):
                     for drop_off in range(drop_offs + 1):
                         if (pick_up + swap) <= self.vehicle.battery_inventory and (
                             pick_up + swap
