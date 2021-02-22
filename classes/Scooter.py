@@ -1,7 +1,9 @@
+from classes import Location
+
+
 class Scooter:
     def __init__(self, lat: float, lon: float, battery: float, id: int):
-        self.lat = lat
-        self.lon = lon
+        self.location = Location(lat, lon)
         self.battery = battery
         self.id = id
         self.battery_change_per_kilometer = 5.0
@@ -13,8 +15,7 @@ class Scooter:
         self.battery = 100.0
 
     def change_coordinates(self, lat: float, lon: float):
-        self.lat = lat
-        self.lon = lon
+        self.location.set_location(lat, lon)
 
     def __repr__(self):
         return f"ID: {self.id} B: {self.battery}"

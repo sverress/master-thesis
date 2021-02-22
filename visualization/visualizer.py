@@ -1,4 +1,5 @@
-from classes import State
+from classes import State, Action, Scooter
+from clustering.scripts import *
 from matplotlib import gridspec
 from visualization.helpers import *
 import matplotlib.pyplot as plt
@@ -86,5 +87,48 @@ def visualize_state(state: State, trips=None):
     plt.show()
 
 
-def visualize_simulation(state: State, trips: [(int, int, int)]):
+def visualize_cluster_flow(state: State, trips: [(int, int, int)]):
     visualize_state(state, trips)
+
+
+def visualize_simulation(current_state: State, next_state: State, action: Action):
+    # generate plot and subplots
+    fig = plt.figure(figsize=(20, 9.7))
+    fig.tight_layout(pad=1.0)
+
+    # creating subplots
+    spec = gridspec.GridSpec(
+        ncols=3, nrows=1, width_ratios=[1, 8, 8], wspace=0, hspace=0
+    )
+    ax1 = fig.add_subplot(spec[0])
+    ax1.set_title(f"Action")
+    ax1.axis("off")
+    ax2 = fig.add_subplot(spec[1])
+    ax2.set_title(f"Current State")
+    ax2.axis("off")
+    ax3 = fig.add_subplot(spec[2])
+    ax3.set_title(f"Next State")
+    ax3.axis("off")
+
+    plot_vehicle_info(current_state.vehicle, next_state.vehicle, ax1)
+
+    plt.show()
+
+
+def plot_vehicle_info(current_vehicle, next_vehicle, ax):
+    # vehicle info box
+    current_vehicle_info = f"Current Vehicle:\n B_I:{current_vehicle.battery_inventory}"
+
+    props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
+
+    # place a text box in upper left in axes coords
+    ax.text(
+        0,
+        0.9,
+        current_vehicle_info,
+        transform=ax.transAxes,
+        fontsize=10,
+        horizontalalignment="left",
+        verticalalignment="top",
+        bbox=props,
+    )

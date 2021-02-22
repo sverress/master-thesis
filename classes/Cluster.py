@@ -1,5 +1,5 @@
 from shapely.geometry import MultiPoint
-from classes.Scooter import Scooter
+from classes import Scooter, Location
 
 
 class Cluster:
@@ -36,7 +36,7 @@ class Cluster:
         cluster_centroid = MultiPoint(
             list(map(lambda scooter: (scooter.lat, scooter.lon), self.scooters))
         ).centroid
-        return cluster_centroid.x, cluster_centroid.y
+        return Location(cluster_centroid.x, cluster_centroid.y)
 
     def add_scooter(self, scooter: Scooter):
         self.scooters.append(scooter)

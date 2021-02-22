@@ -15,6 +15,6 @@ if __name__ == "__main__":
     trips = system_simulate(state)
 
     print("\n ------------ After system simulation ------------ \n")
-    visualize_simulation(state, trips)
+    visualize_cluster_flow(state, trips)
     for cluster in state.clusters:
         print(cluster)
