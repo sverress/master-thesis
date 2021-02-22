@@ -1,6 +1,8 @@
 from shapely.geometry import MultiPoint
 from classes import Scooter
 from classes.Location import Location
+from globals import CLUSTER_CENTER_DELTA
+import numpy as np
 
 
 class Cluster(Location):
@@ -39,10 +41,15 @@ class Cluster(Location):
         return cluster_centroid.x, cluster_centroid.y
 
     def add_scooter(self, scooter: Scooter):
+        # Adding scooter to scooter list
         self.scooters.append(scooter)
+        # Changing coordinates of scooter to this location + some delta
+        delta_lat = np.random.uniform(-CLUSTER_CENTER_DELTA, CLUSTER_CENTER_DELTA)
+        delta_lon = np.random.uniform(-CLUSTER_CENTER_DELTA, CLUSTER_CENTER_DELTA)
+        scooter.set_coordinates(self.get_lat() + delta_lat, self.get_lon() + delta_lon)
 
     def remove_scooter(self, scooter: Scooter):
-        if self.scooters.contains(scooter):
+        if scooter in self.scooters:
             self.scooters.remove(scooter)
         else:
             raise ValueError(

@@ -55,7 +55,7 @@ def visualize_cluster_flow(state: State, trips: [(int, int, int)]):
 
 
 def visualize_scooter_simulation(
-    current_state: State, next_state: State, action: Action
+    current_state: State, next_state: State, action: Action, trips,
 ):
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
@@ -100,8 +100,8 @@ def visualize_scooter_simulation(
         [scooter.get_location() for scooter in all_current_scooters]
     )
 
-    node_size = 300
-    font_size = 10
+    node_size = 100
+    font_size = 8
 
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax2)
 

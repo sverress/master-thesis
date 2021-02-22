@@ -14,7 +14,7 @@ class Scooter(Location):
     def swap_battery(self):
         self.battery = 100.0
 
-    def change_coordinates(self, lat: float, lon: float):
+    def set_coordinates(self, lat: float, lon: float):
         self.set_location(lat, lon)
 
     def __repr__(self):
