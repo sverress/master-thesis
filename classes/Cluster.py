@@ -42,7 +42,7 @@ class Cluster:
         self.scooters.append(scooter)
 
     def remove_scooter(self, scooter: Scooter):
-        if self.scooters.contains(scooter):
+        if scooter in self.scooters:
             self.scooters.remove(scooter)
         else:
             raise ValueError(

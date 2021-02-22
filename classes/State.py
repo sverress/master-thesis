@@ -138,7 +138,7 @@ class State:
 
             # Remove scooter from current cluster
             scooter_in_cluster = self.current_cluster.remove_scooter(pick_up_scooter)
-            scooter_in_cluster.change_battery(None, None)
+            # scooter_in_cluster.change_coordinates(None, None)
 
         # Perform all battery swaps
         for battery_swap_scooter in action.battery_swaps:
