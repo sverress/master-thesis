@@ -268,7 +268,7 @@ class State:
         return [self.clusters[i] for i in neighbour_indices]
 
     def system_simulate(self):
-        system_simulate(self)
+        return system_simulate(self)
 
     def visualize(self):
         visualize_state(self)

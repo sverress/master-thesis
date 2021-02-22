@@ -1,6 +1,5 @@
 from matplotlib import gridspec
-from globals import BLACK, GEOSPATIAL_BOUND_NEW
-from itertools import cycle
+from globals import BLACK, GEOSPATIAL_BOUND_NEW, COLORS
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,7 +32,7 @@ def display_graph(graph, node_color, node_border, node_size, labels, font_size, 
         pos,
         labels,
         font_size=font_size,
-        font_color="white",
+        font_color="black",
         font_weight="bold",
         ax=ax,
     )
@@ -64,7 +63,7 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
     # place a text box in upper left in axes coords
     ax.text(
         0,
-        0.9,
+        0.98,
         current_vehicle_info,
         transform=ax.transAxes,
         fontsize=10,
@@ -75,7 +74,7 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
 
     ax.text(
         0,
-        0.8,
+        0.88,
         next_vehicle_info,
         transform=ax.transAxes,
         fontsize=10,
@@ -85,10 +84,40 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
     )
 
 
-def make_graph(coordinates: [(float, float)]):
-    cartesian_clusters = convert_geographic_to_cart(coordinates, GEOSPATIAL_BOUND_NEW)
+def plot_action(action, ax):
+    props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
 
-    colors = cycle("bgrcmyk")
+    action_string = "Swaps:\n"
+
+    for swap in action.battery_swaps:
+        action_string += f"{swap}\n"
+
+    action_string += "\nPickups:\n"
+
+    for pick_up in action.pick_ups:
+        action_string += f"{pick_up}\n"
+
+    action_string += "\nDelivery:\n"
+
+    for delivery in action.delivery_scooters:
+        action_string += f"{delivery}\n"
+
+    action_string += f"\nNext cluster: {action.next_cluster.id}"
+
+    ax.text(
+        0,
+        0.78,
+        action_string,
+        transform=ax.transAxes,
+        fontsize=10,
+        horizontalalignment="left",
+        verticalalignment="top",
+        bbox=props,
+    )
+
+
+def make_graph(coordinates: [(float, float)], cluster_ids: [int]):
+    cartesian_clusters = convert_geographic_to_cart(coordinates, GEOSPATIAL_BOUND_NEW)
 
     # make graph object
     graph = nx.DiGraph()
@@ -99,10 +128,9 @@ def make_graph(coordinates: [(float, float)]):
     node_color = []
     node_border = []
     for i, cartesian_cluster_coordinates in enumerate(cartesian_clusters):
-        cluster_color = next(colors)
         label = i
         labels[i] = label
-        node_color.append(cluster_color)
+        node_color.append(COLORS[cluster_ids[i]])
         node_border.append(BLACK)
         graph.nodes[i]["pos"] = cartesian_cluster_coordinates
 
@@ -176,12 +204,12 @@ def add_cluster_info(state, graph, ax):
         )
 
 
-def add_edges(graph, trips):
+def add_flow_edges(graph, flows):
     pos = nx.get_node_attributes(graph, "pos")
     edge_labels = {}
     alignment = []
     # adding edges
-    for start, end, number_of_trips in trips:
+    for start, end, number_of_trips in flows:
         if number_of_trips > 0:
             graph.add_edge(start, end, color=BLACK, width=2)
             alignment.append(choose_label_alignment(start, end, pos))

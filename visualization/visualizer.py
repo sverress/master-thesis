@@ -1,8 +1,10 @@
 from classes import State, Action, Scooter
 from clustering.scripts import *
 from visualization.helpers import *
+from globals import *
 import matplotlib.pyplot as plt
 import itertools
+import copy
 
 
 def visualize_state(state: State, ax=None):
@@ -11,7 +13,8 @@ def visualize_state(state: State, ax=None):
 
     # constructs the networkx graph
     graph, labels, node_border, node_color = make_graph(
-        [(cluster.get_location()) for cluster in state.clusters]
+        [(cluster.get_location()) for cluster in state.clusters],
+        [cluster.id for cluster in state.clusters],
     )
 
     add_cluster_info(state, graph, ax)
@@ -25,17 +28,18 @@ def visualize_state(state: State, ax=None):
     plt.show()
 
 
-def visualize_cluster_flow(state: State, trips: [(int, int, int)]):
+def visualize_cluster_flow(state: State, flows: [(int, int, int)]):
     fig, ax = create_standard_state_plot()
 
     # constructs the networkx graph
     graph, labels, node_border, node_color = make_graph(
-        [(cluster.get_location()) for cluster in state.clusters]
+        [(cluster.get_location()) for cluster in state.clusters],
+        [cluster.id for cluster in state.clusters],
     )
 
     add_cluster_info(state, graph, ax)
 
-    edge_labels, alignment = add_edges(graph, trips)
+    edge_labels, alignment = add_flow_edges(graph, flows)
 
     node_size = 1000
     font_size = 14
@@ -89,6 +93,7 @@ def visualize_scooter_simulation(
     ax3.axis("off")
 
     plot_vehicle_info(current_state.vehicle, next_state.vehicle, ax1)
+    plot_action(action, ax1)
 
     all_current_scooters = list(
         itertools.chain.from_iterable(
@@ -96,8 +101,16 @@ def visualize_scooter_simulation(
         )
     )
 
+    all_current_scooters_id = [scooter.id for scooter in all_current_scooters]
+    all_current_cluster_ids = list(
+        itertools.chain.from_iterable(
+            [cluster.id] * len(cluster.scooters) for cluster in current_state.clusters
+        )
+    )
+
     graph, labels, node_border, node_color = make_graph(
-        [scooter.get_location() for scooter in all_current_scooters]
+        [scooter.get_location() for scooter in all_current_scooters],
+        all_current_cluster_ids,
     )
 
     node_size = 100
@@ -105,24 +118,31 @@ def visualize_scooter_simulation(
 
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax2)
 
-    all_next_scooters = list(
-        itertools.chain.from_iterable(
-            map(lambda cluster: cluster.scooters, next_state.clusters)
-        )
+    next_graph = copy.deepcopy(graph)
+
+    cartesian_coordinates = convert_geographic_to_cart(
+        [scooter.get_location() for star, end, scooter in trips], GEOSPATIAL_BOUND_NEW
     )
 
-    next_graph, next_labels, next_node_border, next_node_color = make_graph(
-        [scooter.get_location() for scooter in all_next_scooters]
-    )
+    number_of_current_scooters = len(all_current_scooters)
+
+    for i, trip in enumerate(trips):
+        start, end, scooter = trip
+        previous_label = all_current_scooters_id.index(scooter.id)
+        next_graph.add_node(number_of_current_scooters + i)
+        labels[number_of_current_scooters + i] = previous_label
+        node_color.append(COLORS[end.id])
+        node_color[previous_label] = "black"
+        node_border.append(BLACK)
+        next_graph.nodes[number_of_current_scooters + i]["pos"] = cartesian_coordinates[
+            i
+        ]
+        next_graph.add_edge(
+            previous_label, number_of_current_scooters + i, color=BLACK, width=1
+        )
 
     display_graph(
-        next_graph,
-        next_node_color,
-        next_node_border,
-        node_size,
-        next_labels,
-        font_size,
-        ax3,
+        next_graph, node_color, node_border, node_size, labels, font_size, ax3,
     )
 
     plt.tight_layout(pad=1.0)
