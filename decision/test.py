@@ -23,6 +23,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         for scooter in self.initial_state.current_cluster.scooters:
             scooter.battery = 80.0
+        start_battery_percentage = current_cluster.get_current_state()
 
         # Calculate the expected reward
         reward = len(actions[-1].battery_swaps) * 0.2
@@ -35,7 +36,8 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test battery percentage
         self.assertEqual(
-            current_cluster.get_current_state(), len(current_cluster.scooters) * 100.0
+            current_cluster.get_current_state(),
+            start_battery_percentage + len(actions[-1].battery_swaps) * 20.0,
         )
 
     def test_pick_ups(self):
@@ -48,6 +50,7 @@ class BasicDecisionTests(unittest.TestCase):
         ]
         self.initial_state.current_cluster.ideal_state = 3
         start_number_of_scooters = len(self.initial_state.current_cluster.scooters)
+        current_cluster = self.initial_state.current_cluster
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions()
@@ -58,6 +61,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Set all battery to 20% to calculate expected reward
         for scooter in self.initial_state.current_cluster.scooters:
             scooter.battery = 20.0
+        start_battery_percentage = current_cluster.get_current_state()
 
         # Calculate the expected reward
         reward = len(actions[-1].battery_swaps) * 0.8 - len(actions[-1].pick_ups) * 0.2
@@ -65,6 +69,20 @@ class BasicDecisionTests(unittest.TestCase):
         # Test reward
         self.assertEqual(
             round(self.initial_state.do_action(actions[-1]), 1), round(reward, 1)
+        )
+
+        # Test number of scooters
+        self.assertEqual(
+            len(current_cluster.scooters),
+            start_number_of_scooters - len(actions[-1].pick_ups),
+        )
+
+        # Test battery percentage
+        self.assertEqual(
+            current_cluster.get_current_state(),
+            start_battery_percentage
+            + len(actions[-1].battery_swaps) * 80.0
+            - len(actions[-1].pick_ups) * 20.0,
         )
 
     def test_deliveries(self):
@@ -77,6 +95,8 @@ class BasicDecisionTests(unittest.TestCase):
             :5
         ]
         self.initial_state.current_cluster.ideal_state = 7
+        start_number_of_scooters = len(self.initial_state.current_cluster.scooters)
+        current_cluster = self.initial_state.current_cluster
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions()
@@ -87,6 +107,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Set all battery to 80% to calculate expected reward
         for scooter in self.initial_state.current_cluster.scooters:
             scooter.battery = 80.0
+        start_battery_percentage = current_cluster.get_current_state()
 
         # Calculate the expected reward
         reward = (
@@ -96,6 +117,23 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(self.initial_state.do_action(actions[-1]), round(reward, 1))
+
+        # Test number of scooters
+        self.assertEqual(
+            len(current_cluster.scooters),
+            start_number_of_scooters + len(actions[-1].delivery_scooters),
+        )
+
+        # Test battery percentage
+        delivery_scootery_battery = sum(
+            map(lambda scooter: scooter.battery, actions[-1].delivery_scooters)
+        )
+        self.assertEqual(
+            current_cluster.get_current_state(),
+            start_battery_percentage
+            + len(actions[-1].battery_swaps) * 20.0
+            + delivery_scootery_battery,
+        )
 
     def test_number_of_actions_clusters(self):
         self.initial_state = get_initial_state(sample_size=100, number_of_clusters=6)
