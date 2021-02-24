@@ -14,17 +14,27 @@ class Cluster(Location):
         super().__init__(*self.__compute_center())
         self.move_probabilities = None
 
+    class Decorators:
+        @classmethod
+        def check_move_probabilities(cls, func):
+            def return_function(self, *args, **kwargs):
+                if self.move_probabilities is not None:
+                    return func(self, *args, **kwargs)
+                else:
+                    raise ValueError(
+                        "Move probabilities matrix not initialized. Please set in set_move_probabilities_function"
+                    )
+
+            return return_function
+
     def get_current_state(self) -> float:
         return sum(map(lambda scooter: scooter.battery, self.scooters))
 
+    @Decorators.check_move_probabilities
     def prob_stay(self):
-        if self.move_probabilities:
-            return self.move_probabilities[self.id]
-        else:
-            raise ValueError(
-                "Move probabilities matrix not initialized. Please set in set_move_probabilities_function"
-            )
+        return self.move_probabilities[self.id]
 
+    @Decorators.check_move_probabilities
     def get_leave_distribution(self):
         # Copy list
         distribution = self.move_probabilities.copy()
@@ -33,13 +43,9 @@ class Cluster(Location):
         # Normalize leave distribution
         return distribution / np.sum(distribution)
 
+    @Decorators.check_move_probabilities
     def prob_leave(self, cluster):
-        if self.move_probabilities is not None:
-            return self.move_probabilities[cluster.id]
-        else:
-            raise ValueError(
-                "Move probabilities matrix not initialized. Please set in set_move_probabilities_function"
-            )
+        return self.move_probabilities[cluster.id]
 
     def set_move_probabilities(self, move_probabilities: np.ndarray):
         self.move_probabilities = move_probabilities
@@ -80,28 +86,14 @@ class Cluster(Location):
         if len(matches) == 1:
             return matches[0]
         elif len(matches) > 1:
-            ValueError(
-                f"There are more than one scooter ({len(matches)} scooters) matching on id {scooter.id} in this cluster"
-            )
-        else:
-            ValueError(f"No scooters with id={scooter.id} where found")
-
-    def remove_scooter(self, scooter: Scooter):
-        new_scooter = None
-        matches = [
-            cluster_scooter
-            for cluster_scooter in self.scooters
-            if scooter.id == cluster_scooter.id
-        ]
-        if len(matches) == 1:
-            new_scooter = matches[0]
-        elif len(matches) > 1:
             raise ValueError(
                 f"There are more than one scooter ({len(matches)} scooters) matching on id {scooter.id} in this cluster"
             )
         else:
             raise ValueError(f"No scooters with id={scooter.id} where found")
-        self.scooters.remove(new_scooter)
+
+    def remove_scooter(self, scooter: Scooter):
+        self.scooters.remove(self.get_scooter_by_id(scooter))
 
     def get_valid_scooters(self, battery_limit: float):
         return [

@@ -23,7 +23,7 @@ class State:
         :param lon:
         :return:
         """
-        return max(
+        return min(
             self.clusters,
             key=lambda cluster: State.haversine(lat, lon, *cluster.get_location()),
         )

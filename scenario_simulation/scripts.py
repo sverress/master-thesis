@@ -52,22 +52,21 @@ def markov_decision_process(state: State):
     trips = []
     # Generate scooter trips
     for cluster in state.clusters:
-        # for all scooters in the cluster -> perform a trip to another cluster or stay
+        # For all scooters in the cluster -> perform a trip to another cluster or stay
         for scooter in cluster.scooters:
             # Pick a random destination
             destination = np.random.choice(
                 sorted(state.clusters, key=lambda state_cluster: state_cluster.id),
-                p=cluster.move_probabilities,
+                p=cluster.get_leave_distribution(),
             )
-            if destination != 0:
-                trips.append(
-                    (
-                        state.current_cluster,
-                        destination,
-                        scooter,
-                        state.get_distance(state.current_cluster, destination),
-                    )
+            trips.append(
+                (
+                    state.current_cluster,
+                    destination,
+                    scooter,
+                    state.get_distance(state.current_cluster, destination),
                 )
+            )
 
     # perform all trips
     for start, end, scooter, distance in trips:
