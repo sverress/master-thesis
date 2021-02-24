@@ -25,7 +25,7 @@ class State:
         """
         return max(
             self.clusters,
-            key=lambda cluster: State.haversine(lat, lon, *cluster.center),
+            key=lambda cluster: State.haversine(lat, lon, *cluster.get_location()),
         )
 
     def get_scooters(self):

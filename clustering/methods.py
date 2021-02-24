@@ -95,16 +95,19 @@ def scooter_movement_analysis(
     # merge. The "~" symbol indicates "not" in pandas boolean indexing
     disappeared_scooters = scooter_data[~scooter_data["id"].isin(merged_tables["id"])]
 
-    # Initialize probability_matrix with number of scooters in each cluster
+    # Find number of clusters for dimensions of arrays
     number_of_clusters = len(np.unique(cluster_labels))
+
+    # Initialize probability_matrix with number of scooters in each cluster
     number_of_scooters = np.array(
         [[cluster.number_of_scooters() for cluster in state.clusters]]
         * number_of_clusters,
         dtype="float64",
     ).transpose()
 
-    # Create counter for every combination of cluster and count how many scooters move
+    # Create counter for every combination of cluster
     move_count = np.zeros((number_of_clusters, number_of_clusters), dtype="float64")
+    # Count how many scooters move
     for index, row in moved_scooters.iterrows():
         # Find the nearest cluster the scooter now belongs to
         new_cluster = state.get_cluster_by_lat_lon(row["lat_y"], row["lon_y"])
@@ -113,11 +116,11 @@ def scooter_movement_analysis(
 
     # Calculate number of scooters who stayed in each zone
     for cluster_id in np.unique(cluster_labels):
-        # Formula: Number of scooters from beginning - number of scooters leaving - # disappeared scooters
+        # Formula: Number of scooters from beginning - number of scooters leaving - number of disappeared scooters
         move_count[cluster_id][cluster_id] = (
             number_of_scooters[cluster_id][cluster_id]
             - sum(move_count[cluster_id][np.arange(number_of_clusters) != cluster_id])
-            # np.arange(number_of_clusters) != cluster_id => all indices except cluster_id
+            # (np.arange(number_of_clusters) != cluster_id) says "all indices except cluster_id"
             - len(
                 disappeared_scooters[disappeared_scooters["cluster_id"] == cluster_id]
             )
@@ -128,7 +131,28 @@ def scooter_movement_analysis(
     # Normalize non stay distribution - Same as distribute
     for cluster_id in np.unique(cluster_labels):
         # Calculate probability of a scooter leaving the cluster
-        break
+        prob_leave = 1 - probability_matrix[cluster_id][cluster_id]
+
+        # Extract leaving probabilities from move probabilities
+        leaving_probabilities = probability_matrix[cluster_id][
+            np.arange(number_of_clusters) != cluster_id
+        ]
+
+        # Make sure that sum of all leave probabilities equals prob leave
+        probability_matrix[cluster_id][np.arange(number_of_clusters) != cluster_id] = (
+            prob_leave * leaving_probabilities
+        ) / np.sum(leaving_probabilities)
+
+        # Check if move probabilities sum to 1
+        sum_of_probabilities = np.sum(probability_matrix[cluster_id])
+        if sum_of_probabilities != 1.0:
+            # If there is a slight difference due to computational inaccuracy add this difference to stay prob.
+            probability_matrix[cluster_id][cluster_id] += 1.0 - sum_of_probabilities
+            if np.sum(probability_matrix[cluster_id]) != 1.0:
+                ValueError(
+                    f"The sum of the move probabilities does not sum to 1."
+                    f" Sum: {np.sum(probability_matrix[cluster_id])} "
+                )
     return probability_matrix
 
 

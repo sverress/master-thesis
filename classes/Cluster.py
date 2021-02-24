@@ -1,6 +1,7 @@
 from shapely.geometry import MultiPoint
 import numpy as np
-from classes import Scooter, Location
+from classes.Scooter import Scooter
+from classes.Location import Location
 from globals import CLUSTER_CENTER_DELTA
 
 
