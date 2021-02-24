@@ -108,7 +108,9 @@ class State:
 
         combinations = []
         # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-        for cluster in self.get_neighbours(self.current_cluster, number_of_neighbours):
+        for cluster in self.get_neighbours(
+            self.current_cluster, number_of_neighbours=number_of_neighbours
+        ):
             for pick_up in range(pick_ups + 1):
                 for swap in range(swaps + 1):
                     for drop_off in range(drop_offs + 1):
@@ -261,24 +263,33 @@ class State:
             )
         plt.show()
 
-    def get_neighbours(self, cluster, number_of_neighbours: int):
-        if number_of_neighbours >= len(self.clusters):
-            raise ValueError("Requesting more neighbours then there is clusters")
-
-        cluster_index = self.clusters.index(cluster)
-
-        neighbour_indices = [
-            self.distance_matrix[cluster_index].index(distance)
-            for distance in sorted(self.distance_matrix[cluster_index])[
-                1 : number_of_neighbours + 1
-            ]
-        ]
-
-        return [self.clusters[i] for i in neighbour_indices]
+    def get_neighbours(self, cluster: Cluster, number_of_neighbours=None):
+        """
+        Get sorted list of clusters closest to input cluster
+        :param cluster: cluster to find neighbours for
+        :param number_of_neighbours: number of neighbours to return
+        :return:
+        """
+        neighbours = sorted(
+            [
+                state_cluster
+                for state_cluster in self.clusters
+                if state_cluster.id != cluster.id
+            ],
+            key=lambda state_cluster: self.distance_matrix[cluster.id][
+                state_cluster.id
+            ],
+        )
+        return neighbours[:number_of_neighbours] if number_of_neighbours else neighbours
 
     def system_simulate(self):
         system_simulate(self)
 
     def set_probability_matrix(self, probability_matrix: np.ndarray):
+        if probability_matrix.shape != (len(self.clusters), len(self.clusters)):
+            ValueError(
+                f"The shape of the probability matrix does not match the number of clusters in the class:"
+                f" {probability_matrix.shape} != {(len(self.clusters), len(self.clusters))}"
+            )
         for cluster in self.clusters:
             cluster.set_move_probabilities(probability_matrix[cluster.id])

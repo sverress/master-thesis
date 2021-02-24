@@ -48,32 +48,24 @@ def markov_decision_process(state: State):
     :param state: State - current state to perform one iteration of the markov decision process
     """
 
-    # Generate scooter moves
-    trips = (
-        []
-    )  # (start_cluster: Cluster, end_cluster: Cluster, scooter: Scooter, distance: int)
-
-    # generate all trips
+    # Initialize trips. Trip format: (start_cluster: Cluster, end_cluster: Cluster, scooter: Scooter, distance: int)
+    trips = []
+    # Generate scooter trips
     for cluster in state.clusters:
-        # collect n neighbours for the cluster (can be implemented with distance limit)
-        neighbours = state.get_neighbours(cluster, number_of_neighbours=3)
-
-        # make the markov chain out of the cluster (includes probability of staying in the cluster)
-        prob_distribution = [cluster.prob_stay()] + [
-            cluster.prob_leave(neigh) for neigh in neighbours
-        ]
-
+        # Fetch the probability distribution for moving from the clusters
+        prob_distribution = cluster.move_probabilities
         # for all scooters in the cluster -> perform a trip to another cluster or stay
         for scooter in cluster.scooters:
-            # pick a random destination or stay
+            # Pick a random destination
             destination = np.random.choice(
-                np.arange(len(prob_distribution)), p=prob_distribution
+                sorted(state.clusters, key=lambda state_cluster: state_cluster.id),
+                p=prob_distribution,
             )
             if destination != 0:
                 trips.append(
                     (
                         state.current_cluster,
-                        state.clusters[destination],
+                        destination,
                         scooter,
                         state.get_distance(
                             state.current_cluster, state.clusters[destination]

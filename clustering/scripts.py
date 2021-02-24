@@ -42,4 +42,4 @@ def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
 
 
 if __name__ == "__main__":
-    print(get_initial_state())
+    get_initial_state()
