@@ -28,7 +28,7 @@ def estimate_reward(
         while iteration_counter * length_of_iteration < remaining_shift_duration:
             iteration_counter += 1
             # all possible actions in this state
-            possible_actions = child_state.get_possible_actions()
+            possible_actions = child_state.get_possible_actions(number_of_neighbours=3)
 
             # pick a random action
             random_action = possible_actions[

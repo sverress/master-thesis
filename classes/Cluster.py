@@ -9,7 +9,7 @@ class Cluster(Location):
     def __init__(self, cluster_id: int, scooters: [Scooter]):
         self.id = cluster_id
         self.scooters = scooters
-        self.ideal_state = 2
+        self.ideal_state = 10
         self.trip_intensity_per_iteration = 10
         super().__init__(*self.__compute_center())
         self.move_probabilities = None
@@ -22,7 +22,7 @@ class Cluster(Location):
                     return func(self, *args, **kwargs)
                 else:
                     raise ValueError(
-                        "Move probabilities matrix not initialized. Please set in set_move_probabilities_function"
+                        "Move probabilities matrix not initialized. Please set in the set_move_probabilities function"
                     )
 
             return return_function
@@ -77,23 +77,8 @@ class Cluster(Location):
         delta = np.random.uniform(-CLUSTER_CENTER_DELTA, CLUSTER_CENTER_DELTA)
         scooter.set_coordinates(self.get_lat() + delta, self.get_lon() + delta)
 
-    def get_scooter_by_id(self, scooter: Scooter):
-        matches = [
-            cluster_scooter
-            for cluster_scooter in self.scooters
-            if scooter.id == cluster_scooter.id
-        ]
-        if len(matches) == 1:
-            return matches[0]
-        elif len(matches) > 1:
-            raise ValueError(
-                f"There are more than one scooter ({len(matches)} scooters) matching on id {scooter.id} in this cluster"
-            )
-        else:
-            raise ValueError(f"No scooters with id={scooter.id} where found")
-
     def remove_scooter(self, scooter: Scooter):
-        self.scooters.remove(self.get_scooter_by_id(scooter))
+        self.scooters.remove(self.get_scooter_from_id(scooter.id))
 
     def get_valid_scooters(self, battery_limit: float):
         return [
@@ -109,6 +94,21 @@ class Cluster(Location):
     def get_swappable_scooters(self):
         scooters = [scooter for scooter in self.scooters if scooter.battery < 100]
         return sorted(scooters, key=lambda scooter: scooter.battery, reverse=False)
+
+    def get_scooter_from_id(self, scooter_id):
+        matches = [
+            cluster_scooter
+            for cluster_scooter in self.scooters
+            if scooter_id == cluster_scooter.id
+        ]
+        if len(matches) == 1:
+            return matches[0]
+        elif len(matches) > 1:
+            raise ValueError(
+                f"There are more than one scooter ({len(matches)} scooters) matching on id {scooter_id} in this cluster"
+            )
+        else:
+            raise ValueError(f"No scooters with id={scooter_id} where found")
 
     def __repr__(self):
         return (
