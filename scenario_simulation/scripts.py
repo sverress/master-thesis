@@ -22,9 +22,6 @@ def estimate_reward(
     for i in range(number_of_simulations):
         iteration_counter = 0
         child_state = copy.deepcopy(state)
-        child_state.current_cluster = child_state.clusters[
-            state.clusters.index(state.current_cluster)
-        ]
         total_reward = 0
 
         # Simulate until shift ends

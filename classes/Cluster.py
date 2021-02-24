@@ -9,7 +9,7 @@ class Cluster(Location):
     def __init__(self, cluster_id: int, scooters: [Scooter]):
         self.id = cluster_id
         self.scooters = scooters
-        self.ideal_state = 2
+        self.ideal_state = 10
         self.trip_intensity_per_iteration = 10
         super().__init__(*self.__compute_center())
 
@@ -74,6 +74,13 @@ class Cluster(Location):
     def get_swappable_scooters(self):
         scooters = [scooter for scooter in self.scooters if scooter.battery < 100]
         return sorted(scooters, key=lambda scooter: scooter.battery, reverse=False)
+
+    def get_scooter_from_id(self, scooter_id):
+        if scooter_id not in map(lambda scooter: scooter.id, self.scooters):
+            raise ValueError(f"Scooter {scooter_id} is not in cluster {self.id}.")
+        return next(
+            (scooter for scooter in self.scooters if scooter.id == scooter_id), None
+        )
 
     def __repr__(self):
         return (
