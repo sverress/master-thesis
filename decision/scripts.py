@@ -66,15 +66,3 @@ def run(duration):
         system_simulate(state)
 
     return total_reward, all_actions
-
-
-# To run the program. Input to run is shift duration in minutes.
-"""
-reward, actions = run(180)
-print(f"Total reward: {reward}")
-for action in actions:
-    print(
-        f"Battery swap: {action.battery_swaps}, Pick-ups: {action.pick_ups},"
-        f" Deliveries: {action.delivery_scooters}, Next cluster: {action.next_cluster} \n"
-    )
-"""
