@@ -22,13 +22,16 @@ def estimate_reward(
     for i in range(number_of_simulations):
         iteration_counter = 0
         child_state = copy.deepcopy(state)
+        child_state.current_cluster = child_state.clusters[
+            state.clusters.index(state.current_cluster)
+        ]
         total_reward = 0
 
         # Simulate until shift ends
         while iteration_counter * length_of_iteration < remaining_shift_duration:
             iteration_counter += 1
             # all possible actions in this state
-            possible_actions = child_state.get_possible_actions()
+            possible_actions = child_state.get_possible_actions(number_of_neighbours=3)
 
             # pick a random action
             random_action = possible_actions[

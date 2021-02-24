@@ -25,11 +25,15 @@ def run(duration):
 
         # Find all possible actions
         actions = state.get_possible_actions(number_of_neighbours=3)
+        # TODO next cluster is index of next cluster, not the object itself.
 
         # For every possible action
         for action in actions:
             # Get new state of performing action
             new_state = copy.deepcopy(state)
+            new_state.current_cluster = new_state.clusters[
+                state.clusters.index(state.current_cluster)
+            ]
             reward = new_state.do_action(action)
 
             # Estimate value of making this action
@@ -61,4 +65,4 @@ def run(duration):
     return total_reward, all_actions
 
 
-# run(480)
+run(480)
