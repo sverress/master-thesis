@@ -5,7 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def display_graph(graph, node_color, node_border, node_size, labels, font_size, ax):
+def display_graph(
+    graph, node_color, node_border, node_size, labels, font_size, ax, with_labels=True
+):
+    """
+    Displaying a networkx graph
+    """
     pos = nx.get_node_attributes(graph, "pos")
 
     # set edge color for solution
@@ -23,22 +28,26 @@ def display_graph(graph, node_color, node_border, node_size, labels, font_size, 
         width=edge_weights,
         node_size=node_size,
         alpha=0.7,
-        with_labels=False,
+        with_labels=with_labels,
         ax=ax,
     )
-
-    nx.draw_networkx_labels(
-        graph,
-        pos,
-        labels,
-        font_size=font_size,
-        font_color="black",
-        font_weight="bold",
-        ax=ax,
-    )
+    if with_labels:
+        nx.draw_networkx_labels(
+            graph,
+            pos,
+            labels,
+            font_size=font_size,
+            font_color="black",
+            font_weight="bold",
+            ax=ax,
+        )
 
 
 def plot_vehicle_info(current_vehicle, next_vehicle, ax):
+    """
+    Adds vehicle information to a subplot
+    """
+
     # vehicle info box
     current_vehicle_info = (
         f"Current Vehicle:\n Cap - {current_vehicle.scooter_inventory_capacity}\n"
@@ -85,6 +94,9 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
 
 
 def plot_action(action, ax):
+    """
+    Adds action information to a subplot
+    """
     props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
 
     action_string = "Swaps:\n"
@@ -117,6 +129,10 @@ def plot_action(action, ax):
 
 
 def make_graph(coordinates: [(float, float)], cluster_ids: [int]):
+    """
+    Makes a networkx graph of a list of locations and uses cluster id to give the locations color
+    Location/coordinates can both be clusters and scooters
+    """
     cartesian_clusters = convert_geographic_to_cart(coordinates, GEOSPATIAL_BOUND_NEW)
 
     # make graph object
@@ -138,8 +154,14 @@ def make_graph(coordinates: [(float, float)], cluster_ids: [int]):
 
 
 def convert_geographic_to_cart(
-    coordinates: [(float, float)], bound: [float]
+    coordinates: [(float, float)], bound: (float, float, float, float)
 ) -> [(int, int)]:
+    """
+    Converts (lon,lat) -> ([0,1], [0,1]) give the bounds of lat/lon
+    :param coordinates: list of coordinates to be converted
+    :param bound: lat/lon bounds
+    :return: list of cartesian coordinates on the interval [0,1]
+    """
     lat_min, lat_max, lon_min, lon_max = bound
     delta_lat = lat_max - lat_min
     delta_lon = lon_max - lon_min
@@ -158,6 +180,9 @@ def convert_geographic_to_cart(
 
 
 def choose_label_alignment(start: int, end: int, pos: dict):
+    """
+    Helper method to set the alignment of label above or beyond an edge
+    """
     start_pos = pos[start]
     end_pos = pos[end]
 
@@ -168,6 +193,9 @@ def choose_label_alignment(start: int, end: int, pos: dict):
 
 
 def edge_label(start: int, end: int, pos: dict, number_of_trip: int):
+    """
+    Construct edge label depending on the direction of the edge arrow
+    """
     start_pos = pos[start]
     end_pos = pos[end]
 
@@ -178,6 +206,9 @@ def edge_label(start: int, end: int, pos: dict, number_of_trip: int):
 
 
 def create_standard_state_plot():
+    """
+    Creates standard subplot for a state with image of Oslo as background
+    """
     fig = plt.figure(figsize=(20, 9.7))
 
     # creating subplots
@@ -193,7 +224,49 @@ def create_standard_state_plot():
     return fig, ax
 
 
+def create_system_simulation_plot():
+    """
+    Subplot framework for the simulation visualization
+    """
+
+    # generate plot and subplots
+    fig = plt.figure(figsize=(20, 9.7))
+
+    oslo = plt.imread("test_data/kart_oslo.png")
+
+    # creating subplots
+    spec = gridspec.GridSpec(
+        figure=fig, ncols=3, nrows=1, width_ratios=[1, 8, 8], wspace=0, hspace=0
+    )
+    ax1 = fig.add_subplot(spec[0])
+    ax1.set_title(f"Action")
+    ax1.set_xlim([-0.01, 1.01])
+    ax1.set_ylim([-0.01, 1.01])
+    ax1.axis("off")
+    ax2 = fig.add_subplot(spec[1])
+    ax2.set_title(f"Current State")
+    ax2.set_xlim([-0.01, 1.01])
+    ax2.set_ylim([-0.01, 1.01])
+    ax2.imshow(
+        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+    )
+    ax2.axis("off")
+    ax3 = fig.add_subplot(spec[2])
+    ax3.set_title(f"Next State")
+    ax3.set_xlim([-0.01, 1.01])
+    ax3.set_ylim([-0.01, 1.01])
+    ax3.imshow(
+        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+    )
+    ax3.axis("off")
+
+    return fig, ax1, ax2, ax3
+
+
 def add_cluster_info(state, graph, ax):
+    """
+    Adds cluster info to a subplot (info i set right above the node/scatter)
+    """
     pos = nx.get_node_attributes(graph, "pos")
     # add number of scooters and battery label to nodes
     for i, cluster in enumerate(state.clusters):
@@ -205,6 +278,9 @@ def add_cluster_info(state, graph, ax):
 
 
 def add_flow_edges(graph, flows):
+    """
+    Adds edge flow to the networkx graph
+    """
     pos = nx.get_node_attributes(graph, "pos")
     edge_labels = {}
     alignment = []
@@ -219,6 +295,9 @@ def add_flow_edges(graph, flows):
 
 
 def add_scooter_id(scooters, graph, ax):
+    """
+    Adds scooter id above the node/scatter
+    """
     pos = nx.get_node_attributes(graph, "pos")
 
     for i, scooter in enumerate(scooters):
@@ -240,6 +319,9 @@ def alt_draw_networkx_edge_labels(
     rotate=True,
     **kwds,
 ):
+    """
+    New method to plot edge labels with different alignment for every edge
+    """
     pos = nx.get_node_attributes(G, "pos")
     if ax is None:
         ax = plt.gca()

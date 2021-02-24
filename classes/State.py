@@ -146,6 +146,7 @@ class State:
             self.current_cluster.remove_scooter(pick_up_scooter)
 
             # Set scooter coordinates to None
+            # TODO can be moved into the pick_up function
             pick_up_scooter.set_coordinates(None, None)
 
         # Perform all battery swaps

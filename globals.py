@@ -10,18 +10,6 @@ VEHICLE_SPEED = 30
 MINUTES_IN_HOUR = 60
 
 COLORS = [
-    "#BFC2BD",
-    "#D3B6F0",
-    "#E63612",
-    "#502CD5",
-    "#DA05C9",
-    "#8693CA",
-    "#758725",
-    "#6F4A26",
-    "#25613D",
-    "#C0C2BE",
-    "#05AFB8",
-    "#7C6A11",
     "#B52CC2",
     "#EF9A90",
     "#43C04E",
