@@ -55,6 +55,10 @@ def run(duration):
         total_reward += state.do_action(best_action)
 
         # System simulation
+        # TODO This is only to happen every 20 minutes.
         system_simulate(state)
 
     return total_reward, all_actions
+
+
+# run(480)
