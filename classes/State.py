@@ -69,13 +69,15 @@ class State:
         # Assume that no battery swap or pick-up of scooter with 100% battery and
         # that the scooters with the lowest battery are swapped and picked up
         swappable_scooters = self.current_cluster.get_swappable_scooters()
+        swappable_scooters_id = [scooter.id for scooter in swappable_scooters]
 
         # Initiate constraints for battery swap, pick-up and drop-off
         pick_ups = min(
             max(
                 len(self.current_cluster.scooters) - self.current_cluster.ideal_state, 0
             ),
-            self.vehicle.scooter_inventory_capacity,
+            self.vehicle.scooter_inventory_capacity
+            - len(self.vehicle.scooter_inventory),
         )
         swaps = min(len(self.current_cluster.scooters), self.vehicle.battery_inventory)
         drop_offs = max(
@@ -98,12 +100,18 @@ class State:
                             combinations.append([swap, pick_up, drop_off, cluster])
 
         actions = []
+        # Only need ID of scooter to drop off.
+        vehicle_inventory_id = list(
+            map(lambda scooter: scooter.id, self.vehicle.scooter_inventory)
+        )
+
+        # Adding every action. Actions are the IDs of the scooters to be handled.
         for battery_swap, pick_up, drop_off, cluster in combinations:
             actions.append(
                 Action(
-                    swappable_scooters[pick_up : battery_swap + pick_up],
-                    swappable_scooters[:pick_up],
-                    self.vehicle.scooter_inventory[:drop_off],
+                    swappable_scooters_id[pick_up : battery_swap + pick_up],
+                    swappable_scooters_id[:pick_up],
+                    vehicle_inventory_id[:drop_off],
                     cluster,
                 )
             )
@@ -120,7 +128,10 @@ class State:
         swappable_scooters = self.current_cluster.get_swappable_scooters()
 
         # Perform all pickups
-        for pick_up_scooter in action.pick_ups:
+        for pick_up_scooter_id in action.pick_ups:
+            pick_up_scooter = self.current_cluster.get_scooter_from_id(
+                pick_up_scooter_id
+            )
             swappable_scooters.remove(pick_up_scooter)
 
             reward -= pick_up_scooter.battery / 100.0
@@ -135,7 +146,10 @@ class State:
             pick_up_scooter.set_coordinates(None, None)
 
         # Perform all battery swaps
-        for battery_swap_scooter in action.battery_swaps:
+        for battery_swap_scooter_id in action.battery_swaps:
+            battery_swap_scooter = self.current_cluster.get_scooter_from_id(
+                battery_swap_scooter_id
+            )
             swappable_scooters.remove(battery_swap_scooter)
 
             # Calculate reward of doing the battery swap
@@ -145,12 +159,12 @@ class State:
             self.vehicle.change_battery(battery_swap_scooter)
 
         # Dropping of scooters
-        for delivery_scooter in action.delivery_scooters:
+        for delivery_scooter_id in action.delivery_scooters:
             # Rewarding 1 for delivery
             reward += 1.0
 
             # Removing scooter from vehicle inventory
-            self.vehicle.drop_off(delivery_scooter)
+            delivery_scooter = self.vehicle.drop_off(delivery_scooter_id)
 
             # Adding scooter to current cluster and changing coordinates of scooter
             self.current_cluster.add_scooter(delivery_scooter)
@@ -218,20 +232,24 @@ class State:
             )
         plt.show()
 
-    def get_neighbours(self, cluster, number_of_neighbours: int):
-        if number_of_neighbours >= len(self.clusters):
-            raise ValueError("Requesting more neighbours then there is clusters")
-
-        cluster_index = self.clusters.index(cluster)
-
-        neighbour_indices = [
-            self.distance_matrix[cluster_index].index(distance)
-            for distance in sorted(self.distance_matrix[cluster_index])[
-                1 : number_of_neighbours + 1
-            ]
-        ]
-
-        return [self.clusters[i] for i in neighbour_indices]
+    def get_neighbours(self, cluster: Cluster, number_of_neighbours=None):
+        """
+        Get sorted list of clusters closest to input cluster
+        :param cluster: cluster to find neighbours for
+        :param number_of_neighbours: number of neighbours to return
+        :return:
+        """
+        neighbours = sorted(
+            [
+                state_cluster
+                for state_cluster in self.clusters
+                if state_cluster.id != cluster.id
+            ],
+            key=lambda state_cluster: self.distance_matrix[cluster.id][
+                state_cluster.id
+            ],
+        )
+        return neighbours[:number_of_neighbours] if number_of_neighbours else neighbours
 
     def system_simulate(self):
         system_simulate(self)

@@ -125,8 +125,13 @@ class BasicDecisionTests(unittest.TestCase):
         )
 
         # Test battery percentage
+        delivery_scooter_objects = [
+            scooter
+            for scooter in current_cluster.scooters
+            if scooter.id in actions[-1].delivery_scooters
+        ]
         delivery_scootery_battery = sum(
-            map(lambda scooter: scooter.battery, actions[-1].delivery_scooters)
+            map(lambda scooter: scooter.battery, delivery_scooter_objects)
         )
         self.assertEqual(
             current_cluster.get_current_state(),
