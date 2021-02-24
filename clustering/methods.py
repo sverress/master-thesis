@@ -126,6 +126,7 @@ def scooter_movement_analysis(
             )
         )
 
+    # Calculate the probability matrix
     probability_matrix = move_count / number_of_scooters
 
     # Normalize non stay distribution - Same as distribute
@@ -139,9 +140,14 @@ def scooter_movement_analysis(
         ]
 
         # Make sure that sum of all leave probabilities equals prob leave
-        probability_matrix[cluster_id][np.arange(number_of_clusters) != cluster_id] = (
-            prob_leave * leaving_probabilities
-        ) / np.sum(leaving_probabilities)
+        probability_matrix[cluster_id][
+            np.arange(number_of_clusters) != cluster_id
+        ] = np.divide(
+            prob_leave * leaving_probabilities,
+            np.sum(leaving_probabilities),
+            out=np.zeros_like(leaving_probabilities),
+            where=np.sum(leaving_probabilities) != 0,
+        )
 
         # Check if move probabilities sum to 1
         sum_of_probabilities = np.sum(probability_matrix[cluster_id])

@@ -25,6 +25,14 @@ class Cluster(Location):
                 "Move probabilities matrix not initialized. Please set in set_move_probabilities_function"
             )
 
+    def get_leave_distribution(self):
+        # Copy list
+        distribution = self.move_probabilities.copy()
+        # Set stay probability to zero
+        distribution[self.id] = 0.0
+        # Normalize leave distribution
+        return distribution / np.sum(distribution)
+
     def prob_leave(self, cluster):
         if self.move_probabilities is not None:
             return self.move_probabilities[cluster.id]
@@ -63,13 +71,37 @@ class Cluster(Location):
         delta = np.random.uniform(-CLUSTER_CENTER_DELTA, CLUSTER_CENTER_DELTA)
         scooter.set_coordinates(self.get_lat() + delta, self.get_lon() + delta)
 
-    def remove_scooter(self, scooter: Scooter):
-        if scooter in self.scooters:
-            self.scooters.remove(scooter)
-        else:
-            raise ValueError(
-                "Can't remove a scooter from a cluster its not currently in"
+    def get_scooter_by_id(self, scooter: Scooter):
+        matches = [
+            cluster_scooter
+            for cluster_scooter in self.scooters
+            if scooter.id == cluster_scooter.id
+        ]
+        if len(matches) == 1:
+            return matches[0]
+        elif len(matches) > 1:
+            ValueError(
+                f"There are more than one scooter ({len(matches)} scooters) matching on id {scooter.id} in this cluster"
             )
+        else:
+            ValueError(f"No scooters with id={scooter.id} where found")
+
+    def remove_scooter(self, scooter: Scooter):
+        new_scooter = None
+        matches = [
+            cluster_scooter
+            for cluster_scooter in self.scooters
+            if scooter.id == cluster_scooter.id
+        ]
+        if len(matches) == 1:
+            new_scooter = matches[0]
+        elif len(matches) > 1:
+            raise ValueError(
+                f"There are more than one scooter ({len(matches)} scooters) matching on id {scooter.id} in this cluster"
+            )
+        else:
+            raise ValueError(f"No scooters with id={scooter.id} where found")
+        self.scooters.remove(new_scooter)
 
     def get_valid_scooters(self, battery_limit: float):
         return [

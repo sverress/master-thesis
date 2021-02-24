@@ -47,19 +47,17 @@ def markov_decision_process(state: State):
     """
     :param state: State - current state to perform one iteration of the markov decision process
     """
-
+    raise NotImplementedError("This function is not yet implemented")
     # Initialize trips. Trip format: (start_cluster: Cluster, end_cluster: Cluster, scooter: Scooter, distance: int)
     trips = []
     # Generate scooter trips
     for cluster in state.clusters:
-        # Fetch the probability distribution for moving from the clusters
-        prob_distribution = cluster.move_probabilities
         # for all scooters in the cluster -> perform a trip to another cluster or stay
         for scooter in cluster.scooters:
             # Pick a random destination
             destination = np.random.choice(
                 sorted(state.clusters, key=lambda state_cluster: state_cluster.id),
-                p=prob_distribution,
+                p=cluster.move_probabilities,
             )
             if destination != 0:
                 trips.append(
@@ -67,14 +65,12 @@ def markov_decision_process(state: State):
                         state.current_cluster,
                         destination,
                         scooter,
-                        state.get_distance(
-                            state.current_cluster, state.clusters[destination]
-                        ),
+                        state.get_distance(state.current_cluster, destination),
                     )
                 )
 
     # perform all trips
     for start, end, scooter, distance in trips:
-        start.remove(scooter)
+        start.remove_scooter(scooter)
         end.add_scooter(scooter)
         scooter.travel(distance)

@@ -7,9 +7,6 @@ class BasicScenarioSimulationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.state = get_initial_state()
 
-    def test_markov_decision_process(self):
-        markov_decision_process(self.state)
-
     def test_estimate_reward(self):
         estimate_reward(self.state, 20)
 
