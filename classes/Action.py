@@ -1,5 +1,4 @@
-from classes.Scooter import Scooter
-from classes.Cluster import Cluster
+from classes import Scooter, Cluster
 from globals import MINUTES_IN_HOUR, VEHICLE_SPEED
 
 
