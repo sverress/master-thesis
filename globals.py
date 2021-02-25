@@ -9,6 +9,9 @@ BLUE, GREEN, RED, BLACK = "blue", "green", "red", "black"
 VEHICLE_SPEED = 30
 MINUTES_IN_HOUR = 60
 
+# Testing constants
+MAX_NUMBER_OF_NEIGHBOURS = 3
+
 COLORS = [
     "#B52CC2",
     "#EF9A90",

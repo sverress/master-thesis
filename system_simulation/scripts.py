@@ -3,6 +3,7 @@ import numpy as np
 
 def system_simulate(state):
     """
+    TODO: This script is very similar to the scenario simulation script with the markov chain. Reuse logic
     Simulation of poisson process on the system ->
     Poisson distributed number of trips out of each cluster, markov chain decides where the trip goes
     :param state: current state
@@ -27,24 +28,12 @@ def system_simulate(state):
         if number_of_trips > len(valid_scooters):
             number_of_trips = len(valid_scooters)
 
-        # collect n neighbours for the cluster (can be implemented with distance limit)
-        neighbours = state.get_neighbours(start_cluster, number_of_neighbours=3)
-
-        # make the markov chain out of the cluster
-        prob_distribution = [start_cluster.prob_leave(neigh) for neigh in neighbours]
-
-        normalized_prob_distribution = np.true_divide(
-            prob_distribution, sum(prob_distribution)
-        )
-
         # loop to generate trips from the cluster
         for j in range(number_of_trips):
-            end_cluster = neighbours[
-                np.random.choice(
-                    np.arange(len(normalized_prob_distribution)),
-                    p=normalized_prob_distribution,
-                )
-            ]
+            end_cluster = np.random.choice(
+                sorted(state.clusters, key=lambda state_cluster: state_cluster.id),
+                p=start_cluster.get_leave_distribution(),
+            )
 
             trips.append((start_cluster, end_cluster, valid_scooters[j]))
             flow_counter[(start_cluster.id, end_cluster.id)] += 1

@@ -5,6 +5,7 @@ from classes.Action import Action
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import visualize_state
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 from globals import GEOSPATIAL_BOUND_NEW
@@ -16,6 +17,14 @@ class State:
         self.current_cluster = current
         self.vehicle = vehicle
         self.distance_matrix = self.calculate_distance_matrix()
+
+    def get_cluster_by_lat_lon(self, lat: float, lon: float):
+        """
+        :param lat: lat location of scooter
+        :param lon:
+        :return:
+        """
+        return min(self.clusters, key=lambda cluster: cluster.distance_to(lat, lon))
 
     def get_scooters(self):
         all_scooters = []
@@ -92,7 +101,9 @@ class State:
 
         combinations = []
         # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-        for cluster in self.get_neighbours(self.current_cluster, number_of_neighbours):
+        for cluster in self.get_neighbours(
+            self.current_cluster, number_of_neighbours=number_of_neighbours
+        ):
             for pick_up in range(pick_ups + 1):
                 for swap in range(swaps + 1):
                     for drop_off in range(drop_offs + 1):
@@ -259,3 +270,12 @@ class State:
 
     def visualize(self):
         visualize_state(self)
+
+    def set_probability_matrix(self, probability_matrix: np.ndarray):
+        if probability_matrix.shape != (len(self.clusters), len(self.clusters)):
+            ValueError(
+                f"The shape of the probability matrix does not match the number of clusters in the class:"
+                f" {probability_matrix.shape} != {(len(self.clusters), len(self.clusters))}"
+            )
+        for cluster in self.clusters:
+            cluster.set_move_probabilities(probability_matrix[cluster.id])

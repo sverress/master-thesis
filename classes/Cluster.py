@@ -1,8 +1,8 @@
 from shapely.geometry import MultiPoint
-from classes import Scooter
+import numpy as np
+from classes.Scooter import Scooter
 from classes.Location import Location
 from globals import CLUSTER_CENTER_DELTA
-import numpy as np
 
 
 class Cluster(Location):
@@ -12,18 +12,43 @@ class Cluster(Location):
         self.ideal_state = 10
         self.trip_intensity_per_iteration = 10
         super().__init__(*self.__compute_center())
+        self.move_probabilities = None
 
-    def get_current_state(self):
+    class Decorators:
+        @classmethod
+        def check_move_probabilities(cls, func):
+            def return_function(self, *args, **kwargs):
+                if self.move_probabilities is not None:
+                    return func(self, *args, **kwargs)
+                else:
+                    raise ValueError(
+                        "Move probabilities matrix not initialized. Please set in the set_move_probabilities function"
+                    )
+
+            return return_function
+
+    def get_current_state(self) -> float:
         return sum(map(lambda scooter: scooter.battery, self.scooters))
 
-    def dist(self, cluster):
-        return 5
-
+    @Decorators.check_move_probabilities
     def prob_stay(self):
-        return 0.5
+        return self.move_probabilities[self.id]
 
+    @Decorators.check_move_probabilities
+    def get_leave_distribution(self):
+        # Copy list
+        distribution = self.move_probabilities.copy()
+        # Set stay probability to zero
+        distribution[self.id] = 0.0
+        # Normalize leave distribution
+        return distribution / np.sum(distribution)
+
+    @Decorators.check_move_probabilities
     def prob_leave(self, cluster):
-        return 0.5 / 7  # 7 is number of clusters
+        return self.move_probabilities[cluster.id]
+
+    def set_move_probabilities(self, move_probabilities: np.ndarray):
+        self.move_probabilities = move_probabilities
 
     def number_of_possible_pickups(self):
         if self.number_of_scooters() <= self.ideal_state:
@@ -49,12 +74,7 @@ class Cluster(Location):
         scooter.set_coordinates(self.get_lat() + delta_lat, self.get_lon() + delta_lon)
 
     def remove_scooter(self, scooter: Scooter):
-        if scooter in self.scooters:
-            self.scooters.remove(scooter)
-        else:
-            raise ValueError(
-                "Can't remove a scooter from a cluster its not currently in"
-            )
+        self.scooters.remove(self.get_scooter_from_id(scooter.id))
 
     def get_valid_scooters(self, battery_limit: float):
         return [
@@ -75,11 +95,19 @@ class Cluster(Location):
         return sorted(scooters, key=lambda scooter: scooter.battery, reverse=False)
 
     def get_scooter_from_id(self, scooter_id):
-        if scooter_id not in map(lambda scooter: scooter.id, self.scooters):
-            raise ValueError(f"Scooter {scooter_id} is not in cluster {self.id}.")
-        return next(
-            (scooter for scooter in self.scooters if scooter.id == scooter_id), None
-        )
+        matches = [
+            cluster_scooter
+            for cluster_scooter in self.scooters
+            if scooter_id == cluster_scooter.id
+        ]
+        if len(matches) == 1:
+            return matches[0]
+        elif len(matches) > 1:
+            raise ValueError(
+                f"There are more than one scooter ({len(matches)} scooters) matching on id {scooter_id} in this cluster"
+            )
+        else:
+            raise ValueError(f"No scooters with id={scooter_id} where found")
 
     def __repr__(self):
         return (
