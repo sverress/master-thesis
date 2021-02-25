@@ -18,14 +18,18 @@ class Location:
 
     def set_location(self, lat: float, lon: float):
         lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
-        if lat < lat_min:
+        if lat is None:
+            self.lat = lat
+        elif lat < lat_min:
             self.lat = lat_min
         elif lat > lat_max:
             self.lat = lat_max
         else:
             self.lat = lat
 
-        if lon < lon_min:
+        if lon is None:
+            self.lon = lon
+        elif lon < lon_min:
             self.lon = lon_min
         elif lon > lon_max:
             self.lon = lon_max

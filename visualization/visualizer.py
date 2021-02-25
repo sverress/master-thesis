@@ -1,13 +1,12 @@
-from classes import State, Action, Scooter
-from clustering.scripts import *
+from classes import Action
 from visualization.helpers import *
 from globals import *
 import matplotlib.pyplot as plt
 import itertools
 import copy
 
-
-def visualize_state(state: State, ax=None):
+# TODO Fix object imports. Here Python expert Sverre can shine
+def visualize_state(state, ax=None):
     """
     Visualize the clusters of a state with battery and number of scooters in the clusters
     :param state: State object to be visualized
@@ -38,7 +37,7 @@ def visualize_state(state: State, ax=None):
     plt.show()
 
 
-def visualize_cluster_flow(state: State, flows: [(int, int, int)], ax=None):
+def visualize_cluster_flow(state, flows: [(int, int, int)], ax=None):
     """
     Visualize the flow in a state from a simulation
     :param state: State to display
@@ -82,7 +81,7 @@ def visualize_cluster_flow(state: State, flows: [(int, int, int)], ax=None):
 
 
 def visualize_scooter_simulation(
-    current_state: State, next_state: State, action: Action, trips,
+    current_state, next_state, action: Action, trips,
 ):
     """
     Visualize scooter trips of one system simulation
