@@ -1,70 +1,35 @@
-from classes import Action
+from classes import Action, State
 from visualization.helpers import *
 from globals import *
 import matplotlib.pyplot as plt
 import itertools
 import copy
 
-# TODO Fix object imports. Here Python expert Sverre can shine
-def visualize_state(state, ax=None):
+
+def visualize_state(state: State, ax=None):
     """
     Visualize the clusters of a state with battery and number of scooters in the clusters
     :param state: State object to be visualized
     :param ax: Optional subplot to plot the graph on
     """
-    # Yes Sverre, we may set these to globals. This is just a check if you read my pull request
-    node_size = 1000
-    font_size = 14
-
-    # if subplot isn't specified, construct it
-    if not ax:
-        fig, ax = create_standard_state_plot()
-
-    # constructs the networkx graph from cluster location and with cluster id
-    graph, labels, node_border, node_color = make_graph(
-        [(cluster.get_location()) for cluster in state.clusters],
-        [cluster.id for cluster in state.clusters],
-    )
-
-    # adds cluster info (#scooters and tot battery) on plot
-    add_cluster_info(state, graph, ax)
-
-    # displays plot
-    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
-
+    setup_visualize(state, ax)
     # shows the plots in IDE
     plt.tight_layout(pad=1.0)
     plt.show()
 
 
-def visualize_cluster_flow(state, flows: [(int, int, int)], ax=None):
+def visualize_cluster_flow(state: State, flows: [(int, int, int)], ax=None):
     """
     Visualize the flow in a state from a simulation
     :param state: State to display
-    :param flows:
+    :param flows: TODO: explanation of flows format
+    :param ax: Optional subplot to plot the graph on
     :return:
     """
-    node_size = 1000
-    font_size = 14
-
-    # if subplot isn't specified, construct it
-    if not ax:
-        fig, ax = create_standard_state_plot()
-
-    # constructs the networkx graph from cluster location, second input is for color purpose
-    graph, labels, node_border, node_color = make_graph(
-        [(cluster.get_location()) for cluster in state.clusters],
-        [cluster.id for cluster in state.clusters],
-    )
-
-    # adds cluster info (#scooters and tot battery) on plot
-    add_cluster_info(state, graph, ax)
+    graph = setup_visualize(state, ax)
 
     # adds edges of flow between the clusters
     edge_labels, alignment = add_flow_edges(graph, flows)
-
-    # displays plot
-    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
 
     # displays edges on plot
     alt_draw_networkx_edge_labels(
@@ -81,7 +46,7 @@ def visualize_cluster_flow(state, flows: [(int, int, int)], ax=None):
 
 
 def visualize_scooter_simulation(
-    current_state, next_state, action: Action, trips,
+    current_state: State, next_state: State, action: Action, trips,
 ):
     """
     Visualize scooter trips of one system simulation

@@ -6,33 +6,39 @@ from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 from classes.Cluster import Cluster
 from classes.Scooter import Scooter
+import unittest
 
-if __name__ == "__main__":
-    # state and flow between clusters visualization
-    state = get_initial_state(sample_size=100, number_of_clusters=10)
 
-    state.visualize()
+class BasicVisualizerTests(unittest.TestCase):
+    @staticmethod
+    def test_state_and_flow_between_clusters():
+        # state and flow between clusters visualization
+        state = get_initial_state(sample_size=100, number_of_clusters=10)
 
-    flows, trips = system_simulate(state)
+        state.visualize()
 
-    visualize_cluster_flow(state, flows)
+        flows, trips = system_simulate(state)
 
-    # scooter trips visualization
+        visualize_cluster_flow(state, flows)
 
-    current_state = get_initial_state(sample_size=20, number_of_clusters=5)
+    @staticmethod
+    def test_scooter_trips():
+        # scooter trips visualization
 
-    next_state = copy.deepcopy(current_state)
+        current_state = get_initial_state(sample_size=20, number_of_clusters=5)
 
-    flows, scooter_trips = next_state.system_simulate()
+        next_state = copy.deepcopy(current_state)
 
-    visualize_scooter_simulation(
-        current_state,
-        next_state,
-        Action(
-            [Scooter(0, 0, 69.0, 1)],
-            [Scooter(0, 0, 69.0, 2)],
-            [Scooter(0, 0, 69.0, 3)],
-            Cluster(2, [Scooter(59, 10, 69.0, 1)]),
-        ),
-        scooter_trips,
-    )
+        flows, scooter_trips = next_state.system_simulate()
+
+        visualize_scooter_simulation(
+            current_state,
+            next_state,
+            Action(
+                [Scooter(0, 0, 69.0, 1)],
+                [Scooter(0, 0, 69.0, 2)],
+                [Scooter(0, 0, 69.0, 3)],
+                Cluster(2, [Scooter(59, 10, 69.0, 1)]),
+            ),
+            scooter_trips,
+        )

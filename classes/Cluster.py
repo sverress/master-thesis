@@ -38,6 +38,9 @@ class Cluster(Location):
     def get_leave_distribution(self):
         # Copy list
         distribution = self.move_probabilities.copy()
+        if np.sum(distribution[np.arange(len(distribution)) != self.id]) == 0.0:
+            # if all leave probabilities are zero, let them all be equally likely
+            distribution = np.ones_like(distribution)
         # Set stay probability to zero
         distribution[self.id] = 0.0
         # Normalize leave distribution
