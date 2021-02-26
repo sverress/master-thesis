@@ -9,7 +9,7 @@ def system_simulate(state):
     :param state: current state
     :return: new state after a simulation of the poisson process
     """
-    trip_counter = {
+    flow_counter = {
         (start, end): 0
         for start in np.arange(len(state.clusters))
         for end in np.arange(len(state.clusters))
@@ -36,7 +36,7 @@ def system_simulate(state):
             )
 
             trips.append((start_cluster, end_cluster, valid_scooters[j]))
-            trip_counter[(start_cluster.id, end_cluster.id)] += 1
+            flow_counter[(start_cluster.id, end_cluster.id)] += 1
 
     # compute trip after all trips are generated to avoid handling inflow in cluster
     for start_cluster, end_cluster, scooter in trips:
@@ -45,7 +45,10 @@ def system_simulate(state):
         scooter.travel(trip_distance)
         end_cluster.add_scooter(scooter)
 
-    return [
-        (start_end[0], start_end[1], trips)
-        for start_end, trips in list(trip_counter.items())
-    ]
+    return (
+        [
+            (start_end[0], start_end[1], flow)
+            for start_end, flow in list(flow_counter.items())
+        ],
+        trips,
+    )

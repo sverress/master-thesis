@@ -64,12 +64,7 @@ class Cluster(Location):
 
     def __compute_center(self):
         cluster_centroid = MultiPoint(
-            list(
-                map(
-                    lambda scooter: (scooter.get_lat(), scooter.get_lon(),),
-                    self.scooters,
-                )
-            )
+            list(map(lambda scooter: (scooter.get_location()), self.scooters))
         ).centroid
         return cluster_centroid.x, cluster_centroid.y
 
@@ -77,8 +72,9 @@ class Cluster(Location):
         # Adding scooter to scooter list
         self.scooters.append(scooter)
         # Changing coordinates of scooter to this location + some delta
-        delta = np.random.uniform(-CLUSTER_CENTER_DELTA, CLUSTER_CENTER_DELTA)
-        scooter.set_coordinates(self.get_lat() + delta, self.get_lon() + delta)
+        delta_lat = np.random.uniform(-CLUSTER_CENTER_DELTA, CLUSTER_CENTER_DELTA)
+        delta_lon = np.random.uniform(-CLUSTER_CENTER_DELTA, CLUSTER_CENTER_DELTA)
+        scooter.set_coordinates(self.get_lat() + delta_lat, self.get_lon() + delta_lon)
 
     def remove_scooter(self, scooter: Scooter):
         self.scooters.remove(self.get_scooter_from_id(scooter.id))
@@ -88,10 +84,13 @@ class Cluster(Location):
             scooter for scooter in self.scooters if scooter.battery >= battery_limit
         ]
 
-    def print_all_scooters(self):
+    def print_all_scooters(self, with_coordinates=False):
         string = ""
         for scooter in self.scooters:
-            string += f"ID: {scooter.id}  Battery {round(scooter.battery, 1)} | "
+            string += f"ID: {scooter.id}  Battery {round(scooter.battery, 1)}"
+            string += (
+                f"Coord: {scooter.get_location()} | " if with_coordinates else " | "
+            )
         return string if string != "" else "Empty cluster"
 
     def get_swappable_scooters(self):
