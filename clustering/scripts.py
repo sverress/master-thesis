@@ -32,9 +32,7 @@ def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
     initial_state = State(clusters, current_cluster, vehicle)
 
     # Get probability of movement from scooters in a cluster
-    probability_matrix = scooter_movement_analysis(
-        initial_state, entur_dataframe, cluster_labels
-    )
+    probability_matrix = scooter_movement_analysis(initial_state, entur_dataframe)
 
     initial_state.set_probability_matrix(probability_matrix)
 

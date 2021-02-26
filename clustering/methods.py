@@ -59,7 +59,7 @@ def cluster_data(data: pd.DataFrame, number_of_clusters: int) -> [int]:
 
 
 def scooter_movement_analysis(
-    state: State, scooter_data: pd.DataFrame, cluster_labels: list
+    state: State, first_snapshot_data: pd.DataFrame
 ) -> np.ndarray:
     """
     Based on the clusters created, based on the scooter_data i.e. cluster_labels, a matrix corresponding to the
@@ -67,13 +67,9 @@ def scooter_movement_analysis(
     E.g. probability_matrix[3][5] - will return the probability for a scooter of moving from cluster 3 to 5
     probability_matrix[3][3] - will return the probability of a scooter staying in cluster 3
     :param state: list of generated clusters
-    :param scooter_data: geospatial data for scooters
-    :param cluster_labels: list of labels for scooter data
+    :param first_snapshot_data: geospatial data for scooters
     :return: probability matrix
     """
-
-    # Adding cluster labels to scooter data
-    scooter_data["cluster_id"] = cluster_labels
 
     # Fetching snapshot 20 minutes after original snapshot
     delayed_data = read_bounded_csv_file(
@@ -82,7 +78,11 @@ def scooter_movement_analysis(
 
     # Join tables on scooter id
     merged_tables = pd.merge(
-        left=scooter_data, right=delayed_data, left_on="id", right_on="id", how="inner"
+        left=first_snapshot_data,
+        right=delayed_data,
+        left_on="id",
+        right_on="id",
+        how="inner",
     )
 
     # Filtering out scooters that has moved during the 20 minutes
@@ -93,10 +93,18 @@ def scooter_movement_analysis(
     # Due to the dataset only showing available scooters we need to find out how many scooters leave the zone resulting
     # in a battery percent below 20. To find these scooters we find scooters from the first snapshot that is not in the
     # merge. The "~" symbol indicates "not" in pandas boolean indexing
-    disappeared_scooters = scooter_data[~scooter_data["id"].isin(merged_tables["id"])]
+    disappeared_scooters: pd.DataFrame = first_snapshot_data.loc[
+        ~first_snapshot_data["id"].isin(merged_tables["id"])
+    ].copy()
+    # Find the origin cluster for these scooters
+    disappeared_scooters["cluster_id"] = [
+        state.get_cluster_by_lat_lon(row["lat"], row["lon"])
+        for index, row in disappeared_scooters.iterrows()
+    ]
 
-    # Find number of clusters for dimensions of arrays
-    number_of_clusters = len(np.unique(cluster_labels))
+    # Get list of cluster ids and find number of clusters for dimensions of arrays
+    cluster_labels = [cluster.id for cluster in state.clusters]
+    number_of_clusters = len(cluster_labels)
 
     # Initialize probability_matrix with number of scooters in each cluster
     number_of_scooters = np.array(
@@ -109,13 +117,16 @@ def scooter_movement_analysis(
     move_count = np.zeros((number_of_clusters, number_of_clusters), dtype="float64")
     # Count how many scooters move
     for index, row in moved_scooters.iterrows():
+        # Find the cluster the scooter belonged to
+        old_cluster = state.get_cluster_by_lat_lon(row["lat_x"], row["lon_x"])
         # Find the nearest cluster the scooter now belongs to
         new_cluster = state.get_cluster_by_lat_lon(row["lat_y"], row["lon_y"])
-        # Increase the counter for every visit
-        move_count[row["cluster_id"]][new_cluster.id] += 1
+        # Increase the counter for every visit if the scooter has moved to a new cluster
+        if old_cluster.id != new_cluster.id:
+            move_count[old_cluster.id][new_cluster.id] += 1
 
     # Calculate number of scooters who stayed in each zone
-    for cluster_id in np.unique(cluster_labels):
+    for cluster_id in cluster_labels:
         # Formula: Number of scooters from beginning - number of scooters leaving - number of disappeared scooters
         move_count[cluster_id][cluster_id] = (
             number_of_scooters[cluster_id][cluster_id]
@@ -129,8 +140,8 @@ def scooter_movement_analysis(
     # Calculate the probability matrix
     probability_matrix = move_count / number_of_scooters
 
-    # Normalize non stay distribution - Same as distribute
-    for cluster_id in np.unique(cluster_labels):
+    # Normalize non stay distribution - Same as distribute the disappeared scooter with same distribution
+    for cluster_id in cluster_labels:
         # Calculate probability of a scooter leaving the cluster
         prob_leave = 1 - probability_matrix[cluster_id][cluster_id]
 
