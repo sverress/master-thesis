@@ -217,7 +217,7 @@ def create_standard_state_plot():
     ax = fig.add_subplot(spec[0])
     ax.axis("off")
 
-    oslo = plt.imread("test_data/images/kart_oslo.png")
+    oslo = plt.imread("images/kart_oslo.png")
     ax.imshow(
         oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
     )
@@ -233,7 +233,7 @@ def create_system_simulation_plot():
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
 
-    oslo = plt.imread("test_data/images/kart_oslo.png")
+    oslo = plt.imread("images/kart_oslo.png")
 
     # creating subplots
     spec = gridspec.GridSpec(

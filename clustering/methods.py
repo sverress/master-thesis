@@ -1,19 +1,19 @@
 import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
+import os
 
 from classes import State, Scooter, Cluster
 from globals import GEOSPATIAL_BOUND_NEW
 
 
 def read_bounded_csv_file(
-    file_path: str, boundary: tuple, sample_size=None, separator=";", operator=None
+    file_path: str, sample_size=None, separator=",", operator=None
 ) -> pd.DataFrame:
     """
     Reads csv file from Entur and outputs a dataframe
     with scooters within the given boundary
     :param file_path: filepath to csv file
-    :param boundary: format: (lat, lon, lat, lon)
     :param sample_size: integer number with number of scooters to fetch
     :param separator: how to separate the values in a row of the csv default ";"
     :param operator: Either "voi" or "tier"'
@@ -22,7 +22,7 @@ def read_bounded_csv_file(
     # Get EnTur data from csv file
     raw_data = pd.read_csv(file_path, sep=separator)
     # Hardcoded boundary on data
-    lat_min, lat_max, lon_min, lon_max = boundary
+    lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
     # Filter out data not within boundary
     raw_data = raw_data.loc[
         (
@@ -179,15 +179,19 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
                     )
         return probability_matrix
 
-    return get_probability_matrix(
-        state,
-        read_bounded_csv_file(
-            "test_data/0900-entur-snapshot.csv", GEOSPATIAL_BOUND_NEW
-        ),
-        read_bounded_csv_file(
-            "test_data/0920-entur-snapshot.csv", GEOSPATIAL_BOUND_NEW, separator=","
-        ),
-    )
+    test_data_directory = "test_data"
+    # Fetch all snapshots from test data
+    probability_matrices = []
+    previous_snapshot = None
+    for index, file_path in enumerate(sorted(os.listdir(test_data_directory))):
+        current_snapshot = read_bounded_csv_file(f"{test_data_directory}/{file_path}")
+        if previous_snapshot is not None:
+            probability_matrices.append(
+                get_probability_matrix(state, previous_snapshot, current_snapshot)
+            )
+        previous_snapshot = current_snapshot
+
+    return np.mean(probability_matrices, axis=0)
 
 
 def generate_cluster_objects(

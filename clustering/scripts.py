@@ -5,16 +5,21 @@ from clustering.methods import (
     generate_cluster_objects,
     scooter_movement_analysis,
 )
-from globals import GEOSPATIAL_BOUND_NEW
+import os
+from globals import STATE_CACHE_DIR
 
 
 def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
 
+    # If this combination has been requested before we fetch a cached version
+    if os.path.exists(f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"):
+        return State.load_state(
+            f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
+        )
+
     # Get dataframe from EnTur CSV file within boundary
     entur_dataframe = read_bounded_csv_file(
-        "test_data/0900-entur-snapshot.csv",
-        GEOSPATIAL_BOUND_NEW,
-        sample_size=sample_size,
+        "test_data/0900-entur-snapshot.csv", sample_size=sample_size,
     )
 
     # Create clusters
@@ -35,6 +40,9 @@ def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
     probability_matrix = scooter_movement_analysis(initial_state)
 
     initial_state.set_probability_matrix(probability_matrix)
+
+    # Cache the state for later
+    initial_state.save_state()
 
     return initial_state
 

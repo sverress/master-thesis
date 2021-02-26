@@ -12,6 +12,9 @@ MINUTES_IN_HOUR = 60
 # Testing constants
 MAX_NUMBER_OF_NEIGHBOURS = 3
 
+# State cache directory
+STATE_CACHE_DIR = "state_cache"
+
 COLORS = [
     "#B52CC2",
     "#EF9A90",
