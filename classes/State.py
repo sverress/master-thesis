@@ -3,8 +3,10 @@ from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
 from classes.Action import Action
 from system_simulation.scripts import system_simulate
+from visualization.visualizer import visualize_state
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 from globals import GEOSPATIAL_BOUND_NEW
 
@@ -154,6 +156,7 @@ class State:
             self.current_cluster.remove_scooter(pick_up_scooter)
 
             # Set scooter coordinates to None
+            # TODO can be moved into the pick_up function
             pick_up_scooter.set_coordinates(None, None)
 
         # Perform all battery swaps
@@ -212,7 +215,7 @@ class State:
                 [lon for lat, lon in scooter_locations],
                 [lat for lat, lon in scooter_locations],
                 c=cluster_color,
-                alpha=0.3,
+                alpha=0.6,
                 s=3,
             )
             center_lat, center_lon = cluster.get_location()
@@ -221,7 +224,7 @@ class State:
                 center_lat,
                 c=cluster_color,
                 edgecolor="None",
-                alpha=0.5,
+                alpha=0.8,
                 s=200,
             )
             ax.annotate(
@@ -263,7 +266,10 @@ class State:
         return neighbours[:number_of_neighbours] if number_of_neighbours else neighbours
 
     def system_simulate(self):
-        system_simulate(self)
+        return system_simulate(self)
+
+    def visualize(self):
+        visualize_state(self)
 
     def set_probability_matrix(self, probability_matrix: np.ndarray):
         if probability_matrix.shape != (len(self.clusters), len(self.clusters)):
