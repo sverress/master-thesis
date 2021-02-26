@@ -59,27 +59,23 @@ def cluster_data(data: pd.DataFrame, number_of_clusters: int) -> [int]:
 
 
 def scooter_movement_analysis(
-    state: State, first_snapshot_data: pd.DataFrame
+    state: State, first_snapshot_data: pd.DataFrame, second_snapshot_data: pd.DataFrame
 ) -> np.ndarray:
     """
-    Based on the clusters created, based on the scooter_data i.e. cluster_labels, a matrix corresponding to the
+    Based on the clusters created and the two snapshots provided, a matrix corresponding to the
     probability that a scooter will move between two clusters.
     E.g. probability_matrix[3][5] - will return the probability for a scooter of moving from cluster 3 to 5
     probability_matrix[3][3] - will return the probability of a scooter staying in cluster 3
     :param state: list of generated clusters
-    :param first_snapshot_data: geospatial data for scooters
+    :param first_snapshot_data: geospatial data for scooters in first snapshot
+    :param second_snapshot_data: geospatial data for scooters in first snapshot
     :return: probability matrix
     """
-
-    # Fetching snapshot 20 minutes after original snapshot
-    delayed_data = read_bounded_csv_file(
-        "test_data/0920-entur-snapshot.csv", GEOSPATIAL_BOUND_NEW, separator=","
-    )
 
     # Join tables on scooter id
     merged_tables = pd.merge(
         left=first_snapshot_data,
-        right=delayed_data,
+        right=second_snapshot_data,
         left_on="id",
         right_on="id",
         how="inner",
