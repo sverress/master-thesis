@@ -7,19 +7,19 @@ import copy
 
 
 # TODO Fix object imports. Here Python expert Sverre can shine
-def visualize_state(state, ax=None):
+def visualize_state(state):
     """
     Visualize the clusters of a state with battery and number of scooters in the clusters
     :param state: State object to be visualized
     :param ax: Optional subplot to plot the graph on
     """
-    setup_visualize(state, ax)
+    setup_visualize(state)
     # shows the plots in IDE
     plt.tight_layout(pad=1.0)
     plt.show()
 
 
-def visualize_cluster_flow(state: State, flows: [(int, int, int)], ax=None):
+def visualize_cluster_flow(state: State, flows: [(int, int, int)]):
     """
     Visualize the flow in a state from a simulation
     :param state: State to display
@@ -27,19 +27,7 @@ def visualize_cluster_flow(state: State, flows: [(int, int, int)], ax=None):
     :param ax: Optional subplot to plot the graph on
     :return:
     """
-    graph = setup_visualize(state, ax)
-
-    # adds edges of flow between the clusters
-    edge_labels, alignment = add_flow_edges(graph, flows)
-
-    # displays edges on plot
-    alt_draw_networkx_edge_labels(
-        graph,
-        edge_labels=edge_labels,
-        verticalalignment=alignment,
-        bbox=dict(alpha=0),
-        ax=ax,
-    )
+    setup_visualize(state, flows)
 
     # shows the plots in IDE
     plt.tight_layout(pad=1.0)

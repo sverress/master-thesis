@@ -393,13 +393,13 @@ def alt_draw_networkx_edge_labels(
     return text_items
 
 
-def setup_visualize(state: State, ax=None):
+def setup_visualize(state: State, flows=None):
     node_size = 1000
     font_size = 14
 
     # if subplot isn't specified, construct it
-    if not ax:
-        fig, ax = create_standard_state_plot()
+
+    fig, ax = create_standard_state_plot()
 
     # constructs the networkx graph from cluster location and with cluster id
     graph, labels, node_border, node_color = make_graph(
@@ -410,7 +410,20 @@ def setup_visualize(state: State, ax=None):
     # adds cluster info (#scooters and tot battery) on plot
     add_cluster_info(state, graph, ax)
 
+    if flows:
+        # adds edges of flow between the clusters
+        edge_labels, alignment = add_flow_edges(graph, flows)
+
+        # displays edges on plot
+        alt_draw_networkx_edge_labels(
+            graph,
+            edge_labels=edge_labels,
+            verticalalignment=alignment,
+            bbox=dict(alpha=0),
+            ax=ax,
+        )
+
     # displays plot
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
 
-    return graph
+    return graph, ax

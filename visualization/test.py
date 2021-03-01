@@ -13,7 +13,7 @@ class BasicVisualizerTests(unittest.TestCase):
     @staticmethod
     def test_state_and_flow_between_clusters():
         # state and flow between clusters visualization
-        state = get_initial_state(sample_size=100, number_of_clusters=10)
+        state = get_initial_state(sample_size=50, number_of_clusters=5)
 
         state.visualize()
 
@@ -42,3 +42,7 @@ class BasicVisualizerTests(unittest.TestCase):
             ),
             scooter_trips,
         )
+
+
+if __name__ == "__main__":
+    unittest.main()
