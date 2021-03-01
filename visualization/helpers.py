@@ -3,6 +3,7 @@ from globals import BLACK, GEOSPATIAL_BOUND_NEW, COLORS
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+from classes import State
 
 
 def display_graph(
@@ -390,3 +391,26 @@ def alt_draw_networkx_edge_labels(
         text_items[(n1, n2)] = t
 
     return text_items
+
+
+def setup_visualize(state: State, ax=None):
+    node_size = 1000
+    font_size = 14
+
+    # if subplot isn't specified, construct it
+    if not ax:
+        fig, ax = create_standard_state_plot()
+
+    # constructs the networkx graph from cluster location and with cluster id
+    graph, labels, node_border, node_color = make_graph(
+        [(cluster.get_location()) for cluster in state.clusters],
+        [cluster.id for cluster in state.clusters],
+    )
+
+    # adds cluster info (#scooters and tot battery) on plot
+    add_cluster_info(state, graph, ax)
+
+    # displays plot
+    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
+
+    return graph
