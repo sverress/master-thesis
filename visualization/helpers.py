@@ -1,5 +1,5 @@
 from matplotlib import gridspec
-from globals import BLACK, GEOSPATIAL_BOUND_NEW, COLORS
+from globals import BLACK, RED, GEOSPATIAL_BOUND_NEW, COLORS
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -129,7 +129,7 @@ def plot_action(action, ax):
     )
 
 
-def make_graph(coordinates: [(float, float)], cluster_ids: [int]):
+def make_graph(coordinates: [(float, float)], cluster_ids: [int], current_node=-1):
     """
     Makes a networkx graph of a list of locations and uses cluster id to give the locations color
     Location/coordinates can both be clusters and scooters
@@ -148,7 +148,9 @@ def make_graph(coordinates: [(float, float)], cluster_ids: [int]):
         label = i
         labels[i] = label
         node_color.append(COLORS[cluster_ids[i]])
-        node_border.append(BLACK)
+        node_border.append(
+            BLACK if current_node == -1 or current_node != cluster_ids[i] else RED
+        )
         graph.nodes[i]["pos"] = cartesian_cluster_coordinates
 
     return graph, labels, node_border, node_color
@@ -217,7 +219,7 @@ def create_standard_state_plot():
     ax = fig.add_subplot(spec[0])
     ax.axis("off")
 
-    oslo = plt.imread("test_data/kart_oslo.png")
+    oslo = plt.imread("images/kart_oslo.png")
     ax.imshow(
         oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
     )
@@ -233,7 +235,7 @@ def create_system_simulation_plot():
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
 
-    oslo = plt.imread("test_data/kart_oslo.png")
+    oslo = plt.imread("images/kart_oslo.png")
 
     # creating subplots
     spec = gridspec.GridSpec(
@@ -405,6 +407,7 @@ def setup_visualize(state: State, flows=None):
     graph, labels, node_border, node_color = make_graph(
         [(cluster.get_location()) for cluster in state.clusters],
         [cluster.id for cluster in state.clusters],
+        state.current_cluster.id,
     )
 
     # adds cluster info (#scooters and tot battery) on plot

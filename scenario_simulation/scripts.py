@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 from classes.State import State
+from globals import ITERATION_LENGTH_MINUTES
 
 
 def estimate_reward(
@@ -14,8 +15,6 @@ def estimate_reward(
     :return: int - maximum reward of simulations
     """
 
-    number_of_simulations = 10
-    length_of_iteration = 20
     all_rewards = []
 
     # Do n scenario simulations
@@ -25,7 +24,7 @@ def estimate_reward(
         total_reward = 0
 
         # Simulate until shift ends
-        while iteration_counter * length_of_iteration < remaining_shift_duration:
+        while iteration_counter * ITERATION_LENGTH_MINUTES < remaining_shift_duration:
             iteration_counter += 1
             # all possible actions in this state
             possible_actions = child_state.get_possible_actions(number_of_neighbours=3)

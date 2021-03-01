@@ -6,12 +6,19 @@ from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 
 
-def run(duration, sample_size=100, number_of_clusters=10, visualize=False):
+def run(
+    duration,
+    sample_size=100,
+    number_of_clusters=10,
+    scenario_iterations=10,
+    visualize=False,
+):
     """
-    :param visualize:
-    :param number_of_clusters:
-    :param sample_size:
     :param duration: shift time in minutes
+    :param sample_size: number of scooters in he system
+    :param number_of_clusters: number of clusters in the system
+    :param scenario_iterations: number of iterations per scenario simulation ( 1 itt = 1 random roll out of state)
+    :param visualize: if the solution of system where to be visualised
     :return: Total reward of 1 shift, list of all actions taken
     """
 
@@ -49,7 +56,9 @@ def run(duration, sample_size=100, number_of_clusters=10, visualize=False):
                 shift_duration_used + action.get_action_time(next_cluster_distance)
             )
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            reward += estimate_reward(new_state, remaining_duration)
+            reward += estimate_reward(
+                new_state, remaining_duration, scenario_iterations
+            )
 
             # If the action is better than previous actions, make best_action
             # Add next cluster distance to update shift duration used later.
