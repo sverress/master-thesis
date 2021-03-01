@@ -18,15 +18,15 @@ def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
         )
 
     # Get dataframe from EnTur CSV file within boundary
-    entur_dataframe = read_bounded_csv_file(
-        "test_data/0900-entur-snapshot.csv", sample_size=sample_size,
-    )
+    entur_dataframe = read_bounded_csv_file("test_data/0900-entur-snapshot.csv")
 
     # Create clusters
     cluster_labels = cluster_data(entur_dataframe, number_of_clusters)
 
     # Structure data into objects
-    clusters = generate_cluster_objects(entur_dataframe, cluster_labels)
+    clusters = generate_cluster_objects(
+        entur_dataframe, cluster_labels, sample_size=sample_size
+    )
 
     # Choosing first cluster as starting cluster in state
     current_cluster = clusters[0]

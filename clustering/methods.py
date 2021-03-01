@@ -166,17 +166,6 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
                 out=np.zeros_like(leaving_probabilities),
                 where=np.sum(leaving_probabilities) != 0,
             )
-
-            # Check if move probabilities sum to 1
-            sum_of_probabilities = np.sum(probability_matrix[cluster_id])
-            if sum_of_probabilities != 1.0:
-                # If there is a slight difference due to computational inaccuracy add this difference to stay prob.
-                probability_matrix[cluster_id][cluster_id] += 1.0 - sum_of_probabilities
-                if np.sum(probability_matrix[cluster_id]) != 1.0:
-                    ValueError(
-                        f"The sum of the move probabilities does not sum to 1."
-                        f" Sum: {np.sum(probability_matrix[cluster_id])} "
-                    )
         return probability_matrix
 
     test_data_directory = "test_data"
@@ -191,24 +180,33 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
             )
         previous_snapshot = current_snapshot
 
+    # Compute mean
     return np.mean(probability_matrices, axis=0)
 
 
 def generate_cluster_objects(
-    scooter_data: pd.DataFrame, cluster_labels: list
+    scooter_data: pd.DataFrame, cluster_labels: list, sample_size: None
 ) -> [Cluster]:
     """
     Based on cluster labels and scooter data create Scooter and Cluster objects.
     Cluster class generates cluster center
     :param scooter_data: geospatial data for scooters
     :param cluster_labels: list of labels for scooter data
+    :param sample_size: number of scooters
     :return: list of clusters
     """
+    # Add cluster labels as a row to the scooter data dataframe
+    scooter_data_w_labels = scooter_data.copy()
+    scooter_data_w_labels["cluster_labels"] = cluster_labels
+    if sample_size:
+        scooter_data_w_labels = scooter_data_w_labels.sample(sample_size)
     # Generate series of scooters belonging to each cluster
     clusters = []
     for cluster_label in np.unique(cluster_labels):
         # Filter out scooters within cluster
-        cluster_scooters = scooter_data[cluster_labels == cluster_label]
+        cluster_scooters = scooter_data_w_labels[
+            scooter_data_w_labels["cluster_labels"] == cluster_label
+        ]
         # Generate scooter objets, using index as ID
         scooters = [
             Scooter(row["lat"], row["lon"], row["battery"], index)
