@@ -1,14 +1,16 @@
 import copy
 
 from clustering.scripts import get_initial_state
-from classes.Action import Action
-from classes.State import State
 from scenario_simulation.scripts import estimate_reward
 from system_simulation.scripts import system_simulate
+from visualization.visualizer import *
 
 
-def run(duration):
+def run(duration, sample_size=100, number_of_clusters=10, visualize=False):
     """
+    :param visualize:
+    :param number_of_clusters:
+    :param sample_size:
     :param duration: shift time in minutes
     :return: Total reward of 1 shift, list of all actions taken
     """
@@ -19,7 +21,9 @@ def run(duration):
     all_actions = []
 
     # Get data from database
-    state = get_initial_state(sample_size=100, number_of_clusters=10)
+    state = get_initial_state(
+        sample_size=sample_size, number_of_clusters=number_of_clusters
+    )
 
     while shift_duration_used < duration:
         max_reward = 0
@@ -61,8 +65,16 @@ def run(duration):
         # Perform best action
         total_reward += state.do_action(best_action)
 
+        if visualize:
+            previous_state = copy.deepcopy(state)
+
         # System simulation
         # TODO This is only to happen every 20 minutes.
-        system_simulate(state)
+        flows, trips = system_simulate(state)
+
+        if visualize:
+            previous_state.visualize()
+            previous_state.visualize_clustering(flows)
+            previous_state.visualize_trips(state, best_action, trips)
 
     return total_reward, all_actions

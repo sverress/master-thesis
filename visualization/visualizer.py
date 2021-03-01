@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import itertools
 import copy
 
+
 # TODO Fix object imports. Here Python expert Sverre can shine
 def visualize_state(state, ax=None):
     """

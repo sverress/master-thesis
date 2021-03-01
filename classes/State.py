@@ -3,7 +3,7 @@ from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
 from classes.Action import Action
 from system_simulation.scripts import system_simulate
-from visualization.visualizer import visualize_state
+from visualization.visualizer import *
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -270,6 +270,12 @@ class State:
 
     def visualize(self):
         visualize_state(self)
+
+    def visualize_flow(self, flows: [(int, int, int)]):
+        visualize_cluster_flow(flows)
+
+    def visualize_trips(self, next_state, action: Action, trips):
+        visualize_scooter_simulation(self, next_state, action, trips)
 
     def set_probability_matrix(self, probability_matrix: np.ndarray):
         if probability_matrix.shape != (len(self.clusters), len(self.clusters)):
