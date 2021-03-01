@@ -6,9 +6,10 @@ from system_simulation.scripts import system_simulate
 from visualization.visualizer import visualize_state
 import matplotlib.pyplot as plt
 import numpy as np
+import pickle
+import os
 
-
-from globals import GEOSPATIAL_BOUND_NEW
+from globals import GEOSPATIAL_BOUND_NEW, STATE_CACHE_DIR
 
 
 class State:
@@ -279,3 +280,20 @@ class State:
             )
         for cluster in self.clusters:
             cluster.set_move_probabilities(probability_matrix[cluster.id])
+
+    def save_state(self):
+        # If there is no state_cache directory, create it
+        if not os.path.exists(STATE_CACHE_DIR):
+            os.makedirs(STATE_CACHE_DIR)
+        with open(self.get_filepath(), "wb") as file:
+            pickle.dump(self, file)
+
+    def get_filepath(self):
+        return (
+            f"{STATE_CACHE_DIR}/c{len(self.clusters)}s{len(self.get_scooters())}.pickle"
+        )
+
+    @classmethod
+    def load_state(cls, filepath):
+        with open(filepath, "rb") as file:
+            return pickle.load(file)
