@@ -4,7 +4,7 @@ from clustering.scripts import get_initial_state
 
 class BasicSystemSimulationTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.state = get_initial_state()
+        self.state = get_initial_state(500)
 
     def test_equal_number_of_scooters(self):
         number_of_scooters_before = sum(
