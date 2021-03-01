@@ -71,11 +71,11 @@ def run(
         all_actions.append(best_action)
         shift_duration_used += best_action.get_action_time(best_next_cluster_distance)
 
-        # Perform best action
-        total_reward += state.do_action(best_action)
-
         if visualize:
             previous_state = copy.deepcopy(state)
+
+        # Perform best action
+        total_reward += state.do_action(best_action)
 
         # System simulation
         # TODO This is only to happen every 20 minutes.
@@ -83,7 +83,8 @@ def run(
 
         if visualize:
             previous_state.visualize()
-            previous_state.visualize_clustering(flows)
-            previous_state.visualize_trips(state, best_action, trips)
+            previous_state.visualize_flow(flows, best_action.next_cluster.id)
+            previous_state.visualize_action(state, best_action)
+            previous_state.visualize_system_simulation(trips)
 
     return total_reward, all_actions

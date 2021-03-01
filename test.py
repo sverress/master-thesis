@@ -1,4 +1,4 @@
 from decision.scripts import run
 
 if __name__ == "__main__":
-    run(60, 60, 6, True)
+    run(30, 20, 5, 2, True)

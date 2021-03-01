@@ -272,11 +272,14 @@ class State:
     def visualize(self):
         visualize_state(self)
 
-    def visualize_flow(self, flows: [(int, int, int)]):
-        visualize_cluster_flow(flows)
+    def visualize_flow(self, flows: [(int, int, int)], next_state_id: int):
+        visualize_cluster_flow(self, flows, next_state_id)
 
-    def visualize_trips(self, next_state, action: Action, trips):
-        visualize_scooter_simulation(self, next_state, action, trips)
+    def visualize_action(self, state_after_action, action: Action):
+        visualize_action(self, state_after_action, action)
+
+    def visualize_system_simulation(self, trips):
+        visualize_scooter_simulation(self, trips)
 
     def set_probability_matrix(self, probability_matrix: np.ndarray):
         if probability_matrix.shape != (len(self.clusters), len(self.clusters)):

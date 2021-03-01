@@ -1,5 +1,7 @@
+import itertools
+
 from matplotlib import gridspec
-from globals import BLACK, RED, GEOSPATIAL_BOUND_NEW, COLORS
+from globals import BLACK, RED, BLUE, GEOSPATIAL_BOUND_NEW, COLORS
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -129,7 +131,33 @@ def plot_action(action, ax):
     )
 
 
-def make_graph(coordinates: [(float, float)], cluster_ids: [int], current_node=-1):
+def plot_trips(trips, ax):
+    """
+        Adds trips information to a subplot
+        """
+    props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
+
+    trips_string = ""
+
+    for trip in trips:
+        start, end, scooter = trip
+        trips_string += f"{start.id} -> {end.id}: {scooter.id}\n"
+
+    ax.text(
+        0,
+        0.98,
+        trips_string,
+        transform=ax.transAxes,
+        fontsize=10,
+        horizontalalignment="left",
+        verticalalignment="top",
+        bbox=props,
+    )
+
+
+def make_graph(
+    coordinates: [(float, float)], cluster_ids: [int], current_node=-1, next_state=-1
+):
     """
     Makes a networkx graph of a list of locations and uses cluster id to give the locations color
     Location/coordinates can both be clusters and scooters
@@ -147,10 +175,9 @@ def make_graph(coordinates: [(float, float)], cluster_ids: [int], current_node=-
     for i, cartesian_cluster_coordinates in enumerate(cartesian_clusters):
         label = i
         labels[i] = label
+        border_color = RED if current_node == cluster_ids[i] else BLACK
         node_color.append(COLORS[cluster_ids[i]])
-        node_border.append(
-            BLACK if current_node == -1 or current_node != cluster_ids[i] else RED
-        )
+        node_border.append(BLUE if next_state == cluster_ids[i] else border_color)
         graph.nodes[i]["pos"] = cartesian_cluster_coordinates
 
     return graph, labels, node_border, node_color
@@ -227,7 +254,7 @@ def create_standard_state_plot():
     return fig, ax
 
 
-def create_system_simulation_plot():
+def create_system_simulation_plot(title_1="", title_2="", title_3=""):
     """
     Subplot framework for the simulation visualization
     """
@@ -242,12 +269,12 @@ def create_system_simulation_plot():
         figure=fig, ncols=3, nrows=1, width_ratios=[1, 8, 8], wspace=0, hspace=0
     )
     ax1 = fig.add_subplot(spec[0])
-    ax1.set_title(f"Action")
+    ax1.set_title(title_1)
     ax1.set_xlim([-0.01, 1.01])
     ax1.set_ylim([-0.01, 1.01])
     ax1.axis("off")
     ax2 = fig.add_subplot(spec[1])
-    ax2.set_title(f"Current State")
+    ax2.set_title(title_2)
     ax2.set_xlim([-0.01, 1.01])
     ax2.set_ylim([-0.01, 1.01])
     ax2.imshow(
@@ -255,7 +282,7 @@ def create_system_simulation_plot():
     )
     ax2.axis("off")
     ax3 = fig.add_subplot(spec[2])
-    ax3.set_title(f"Next State")
+    ax3.set_title(title_3)
     ax3.set_xlim([-0.01, 1.01])
     ax3.set_ylim([-0.01, 1.01])
     ax3.imshow(
@@ -297,7 +324,7 @@ def add_flow_edges(graph, flows):
     return edge_labels, alignment
 
 
-def add_scooter_id(scooters, graph, ax):
+def add_scooter_id_and_battery(scooters, graph, ax, scooter_battery=False):
     """
     Adds scooter id above the node/scatter
     """
@@ -305,7 +332,15 @@ def add_scooter_id(scooters, graph, ax):
 
     for i, scooter in enumerate(scooters):
         x, y = pos[i]
-        ax.text(x, y + 0.015, f"{scooter.id}", horizontalalignment="center")
+        ax.text(x, y + 0.015, f"{scooter.id}", horizontalalignment="center", fontsize=8)
+        if scooter_battery:
+            ax.text(
+                x,
+                y - 0.02,
+                f"B - {round(scooter.battery,1)}",
+                horizontalalignment="center",
+                fontsize=8,
+            )
 
 
 def alt_draw_networkx_edge_labels(
@@ -395,7 +430,7 @@ def alt_draw_networkx_edge_labels(
     return text_items
 
 
-def setup_visualize(state: State, flows=None):
+def setup_cluster_visualize(state: State, flows=None, next_state_id=-1):
     node_size = 1000
     font_size = 14
 
@@ -408,6 +443,7 @@ def setup_visualize(state: State, flows=None):
         [(cluster.get_location()) for cluster in state.clusters],
         [cluster.id for cluster in state.clusters],
         state.current_cluster.id,
+        next_state_id,
     )
 
     # adds cluster info (#scooters and tot battery) on plot
@@ -430,3 +466,55 @@ def setup_visualize(state: State, flows=None):
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
 
     return graph, ax
+
+
+def make_scooter_visualize(state, ax, scooter_battery=False):
+    node_size = 50
+    font_size = 10
+    # make a list of all scooters
+    all_scooters = list(
+        itertools.chain.from_iterable(
+            map(lambda cluster: cluster.scooters, state.clusters)
+        )
+    )
+
+    # list of all scooter ids for the scooter label plot
+    all_scooters_id = [scooter.id for scooter in all_scooters]
+
+    # list of all cluster ids associated with scooters (so we can get the right color of the scooter nodes)
+    all_cluster_ids = list(
+        itertools.chain.from_iterable(
+            [cluster.id] * len(cluster.scooters) for cluster in state.clusters
+        )
+    )
+
+    # constructs the networkx graph from cluster location, second input is for color purpose
+    graph, labels, node_border, node_color = make_graph(
+        [scooter.get_location() for scooter in all_scooters], all_cluster_ids,
+    )
+
+    # add scooter id as label above each node in plot
+    add_scooter_id_and_battery(all_scooters, graph, ax, scooter_battery)
+
+    # display graph
+    display_graph(
+        graph,
+        node_color,
+        node_border,
+        node_size,
+        labels,
+        font_size,
+        ax,
+        with_labels=False,
+    )
+
+    return (
+        graph,
+        node_color,
+        node_border,
+        node_size,
+        labels,
+        font_size,
+        all_scooters,
+        all_scooters_id,
+    )
