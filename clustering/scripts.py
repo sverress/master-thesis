@@ -7,35 +7,42 @@ from clustering.methods import (
 )
 import os
 from globals import STATE_CACHE_DIR
+from progress.bar import Bar
 
 
 def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
-
     # If this combination has been requested before we fetch a cached version
     if os.path.exists(f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"):
+        print(
+            f"Using cached version of state from {STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
+        )
         return State.load_state(
             f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
         )
+    print("\nSetup initial state from entur dataset")
 
+    clustering = Bar("Clustering data", max=3)
     # Get dataframe from EnTur CSV file within boundary
     entur_dataframe = read_bounded_csv_file("test_data/0900-entur-snapshot.csv")
+    clustering.next()
 
     # Create clusters
     cluster_labels = cluster_data(entur_dataframe, number_of_clusters)
+    clustering.next()
 
     # Structure data into objects
     clusters = generate_cluster_objects(
         entur_dataframe, cluster_labels, sample_size=sample_size
     )
-
+    clustering.next()
     # Choosing first cluster as starting cluster in state
     current_cluster = clusters[0]
+    clustering.finish()
 
     # Choosing a default vehicle as the vehicle in the new state
     vehicle = Vehicle()
 
     initial_state = State(clusters, current_cluster, vehicle)
-
     # Find the ideal state for each cluster
     initial_state.compute_and_set_ideal_state(sample_size=sample_size)
     # Get probability of movement from scooters in a cluster
@@ -45,6 +52,7 @@ def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
 
     # Cache the state for later
     initial_state.save_state()
+    print("Setup state completed\n")
 
     return initial_state
 

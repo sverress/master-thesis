@@ -5,6 +5,7 @@ import os
 
 from classes import State, Scooter, Cluster
 from globals import GEOSPATIAL_BOUND_NEW, TEST_DATA_DIRECTORY
+from progress.bar import Bar
 
 
 def read_bounded_csv_file(
@@ -168,17 +169,19 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
             )
         return probability_matrix
 
+    progress = Bar("Computing MPM", max=len(os.listdir(TEST_DATA_DIRECTORY)),)
     # Fetch all snapshots from test data
     probability_matrices = []
     previous_snapshot = None
     for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
+        progress.next()
         current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
         if previous_snapshot is not None:
             probability_matrices.append(
                 get_probability_matrix(state, previous_snapshot, current_snapshot)
             )
         previous_snapshot = current_snapshot
-
+    progress.finish()
     # Compute mean
     return np.mean(probability_matrices, axis=0)
 
@@ -216,10 +219,12 @@ def generate_cluster_objects(
 
 
 def compute_and_set_ideal_state(state: State, sample_size=None):
+    progressbar = Bar("Computing ideal state", max=len(os.listdir(TEST_DATA_DIRECTORY)))
     number_of_scooters_counter = np.zeros(
         (len(state.clusters), len(os.listdir(TEST_DATA_DIRECTORY)))
     )
     for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
+        progressbar.next()
         current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
         if sample_size:
             current_snapshot = current_snapshot.sample(sample_size)
@@ -234,3 +239,4 @@ def compute_and_set_ideal_state(state: State, sample_size=None):
     cluster_ideal_states = np.mean(number_of_scooters_counter, axis=1)
     for cluster in state.clusters:
         cluster.ideal_state = cluster_ideal_states[cluster.id]
+    progressbar.finish()
