@@ -28,7 +28,7 @@ class Cluster(Location):
             return return_function
 
     def get_current_state(self) -> float:
-        return sum(map(lambda scooter: scooter.battery, self.scooters))
+        return sum(map(lambda scooter: scooter.battery / 100, self.scooters))
 
     @Decorators.check_move_probabilities
     def prob_stay(self):

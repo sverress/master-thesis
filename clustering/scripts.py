@@ -10,18 +10,22 @@ from globals import STATE_CACHE_DIR
 from progress.bar import Bar
 
 
-def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
+def get_initial_state(sample_size=None, number_of_clusters=20, save=True) -> State:
     # If this combination has been requested before we fetch a cached version
-    if os.path.exists(f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"):
+    if save and os.path.exists(
+        f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
+    ):
         print(
             f"Using cached version of state from {STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
         )
         return State.load_state(
             f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
         )
-    print("\nSetup initial state from entur dataset")
+    print(
+        f"\nSetup initial state from entur dataset with {number_of_clusters} clusters and {sample_size} scooters"
+    )
 
-    clustering = Bar("Clustering data", max=3)
+    clustering = Bar("| Clustering data", max=3)
     # Get dataframe from EnTur CSV file within boundary
     entur_dataframe = read_bounded_csv_file("test_data/0900-entur-snapshot.csv")
     clustering.next()
@@ -47,6 +51,8 @@ def get_initial_state(sample_size=None, number_of_clusters=20) -> State:
     initial_state.compute_and_set_ideal_state(sample_size=sample_size)
     # Get probability of movement from scooters in a cluster
     probability_matrix = scooter_movement_analysis(initial_state)
+
+    initial_state.compute_and_set_trip_intensity(sample_size=sample_size)
 
     initial_state.set_probability_matrix(probability_matrix)
 
