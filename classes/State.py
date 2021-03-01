@@ -2,6 +2,7 @@ from itertools import cycle
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
 from classes.Action import Action
+from clustering.methods import compute_and_set_ideal_state
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import visualize_state
 import matplotlib.pyplot as plt
@@ -297,3 +298,6 @@ class State:
     def load_state(cls, filepath):
         with open(filepath, "rb") as file:
             return pickle.load(file)
+
+    def compute_and_set_ideal_state(self, sample_size=None):
+        compute_and_set_ideal_state(self, sample_size=sample_size)

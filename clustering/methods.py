@@ -4,7 +4,7 @@ from sklearn.cluster import KMeans
 import os
 
 from classes import State, Scooter, Cluster
-from globals import GEOSPATIAL_BOUND_NEW
+from globals import GEOSPATIAL_BOUND_NEW, TEST_DATA_DIRECTORY
 
 
 def read_bounded_csv_file(
@@ -168,12 +168,11 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
             )
         return probability_matrix
 
-    test_data_directory = "test_data"
     # Fetch all snapshots from test data
     probability_matrices = []
     previous_snapshot = None
-    for index, file_path in enumerate(sorted(os.listdir(test_data_directory))):
-        current_snapshot = read_bounded_csv_file(f"{test_data_directory}/{file_path}")
+    for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
+        current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
         if previous_snapshot is not None:
             probability_matrices.append(
                 get_probability_matrix(state, previous_snapshot, current_snapshot)
@@ -214,3 +213,24 @@ def generate_cluster_objects(
         ]
         clusters.append(Cluster(cluster_label, scooters))
     return clusters
+
+
+def compute_and_set_ideal_state(state: State, sample_size=None):
+    number_of_scooters_counter = np.zeros(
+        (len(state.clusters), len(os.listdir(TEST_DATA_DIRECTORY)))
+    )
+    for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
+        current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
+        if sample_size:
+            current_snapshot = current_snapshot.sample(sample_size)
+        current_snapshot["cluster"] = [
+            state.get_cluster_by_lat_lon(row["lat"], row["lon"]).id
+            for index, row in current_snapshot.iterrows()
+        ]
+        for cluster in state.clusters:
+            number_of_scooters_counter[cluster.id][index] = len(
+                current_snapshot[current_snapshot["cluster"] == cluster.id]
+            )
+    cluster_ideal_states = np.mean(number_of_scooters_counter, axis=1)
+    for cluster in state.clusters:
+        cluster.ideal_state = cluster_ideal_states[cluster.id]

@@ -15,6 +15,9 @@ MAX_NUMBER_OF_NEIGHBOURS = 3
 # State cache directory
 STATE_CACHE_DIR = "state_cache"
 
+# Test data directory
+TEST_DATA_DIRECTORY = "test_data"
+
 COLORS = [
     "#B52CC2",
     "#EF9A90",
