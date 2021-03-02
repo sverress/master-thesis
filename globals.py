@@ -11,6 +11,9 @@ BLUE, GREEN, RED, BLACK = "blue", "green", "red", "black"
 VEHICLE_SPEED = 30
 MINUTES_IN_HOUR = 60
 
+# Default simulation constants
+ITERATION_LENGTH_MINUTES = 20
+
 # Testing constants
 MAX_NUMBER_OF_NEIGHBOURS = 3
 

@@ -10,7 +10,7 @@ class Cluster(Location):
         self.id = cluster_id
         self.scooters = scooters
         self.ideal_state = 10
-        self.trip_intensity_per_iteration = 10
+        self.trip_intensity_per_iteration = 2
         super().__init__(*self.__compute_center())
         self.move_probabilities = None
 

@@ -13,7 +13,7 @@ class BasicVisualizerTests(unittest.TestCase):
     @staticmethod
     def test_state_and_flow_between_clusters():
         # state and flow between clusters visualization
-        state = get_initial_state(sample_size=100, number_of_clusters=10)
+        state = get_initial_state(sample_size=50, number_of_clusters=5)
 
         state.visualize()
 
@@ -31,14 +31,10 @@ class BasicVisualizerTests(unittest.TestCase):
 
         flows, scooter_trips = next_state.system_simulate()
 
-        visualize_scooter_simulation(
-            current_state,
-            next_state,
-            Action(
-                [Scooter(0, 0, 69.0, 1)],
-                [Scooter(0, 0, 69.0, 2)],
-                [Scooter(0, 0, 69.0, 3)],
-                Cluster(2, [Scooter(59, 10, 69.0, 1)]),
-            ),
-            scooter_trips,
-        )
+        current_state.visualize_system_simulation(scooter_trips)
+
+        current_state.visualize_flow(flows, next_state.current_cluster.id)
+
+
+if __name__ == "__main__":
+    unittest.main()
