@@ -198,8 +198,6 @@ def generate_cluster_objects(
     # Add cluster labels as a row to the scooter data dataframe
     scooter_data_w_labels = scooter_data.copy()
     scooter_data_w_labels["cluster_labels"] = cluster_labels
-    if sample_size:
-        scooter_data_w_labels = scooter_data_w_labels.sample(sample_size)
     # Generate series of scooters belonging to each cluster
     clusters = []
     for cluster_label in np.unique(cluster_labels):
@@ -212,5 +210,15 @@ def generate_cluster_objects(
             Scooter(row["lat"], row["lon"], row["battery"], index)
             for index, row in cluster_scooters.iterrows()
         ]
+        # Adding all scooters to cluster to find center location
         clusters.append(Cluster(cluster_label, scooters))
+    if sample_size:
+        # Filter out scooters not in sample
+        sampled_scooter_data_w_labels = scooter_data_w_labels.sample(sample_size)
+        for cluster in clusters:
+            cluster.scooters = [
+                scooter
+                for scooter in cluster.scooters
+                if scooter.id in sampled_scooter_data_w_labels.index
+            ]
     return clusters
