@@ -1,3 +1,5 @@
+import os
+
 GEOSPATIAL_BOUND = (59.9112, 59.9438, 10.7027, 10.7772)
 GEOSPATIAL_BOUND_NEW = (59.9040, 59.9547, 10.6478, 10.8095)
 CLUSTER_CENTER_DELTA = 0.01
@@ -13,7 +15,11 @@ MINUTES_IN_HOUR = 60
 MAX_NUMBER_OF_NEIGHBOURS = 3
 
 # State cache directory
-STATE_CACHE_DIR = "state_cache"
+if os.environ.get("CI"):
+    STATE_CACHE_DIR = "test_state_cache"
+else:
+    STATE_CACHE_DIR = "state_cache"
+
 
 # Test data directory
 TEST_DATA_DIRECTORY = "test_data"
