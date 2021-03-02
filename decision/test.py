@@ -17,7 +17,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         for scooter in self.initial_state.current_cluster.scooters:
             scooter.battery = 80.0
-        start_battery_percentage = current_cluster.get_current_state()
+        start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions()
@@ -36,7 +36,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test battery percentage
         self.assertEqual(
-            current_cluster.get_current_state(),
+            current_cluster.get_current_state() * 100,
             start_battery_percentage + len(actions[-1].battery_swaps) * 20.0,
         )
 
@@ -55,7 +55,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Set all battery to 20% to calculate expected reward
         for scooter in self.initial_state.current_cluster.scooters:
             scooter.battery = 20.0
-        start_battery_percentage = current_cluster.get_current_state()
+        start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions()
@@ -85,7 +85,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test battery percentage
         self.assertEqual(
-            current_cluster.get_current_state(),
+            current_cluster.get_current_state() * 100,
             start_battery_percentage
             + len(actions[-1].battery_swaps) * 80.0
             - len(actions[-1].pick_ups) * 20.0,
@@ -107,7 +107,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Set all battery to 80% to calculate expected reward
         for scooter in self.initial_state.current_cluster.scooters:
             scooter.battery = 80.0
-        start_battery_percentage = current_cluster.get_current_state()
+        start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions()
@@ -140,7 +140,7 @@ class BasicDecisionTests(unittest.TestCase):
             map(lambda scooter: scooter.battery, delivery_scooter_objects)
         )
         self.assertEqual(
-            current_cluster.get_current_state(),
+            current_cluster.get_current_state() * 100,
             start_battery_percentage
             + len(actions[-1].battery_swaps) * 20.0
             + delivery_scootery_battery,
