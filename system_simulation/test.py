@@ -36,6 +36,47 @@ class BasicSystemSimulationTests(unittest.TestCase):
             total_battery_of_scooters_after, total_battery_of_scooters_before
         )
 
+    def test_flows_and_trips(self):
+        initial_cluster_inventory = {}
+
+        for cluster in self.state.clusters:
+            initial_cluster_inventory[cluster.id] = len(cluster.scooters)
+
+        flows, trips = self.state.system_simulate()
+
+        out_flow = {cluster.id: 0 for cluster in self.state.clusters}
+        in_flow = {cluster.id: 0 for cluster in self.state.clusters}
+
+        trips_from = {cluster.id: 0 for cluster in self.state.clusters}
+        trips_to = {cluster.id: 0 for cluster in self.state.clusters}
+
+        for start, end, scooter in trips:
+            trips_from[start.id] += 1
+            trips_to[end.id] += 1
+
+        for cluster in self.state.clusters:
+            out_flow[cluster.id] = sum(
+                [flow for start, end, flow in flows if start == cluster.id]
+            )
+            in_flow[cluster.id] = sum(
+                [flow for start, end, flow in flows if end == cluster.id]
+            )
+
+            # Test flow in/out equal to change in scooter inventory in a cluster
+            self.assertEqual(
+                initial_cluster_inventory[cluster.id] - len(cluster.scooters),
+                out_flow[cluster.id] - in_flow[cluster.id],
+            )
+
+            # Test number of trips in/out equal to change in scooter inventory in a cluster
+            self.assertEqual(
+                initial_cluster_inventory[cluster.id] - len(cluster.scooters),
+                trips_from[cluster.id] - trips_to[cluster.id],
+            )
+
+        # Test that total flow out equal to total flow in
+        self.assertEqual(sum(out_flow.values()), sum(in_flow.values()))
+
 
 if __name__ == "__main__":
     unittest.main()

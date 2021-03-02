@@ -77,6 +77,12 @@ class BasicDecisionTests(unittest.TestCase):
             start_number_of_scooters - len(actions[-1].pick_ups),
         )
 
+        # Test inventory vehicle
+        self.assertEqual(
+            start_number_of_scooters - len(current_cluster.scooters),
+            len(self.initial_state.vehicle.scooter_inventory),
+        )
+
         # Test battery percentage
         self.assertEqual(
             current_cluster.get_current_state(),

@@ -6,103 +6,77 @@ import itertools
 import copy
 
 
-def visualize_state(state: State, ax=None):
+def visualize_state(state):
     """
     Visualize the clusters of a state with battery and number of scooters in the clusters
     :param state: State object to be visualized
-    :param ax: Optional subplot to plot the graph on
     """
-    setup_visualize(state, ax)
+    setup_cluster_visualize(state)
     # shows the plots in IDE
     plt.tight_layout(pad=1.0)
     plt.show()
 
 
-def visualize_cluster_flow(state: State, flows: [(int, int, int)], ax=None):
+def visualize_cluster_flow(state: State, flows: [(int, int, int)], next_state_id=-1):
     """
     Visualize the flow in a state from a simulation
+    :param next_state_id: id of next state
     :param state: State to display
-    :param flows: TODO: explanation of flows format
-    :param ax: Optional subplot to plot the graph on
+    :param flows: flow of scooter from one cluster to another
     :return:
     """
-    graph = setup_visualize(state, ax)
-
-    # adds edges of flow between the clusters
-    edge_labels, alignment = add_flow_edges(graph, flows)
-
-    # displays edges on plot
-    alt_draw_networkx_edge_labels(
-        graph,
-        edge_labels=edge_labels,
-        verticalalignment=alignment,
-        bbox=dict(alpha=0),
-        ax=ax,
-    )
+    setup_cluster_visualize(state, flows, next_state_id)
 
     # shows the plots in IDE
+    plt.tight_layout(pad=1.0)
+    plt.show()
+
+
+def visualize_action(state_before_action: State, current_state: State, action: Action):
+
+    # creating the subplots for the visualization
+    fig, ax1, ax2, ax3 = create_system_simulation_plot(
+        "Action", "State before action", "State after action"
+    )
+
+    # plots the vehicle info and the action in the first plot
+    plot_vehicle_info(state_before_action.vehicle, current_state.vehicle, ax1)
+    plot_action(action, ax1)
+
+    make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
+
+    make_scooter_visualize(current_state, ax3, scooter_battery=True)
+
     plt.tight_layout(pad=1.0)
     plt.show()
 
 
 def visualize_scooter_simulation(
-    current_state: State, next_state: State, action: Action, trips,
+    current_state: State, trips,
 ):
     """
     Visualize scooter trips of one system simulation
     :param current_state: Initial state for the simulation
-    :param next_state: The state after the simulation is done
-    # TODO take in the state before an action is performed, so we can dispaly state before/after an action i one plot
-    :param action: actions to be performed before the simulation
     :param trips: trips completed during a system simulation
     """
 
-    node_size = 50
-    font_size = 10
-
     # creating the subplots for the visualization
-    fig, ax1, ax2, ax3 = create_system_simulation_plot()
-
-    # plots the vehicle info and the action in the first plot
-    plot_vehicle_info(current_state.vehicle, next_state.vehicle, ax1)
-    plot_action(action, ax1)
-
-    # make a list of all scooters
-    all_current_scooters = list(
-        itertools.chain.from_iterable(
-            map(lambda cluster: cluster.scooters, current_state.clusters)
-        )
+    fig, ax1, ax2, ax3 = create_system_simulation_plot(
+        "Trips", "Current State", "Next State"
     )
 
-    # list of all scooter ids for the scooter label plot
-    all_current_scooters_id = [scooter.id for scooter in all_current_scooters]
-    # list of all cluster ids associated with scooters (so we can get the right color of the scooter nodes)
-    all_current_cluster_ids = list(
-        itertools.chain.from_iterable(
-            [cluster.id] * len(cluster.scooters) for cluster in current_state.clusters
-        )
-    )
+    plot_trips(trips, ax1)
 
-    # constructs the networkx graph from cluster location, second input is for color purpose
-    graph, labels, node_border, node_color = make_graph(
-        [scooter.get_location() for scooter in all_current_scooters],
-        all_current_cluster_ids,
-    )
-
-    # add scooter id as label above each node in plot
-    add_scooter_id(all_current_scooters, graph, ax2)
-
-    # display graph
-    display_graph(
+    (
         graph,
         node_color,
         node_border,
         node_size,
         labels,
         font_size,
-        ax2,
-        with_labels=False,
-    )
+        all_current_scooters,
+        all_current_scooters_id,
+    ) = make_scooter_visualize(current_state, ax2, scooter_battery=True)
 
     # have to copy the networkx graph since the plot isn't shown in the IDE yet
     next_graph = copy.deepcopy(graph)
@@ -115,7 +89,9 @@ def visualize_scooter_simulation(
     number_of_current_scooters = len(all_current_scooters)
 
     # adds labels to the new subplot of the scooters from the state before simulation
-    add_scooter_id(all_current_scooters, next_graph, ax3)
+    add_scooter_id_and_battery(
+        all_current_scooters, next_graph, ax3, scooter_battery=True
+    )
 
     # loop to add nodes/scooters that have moved during a simulation
     for i, trip in enumerate(trips):
@@ -142,7 +118,17 @@ def visualize_scooter_simulation(
         )
 
         # display label on subplot
-        ax3.text(x, y + 0.015, f"{scooter.id}", horizontalalignment="center")
+        ax3.text(
+            x, y + 0.015, f"{scooter.id}", horizontalalignment="center", fontsize=8
+        )
+
+        ax3.text(
+            x,
+            y - 0.02,
+            f"B - {round(scooter.battery, 1)}",
+            horizontalalignment="center",
+            fontsize=8,
+        )
 
     display_graph(
         next_graph,
