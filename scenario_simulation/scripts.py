@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 from classes.State import State
+from globals import ITERATION_LENGTH_MINUTES
 
 
 def estimate_reward(
@@ -14,8 +15,6 @@ def estimate_reward(
     :return: int - maximum reward of simulations
     """
 
-    number_of_simulations = 10
-    length_of_iteration = 20
     all_rewards = []
 
     # Do n scenario simulations
@@ -25,10 +24,10 @@ def estimate_reward(
         total_reward = 0
 
         # Simulate until shift ends
-        while iteration_counter * length_of_iteration < remaining_shift_duration:
+        while iteration_counter * ITERATION_LENGTH_MINUTES < remaining_shift_duration:
             iteration_counter += 1
             # all possible actions in this state
-            possible_actions = child_state.get_possible_actions()
+            possible_actions = child_state.get_possible_actions(number_of_neighbours=3)
 
             # pick a random action
             random_action = possible_actions[
@@ -47,42 +46,29 @@ def markov_decision_process(state: State):
     """
     :param state: State - current state to perform one iteration of the markov decision process
     """
-
-    # Generate scooter moves
-    trips = (
-        []
-    )  # (start_cluster: Cluster, end_cluster: Cluster, scooter: Scooter, distance: int)
-
-    # generate all trips
+    raise NotImplementedError("This function is not yet implemented")
+    # Initialize trips. Trip format: (start_cluster: Cluster, end_cluster: Cluster, scooter: Scooter, distance: int)
+    trips = []
+    # Generate scooter trips
     for cluster in state.clusters:
-        # collect n neighbours for the cluster (can be implemented with distance limit)
-        neighbours = state.get_neighbours(cluster, number_of_neighbours=3)
-
-        # make the markov chain out of the cluster (includes probability of staying in the cluster)
-        prob_distribution = [cluster.prob_stay()] + [
-            cluster.prob_leave(neigh) for neigh in neighbours
-        ]
-
-        # for all scooters in the cluster -> perform a trip to another cluster or stay
+        # For all scooters in the cluster -> perform a trip to another cluster or stay
         for scooter in cluster.scooters:
-            # pick a random destination or stay
+            # Pick a random destination
             destination = np.random.choice(
-                np.arange(len(prob_distribution)), p=prob_distribution
+                sorted(state.clusters, key=lambda state_cluster: state_cluster.id),
+                p=cluster.get_leave_distribution(),
             )
-            if destination != 0:
-                trips.append(
-                    (
-                        state.current_cluster,
-                        state.clusters[destination],
-                        scooter,
-                        state.get_distance(
-                            state.current_cluster, state.clusters[destination]
-                        ),
-                    )
+            trips.append(
+                (
+                    state.current_cluster,
+                    destination,
+                    scooter,
+                    state.get_distance(state.current_cluster, destination),
                 )
+            )
 
     # perform all trips
     for start, end, scooter, distance in trips:
-        start.remove(scooter)
+        start.remove_scooter(scooter)
         end.add_scooter(scooter)
         scooter.travel(distance)

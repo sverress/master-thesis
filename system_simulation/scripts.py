@@ -3,12 +3,13 @@ import numpy as np
 
 def system_simulate(state):
     """
+    TODO: This script is very similar to the scenario simulation script with the markov chain. Reuse logic
     Simulation of poisson process on the system ->
     Poisson distributed number of trips out of each cluster, markov chain decides where the trip goes
     :param state: current state
     :return: new state after a simulation of the poisson process
     """
-    trip_counter = {
+    flow_counter = {
         (start, end): 0
         for start in np.arange(len(state.clusters))
         for end in np.arange(len(state.clusters))
@@ -27,38 +28,27 @@ def system_simulate(state):
         if number_of_trips > len(valid_scooters):
             number_of_trips = len(valid_scooters)
 
-        # collect n neighbours for the cluster (can be implemented with distance limit)
-        neighbours = state.get_neighbours(start_cluster, number_of_neighbours=3)
-
-        # make the markov chain out of the cluster
-        prob_distribution = [start_cluster.prob_leave(neigh) for neigh in neighbours]
-
-        normalized_prob_distribution = np.true_divide(
-            prob_distribution, sum(prob_distribution)
-        )
-
         # loop to generate trips from the cluster
         for j in range(number_of_trips):
-            end_cluster = neighbours[
-                np.random.choice(
-                    np.arange(len(normalized_prob_distribution)),
-                    p=normalized_prob_distribution,
-                )
-            ]
+            end_cluster = np.random.choice(
+                sorted(state.clusters, key=lambda state_cluster: state_cluster.id),
+                p=start_cluster.get_leave_distribution(),
+            )
 
             trips.append((start_cluster, end_cluster, valid_scooters[j]))
-            trip_counter[(start_cluster.id, end_cluster.id)] += 1
+            flow_counter[(start_cluster.id, end_cluster.id)] += 1
 
     # compute trip after all trips are generated to avoid handling inflow in cluster
     for start_cluster, end_cluster, scooter in trips:
         start_cluster.scooters.remove(scooter)
-        end_cluster_lat, end_cluster_lon = end_cluster.center
-        scooter.change_coordinates(end_cluster_lat, end_cluster_lon)
         trip_distance = state.get_distance(start_cluster, end_cluster)
         scooter.travel(trip_distance)
         end_cluster.add_scooter(scooter)
 
-    return [
-        (start_end[0], start_end[1], trips)
-        for start_end, trips in list(trip_counter.items())
-    ]
+    return (
+        [
+            (start_end[0], start_end[1], flow)
+            for start_end, flow in list(flow_counter.items())
+        ],
+        trips,
+    )

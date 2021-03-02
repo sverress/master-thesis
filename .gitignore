@@ -140,3 +140,6 @@ dmypy.json
 
 # computational study results
 computational_study/
+
+# State cache
+state_cache/

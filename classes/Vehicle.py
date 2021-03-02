@@ -24,11 +24,15 @@ class Vehicle:
             self.scooter_inventory.append(scooter)
             self.change_battery(scooter)
 
-    def drop_off(self, scooter: Scooter):
-        if scooter in self.scooter_inventory:
-            self.scooter_inventory.remove(scooter)
-            return True
-        else:
+    def drop_off(self, scooter_id: int):
+        if scooter_id not in map(lambda scooter: scooter.id, self.scooter_inventory):
             raise ValueError(
                 "Can't deliver a scooter that isn't in the vehicle inventory"
             )
+
+        scooter = next(
+            (scooter for scooter in self.scooter_inventory if scooter.id == scooter_id),
+            None,
+        )
+        self.scooter_inventory.remove(scooter)
+        return scooter
