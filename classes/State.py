@@ -264,5 +264,12 @@ class State:
 
         return [self.clusters[i] for i in neighbour_indices]
 
+    def get_cluster_by_id(self, cluster_id: int):
+        clusters = [cluster for cluster in self.clusters if cluster.id == cluster_id]
+        if len(clusters) > 0:
+            return next(clusters)
+        else:
+            raise ValueError(f"State dosen't contain cluster{cluster_id}")
+
     def system_simulate(self):
         system_simulate(self)
