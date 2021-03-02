@@ -46,14 +46,17 @@ def get_initial_state(sample_size=None, number_of_clusters=20, save=True) -> Sta
     # Choosing a default vehicle as the vehicle in the new state
     vehicle = Vehicle()
 
+    # Create state object
     initial_state = State(clusters, current_cluster, vehicle)
+
     # Find the ideal state for each cluster
     initial_state.compute_and_set_ideal_state(sample_size=sample_size)
-    # Get probability of movement from scooters in a cluster
-    probability_matrix = scooter_movement_analysis(initial_state)
 
+    # Trip intensity analysis
     initial_state.compute_and_set_trip_intensity(sample_size=sample_size)
 
+    # Get probability of movement from scooters in a cluster
+    probability_matrix = scooter_movement_analysis(initial_state)
     initial_state.set_probability_matrix(probability_matrix)
 
     # Cache the state for later
