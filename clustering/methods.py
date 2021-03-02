@@ -4,7 +4,8 @@ from sklearn.cluster import KMeans
 import os
 
 from classes import State, Scooter, Cluster
-from globals import GEOSPATIAL_BOUND_NEW
+from globals import GEOSPATIAL_BOUND_NEW, TEST_DATA_DIRECTORY
+from progress.bar import Bar
 
 
 def read_bounded_csv_file(
@@ -168,18 +169,19 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
             )
         return probability_matrix
 
-    test_data_directory = "test_data"
+    progress = Bar("| Computing MPM", max=len(os.listdir(TEST_DATA_DIRECTORY)),)
     # Fetch all snapshots from test data
     probability_matrices = []
     previous_snapshot = None
-    for index, file_path in enumerate(sorted(os.listdir(test_data_directory))):
-        current_snapshot = read_bounded_csv_file(f"{test_data_directory}/{file_path}")
+    for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
+        progress.next()
+        current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
         if previous_snapshot is not None:
             probability_matrices.append(
                 get_probability_matrix(state, previous_snapshot, current_snapshot)
             )
         previous_snapshot = current_snapshot
-
+    progress.finish()
     # Compute mean
     return np.mean(probability_matrices, axis=0)
 
@@ -214,3 +216,70 @@ def generate_cluster_objects(
         ]
         clusters.append(Cluster(cluster_label, scooters))
     return clusters
+
+
+def compute_and_set_ideal_state(state: State, sample_size=None):
+    progressbar = Bar(
+        "| Computing ideal state", max=len(os.listdir(TEST_DATA_DIRECTORY))
+    )
+    number_of_scooters_counter = np.zeros(
+        (len(state.clusters), len(os.listdir(TEST_DATA_DIRECTORY)))
+    )
+    for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
+        progressbar.next()
+        current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
+        if sample_size:
+            current_snapshot = current_snapshot.sample(sample_size)
+        current_snapshot["cluster"] = [
+            state.get_cluster_by_lat_lon(row["lat"], row["lon"]).id
+            for index, row in current_snapshot.iterrows()
+        ]
+        for cluster in state.clusters:
+            number_of_scooters_counter[cluster.id][index] = len(
+                current_snapshot[current_snapshot["cluster"] == cluster.id]
+            )
+    cluster_ideal_states = np.mean(number_of_scooters_counter, axis=1)
+    for cluster in state.clusters:
+        cluster.ideal_state = cluster_ideal_states[cluster.id]
+    progressbar.finish()
+
+
+def compute_and_set_trip_intensity(state: State, sample_size=None):
+    progress = Bar(
+        "| Computing trip intensity", max=len(os.listdir(TEST_DATA_DIRECTORY)),
+    )
+    # Fetch all snapshots from test data
+    trip_counter = np.zeros((len(state.clusters), len(os.listdir(TEST_DATA_DIRECTORY))))
+    previous_snapshot = None
+    for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
+        progress.next()
+        current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
+        if sample_size:
+            current_snapshot = current_snapshot.sample(sample_size)
+        if previous_snapshot is not None:
+            # Join tables on scooter id
+            merged_tables = pd.merge(
+                left=previous_snapshot,
+                right=current_snapshot,
+                left_on="id",
+                right_on="id",
+                how="inner",
+            )
+
+            # Filtering out scooters that has moved during the 20 minutes
+            moved_scooters = merged_tables[
+                merged_tables["battery_x"] != merged_tables["battery_y"]
+            ].copy()
+            moved_scooters["cluster"] = [
+                state.get_cluster_by_lat_lon(row["lat_x"], row["lon_x"]).id
+                for index, row in moved_scooters.iterrows()
+            ]
+            for cluster in state.clusters:
+                trip_counter[cluster.id][index] = len(
+                    moved_scooters[moved_scooters["cluster"] == cluster.id]
+                )
+        previous_snapshot = current_snapshot
+    cluster_trip_intensities = np.mean(trip_counter, axis=1)
+    for cluster in state.clusters:
+        cluster.trip_intensity_per_iteration = cluster_trip_intensities[cluster.id]
+    progress.finish()
