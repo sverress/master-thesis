@@ -4,9 +4,13 @@ from classes import Scooter
 
 class ScooterArrival(Event):
     def __int__(
-        self, time: int, scooter: Scooter, arrival_cluster_id: int, distance: int
+        self,
+        arrival_time: int,
+        scooter: Scooter,
+        arrival_cluster_id: int,
+        distance: int,
     ):
-        super().__init__(time)
+        super().__init__(arrival_time)
         self.scooter = scooter
         self.arrival_cluster_id = arrival_cluster_id
         self.distance = distance
@@ -29,3 +33,6 @@ class ScooterArrival(Event):
 
         # change coordinates of scooter after arrival
         self.scooter.change_coordinates(lat, lon)
+
+        # set time of world to this event's time
+        world.time = self.time
