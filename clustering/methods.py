@@ -248,7 +248,7 @@ def compute_and_set_ideal_state(state: State, sample_size=None):
             )
     cluster_ideal_states = np.mean(number_of_scooters_counter, axis=1)
     for cluster in state.clusters:
-        cluster.ideal_state = cluster_ideal_states[cluster.id]
+        cluster.ideal_state = round(cluster_ideal_states[cluster.id])
     progressbar.finish()
 
 
