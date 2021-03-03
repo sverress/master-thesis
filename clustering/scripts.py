@@ -13,7 +13,7 @@ from progress.bar import Bar
 def get_initial_state(sample_size=None, number_of_clusters=20, save=True) -> State:
     # If this combination has been requested before we fetch a cached version
     if save and os.path.exists(
-        f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size if sample_size else 5345}.pickle"
+        f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
     ):
         print(
             f"\nUsing cached version of state from {STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle\n"

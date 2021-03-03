@@ -200,7 +200,7 @@ class State:
         fig, ax = plt.subplots(figsize=[10, 6])
 
         # Add image to background
-        oslo = plt.imread("test_data/kart_oslo.png")
+        oslo = plt.imread("images/kart_oslo.png")
         lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
         ax.imshow(
             oslo,
