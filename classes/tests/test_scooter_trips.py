@@ -10,9 +10,9 @@ class ScooterTripsTestCase(unittest.TestCase):
     def test_scooter_departure(self):
         scooter = self.world.state.current_cluster.get_valid_scooters(20.0)
 
-        departure_event = ScooterDeparture(2)
+        departure_event = ScooterDeparture(2, 3, scooter)
 
-        vehicle = VehicleArrival(2)
+        vehicle = VehicleArrival(2, 5)
 
         self.world.stack = []
 
