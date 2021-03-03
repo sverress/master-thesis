@@ -13,6 +13,7 @@ MINUTES_IN_HOUR = 60
 
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
+BATTERY_LIMIT = 20.0
 
 # Testing constants
 MAX_NUMBER_OF_NEIGHBOURS = 3
