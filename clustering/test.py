@@ -17,6 +17,7 @@ class ClusteringTests(unittest.TestCase):
         self.assertAlmostEqual(
             len(self.state.get_scooters()),
             sum(cluster.ideal_state for cluster in self.state.clusters),
+            -1,
         )
 
 
