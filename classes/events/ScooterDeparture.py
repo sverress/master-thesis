@@ -3,7 +3,9 @@ from classes.events import Event
 
 
 class ScooterDeparture(Event):
-    def __int__(self, departure_time: int, departure_cluster_id: int, scooter: Scooter):
+    def __init__(
+        self, departure_time: int, departure_cluster_id: int, scooter: Scooter
+    ):
         super().__init__(departure_time)
         self.scooter = scooter
         self.departure_cluster_id = departure_cluster_id
