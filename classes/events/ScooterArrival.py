@@ -29,8 +29,7 @@ class ScooterArrival(Event):
         # add scooter to the arrived cluster
         arrival_cluster.add_scooter(self.scooter)
 
-        lat = arrival_cluster.lat
-        lon = arrival_cluster.lon
+        lat, lon = arrival_cluster.get_location()
 
         # change coordinates of scooter after arrival
         self.scooter.set_coordinates(lat, lon)

@@ -30,6 +30,8 @@ class ScooterTripsTestCase(unittest.TestCase):
     def test_scooter_arrival(self):
         scooter = self.world.state.current_cluster.get_valid_scooters(20.0)[0]
 
+        scooter_battery = scooter.battery
+
         arrival_cluster = self.world.state.get_cluster_by_id(
             round(np.random.uniform(len(self.world.state.clusters)))
         )
@@ -45,6 +47,9 @@ class ScooterTripsTestCase(unittest.TestCase):
 
         # test if arrival cluster contains the arrived scooter
         self.assertTrue(arrival_cluster.scooters.__contains__(scooter))
+
+        # test if battery has decreased
+        self.assertLess(scooter.battery, scooter_battery)
 
 
 if __name__ == "__main__":
