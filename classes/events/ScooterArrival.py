@@ -3,7 +3,7 @@ from classes import Scooter
 
 
 class ScooterArrival(Event):
-    def __int__(
+    def __init__(
         self,
         arrival_time: int,
         scooter: Scooter,
@@ -21,7 +21,7 @@ class ScooterArrival(Event):
         """
 
         # get arrival cluster
-        arrival_cluster = world.state.get_cluster(self.arrival_cluster_id)
+        arrival_cluster = world.state.get_cluster_by_id(self.arrival_cluster_id)
 
         # make the scooter travel the distance to change battery
         self.scooter.travel(self.distance)
@@ -29,10 +29,11 @@ class ScooterArrival(Event):
         # add scooter to the arrived cluster
         arrival_cluster.add_scooter(self.scooter)
 
-        lat, lon = arrival_cluster.center
+        lat = arrival_cluster.lat
+        lon = arrival_cluster.lon
 
         # change coordinates of scooter after arrival
-        self.scooter.change_coordinates(lat, lon)
+        self.scooter.set_coordinates(lat, lon)
 
         # set time of world to this event's time
         world.time = self.time
