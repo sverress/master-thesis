@@ -270,6 +270,17 @@ class State:
         )
         return neighbours[:number_of_neighbours] if number_of_neighbours else neighbours
 
+    def get_cluster_by_id(self, cluster_id: int):
+        matches = [cluster for cluster in self.clusters if cluster_id == cluster.id]
+        if len(matches) == 1:
+            return matches[0]
+        elif len(matches) > 1:
+            raise ValueError(
+                f"There are more than one cluster ({len(matches)} clusters) matching on id {cluster_id} in this state"
+            )
+        else:
+            raise ValueError(f"No cluster with id={cluster_id} where found")
+
     def system_simulate(self):
         return system_simulate(self)
 
