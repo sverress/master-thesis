@@ -4,7 +4,7 @@ from classes import World
 from classes.events import ScooterDeparture, ScooterArrival
 
 
-class ScooterTripsTestCase(unittest.TestCase):
+class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = World(40)
         self.departure_time = 1

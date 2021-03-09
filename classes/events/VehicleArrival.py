@@ -26,4 +26,4 @@ class VehicleArrival(Event):
         world.add_reward(reward)
 
         # set time of world to this event's time
-        world.time = self.time
+        super(VehicleArrival, self).perform(world)

@@ -1,10 +1,9 @@
-from abc import ABC, abstractmethod
+from classes import World
 
 
-class Event(ABC):
+class Event:
     def __init__(self, time: int):
         self.time = time
 
-    @abstractmethod
-    def perform(self, world) -> None:
-        pass
+    def perform(self, world: World) -> None:
+        world.time = self.time
