@@ -6,4 +6,4 @@ class GenerateScooterTrips(Event):
         super().__init__(time)
 
     def perform(self, world) -> None:
-        pass
+        super(GenerateScooterTrips, self).perform(world)
