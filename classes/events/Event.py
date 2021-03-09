@@ -6,4 +6,10 @@ class Event:
         self.time = time
 
     def perform(self, world: World) -> None:
-        world.time = self.time
+        if world.time <= self.time:
+            world.time = self.time
+        else:
+            raise ValueError(
+                f"{self.__class__.__name__} object tries to move the world backwards in time. Event time: {self.time}"
+                f", World time: {world.time}"
+            )

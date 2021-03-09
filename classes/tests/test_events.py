@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from classes import World
-from classes.events import ScooterDeparture, ScooterArrival, VehicleArrival
+from classes.events import ScooterDeparture, ScooterArrival, VehicleArrival, Event
 import random
 
 
@@ -77,6 +77,14 @@ class EventsTests(unittest.TestCase):
 
         # Vehicle arrival event created a new vehicle arrival event
         self.assertEqual(1, len(self.world.stack))
+
+    def test_try_to_move_back_in_time(self):
+        # Create a nice event to make time fly
+        event = Event(10)
+        event.perform(self.world)
+        # Create an event that tries to move back in time
+        wrong_event = Event(5)
+        self.assertRaises(ValueError, wrong_event.perform, self.world)
 
 
 if __name__ == "__main__":
