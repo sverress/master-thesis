@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 from classes import World
-from classes.events import ScooterDeparture, ScooterArrival
+from classes.events import ScooterDeparture, ScooterArrival, VehicleArrival
+import random
 
 
 class EventsTests(unittest.TestCase):
@@ -22,10 +23,8 @@ class EventsTests(unittest.TestCase):
         # test if the time of world object is set to the departure time
         self.assertEqual(departure_event.time, self.world.time)
 
-        scooters = self.world.state.get_scooters()
-
         # scooter should have been removed from the scooters in the state
-        self.assertFalse(scooters.__contains__(scooter))
+        self.assertFalse(self.world.state.get_scooters().__contains__(scooter))
 
     def test_scooter_arrival(self):
         scooter = self.world.state.current_cluster.get_valid_scooters(20.0)[0]
@@ -50,6 +49,34 @@ class EventsTests(unittest.TestCase):
 
         # test if battery has decreased
         self.assertLess(scooter.battery, scooter_battery)
+
+    def test_vehicle_arrival(self):
+        random_cluster_in_state = random.choice(
+            [
+                cluster
+                for cluster in self.world.state.clusters
+                if cluster.id != self.world.state.current_cluster.id
+            ]
+        )
+        # Create a vehicle arrival event with a arrival time of 20 arriving at a random cluster in the world state
+        vehicle_arrival = VehicleArrival(20, random_cluster_in_state.id)
+
+        # Perform the vehicle arrival event
+        vehicle_arrival.perform(self.world)
+
+        # The total reward has increased
+        self.assertLess(0, self.world.get_total_reward())
+
+        # test if the time of world object is set to the departure time
+        self.assertEqual(vehicle_arrival.time, self.world.time)
+
+        # New current cluster is not the arrival cluster, as the action takes the state to a new cluster
+        self.assertNotEqual(
+            random_cluster_in_state.id, self.world.state.current_cluster.id
+        )
+
+        # Vehicle arrival event created a new vehicle arrival event
+        self.assertEqual(1, len(self.world.stack))
 
 
 if __name__ == "__main__":
