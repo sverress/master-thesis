@@ -55,6 +55,11 @@ class State:
 
         return self.distance_matrix[start_index][end_index]
 
+    def get_distance_id(self, start: int, end: int):
+        return self.get_distance(
+            self.get_cluster_by_id(start), self.get_cluster_by_id(end)
+        )
+
     def calculate_distance_matrix(self):
         """
         Computes distance matrix for all clusters
@@ -200,7 +205,7 @@ class State:
         fig, ax = plt.subplots(figsize=[10, 6])
 
         # Add image to background
-        oslo = plt.imread("test_data/kart_oslo.png")
+        oslo = plt.imread("images/kart_oslo.png")
         lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
         ax.imshow(
             oslo,
@@ -271,11 +276,15 @@ class State:
         return neighbours[:number_of_neighbours] if number_of_neighbours else neighbours
 
     def get_cluster_by_id(self, cluster_id: int):
-        clusters = [cluster for cluster in self.clusters if cluster.id == cluster_id]
-        if len(clusters) > 0:
-            return next(clusters)
+        matches = [cluster for cluster in self.clusters if cluster_id == cluster.id]
+        if len(matches) == 1:
+            return matches[0]
+        elif len(matches) > 1:
+            raise ValueError(
+                f"There are more than one cluster ({len(matches)} clusters) matching on id {cluster_id} in this state"
+            )
         else:
-            raise ValueError(f"State dosen't contain cluster{cluster_id}")
+            raise ValueError(f"No cluster with id={cluster_id} where found")
 
     def system_simulate(self):
         return system_simulate(self)

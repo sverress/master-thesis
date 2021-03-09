@@ -27,3 +27,4 @@ class GenerateScooterTrips(Event):
         ]
 
         world.add_events(new_trips)
+        super(GenerateScooterTrips, self).perform(world)
