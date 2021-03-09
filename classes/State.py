@@ -55,6 +55,11 @@ class State:
 
         return self.distance_matrix[start_index][end_index]
 
+    def get_distance_id(self, start: int, end: int):
+        return self.get_distance(
+            self.get_cluster_by_id(start), self.get_cluster_by_id(end)
+        )
+
     def calculate_distance_matrix(self):
         """
         Computes distance matrix for all clusters

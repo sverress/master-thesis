@@ -35,4 +35,4 @@ class ScooterArrival(Event):
         self.scooter.set_coordinates(lat, lon)
 
         # set time of world to this event's time
-        world.time = self.time
+        super(ScooterArrival, self).perform(world)

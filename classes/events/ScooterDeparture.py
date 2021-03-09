@@ -22,4 +22,4 @@ class ScooterDeparture(Event):
         departure_cluster.remove_scooter(self.scooter)
 
         # set time of world to this event's time
-        world.time = self.time
+        super(ScooterDeparture, self).perform(world)
