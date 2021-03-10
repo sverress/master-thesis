@@ -1,5 +1,5 @@
 from classes import Event
-from decision import get_best_action
+import decision
 
 
 class VehicleArrival(Event):
@@ -18,7 +18,7 @@ class VehicleArrival(Event):
         world.state.current_cluster = arrival_cluster
 
         # find the best action from the current world state
-        action = get_best_action(world.state, world.get_remaining_time())
+        action = decision.get_best_action(world.state, world.get_remaining_time())
 
         # perform the best action on the state
         reward = world.state.do_action(action)

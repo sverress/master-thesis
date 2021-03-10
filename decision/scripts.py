@@ -9,7 +9,7 @@ def get_best_action(state: State, remaining_time: int) -> Action:
     best_action = None
 
     # Find all possible actions
-    actions = state.get_filtered_possible_actions(number_of_neighbours=3)
+    actions = state.get_possible_actions(number_of_neighbours=3, divide=2)
 
     # For every possible action
     for action in actions:
