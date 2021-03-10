@@ -31,9 +31,7 @@ class EventsTests(unittest.TestCase):
 
         scooter_battery = scooter.battery
 
-        arrival_cluster = self.world.state.get_cluster_by_id(
-            round(np.random.uniform(len(self.world.state.clusters)))
-        )
+        arrival_cluster = random.choice(self.world.state.clusters)
 
         arrival_event = ScooterArrival(
             self.departure_time + self.travel_time, scooter, arrival_cluster.id, 3

@@ -1,7 +1,6 @@
 from itertools import cycle
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
-from classes.Action import Action
 from clustering.methods import (
     compute_and_set_ideal_state,
     compute_and_set_trip_intensity,
@@ -78,19 +77,17 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
-    def get_possible_actions(self, number_of_neighbours=1):
+    def get_possible_actions(self, number_of_neighbours=None):
         """
-        Need to figure out what actions we want to look at. The combination of pick-ups, battery swaps,
-        drop-offs and next cluster is too large to try them all.
-        Improvements: - Travel only to neighbouring clusters.
-        - Only perform some battery swaps, eg. even numbers
-        :return: List of object Action
+        Enumerate all possible actions from the current state
+        :return: List of Action objects
         """
 
-        # Assume that no battery swap or pick-up of scooter with 100% battery and
-        # that the scooters with the lowest battery are swapped and picked up
-        swappable_scooters = self.current_cluster.get_swappable_scooters()
-        swappable_scooters_id = [scooter.id for scooter in swappable_scooters]
+        # Assume that no battery swap or pick-up of scooters with 100% battery and
+        # that the scooters with the lowest battery are prioritized
+        swappable_scooters_id = [
+            scooter.id for scooter in self.current_cluster.get_swappable_scooters()
+        ]
 
         # Initiate constraints for battery swap, pick-up and drop-off
         pick_ups = min(
@@ -120,22 +117,20 @@ class State:
                         if (pick_up + swap) <= self.vehicle.battery_inventory and (
                             pick_up + swap
                         ) <= len(self.current_cluster.scooters):
-                            combinations.append([swap, pick_up, drop_off, cluster])
+                            combinations.append([swap, pick_up, drop_off, cluster.id])
 
         actions = []
-        # Only need ID of scooter to drop off.
-        vehicle_inventory_id = list(
-            map(lambda scooter: scooter.id, self.vehicle.scooter_inventory)
-        )
 
         # Adding every action. Actions are the IDs of the scooters to be handled.
-        for battery_swap, pick_up, drop_off, cluster in combinations:
+        for battery_swap, pick_up, drop_off, cluster_id in combinations:
             actions.append(
                 Action(
                     swappable_scooters_id[pick_up : battery_swap + pick_up],
                     swappable_scooters_id[:pick_up],
-                    vehicle_inventory_id[:drop_off],
-                    cluster,
+                    [scooter.id for scooter in self.vehicle.scooter_inventory][
+                        :drop_off
+                    ],
+                    cluster_id,
                 )
             )
         return actions
@@ -147,7 +142,7 @@ class State:
         :return: float - reward for doing the action on the state
         """
         reward = 0
-        # Retrieve all scooters that you can change battery on (and therefor also pick up)
+        # Retrieve all scooters that you can change battery on (and therefore also pick up)
         swappable_scooters = self.current_cluster.get_swappable_scooters()
 
         # Perform all pickups
@@ -194,7 +189,7 @@ class State:
             self.current_cluster.add_scooter(delivery_scooter)
 
         # Moving the state/vehicle from this to next cluster
-        self.current_cluster = action.next_cluster
+        self.current_cluster = self.get_cluster_by_id(action.next_cluster)
 
         return reward
 

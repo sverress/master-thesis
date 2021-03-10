@@ -94,6 +94,9 @@ class Cluster(Location):
         return string if string != "" else "Empty cluster"
 
     def get_swappable_scooters(self):
+        """
+        Filter out scooters with 100% battery and sort them by battery percentage
+        """
         scooters = [scooter for scooter in self.scooters if scooter.battery < 100]
         return sorted(scooters, key=lambda scooter: scooter.battery, reverse=False)
 

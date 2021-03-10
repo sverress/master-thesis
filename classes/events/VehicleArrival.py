@@ -31,7 +31,7 @@ class VehicleArrival(Event):
 
         # Compute the arrival time for the Vehicle arrival event created by the action
         arrival_time = self.time + action.get_action_time(
-            world.state.get_distance_id(self.arrival_cluster_id, action.next_cluster.id)
+            world.state.get_distance_id(self.arrival_cluster_id, action.next_cluster)
         )
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack
-        world.add_event(VehicleArrival(arrival_time, action.next_cluster.id))
+        world.add_event(VehicleArrival(arrival_time, action.next_cluster))
