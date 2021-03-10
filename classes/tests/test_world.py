@@ -1,8 +1,6 @@
 import unittest
 import random
-
-from classes import World
-from classes.events import Event
+from classes import World, Event
 
 
 class WorldTestCase(unittest.TestCase):
