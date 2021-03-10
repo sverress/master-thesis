@@ -35,3 +35,9 @@ class VehicleArrival(Event):
         )
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack
         world.add_event(VehicleArrival(arrival_time, action.next_cluster.id))
+
+        # visualize cluster flows since last vehicle arrival
+        world.state.visualize_flow(world.get_cluster_flow(), action.next_cluster.id)
+
+        # clear world flow counter dictionary
+        world.clear_flow_dict()

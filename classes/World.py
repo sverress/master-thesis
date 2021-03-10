@@ -1,5 +1,6 @@
 import clustering.scripts as clustering_scripts
-from classes.events import Event
+from classes import Event
+import numpy as np
 import bisect
 
 
@@ -12,10 +13,16 @@ class World:
         self.stack = []
         self.time = 0
         self.rewards = []
+        self.cluster_flow = {
+            (start, end): 0
+            for start in np.arange(len(self.state.clusters))
+            for end in np.arange(len(self.state.clusters))
+            if start != end
+        }
 
     def run(self):
         while self.time < self.shift_duration:
-            self.stack.pop().perform(self)
+            self.stack.pop(0).perform(self)
 
     def get_remaining_time(self) -> int:
         """
@@ -47,3 +54,16 @@ class World:
         """
         insert_index = bisect.bisect([event.time for event in self.stack], event.time)
         self.stack.insert(insert_index, event)
+
+    def add_trip_to_flow(self, start: int, end: int):
+        self.cluster_flow[(start, end)] += 1
+
+    def get_cluster_flow(self):
+        return [
+            (start_end[0], start_end[1], flow)
+            for start_end, flow in list(self.cluster_flow.items())
+        ]
+
+    def clear_flow_dict(self):
+        for key in self.cluster_flow.keys():
+            self.cluster_flow[key] = 0
