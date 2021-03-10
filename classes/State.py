@@ -77,18 +77,7 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
-    def get_possible_actions(self, number_of_neighbours=None):
-        """
-        Enumerate all possible actions from the current state
-        :return: List of Action objects
-        """
-
-        # Assume that no battery swap or pick-up of scooters with 100% battery and
-        # that the scooters with the lowest battery are prioritized
-        swappable_scooters_id = [
-            scooter.id for scooter in self.current_cluster.get_swappable_scooters()
-        ]
-
+    def get_action_constraints(self) -> (int, int, int):
         # Initiate constraints for battery swap, pick-up and drop-off
         pick_ups = min(
             max(
@@ -105,6 +94,35 @@ class State:
             ),
             0,
         )
+        return pick_ups, swaps, drop_offs
+
+    def get_action_objects_from_combinations(
+        self, combinations: [(int, int, int, int)]
+    ):
+        # Assume that no battery swap or pick-up of scooters with 100% battery and
+        # that the scooters with the lowest battery are prioritized
+        swappable_scooters_id = [
+            scooter.id for scooter in self.current_cluster.get_swappable_scooters()
+        ]
+        # Adding every action. Actions are the IDs of the scooters to be handled.
+        return [
+            Action(
+                swappable_scooters_id[pick_up : battery_swap + pick_up],
+                swappable_scooters_id[:pick_up],
+                [scooter.id for scooter in self.vehicle.scooter_inventory][:drop_off],
+                cluster_id,
+            )
+            for battery_swap, pick_up, drop_off, cluster_id in combinations
+        ]
+
+    def get_possible_actions(self, number_of_neighbours=None):
+        """
+        Enumerate all possible actions from the current state
+        :return: List of Action objects
+        """
+
+        # Initiate constraints for battery swap, pick-up and drop-off2
+        pick_ups, swaps, drop_offs = self.get_action_constraints()
 
         combinations = []
         # Different combinations of battery swaps, pick-ups, drop-offs and clusters
@@ -119,21 +137,36 @@ class State:
                         ) <= len(self.current_cluster.scooters):
                             combinations.append([swap, pick_up, drop_off, cluster.id])
 
-        actions = []
+        return self.get_action_objects_from_combinations(combinations)
 
-        # Adding every action. Actions are the IDs of the scooters to be handled.
-        for battery_swap, pick_up, drop_off, cluster_id in combinations:
-            actions.append(
-                Action(
-                    swappable_scooters_id[pick_up : battery_swap + pick_up],
-                    swappable_scooters_id[:pick_up],
-                    [scooter.id for scooter in self.vehicle.scooter_inventory][
-                        :drop_off
-                    ],
-                    cluster_id,
-                )
-            )
-        return actions
+    def get_filtered_possible_actions(self, number_of_neighbours=None, divide=2):
+        """
+        Get a restricted number of the possible actions in the current state
+        :param number_of_neighbours: number of neighbours to evaluate
+        :param divide: number to divide by to create range increment
+        :return: List of action objects
+        """
+
+        def get_range(max_int):
+            return range(0, max_int + 1, round(max_int / divide) if max_int else 1)
+
+        # Initiate constraints for battery swap, pick-up and drop-off2
+        pick_ups, swaps, drop_offs = self.get_action_constraints()
+
+        combinations = []
+        # Different combinations of battery swaps, pick-ups, drop-offs and clusters
+        for cluster in self.get_neighbours(
+            self.current_cluster, number_of_neighbours=number_of_neighbours
+        ):
+            for pick_up in get_range(pick_ups):
+                for swap in get_range(swaps):
+                    for drop_off in get_range(drop_offs):
+                        if (pick_up + swap) <= self.vehicle.battery_inventory and (
+                            pick_up + swap
+                        ) <= len(self.current_cluster.scooters):
+                            combinations.append([swap, pick_up, drop_off, cluster.id])
+
+        return self.get_action_objects_from_combinations(combinations)
 
     def do_action(self, action: Action):
         """
