@@ -74,7 +74,7 @@ class EventsTests(unittest.TestCase):
         vehicle_arrival.perform(self.large_world)
 
         # The total reward has increased
-        self.assertLess(0, self.large_world.get_total_reward())
+        self.assertLessEqual(0, self.large_world.get_total_reward())
 
         # test if the time of world object is set to the departure time
         self.assertEqual(vehicle_arrival.time, self.large_world.time)
@@ -125,9 +125,7 @@ class EventsTests(unittest.TestCase):
         ]
 
         # check if departure time is less then arrival time
-        for trip in trips:
-            departure_event = trip[0]
-            arrival_event = trip[1]
+        for departure_event, arrival_event in trips:
             self.assertLess(departure_event.time, arrival_event.time)
 
     def test_lost_trip(self):
