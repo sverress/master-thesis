@@ -24,7 +24,6 @@ def get_label(instance, i: int):
 
 
 def create_node_dict(instance):
-    # TODO: should be moved to solution visualization script. this should return a list. Needs documentation
     output = {}
     locations = (
         [instance.depot]

@@ -16,6 +16,10 @@ class Location:
     def get_location(self):
         return self.lat, self.lon
 
+    def remove_location(self):
+        self.lon = None
+        self.lat = None
+
     def set_location(self, lat: float, lon: float):
         lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
         if lat is None:

@@ -1,6 +1,6 @@
 import unittest
 from clustering.scripts import get_initial_state
-from scenario_simulation.scripts import markov_decision_process, estimate_reward
+from scenario_simulation.scripts import estimate_reward
 
 
 class BasicScenarioSimulationTests(unittest.TestCase):
