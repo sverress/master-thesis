@@ -130,6 +130,13 @@ class EventsTests(unittest.TestCase):
             arrival_event = trip[1]
             self.assertLess(departure_event.time, arrival_event.time)
 
+    def test_lost_trip(self):
+        lost_trip = LostTrip(2)
+        lost_trip.perform(self.world)
+
+        # check if lost trip gives negative reward
+        self.assertLess(sum(self.world.rewards), 0)
+
     def test_try_to_move_back_in_time(self):
         # Create a nice event to make time fly
         event = Event(10)
