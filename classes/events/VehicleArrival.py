@@ -1,5 +1,6 @@
 from classes import Event
 from decision import get_best_action
+import copy
 
 
 class VehicleArrival(Event):
@@ -20,8 +21,18 @@ class VehicleArrival(Event):
         # find the best action from the current world state
         action = get_best_action(world.state, world.get_remaining_time())
 
+        # visualize cluster flows since last vehicle arrival
+        world.state.visualize_flow(world.get_cluster_flow(), action.next_cluster.id)
+
+        # clear world flow counter dictionary
+        world.clear_flow_dict()
+
+        current_state = copy.deepcopy(world.state)
+
         # perform the best action on the state
         reward = world.state.do_action(action)
+
+        current_state.visualize_action(world.state, action)
 
         # add the reward from the action to a reward list for a posterior analysis
         world.add_reward(reward)
@@ -35,9 +46,3 @@ class VehicleArrival(Event):
         )
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack
         world.add_event(VehicleArrival(arrival_time, action.next_cluster.id))
-
-        # visualize cluster flows since last vehicle arrival
-        world.state.visualize_flow(world.get_cluster_flow(), action.next_cluster.id)
-
-        # clear world flow counter dictionary
-        world.clear_flow_dict()
