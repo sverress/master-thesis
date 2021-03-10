@@ -1,5 +1,6 @@
-from classes.events import Event, LostTrip, ScooterArrival, ScooterDeparture
-from globals import BATTERY_LIMIT, SCOOTER_SPEED
+from classes import Event, LostTrip, ScooterArrival, ScooterDeparture
+from classes import World
+from globals import BATTERY_LIMIT, SCOOTER_SPEED, ITERATION_LENGTH_MINUTES
 import numpy as np
 
 
@@ -7,7 +8,7 @@ class GenerateScooterTrips(Event):
     def __init__(self, time: int):
         super().__init__(time)
 
-    def perform(self, world) -> None:
+    def perform(self, world: World) -> None:
         cluster_indices = np.arange(len(world.state.clusters))
 
         for departure_cluster in world.state.clusters:
@@ -33,25 +34,31 @@ class GenerateScooterTrips(Event):
                     continue
 
                 # add departure event to the stack
-                world.add_event(
-                    ScooterDeparture(departure_time, departure_cluster.id, scooter)
+                departure_event = ScooterDeparture(
+                    departure_time, departure_cluster.id, scooter
                 )
+                world.add_event(departure_event)
 
                 arrival_cluster_index = np.random.choice(
                     cluster_indices, p=departure_cluster.get_leave_distribution()
                 )
 
                 trip_distance = world.state.get_distance(
-                    departure_cluster.id, arrival_cluster_index
+                    departure_cluster,
+                    world.state.get_cluster_by_id(arrival_cluster_index),
                 )
 
                 # calculate arrival time
-                arrival_time = departure_time + round(trip_distance / SCOOTER_SPEED)
+                arrival_time = departure_time + round(
+                    trip_distance / SCOOTER_SPEED * 60
+                )
 
                 world.add_event(
                     ScooterArrival(
                         arrival_time, scooter, arrival_cluster_index, trip_distance
                     )
                 )
+
+        world.add_event(GenerateScooterTrips(self.time + ITERATION_LENGTH_MINUTES))
 
         super(GenerateScooterTrips, self).perform(world)

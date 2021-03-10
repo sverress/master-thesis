@@ -1,4 +1,4 @@
-from classes.events import Event
+from classes import Event
 from decision import get_best_action
 
 
