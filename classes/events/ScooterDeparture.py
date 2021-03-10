@@ -1,5 +1,5 @@
+from classes import Event
 from classes import Scooter
-from classes.events import Event
 
 
 class ScooterDeparture(Event):

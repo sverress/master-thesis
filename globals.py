@@ -11,8 +11,15 @@ BLUE, GREEN, RED, BLACK = "blue", "green", "red", "black"
 VEHICLE_SPEED = 30
 MINUTES_IN_HOUR = 60
 
+# Speed of scooter ref - Fearnley at al. (2020, section 3.6)
+SCOOTER_SPEED = 7
+
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
+BATTERY_LIMIT = 20.0
+
+# Negative reward for lost trip
+LOST_TRIP_REWARD = -0.1
 
 # Testing constants
 MAX_NUMBER_OF_NEIGHBOURS = 3

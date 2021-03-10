@@ -23,6 +23,7 @@ class Vehicle:
         else:
             self.scooter_inventory.append(scooter)
             self.change_battery(scooter)
+            scooter.remove_location()
 
     def drop_off(self, scooter_id: int):
         if scooter_id not in map(lambda scooter: scooter.id, self.scooter_inventory):

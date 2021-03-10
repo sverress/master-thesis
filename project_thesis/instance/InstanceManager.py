@@ -36,9 +36,6 @@ class InstanceManager:
     ):
         """
         Creates necessary data structures to create a new ModelInput object.
-
-        TODO: This methods input parameters are only related to zones and number of nodes.
-        TODO: Other parameters should be added optionally
         :param number_of_sections: number of sections at each x and y axis. ex. 3 gives 9 zones
         :param number_of_scooters_per_section: this is the number of scooters per zone and is also considered the optimal
         state at the time of writing

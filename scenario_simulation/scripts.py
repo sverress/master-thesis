@@ -12,7 +12,7 @@ def estimate_reward(
     :param state: State - state to de the simulations from
     :param remaining_shift_duration: int - time left on shift = length of simulation
     :param number_of_simulations: int - number of simulations to be performed (default = 10)
-    :return: int - maximum reward of simulations
+    :return: int - maximum reward from simulations
     """
 
     all_rewards = []
@@ -35,40 +35,8 @@ def estimate_reward(
             ]
             total_reward += child_state.do_action(random_action)
 
-            # TODO Do a Markov Decision Process from markov_decision_process()
+            child_state.system_simulate()
 
         all_rewards.append(total_reward)
 
     return max(all_rewards)
-
-
-def markov_decision_process(state: State):
-    """
-    :param state: State - current state to perform one iteration of the markov decision process
-    """
-    raise NotImplementedError("This function is not yet implemented")
-    # Initialize trips. Trip format: (start_cluster: Cluster, end_cluster: Cluster, scooter: Scooter, distance: int)
-    trips = []
-    # Generate scooter trips
-    for cluster in state.clusters:
-        # For all scooters in the cluster -> perform a trip to another cluster or stay
-        for scooter in cluster.scooters:
-            # Pick a random destination
-            destination = np.random.choice(
-                sorted(state.clusters, key=lambda state_cluster: state_cluster.id),
-                p=cluster.get_leave_distribution(),
-            )
-            trips.append(
-                (
-                    state.current_cluster,
-                    destination,
-                    scooter,
-                    state.get_distance(state.current_cluster, destination),
-                )
-            )
-
-    # perform all trips
-    for start, end, scooter, distance in trips:
-        start.remove_scooter(scooter)
-        end.add_scooter(scooter)
-        scooter.travel(distance)
