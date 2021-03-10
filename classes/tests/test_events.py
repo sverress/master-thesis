@@ -71,9 +71,6 @@ class EventsTests(unittest.TestCase):
         # Perform the vehicle arrival event
         vehicle_arrival.perform(self.large_world)
 
-        # The total reward has increased
-        self.assertLessEqual(0, self.large_world.get_total_reward())
-
         # test if the time of world object is set to the departure time
         self.assertEqual(vehicle_arrival.time, self.large_world.time)
 

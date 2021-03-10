@@ -161,6 +161,16 @@ class BasicDecisionTests(unittest.TestCase):
     def test_get_best_action(self):
         self.assertIsInstance(get_best_action(self.initial_state, 30), Action)
 
+    def test_number_of_actions(self):
+        self.assertLess(
+            len(self.initial_state.get_possible_actions(divide=2)),
+            len(self.initial_state.get_possible_actions()),
+        )
+        self.assertLess(
+            len(self.initial_state.get_possible_actions(divide=2)),
+            len(self.initial_state.get_possible_actions(divide=3)),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
