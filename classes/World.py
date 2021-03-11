@@ -2,9 +2,17 @@ import clustering.scripts as clustering_scripts
 from classes.events import Event
 import bisect
 
+from decision.policies import RandomRolloutPolicy
+
 
 class World:
-    def __init__(self, shift_duration: int, sample_size=100, number_of_clusters=20):
+    def __init__(
+        self,
+        shift_duration: int,
+        sample_size=100,
+        number_of_clusters=20,
+        policy=RandomRolloutPolicy,
+    ):
         self.shift_duration = shift_duration
         self.state = clustering_scripts.get_initial_state(
             sample_size=sample_size, number_of_clusters=number_of_clusters
@@ -12,6 +20,7 @@ class World:
         self.stack = []
         self.time = 0
         self.rewards = []
+        self.policy = policy
 
     def run(self):
         while self.time < self.shift_duration:
