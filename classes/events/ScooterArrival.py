@@ -1,12 +1,11 @@
-from classes import Event
-from classes import Scooter
+import classes.events.Event
 
 
-class ScooterArrival(Event):
+class ScooterArrival(classes.Event):
     def __init__(
         self,
         arrival_time: int,
-        scooter: Scooter,
+        scooter: classes.Scooter,
         arrival_cluster_id: int,
         departure_cluster_id: int,
         distance: int,

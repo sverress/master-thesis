@@ -1,9 +1,9 @@
-from classes import Event
+import classes
 import copy
 import decision
 
 
-class VehicleArrival(Event):
+class VehicleArrival(classes.Event):
     def __init__(self, arrival_time: int, arrival_cluster_id: int):
         super().__init__(arrival_time)
         self.arrival_cluster_id = arrival_cluster_id

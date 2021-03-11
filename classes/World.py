@@ -1,5 +1,4 @@
 import clustering.scripts as clustering_scripts
-from classes import Event
 import numpy as np
 import bisect
 
@@ -46,7 +45,7 @@ class World:
         """
         return sum(self.rewards)
 
-    def add_event(self, event: Event) -> None:
+    def add_event(self, event) -> None:
         """
         Adds event to the sorted stack.
         Avoids calling sort on every iteration by using the bisect package
