@@ -1,15 +1,21 @@
-from classes import Scooter, Cluster
 from globals import MINUTES_IN_HOUR, VEHICLE_SPEED
 
 
 class Action:
     def __init__(
         self,
-        battery_swaps: [Scooter],
-        pick_ups: [Scooter],
-        delivery_scooters: [Scooter],
-        next_cluster: Cluster,
+        battery_swaps: [int],
+        pick_ups: [int],
+        delivery_scooters: [int],
+        next_cluster: int,
     ):
+        """
+        Object to represent an action
+        :param battery_swaps: ids of scooters to swap batteries on
+        :param pick_ups: ids of scooters to pick up
+        :param delivery_scooters: ids of scooters to deliver
+        :param next_cluster: id of next cluster to visit
+        """
         self.battery_swaps = battery_swaps
         self.pick_ups = pick_ups
         self.delivery_scooters = delivery_scooters
