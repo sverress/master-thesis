@@ -40,9 +40,7 @@ class EventsTests(unittest.TestCase):
 
         scooter_battery = scooter.battery
 
-        arrival_cluster = self.world.state.get_cluster_by_id(
-            round(np.random.uniform(len(self.world.state.clusters)))
-        )
+        arrival_cluster = random.choice(self.world.state.clusters)
 
         arrival_event = ScooterArrival(
             self.departure_time + self.travel_time, scooter, arrival_cluster.id, 3
@@ -72,9 +70,6 @@ class EventsTests(unittest.TestCase):
 
         # Perform the vehicle arrival event
         vehicle_arrival.perform(self.large_world)
-
-        # The total reward has increased
-        self.assertLessEqual(0, self.large_world.get_total_reward())
 
         # test if the time of world object is set to the departure time
         self.assertEqual(vehicle_arrival.time, self.large_world.time)
