@@ -22,17 +22,19 @@ class VehicleArrival(Event):
         action = decision.get_best_action(world.state, world.get_remaining_time())
 
         # visualize cluster flows since last vehicle arrival
-        world.state.visualize_flow(world.get_cluster_flow(), action.next_cluster.id)
+        world.state.visualize_flow(world.get_cluster_flow(), action.next_cluster)
 
         # clear world flow counter dictionary
         world.clear_flow_dict()
 
-        current_state = copy.deepcopy(world.state)
+        # copy state before action for visualization purposes
+        state_before_action = copy.deepcopy(world.state)
 
         # perform the best action on the state
         reward = world.state.do_action(action)
 
-        current_state.visualize_action(world.state, action)
+        # visualize action performed by vehicle
+        state_before_action.visualize_action(world.state, action)
 
         # add the reward from the action to a reward list for a posterior analysis
         world.add_reward(reward)

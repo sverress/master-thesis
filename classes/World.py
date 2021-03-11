@@ -55,15 +55,27 @@ class World:
         insert_index = bisect.bisect([event.time for event in self.stack], event.time)
         self.stack.insert(insert_index, event)
 
-    def add_trip_to_flow(self, start: int, end: int):
+    def add_trip_to_flow(self, start: int, end: int) -> None:
+        """
+        Adds a trip from start to end for cluster flow
+        :param start: departure cluster
+        :param end: arrival cluster
+        """
         self.cluster_flow[(start, end)] += 1
 
-    def get_cluster_flow(self):
+    def get_cluster_flow(self) -> [(int, int, int)]:
+        """
+        Get all flows between cluster since last vehicle arrival
+        :return: list: tuple (start, end, flow) flow from departure cluster to arrival cluster
+        """
         return [
             (start_end[0], start_end[1], flow)
             for start_end, flow in list(self.cluster_flow.items())
         ]
 
-    def clear_flow_dict(self):
+    def clear_flow_dict(self) -> None:
+        """
+        Clears the cluster flow dict
+        """
         for key in self.cluster_flow.keys():
             self.cluster_flow[key] = 0

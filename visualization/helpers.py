@@ -118,7 +118,7 @@ def plot_action(action, ax, offset=0):
     for delivery in action.delivery_scooters:
         action_string += f"{delivery}\n"
 
-    action_string += f"\nNext cluster: {action.next_cluster.id}"
+    action_string += f"\nNext cluster: {action.next_cluster}"
 
     ax.text(
         0,
