@@ -238,8 +238,11 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
                 current_snapshot[current_snapshot["cluster"] == cluster.id]
             )
     cluster_ideal_states = np.mean(number_of_scooters_counter, axis=1)
+    normalized_cluster_ideal_states = (
+        len(sample_scooters) * cluster_ideal_states / sum(cluster_ideal_states)
+    )
     for cluster in state.clusters:
-        cluster.ideal_state = round(cluster_ideal_states[cluster.id])
+        cluster.ideal_state = round(normalized_cluster_ideal_states[cluster.id])
     progressbar.finish()
 
 
