@@ -35,9 +35,7 @@ def get_initial_state(sample_size=None, number_of_clusters=20, save=True) -> Sta
     clustering.next()
 
     # Structure data into objects
-    clusters = generate_cluster_objects(
-        entur_dataframe, cluster_labels, sample_size=sample_size
-    )
+    clusters = generate_cluster_objects(entur_dataframe, cluster_labels)
     clustering.next()
     # Choosing first cluster as starting cluster in state
     current_cluster = clusters[0]
@@ -58,6 +56,9 @@ def get_initial_state(sample_size=None, number_of_clusters=20, save=True) -> Sta
     # Get probability of movement from scooters in a cluster
     probability_matrix = scooter_movement_analysis(initial_state)
     initial_state.set_probability_matrix(probability_matrix)
+
+    if sample_size:
+        initial_state.sample(sample_size)
 
     # Cache the state for later
     initial_state.save_state()
