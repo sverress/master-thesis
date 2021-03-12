@@ -11,6 +11,7 @@ from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 import pickle
 import os
 
@@ -91,7 +92,7 @@ class State:
             return range(
                 0,
                 max_int + 1,
-                round(max_int / divide if divide else 1) if max_int > 1 else 1,
+                math.ceil(max_int / divide if divide else 1) if max_int else 1,
             )
 
         # Initiate constraints for battery swap, pick-up and drop-off
