@@ -8,11 +8,13 @@ class ScooterArrival(Event):
         arrival_time: int,
         scooter: Scooter,
         arrival_cluster_id: int,
+        departure_cluster_id: int,
         distance: int,
     ):
         super().__init__(arrival_time)
         self.scooter = scooter
         self.arrival_cluster_id = arrival_cluster_id
+        self.departure_cluster_id = departure_cluster_id
         self.distance = distance
 
     def perform(self, world) -> None:
@@ -33,6 +35,8 @@ class ScooterArrival(Event):
 
         # change coordinates of scooter after arrival
         self.scooter.set_coordinates(lat, lon)
+
+        world.add_trip_to_flow(self.departure_cluster_id, self.arrival_cluster_id)
 
         # set time of world to this event's time
         super(ScooterArrival, self).perform(world)

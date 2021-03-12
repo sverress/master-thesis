@@ -59,7 +59,11 @@ class GenerateScooterTrips(Event):
 
                 world.add_event(
                     ScooterArrival(
-                        arrival_time, scooter, arrival_cluster_index, trip_distance
+                        arrival_time,
+                        scooter,
+                        arrival_cluster_index,
+                        departure_cluster.id,
+                        trip_distance,
                     )
                 )
 
