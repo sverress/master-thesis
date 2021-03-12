@@ -226,7 +226,7 @@ def generate_cluster_objects(
     return clusters
 
 
-def compute_and_set_ideal_state(state: State, sample_size=None):
+def compute_and_set_ideal_state(state: State, sample_scooters: list):
     progressbar = Bar(
         "| Computing ideal state", max=len(os.listdir(TEST_DATA_DIRECTORY))
     )
@@ -236,8 +236,9 @@ def compute_and_set_ideal_state(state: State, sample_size=None):
     for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
         progressbar.next()
         current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
-        if sample_size:
-            current_snapshot = current_snapshot.sample(sample_size)
+        current_snapshot = current_snapshot[
+            current_snapshot["id"].isin(sample_scooters)
+        ]
         current_snapshot["cluster"] = [
             state.get_cluster_by_lat_lon(row["lat"], row["lon"]).id
             for index, row in current_snapshot.iterrows()
@@ -252,7 +253,7 @@ def compute_and_set_ideal_state(state: State, sample_size=None):
     progressbar.finish()
 
 
-def compute_and_set_trip_intensity(state: State, sample_size=None):
+def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     progress = Bar(
         "| Computing trip intensity", max=len(os.listdir(TEST_DATA_DIRECTORY)),
     )
@@ -262,8 +263,9 @@ def compute_and_set_trip_intensity(state: State, sample_size=None):
     for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):
         progress.next()
         current_snapshot = read_bounded_csv_file(f"{TEST_DATA_DIRECTORY}/{file_path}")
-        if sample_size:
-            current_snapshot = current_snapshot.sample(sample_size)
+        current_snapshot = current_snapshot[
+            current_snapshot["id"].isin(sample_scooters)
+        ]
         if previous_snapshot is not None:
             # Join tables on scooter id
             merged_tables = pd.merge(
@@ -291,3 +293,9 @@ def compute_and_set_trip_intensity(state: State, sample_size=None):
     for cluster in state.clusters:
         cluster.trip_intensity_per_iteration = cluster_trip_intensities[cluster.id]
     progress.finish()
+
+
+def scooter_sample_filter(dataframe: pd.DataFrame, sample_size=None):
+    if sample_size:
+        dataframe = dataframe.sample(sample_size)
+    return dataframe["id"].tolist()

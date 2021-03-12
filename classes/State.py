@@ -321,8 +321,8 @@ class State:
         with open(filepath, "rb") as file:
             return pickle.load(file)
 
-    def compute_and_set_ideal_state(self, sample_size=None):
-        compute_and_set_ideal_state(self, sample_size=sample_size)
+    def compute_and_set_ideal_state(self, sample_scooters):
+        compute_and_set_ideal_state(self, sample_scooters)
 
-    def compute_and_set_trip_intensity(self, sample_size=None):
-        compute_and_set_trip_intensity(self, sample_size=sample_size)
+    def compute_and_set_trip_intensity(self, sample_scooters):
+        compute_and_set_trip_intensity(self, sample_scooters)
