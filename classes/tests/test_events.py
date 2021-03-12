@@ -1,6 +1,4 @@
 import unittest
-import numpy as np
-from classes import World
 from classes import (
     ScooterDeparture,
     ScooterArrival,
@@ -8,9 +6,10 @@ from classes import (
     Event,
     GenerateScooterTrips,
     LostTrip,
+    World,
 )
-
 import random
+from globals import ITERATION_LENGTH_MINUTES
 
 
 class EventsTests(unittest.TestCase):
@@ -21,10 +20,8 @@ class EventsTests(unittest.TestCase):
         self.travel_time = 5
 
     def test_scooter_departure(self):
-        scooter = self.world.state.current_cluster.get_valid_scooters(20.0)[0]
-
         departure_event = ScooterDeparture(
-            self.departure_time, self.world.state.current_cluster.id, scooter
+            self.departure_time, self.world.state.current_cluster.id
         )
 
         departure_event.perform(self.world)
@@ -32,8 +29,17 @@ class EventsTests(unittest.TestCase):
         # test if the time of world object is set to the departure time
         self.assertEqual(departure_event.time, self.world.time)
 
+        arrival_event = next(iter(self.world.stack))
+
+        # test if the arrival event created in departure has the same departure cluster id
+        self.assertEqual(
+            departure_event.departure_cluster_id, arrival_event.departure_cluster_id,
+        )
+
         # scooter should have been removed from the scooters in the state
-        self.assertFalse(self.world.state.get_scooters().__contains__(scooter))
+        self.assertFalse(
+            self.world.state.get_scooters().__contains__(arrival_event.scooter)
+        )
 
     def test_scooter_arrival(self):
         scooter = self.world.state.current_cluster.get_valid_scooters(20.0)[0]
@@ -98,30 +104,15 @@ class EventsTests(unittest.TestCase):
             )
         )
 
-        departures = [
-            event
-            for event in self.large_world.stack
-            if isinstance(event, ScooterDeparture)
-        ]
-        arrivals = [
-            event
-            for event in self.large_world.stack
-            if isinstance(event, ScooterArrival)
-        ]
-
-        # check if there is equally many departures and arrivals
-        self.assertEqual(len(departures), len(arrivals))
-
-        trips = [
-            (departure, arrival)
-            for departure in departures
-            for arrival in arrivals
-            if departure.scooter.id == arrival.scooter.id
-        ]
-
-        # check if departure time is less then arrival time
-        for departure_event, arrival_event in trips:
-            self.assertLess(departure_event.time, arrival_event.time)
+        # check if all departure times are inside the interval of iteration duration
+        self.assertTrue(
+            all(
+                [
+                    True if 0 <= event.time <= ITERATION_LENGTH_MINUTES else False
+                    for event in self.large_world.stack
+                ]
+            )
+        )
 
     def test_lost_trip(self):
         lost_trip = LostTrip(2)

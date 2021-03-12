@@ -1,4 +1,5 @@
 import numpy as np
+from globals import BATTERY_LIMIT
 
 
 def system_simulate(state):
@@ -14,7 +15,6 @@ def system_simulate(state):
         for end in np.arange(len(state.clusters))
         if start != end
     }
-    min_battery = 20.0
     trips = []
     for i, start_cluster in enumerate(state.clusters):
         # poisson process to select number of trips in a iteration
@@ -23,7 +23,7 @@ def system_simulate(state):
         )
 
         # can't complete more trips then there is scooters with battery over min_battery
-        valid_scooters = start_cluster.get_valid_scooters(min_battery)
+        valid_scooters = start_cluster.get_valid_scooters(BATTERY_LIMIT)
         if number_of_trips > len(valid_scooters):
             number_of_trips = len(valid_scooters)
 

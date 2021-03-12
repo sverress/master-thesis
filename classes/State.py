@@ -1,4 +1,6 @@
 from itertools import cycle
+import random
+
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
 from clustering.methods import (
@@ -9,6 +11,7 @@ from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 import pickle
 import os
 
@@ -89,7 +92,7 @@ class State:
             return range(
                 0,
                 max_int + 1,
-                round(max_int / divide if divide else 1) if max_int else 1,
+                math.ceil(max_int / divide if divide else 1) if max_int else 1,
             )
 
         # Initiate constraints for battery swap, pick-up and drop-off
@@ -326,3 +329,15 @@ class State:
 
     def compute_and_set_trip_intensity(self, sample_scooters):
         compute_and_set_trip_intensity(self, sample_scooters)
+
+    def sample(self, sample_size: int):
+        # Filter out scooters not in sample
+        sampled_scooter_ids = random.sample(
+            [scooter.id for scooter in self.get_scooters()], sample_size
+        )
+        for cluster in self.clusters:
+            cluster.scooters = [
+                scooter
+                for scooter in cluster.scooters
+                if scooter.id in sampled_scooter_ids
+            ]

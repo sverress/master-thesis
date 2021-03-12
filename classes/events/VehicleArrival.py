@@ -1,6 +1,6 @@
+import classes
 from classes import Event
 import copy
-import decision
 
 
 class VehicleArrival(Event):
@@ -19,7 +19,7 @@ class VehicleArrival(Event):
         world.state.current_cluster = arrival_cluster
 
         # find the best action from the current world state
-        action = decision.get_best_action(world.state, world.get_remaining_time())
+        action = world.policy.get_best_action(world)
 
         # visualize cluster flows since last vehicle arrival
         world.state.visualize_flow(world.get_cluster_flow(), action.next_cluster)

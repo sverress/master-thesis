@@ -1,12 +1,12 @@
 from classes import Event
-from classes import Scooter
+import classes
 
 
 class ScooterArrival(Event):
     def __init__(
         self,
         arrival_time: int,
-        scooter: Scooter,
+        scooter: classes.Scooter,
         arrival_cluster_id: int,
         departure_cluster_id: int,
         distance: int,
@@ -28,14 +28,10 @@ class ScooterArrival(Event):
         # make the scooter travel the distance to change battery
         self.scooter.travel(self.distance)
 
-        # add scooter to the arrived cluster
+        # add scooter to the arrived cluster (location is changed in add_scooter method)
         arrival_cluster.add_scooter(self.scooter)
 
-        lat, lon = arrival_cluster.get_location()
-
-        # change coordinates of scooter after arrival
-        self.scooter.set_coordinates(lat, lon)
-
+        # adding the trip to world flow for visualizing purposes
         world.add_trip_to_flow(self.departure_cluster_id, self.arrival_cluster_id)
 
         # set time of world to this event's time
