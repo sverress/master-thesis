@@ -1,8 +1,7 @@
-from classes import Action, State
+from classes import Action, State, Scooter
 from visualization.helpers import *
 from globals import *
 import matplotlib.pyplot as plt
-import itertools
 import copy
 
 
@@ -54,6 +53,19 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
 
     make_scooter_visualize(current_state, ax3, scooter_battery=True)
+
+    plt.tight_layout(pad=1.0)
+    plt.show()
+
+
+def visualize_scooters_on_trip(current_state: State, trips: [(int, int, Scooter)]):
+    fig, ax1, ax2 = create_state_trips_plot("Current trips", "State")
+
+    plot_trips(trips, ax1)
+
+    make_scooter_visualize(current_state, ax2, scooter_battery=True)
+
+    add_cluster_center(current_state.clusters, ax2)
 
     plt.tight_layout(pad=1.0)
     plt.show()
