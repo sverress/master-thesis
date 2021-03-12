@@ -9,6 +9,7 @@ from classes import (
     World,
 )
 import random
+from globals import ITERATION_LENGTH_MINUTES
 
 
 class EventsTests(unittest.TestCase):
@@ -103,11 +104,11 @@ class EventsTests(unittest.TestCase):
             )
         )
 
-        # check if all departure times are inside 20 min interval
+        # check if all departure times are inside the interval of iteration duration
         self.assertTrue(
             all(
                 [
-                    True if 0 <= event.time <= 20 else False
+                    True if 0 <= event.time <= ITERATION_LENGTH_MINUTES else False
                     for event in self.large_world.stack
                 ]
             )
