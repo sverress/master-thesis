@@ -91,7 +91,7 @@ class State:
             return range(
                 0,
                 max_int + 1,
-                round(max_int / divide if divide else 1) if max_int else 1,
+                round(max_int / divide if divide else 1) if max_int > 1 else 1,
             )
 
         # Initiate constraints for battery swap, pick-up and drop-off

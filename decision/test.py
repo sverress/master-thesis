@@ -1,7 +1,8 @@
 import unittest
+
+from classes import World, Action
 from clustering.scripts import get_initial_state
-from decision.scripts import get_best_action
-from classes import Action
+from decision.policies import RandomRolloutPolicy
 
 
 class BasicDecisionTests(unittest.TestCase):
@@ -158,9 +159,6 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of actions possible
         self.assertEqual(len(actions), 5)
 
-    def test_get_best_action(self):
-        self.assertIsInstance(get_best_action(self.initial_state, 30), Action)
-
     def test_number_of_actions(self):
         self.assertLess(
             len(self.initial_state.get_possible_actions(divide=2)),
@@ -170,6 +168,9 @@ class BasicDecisionTests(unittest.TestCase):
             len(self.initial_state.get_possible_actions(divide=2)),
             len(self.initial_state.get_possible_actions(divide=3)),
         )
+
+    def test_random_rollout_policy(self):
+        self.assertIsInstance(RandomRolloutPolicy.get_best_action(World(40)), Action)
 
 
 if __name__ == "__main__":
