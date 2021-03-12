@@ -1,11 +1,8 @@
-from classes import World
-
-
 class Event:
     def __init__(self, time: int):
         self.time = time
 
-    def perform(self, world: World) -> None:
+    def perform(self, world) -> None:
         if world.time <= self.time:
             world.time = self.time
         else:

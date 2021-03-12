@@ -4,8 +4,8 @@ from classes.Scooter import Scooter
 from classes.State import State
 from classes.Vehicle import Vehicle
 from classes.Location import Location
-from classes.World import World
 from classes.events.Event import Event
+from classes.World import World
 from classes.events.LostTrip import LostTrip
 from classes.events.ScooterDeparture import ScooterDeparture
 from classes.events.ScooterArrival import ScooterArrival

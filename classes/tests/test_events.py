@@ -16,7 +16,7 @@ import random
 class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = World(40)
-        self.large_world = World(40, sample_size=2000, number_of_clusters=20)
+        self.large_world = World(40, sample_size=500, number_of_clusters=20)
         self.departure_time = 1
         self.travel_time = 5
 
@@ -43,7 +43,7 @@ class EventsTests(unittest.TestCase):
         arrival_cluster = random.choice(self.world.state.clusters)
 
         arrival_event = ScooterArrival(
-            self.departure_time + self.travel_time, scooter, arrival_cluster.id, 3
+            self.departure_time + self.travel_time, scooter, arrival_cluster.id, 0, 3
         )
 
         arrival_event.perform(self.world)

@@ -18,4 +18,4 @@ class Scooter(Location):
         self.set_location(lat, lon)
 
     def __repr__(self):
-        return f"ID: {self.id} B: {self.battery}"
+        return f"ID-{self.id} B-{round(self.battery,1)}"
