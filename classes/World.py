@@ -68,8 +68,7 @@ class World:
         :return: list: tuple (start, end, flow) flow from departure cluster to arrival cluster
         """
         return [
-            (start_end[0], start_end[1], flow)
-            for start_end, flow in list(self.cluster_flow.items())
+            (start, end, flow) for (start, end), flow in list(self.cluster_flow.items())
         ]
 
     def clear_flow_dict(self) -> None:

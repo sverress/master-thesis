@@ -27,13 +27,8 @@ class ScooterArrival(classes.Event):
         # make the scooter travel the distance to change battery
         self.scooter.travel(self.distance)
 
-        # add scooter to the arrived cluster
+        # add scooter to the arrived cluster (location is changed in add_scooter method)
         arrival_cluster.add_scooter(self.scooter)
-
-        lat, lon = arrival_cluster.get_location()
-
-        # change coordinates of scooter after arrival
-        self.scooter.set_coordinates(lat, lon)
 
         world.add_trip_to_flow(self.departure_cluster_id, self.arrival_cluster_id)
 
