@@ -187,14 +187,13 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
 
 
 def generate_cluster_objects(
-    scooter_data: pd.DataFrame, cluster_labels: list, sample_size: None
+    scooter_data: pd.DataFrame, cluster_labels: list
 ) -> [Cluster]:
     """
     Based on cluster labels and scooter data create Scooter and Cluster objects.
     Cluster class generates cluster center
     :param scooter_data: geospatial data for scooters
     :param cluster_labels: list of labels for scooter data
-    :param sample_size: number of scooters
     :return: list of clusters
     """
     # Add cluster labels as a row to the scooter data dataframe
@@ -214,15 +213,6 @@ def generate_cluster_objects(
         ]
         # Adding all scooters to cluster to find center location
         clusters.append(Cluster(cluster_label, scooters))
-    if sample_size:
-        # Filter out scooters not in sample
-        sampled_scooter_data_w_labels = scooter_data_w_labels.sample(sample_size)
-        for cluster in clusters:
-            cluster.scooters = [
-                scooter
-                for scooter in cluster.scooters
-                if scooter.id in sampled_scooter_data_w_labels.index
-            ]
     return clusters
 
 

@@ -1,4 +1,6 @@
 from itertools import cycle
+import random
+
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
 from clustering.methods import (
@@ -327,3 +329,15 @@ class State:
 
     def compute_and_set_trip_intensity(self, sample_size=None):
         compute_and_set_trip_intensity(self, sample_size=sample_size)
+
+    def sample(self, sample_size: int):
+        # Filter out scooters not in sample
+        sampled_scooter_ids = random.sample(
+            [scooter.id for scooter in self.get_scooters()], sample_size
+        )
+        for cluster in self.clusters:
+            cluster.scooters = [
+                scooter
+                for scooter in cluster.scooters
+                if scooter.id in sampled_scooter_ids
+            ]

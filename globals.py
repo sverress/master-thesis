@@ -34,6 +34,10 @@ else:
 # Test data directory
 TEST_DATA_DIRECTORY = "test_data"
 
+
+# RUNTIME SETTINGS
+SEED = 69
+
 COLORS = [
     "#B52CC2",
     "#EF9A90",
