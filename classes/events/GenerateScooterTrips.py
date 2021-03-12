@@ -1,9 +1,10 @@
 import classes
+from classes import Event
 from globals import ITERATION_LENGTH_MINUTES
 import numpy as np
 
 
-class GenerateScooterTrips(classes.Event):
+class GenerateScooterTrips(Event):
     def __init__(self, time: int):
         super().__init__(time)
 

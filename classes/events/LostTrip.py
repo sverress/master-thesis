@@ -1,8 +1,8 @@
-import classes
+from classes import Event
 from globals import LOST_TRIP_REWARD
 
 
-class LostTrip(classes.Event):
+class LostTrip(Event):
     def __init__(self, time: int):
         super().__init__(time)
 

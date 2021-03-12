@@ -103,30 +103,15 @@ class EventsTests(unittest.TestCase):
             )
         )
 
-        departures = [
-            event
-            for event in self.large_world.stack
-            if isinstance(event, ScooterDeparture)
-        ]
-        arrivals = [
-            event
-            for event in self.large_world.stack
-            if isinstance(event, ScooterArrival)
-        ]
-
-        # check if there is equally many departures and arrivals
-        self.assertEqual(len(departures), len(arrivals))
-
-        trips = [
-            (departure, arrival)
-            for departure in departures
-            for arrival in arrivals
-            if departure.scooter.id == arrival.scooter.id
-        ]
-
-        # check if departure time is less then arrival time
-        for departure_event, arrival_event in trips:
-            self.assertLess(departure_event.time, arrival_event.time)
+        # check if all departure times are inside 20 min interval
+        self.assertTrue(
+            all(
+                [
+                    True if 0 <= event.time <= 20 else False
+                    for event in self.large_world.stack
+                ]
+            )
+        )
 
     def test_lost_trip(self):
         lost_trip = LostTrip(2)

@@ -1,7 +1,8 @@
-import classes.events.Event
+from classes import Event
+import classes
 
 
-class ScooterArrival(classes.Event):
+class ScooterArrival(Event):
     def __init__(
         self,
         arrival_time: int,
@@ -30,6 +31,7 @@ class ScooterArrival(classes.Event):
         # add scooter to the arrived cluster (location is changed in add_scooter method)
         arrival_cluster.add_scooter(self.scooter)
 
+        # adding the trip to world flow for visualizing purposes
         world.add_trip_to_flow(self.departure_cluster_id, self.arrival_cluster_id)
 
         # set time of world to this event's time

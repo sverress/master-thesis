@@ -1,9 +1,10 @@
 import classes
+from classes import Event
 from globals import BATTERY_LIMIT, SCOOTER_SPEED
 import numpy as np
 
 
-class ScooterDeparture(classes.Event):
+class ScooterDeparture(Event):
     def __init__(self, departure_time: int, departure_cluster_id: int):
         super().__init__(departure_time)
         self.departure_cluster_id = departure_cluster_id
@@ -22,6 +23,8 @@ class ScooterDeparture(classes.Event):
         # if there are no more available scooters -> make a LostTrip event for that departure time
         if len(available_scooters) > 0:
             scooter = available_scooters.pop(0)
+
+            # get a arrival cluster from the leave prob distribution
             arrival_cluster = np.random.choice(
                 world.state.clusters, p=departure_cluster.get_leave_distribution()
             )
