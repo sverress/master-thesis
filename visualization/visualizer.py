@@ -41,7 +41,15 @@ def visualize_action(state_before_action: State, current_state: State, action: A
 
     # plots the vehicle info and the action in the first plot
     plot_vehicle_info(state_before_action.vehicle, current_state.vehicle, ax1)
-    plot_action(action, ax1)
+    plot_action(
+        action,
+        ax1,
+        offset=(
+            len(state_before_action.vehicle.scooter_inventory)
+            + len(current_state.vehicle.scooter_inventory)
+        )
+        * 0.015,
+    )
 
     make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
 

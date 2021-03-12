@@ -30,6 +30,7 @@ def display_graph(
         edge_color=edge_colors,
         width=edge_weights,
         node_size=node_size,
+        linewidths=2,
         alpha=0.7,
         with_labels=with_labels,
         ax=ax,
@@ -53,22 +54,22 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
 
     # vehicle info box
     current_vehicle_info = (
-        f"Current Vehicle:\n Cap - {current_vehicle.scooter_inventory_capacity}\n"
-        f" Battery - {current_vehicle.battery_inventory}\n"
-        f" Scooters:"
+        f"Current Vehicle:\nCap - {current_vehicle.scooter_inventory_capacity}\n"
+        f"Battery - {current_vehicle.battery_inventory}\n"
+        f"Scooters:"
     )
 
     for scooter in current_vehicle.scooter_inventory:
-        current_vehicle_info += f"  {scooter}\n"
+        current_vehicle_info += f"\n{scooter}"
 
     next_vehicle_info = (
-        f"Next Vehicle:\n Cap - {next_vehicle.scooter_inventory_capacity}\n"
-        f" Battery - {next_vehicle.battery_inventory}\n"
-        f" Scooters:"
+        f"Next Vehicle:\nCap - {next_vehicle.scooter_inventory_capacity}\n"
+        f"Battery - {next_vehicle.battery_inventory}\n"
+        f"Scooters:"
     )
 
     for scooter in next_vehicle.scooter_inventory:
-        next_vehicle_info += f"  {scooter}\n"
+        next_vehicle_info += f"\n{scooter}"
 
     props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
 
@@ -86,7 +87,7 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
 
     ax.text(
         0,
-        0.88,
+        0.88 - 0.015 * len(current_vehicle.scooter_inventory),
         next_vehicle_info,
         transform=ax.transAxes,
         fontsize=10,
@@ -96,7 +97,7 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
     )
 
 
-def plot_action(action, ax):
+def plot_action(action, ax, offset=0):
     """
     Adds action information to a subplot
     """
@@ -117,11 +118,11 @@ def plot_action(action, ax):
     for delivery in action.delivery_scooters:
         action_string += f"{delivery}\n"
 
-    action_string += f"\nNext cluster: {action.next_cluster.id}"
+    action_string += f"\nNext cluster: {action.next_cluster}"
 
     ax.text(
         0,
-        0.78,
+        0.78 - offset,
         action_string,
         transform=ax.transAxes,
         fontsize=10,
@@ -461,6 +462,9 @@ def setup_cluster_visualize(state: State, flows=None, next_state_id=-1):
             bbox=dict(alpha=0),
             ax=ax,
         )
+
+    if next_state_id != -1:
+        graph.add_edge(state.current_cluster.id, next_state_id, color=RED, width=3)
 
     # displays plot
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
