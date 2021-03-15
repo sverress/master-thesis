@@ -262,6 +262,7 @@ def create_system_simulation_plot(title_1="", title_2="", title_3=""):
 
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
+    axis = []
 
     oslo = plt.imread("images/kart_oslo.png")
 
@@ -269,29 +270,20 @@ def create_system_simulation_plot(title_1="", title_2="", title_3=""):
     spec = gridspec.GridSpec(
         figure=fig, ncols=3, nrows=1, width_ratios=[1, 8, 8], wspace=0, hspace=0
     )
-    ax1 = fig.add_subplot(spec[0])
-    ax1.set_title(title_1)
-    ax1.set_xlim([-0.01, 1.01])
-    ax1.set_ylim([-0.01, 1.01])
-    ax1.axis("off")
-    ax2 = fig.add_subplot(spec[1])
-    ax2.set_title(title_2)
-    ax2.set_xlim([-0.01, 1.01])
-    ax2.set_ylim([-0.01, 1.01])
-    ax2.imshow(
-        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
-    )
-    ax2.axis("off")
-    ax3 = fig.add_subplot(spec[2])
-    ax3.set_title(title_3)
-    ax3.set_xlim([-0.01, 1.01])
-    ax3.set_ylim([-0.01, 1.01])
-    ax3.imshow(
-        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
-    )
-    ax3.axis("off")
 
-    return fig, ax1, ax2, ax3
+    for i in range(3):
+        ax = fig.add_subplot(spec[i])
+        ax.set_title(title_1)
+        ax.set_xlim([-0.01, 1.01])
+        ax.set_ylim([-0.01, 1.01])
+        ax.axis("off")
+        if i > 0:
+            ax.imshow(
+                oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+            )
+        axis.append(ax)
+
+    return (fig, *axis)
 
 
 def create_state_trips_plot(title_1="", title_2=""):
@@ -301,6 +293,7 @@ def create_state_trips_plot(title_1="", title_2=""):
 
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
+    axis = []
 
     oslo = plt.imread("images/kart_oslo.png")
 
@@ -308,21 +301,19 @@ def create_state_trips_plot(title_1="", title_2=""):
     spec = gridspec.GridSpec(
         figure=fig, ncols=2, nrows=1, width_ratios=[1, 16], wspace=0, hspace=0
     )
-    ax1 = fig.add_subplot(spec[0])
-    ax1.set_title(title_1)
-    ax1.set_xlim([-0.01, 1.01])
-    ax1.set_ylim([-0.01, 1.01])
-    ax1.axis("off")
-    ax2 = fig.add_subplot(spec[1])
-    ax2.set_title(title_2)
-    ax2.set_xlim([-0.01, 1.01])
-    ax2.set_ylim([-0.01, 1.01])
-    ax2.imshow(
+    for i in range(2):
+        ax = fig.add_subplot(spec[i])
+        ax.set_title(title_1)
+        ax.set_xlim([-0.01, 1.01])
+        ax.set_ylim([-0.01, 1.01])
+        ax.axis("off")
+        axis.append(ax)
+
+    axis[1].imshow(
         oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
     )
-    ax2.axis("off")
 
-    return fig, ax1, ax2
+    return (fig, *axis)
 
 
 def add_cluster_info(state, graph, ax):
