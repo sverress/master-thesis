@@ -11,6 +11,10 @@ BLUE, GREEN, RED, BLACK = "blue", "green", "red", "black"
 VEHICLE_SPEED = 30
 MINUTES_IN_HOUR = 60
 
+# Inventory of vehicle
+BATTERY_INVENTORY = 100
+SCOOTER_INVENTORY = 10
+
 # Speed of scooter ref - Fearnley at al. (2020, section 3.6)
 SCOOTER_SPEED = 7
 

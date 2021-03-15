@@ -295,6 +295,9 @@ class State:
     def visualize_action(self, state_after_action, action: Action):
         visualize_action(self, state_after_action, action)
 
+    def visualize_current_trips(self, trips: [(int, int, Scooter)]):
+        visualize_scooters_on_trip(self, trips)
+
     def visualize_system_simulation(self, trips):
         visualize_scooter_simulation(self, trips)
 

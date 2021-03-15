@@ -24,6 +24,9 @@ class VehicleArrival(Event):
         # visualize cluster flows since last vehicle arrival
         world.state.visualize_flow(world.get_cluster_flow(), action.next_cluster)
 
+        # visualize scooters currently out on a trip
+        world.state.visualize_current_trips(world.get_scooters_on_trip())
+
         # clear world flow counter dictionary
         world.clear_flow_dict()
 
