@@ -92,7 +92,7 @@ class State:
             return range(
                 0,
                 max_int + 1,
-                math.ceil(max_int / divide if divide else 1) if max_int else 1,
+                math.ceil((max_int / divide) if divide else 1) if max_int else 1,
             )
 
         # Initiate constraints for battery swap, pick-up and drop-off
@@ -330,11 +330,11 @@ class State:
         with open(filepath, "rb") as file:
             return pickle.load(file)
 
-    def compute_and_set_ideal_state(self, sample_size=None):
-        compute_and_set_ideal_state(self, sample_size=sample_size)
+    def compute_and_set_ideal_state(self, sample_scooters):
+        compute_and_set_ideal_state(self, sample_scooters)
 
-    def compute_and_set_trip_intensity(self, sample_size=None):
-        compute_and_set_trip_intensity(self, sample_size=sample_size)
+    def compute_and_set_trip_intensity(self, sample_scooters):
+        compute_and_set_trip_intensity(self, sample_scooters)
 
     def sample(self, sample_size: int):
         # Filter out scooters not in sample
