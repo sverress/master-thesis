@@ -103,7 +103,10 @@ class State:
             self.vehicle.scooter_inventory_capacity
             - len(self.vehicle.scooter_inventory),
         )
-        swaps = min(len(self.current_cluster.scooters), self.vehicle.battery_inventory)
+        swaps = min(
+            min(len(self.current_cluster.scooters), self.vehicle.battery_inventory),
+            self.current_cluster.ideal_state,
+        )
         drop_offs = max(
             min(
                 self.current_cluster.ideal_state - len(self.current_cluster.scooters),
