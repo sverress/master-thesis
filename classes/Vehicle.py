@@ -1,11 +1,12 @@
 from classes.Scooter import Scooter
+from globals import BATTERY_INVENTORY, SCOOTER_INVENTORY
 
 
 class Vehicle:
     def __init__(self):
-        self.battery_inventory = 20
+        self.battery_inventory = BATTERY_INVENTORY
         self.scooter_inventory = []
-        self.scooter_inventory_capacity = 5
+        self.scooter_inventory_capacity = SCOOTER_INVENTORY
 
     def change_battery(self, scooter: Scooter):
         if self.battery_inventory <= 0:
