@@ -1,6 +1,7 @@
 import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
+import classes
 
 from decision.policies import RandomRolloutPolicy
 
@@ -84,3 +85,14 @@ class World:
         """
         for key in self.cluster_flow.keys():
             self.cluster_flow[key] = 0
+
+    def get_scooters_on_trip(self) -> [(int, int, classes.Scooter)]:
+        """
+        Get all scooters that are currently out on a trip
+        :return: list of all scooters that are out on a trip
+        """
+        return [
+            (event.departure_cluster_id, event.arrival_cluster_id, event.scooter)
+            for event in self.stack
+            if isinstance(event, classes.ScooterArrival)
+        ]

@@ -26,6 +26,13 @@ class BasicDecisionTests(unittest.TestCase):
         # Get all possible actions
         actions = self.initial_state.get_possible_actions()
 
+        # Test number of swaps less or equal to ideal state
+        for action in actions:
+            self.assertLessEqual(
+                len(action.battery_swaps),
+                self.initial_state.current_cluster.ideal_state,
+            )
+
         # Test number of actions
         self.assertEqual(len(actions), 6)
 
@@ -63,7 +70,7 @@ class BasicDecisionTests(unittest.TestCase):
         actions = self.initial_state.get_possible_actions()
 
         # Test number of actions
-        self.assertEqual(len(actions), 15)
+        self.assertEqual(len(actions), 12)
 
         # Calculate the expected reward
         reward = len(actions[-1].battery_swaps) * 0.8 - len(actions[-1].pick_ups) * 0.2

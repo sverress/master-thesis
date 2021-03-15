@@ -142,7 +142,7 @@ def plot_trips(trips, ax):
 
     for trip in trips:
         start, end, scooter = trip
-        trips_string += f"{start.id} -> {end.id}: {scooter.id}\n"
+        trips_string += f"{start} -> {end}: {scooter.id}\n"
 
     ax.text(
         0,
@@ -255,7 +255,7 @@ def create_standard_state_plot():
     return fig, ax
 
 
-def create_system_simulation_plot(title_1="", title_2="", title_3=""):
+def create_system_simulation_plot(titles=["", "", ""]):
     """
     Subplot framework for the simulation visualization
     """
@@ -263,35 +263,46 @@ def create_system_simulation_plot(title_1="", title_2="", title_3=""):
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
 
-    oslo = plt.imread("images/kart_oslo.png")
-
     # creating subplots
     spec = gridspec.GridSpec(
         figure=fig, ncols=3, nrows=1, width_ratios=[1, 8, 8], wspace=0, hspace=0
     )
-    ax1 = fig.add_subplot(spec[0])
-    ax1.set_title(title_1)
-    ax1.set_xlim([-0.01, 1.01])
-    ax1.set_ylim([-0.01, 1.01])
-    ax1.axis("off")
-    ax2 = fig.add_subplot(spec[1])
-    ax2.set_title(title_2)
-    ax2.set_xlim([-0.01, 1.01])
-    ax2.set_ylim([-0.01, 1.01])
-    ax2.imshow(
-        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
-    )
-    ax2.axis("off")
-    ax3 = fig.add_subplot(spec[2])
-    ax3.set_title(title_3)
-    ax3.set_xlim([-0.01, 1.01])
-    ax3.set_ylim([-0.01, 1.01])
-    ax3.imshow(
-        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
-    )
-    ax3.axis("off")
 
-    return fig, ax1, ax2, ax3
+    return (fig, *create_subplots_from_gripspec(fig, spec, titles))
+
+
+def create_state_trips_plot(titles=["", ""]):
+    """
+    Subplot framework for the simulation visualization
+    """
+
+    # generate plot and subplots
+    fig = plt.figure(figsize=(20, 9.7))
+
+    # creating subplots
+    spec = gridspec.GridSpec(
+        figure=fig, ncols=2, nrows=1, width_ratios=[1, 16], wspace=0, hspace=0
+    )
+
+    return (fig, *create_subplots_from_gripspec(fig, spec, titles))
+
+
+def create_subplots_from_gripspec(fig, spec, titles):
+    axis = []
+    oslo = plt.imread("images/kart_oslo.png")
+    for i in range(spec.ncols):
+        ax = fig.add_subplot(spec[i])
+        ax.set_title(titles[i])
+        ax.set_xlim([-0.01, 1.01])
+        ax.set_ylim([-0.01, 1.01])
+        ax.axis("off")
+        if i > 0:
+            ax.imshow(
+                oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+            )
+        axis.append(ax)
+
+    return axis
 
 
 def add_cluster_info(state, graph, ax):
@@ -522,3 +533,24 @@ def make_scooter_visualize(state, ax, scooter_battery=False):
         all_scooters,
         all_scooters_id,
     )
+
+
+def add_cluster_center(clusters, ax):
+
+    cluster_locations = convert_geographic_to_cart(
+        [cluster.get_location() for cluster in clusters], GEOSPATIAL_BOUND_NEW
+    )
+
+    for cluster in clusters:
+        center_x, center_y = cluster_locations[cluster.id]
+        ax.scatter(
+            center_x,
+            center_y,
+            c=COLORS[cluster.id],
+            edgecolor="None",
+            alpha=0.8,
+            s=200,
+        )
+        ax.annotate(
+            cluster.id, (center_x, center_y), ha="center", va="center", weight="bold",
+        )

@@ -103,7 +103,10 @@ class State:
             self.vehicle.scooter_inventory_capacity
             - len(self.vehicle.scooter_inventory),
         )
-        swaps = min(len(self.current_cluster.scooters), self.vehicle.battery_inventory)
+        swaps = min(
+            min(len(self.current_cluster.scooters), self.vehicle.battery_inventory),
+            self.current_cluster.ideal_state,
+        )
         drop_offs = max(
             min(
                 self.current_cluster.ideal_state - len(self.current_cluster.scooters),
@@ -294,6 +297,9 @@ class State:
 
     def visualize_action(self, state_after_action, action: Action):
         visualize_action(self, state_after_action, action)
+
+    def visualize_current_trips(self, trips: [(int, int, Scooter)]):
+        visualize_scooters_on_trip(self, trips)
 
     def visualize_system_simulation(self, trips):
         visualize_scooter_simulation(self, trips)
