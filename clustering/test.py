@@ -4,16 +4,12 @@ from clustering.scripts import get_initial_state
 
 class ClusteringTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.state_mid = get_initial_state(500)
+        self.state_mid = get_initial_state(500, cache=False, save=False)
         self.state_small = get_initial_state(100)
         self.state_big = get_initial_state(2000)
 
     def test_sample_size(self):
         self.assertEqual(len(self.state_mid.get_scooters()), 500)
-
-    @staticmethod
-    def test_full_dataset_init_state():
-        get_initial_state()
 
     def test_ideal_state_sum_to_number_of_scooters(self):
         self.assertAlmostEqual(

@@ -160,13 +160,14 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(len(actions), 5)
 
     def test_number_of_actions(self):
+        bigger_state = get_initial_state(sample_size=100)
         self.assertLess(
-            len(self.initial_state.get_possible_actions(divide=2)),
-            len(self.initial_state.get_possible_actions()),
+            len(bigger_state.get_possible_actions(divide=2)),
+            len(bigger_state.get_possible_actions()),
         )
         self.assertLess(
-            len(self.initial_state.get_possible_actions(divide=2)),
-            len(self.initial_state.get_possible_actions(divide=3)),
+            len(bigger_state.get_possible_actions(divide=2)),
+            len(bigger_state.get_possible_actions(divide=3)),
         )
 
     def test_random_rollout_policy(self):

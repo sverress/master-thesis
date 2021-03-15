@@ -238,12 +238,24 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
                 current_snapshot[current_snapshot["cluster"] == cluster.id]
             )
     cluster_ideal_states = np.mean(number_of_scooters_counter, axis=1)
-    normalized_cluster_ideal_states = (
-        len(sample_scooters) * cluster_ideal_states / sum(cluster_ideal_states)
+    normalized_cluster_ideal_states = normalize_to_integers(
+        cluster_ideal_states, sum_to=len(sample_scooters)
     )
     for cluster in state.clusters:
-        cluster.ideal_state = round(normalized_cluster_ideal_states[cluster.id])
+        cluster.ideal_state = normalized_cluster_ideal_states[cluster.id]
     progressbar.finish()
+
+
+def normalize_to_integers(array, sum_to=1):
+    normalized_cluster_ideal_states = sum_to * array / sum(array)
+    rests = normalized_cluster_ideal_states - np.floor(normalized_cluster_ideal_states)
+    number_of_ones = round(sum(rests))
+    sorted_rests = np.sort(rests)
+    return np.array(
+        np.floor(normalized_cluster_ideal_states)
+        + [1 if rest in sorted_rests[number_of_ones:] else 0 for rest in rests],
+        dtype="int32",
+    ).tolist()
 
 
 def compute_and_set_trip_intensity(state: State, sample_scooters: list):

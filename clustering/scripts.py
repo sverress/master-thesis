@@ -5,9 +5,11 @@ from globals import STATE_CACHE_DIR
 from progress.bar import Bar
 
 
-def get_initial_state(sample_size=None, number_of_clusters=20, save=True) -> State:
+def get_initial_state(
+    sample_size=None, number_of_clusters=20, save=True, cache=True
+) -> State:
     # If this combination has been requested before we fetch a cached version
-    if save and os.path.exists(
+    if cache and os.path.exists(
         f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
     ):
         print(
@@ -58,9 +60,10 @@ def get_initial_state(sample_size=None, number_of_clusters=20, save=True) -> Sta
     if sample_size:
         initial_state.sample(sample_size)
 
-    # Cache the state for later
-    initial_state.save_state()
-    print("Setup state completed\n")
+    if save:
+        # Cache the state for later
+        initial_state.save_state()
+        print("Setup state completed\n")
 
     return initial_state
 
