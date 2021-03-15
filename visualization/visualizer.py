@@ -35,7 +35,7 @@ def visualize_action(state_before_action: State, current_state: State, action: A
 
     # creating the subplots for the visualization
     fig, ax1, ax2, ax3 = create_system_simulation_plot(
-        "Action", "State before action", "State after action"
+        ["Action", "State before action", "State after action"]
     )
 
     # plots the vehicle info and the action in the first plot
@@ -59,7 +59,7 @@ def visualize_action(state_before_action: State, current_state: State, action: A
 
 
 def visualize_scooters_on_trip(current_state: State, trips: [(int, int, Scooter)]):
-    fig, ax1, ax2 = create_state_trips_plot("Current trips", "State")
+    fig, ax1, ax2 = create_state_trips_plot(["Current trips", "State"])
 
     plot_trips(trips, ax1)
 
@@ -82,7 +82,7 @@ def visualize_scooter_simulation(
 
     # creating the subplots for the visualization
     fig, ax1, ax2, ax3 = create_system_simulation_plot(
-        "Trips", "Current State", "Next State"
+        ["Trips", "Current state", "Next State"]
     )
 
     plot_trips(trips, ax1)
