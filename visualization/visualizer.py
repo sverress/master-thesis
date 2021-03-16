@@ -106,17 +106,20 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     plot_vehicle_info(state_before_action.vehicle, current_state.vehicle, ax1)
     plot_action(
         action,
+        state_before_action.current_cluster.id,
         ax1,
         offset=(
             len(state_before_action.vehicle.scooter_inventory)
             + len(current_state.vehicle.scooter_inventory)
         )
-        * 0.015,
+        * ACTION_OFFSET,
     )
 
     make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
+    add_cluster_center(state_before_action.clusters, ax2)
 
     make_scooter_visualize(current_state, ax3, scooter_battery=True)
+    add_cluster_center(state_before_action.clusters, ax3)
 
     plt.tight_layout(pad=1.0)
     plt.show()

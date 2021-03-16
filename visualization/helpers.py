@@ -1,6 +1,6 @@
 import itertools
 from matplotlib import gridspec
-from globals import BLACK, RED, BLUE, GREEN, GEOSPATIAL_BOUND_NEW, COLORS
+from globals import BLACK, RED, BLUE, GREEN, GEOSPATIAL_BOUND_NEW, COLORS, ACTION_OFFSET
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -86,7 +86,7 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
 
     ax.text(
         0,
-        0.88 - 0.015 * len(current_vehicle.scooter_inventory),
+        0.89 - ACTION_OFFSET * len(current_vehicle.scooter_inventory),
         next_vehicle_info,
         transform=ax.transAxes,
         fontsize=10,
@@ -96,7 +96,7 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
     )
 
 
-def plot_action(action, ax, offset=0):
+def plot_action(action, current_cluster, ax, offset=0):
     """
     Adds action information to a subplot
     """
@@ -117,11 +117,11 @@ def plot_action(action, ax, offset=0):
     for delivery in action.delivery_scooters:
         action_string += f"{delivery}\n"
 
-    action_string += f"\nNext cluster: {action.next_cluster}"
+    action_string += f"\nCurrent : {current_cluster}\nNext : {action.next_cluster}"
 
     ax.text(
         0,
-        0.78 - offset,
+        0.80 - offset,
         action_string,
         transform=ax.transAxes,
         fontsize=10,
@@ -310,7 +310,7 @@ def add_cluster_info(state, graph, ax):
     pos = nx.get_node_attributes(graph, "pos")
     # add number of scooters and battery label to nodes
     for i, cluster in enumerate(state.clusters):
-        node_info = f"S = {cluster.number_of_scooters()} \nB = {round(cluster.get_current_state(), 1)}"
+        node_info = f"S = {cluster.number_of_scooters()}\nIS = {cluster.ideal_state}\nB = {round(cluster.get_current_state(), 1)}"
         x, y = pos[i]
         ax.annotate(
             node_info, xy=(x, y + 0.03), horizontalalignment="center", fontsize=12
@@ -449,7 +449,7 @@ def alt_draw_networkx_edge_labels(
             rotation=trans_angle,
             transform=ax.transData,
             bbox=bbox,
-            zorder=1,
+            zorder=10,
             clip_on=True,
         )
         text_items[(n1, n2)] = t
@@ -536,7 +536,7 @@ def make_scooter_visualize(state, ax, scooter_battery=False):
     )
 
 
-def add_cluster_center(clusters, ax):
+def add_cluster_center(clusters, ax, current_cluster=-1, next_cluster=-1):
 
     cluster_locations = convert_geographic_to_cart(
         [cluster.get_location() for cluster in clusters], GEOSPATIAL_BOUND_NEW

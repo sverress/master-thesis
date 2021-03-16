@@ -43,6 +43,9 @@ TEST_DATA_DIRECTORY = "test_data"
 # RUNTIME SETTINGS
 SEED = 69
 
+# Visualization parameters
+ACTION_OFFSET = 0.018
+
 COLORS = [
     "#B52CC2",
     "#EF9A90",
