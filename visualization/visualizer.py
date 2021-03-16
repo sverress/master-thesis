@@ -16,15 +16,18 @@ def visualize_state(state):
     plt.show()
 
 
-def visualize_cluster_flow(state: State, flows: [(int, int, int)], next_state_id=-1):
+def visualize_cluster_flow(
+    state: State, flows: [(int, int, int)], vehicle_trip=None, next_state_id=-1
+):
     """
     Visualize the flow in a state from a simulation
+    :param vehicle_trip: passed trip for the vehicle entering a
     :param next_state_id: id of next state
     :param state: State to display
     :param flows: flow of scooter from one cluster to another
     :return:
     """
-    setup_cluster_visualize(state, flows, next_state_id)
+    setup_cluster_visualize(state, flows, vehicle_trip, next_state_id)
 
     # shows the plots in IDE
     plt.tight_layout(pad=1.0)

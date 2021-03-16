@@ -1,7 +1,6 @@
 import copy
-
 from classes import World
-
+from globals import NUMBER_OF_ROLLOUTS
 from scenario_simulation.scripts import estimate_reward
 
 
@@ -27,7 +26,11 @@ class RandomRolloutPolicy(Policy):
             reward = new_state.do_action(action)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            reward += estimate_reward(new_state, world.get_remaining_time())
+            reward += estimate_reward(
+                new_state,
+                world.get_remaining_time(),
+                number_of_simulations=NUMBER_OF_ROLLOUTS,
+            )
 
             # If the action is better than previous actions, make best_action
             # Add next cluster distance to update shift duration used later.

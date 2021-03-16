@@ -1,7 +1,7 @@
 import itertools
 
 from matplotlib import gridspec
-from globals import BLACK, RED, BLUE, GEOSPATIAL_BOUND_NEW, COLORS
+from globals import BLACK, RED, BLUE, GREEN, GEOSPATIAL_BOUND_NEW, COLORS
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
@@ -174,11 +174,10 @@ def make_graph(
     node_color = []
     node_border = []
     for i, cartesian_cluster_coordinates in enumerate(cartesian_clusters):
-        label = i
-        labels[i] = label
-        border_color = RED if current_node == cluster_ids[i] else BLACK
+        labels[i] = cluster_ids[i]
+        border_color = BLUE if current_node == cluster_ids[i] else BLACK
         node_color.append(COLORS[cluster_ids[i]])
-        node_border.append(BLUE if next_state == cluster_ids[i] else border_color)
+        node_border.append(RED if next_state == cluster_ids[i] else border_color)
         graph.nodes[i]["pos"] = cartesian_cluster_coordinates
 
     return graph, labels, node_border, node_color
@@ -442,12 +441,13 @@ def alt_draw_networkx_edge_labels(
     return text_items
 
 
-def setup_cluster_visualize(state: State, flows=None, next_state_id=-1):
+def setup_cluster_visualize(
+    state: State, flows=None, vehicle_trip=None, next_state_id=-1
+):
     node_size = 1000
     font_size = 14
 
     # if subplot isn't specified, construct it
-
     fig, ax = create_standard_state_plot()
 
     # constructs the networkx graph from cluster location and with cluster id
@@ -472,6 +472,21 @@ def setup_cluster_visualize(state: State, flows=None, next_state_id=-1):
             verticalalignment=alignment,
             bbox=dict(alpha=0),
             ax=ax,
+        )
+
+    if vehicle_trip:
+        pos = nx.get_node_attributes(graph, "pos")
+        node_border[vehicle_trip[0]] = GREEN
+        trip_labels = {}
+        trip_alignment = []
+        for i in range(len(vehicle_trip) - 1):
+            start, end = vehicle_trip[i], vehicle_trip[i + 1]
+            graph.add_edge(start, end, color=GREEN, width=2)
+            trip_labels[(start, end)] = f"{i}"
+            alignment.append(choose_label_alignment(start, end, pos))
+
+        alt_draw_networkx_edge_labels(
+            graph, pos, edge_labels=trip_labels, verticalalignment=trip_alignment, ax=ax
         )
 
     if next_state_id != -1:
