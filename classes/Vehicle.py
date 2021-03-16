@@ -7,7 +7,7 @@ class Vehicle:
         self.battery_inventory = BATTERY_INVENTORY
         self.scooter_inventory = []
         self.scooter_inventory_capacity = SCOOTER_INVENTORY
-        self.service_trip = []
+        self.service_route = []
 
     def change_battery(self, scooter: Scooter):
         if self.battery_inventory <= 0:
@@ -40,8 +40,8 @@ class Vehicle:
         self.scooter_inventory.remove(scooter)
         return scooter
 
-    def add_cluster_id_to_trip(self, cluster_id: int):
-        self.service_trip.append(cluster_id)
+    def add_cluster_id_to_route(self, cluster_id: int):
+        self.service_route.append(cluster_id)
 
-    def get_trip(self):
-        return self.service_trip
+    def get_route(self):
+        return self.service_route

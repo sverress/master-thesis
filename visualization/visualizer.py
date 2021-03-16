@@ -16,18 +16,79 @@ def visualize_state(state):
     plt.show()
 
 
-def visualize_cluster_flow(
-    state: State, flows: [(int, int, int)], vehicle_trip=None, next_state_id=-1
-):
+def visualize_cluster_flow(state: State, flows: [(int, int, int)]):
     """
     Visualize the flow in a state from a simulation
-    :param vehicle_trip: passed trip for the vehicle entering a
-    :param next_state_id: id of next state
     :param state: State to display
     :param flows: flow of scooter from one cluster to another
     :return:
     """
-    setup_cluster_visualize(state, flows, vehicle_trip, next_state_id)
+    (
+        graph,
+        fig,
+        ax,
+        graph,
+        labels,
+        node_border,
+        node_color,
+        node_size,
+        font_size,
+    ) = setup_cluster_visualize(state)
+
+    if flows:
+        # adds edges of flow between the clusters
+        edge_labels, alignment = add_flow_edges(graph, flows)
+
+        # displays edges on plot
+        alt_draw_networkx_edge_labels(
+            graph,
+            edge_labels=edge_labels,
+            verticalalignment=alignment,
+            bbox=dict(alpha=0),
+            ax=ax,
+        )
+
+    # displays plot
+    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
+
+    # shows the plots in IDE
+    plt.tight_layout(pad=1.0)
+    plt.show()
+
+
+def visualize_vehicle_route(state, vehicle_route=None, next_state_id=-1):
+    """
+    Visualize the vehicle route in a state from a simulation
+    :param state: State to display
+    :param vehicle_route: passed route for the vehicle entering a
+    :param next_state_id: id of next state
+    :return:
+    """
+    (
+        graph,
+        fig,
+        ax,
+        graph,
+        labels,
+        node_border,
+        node_color,
+        node_size,
+        font_size,
+    ) = setup_cluster_visualize(state, next_state_id)
+
+    if vehicle_route:
+        route_labels, alignment = add_vehicle_route(graph, node_border, vehicle_route)
+
+        alt_draw_networkx_edge_labels(
+            graph,
+            edge_labels=route_labels,
+            verticalalignment=alignment,
+            bbox=dict(alpha=0),
+            ax=ax,
+        )
+
+    # displays plot
+    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
 
     # shows the plots in IDE
     plt.tight_layout(pad=1.0)

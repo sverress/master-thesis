@@ -1,5 +1,4 @@
 import itertools
-
 from matplotlib import gridspec
 from globals import BLACK, RED, BLUE, GREEN, GEOSPATIAL_BOUND_NEW, COLORS
 import networkx as nx
@@ -335,6 +334,23 @@ def add_flow_edges(graph, flows):
     return edge_labels, alignment
 
 
+def add_vehicle_route(graph, node_border, vehicle_route):
+    pos = nx.get_node_attributes(graph, "pos")
+    node_border[vehicle_route[0]] = GREEN
+    route_labels = {}
+    alignment = []
+    for i in range(len(vehicle_route) - 1):
+        start, end = vehicle_route[i], vehicle_route[i + 1]
+        graph.add_edge(start, end, color=GREEN, width=2)
+        if route_labels.keys().__contains__((start, end)):
+            route_labels[(start, end)] = route_labels[(start, end)] + f", {i}"
+        else:
+            route_labels[(start, end)] = f"{i}"
+        alignment.append(choose_label_alignment(start, end, pos))
+
+    return route_labels, alignment
+
+
 def add_scooter_id_and_battery(scooters, graph, ax, scooter_battery=False):
     """
     Adds scooter id above the node/scatter
@@ -441,9 +457,7 @@ def alt_draw_networkx_edge_labels(
     return text_items
 
 
-def setup_cluster_visualize(
-    state: State, flows=None, vehicle_trip=None, next_state_id=-1
-):
+def setup_cluster_visualize(state: State, next_state_id=-1):
     node_size = 1000
     font_size = 14
 
@@ -461,41 +475,13 @@ def setup_cluster_visualize(
     # adds cluster info (#scooters and tot battery) on plot
     add_cluster_info(state, graph, ax)
 
-    if flows:
-        # adds edges of flow between the clusters
-        edge_labels, alignment = add_flow_edges(graph, flows)
-
-        # displays edges on plot
-        alt_draw_networkx_edge_labels(
-            graph,
-            edge_labels=edge_labels,
-            verticalalignment=alignment,
-            bbox=dict(alpha=0),
-            ax=ax,
-        )
-
-    if vehicle_trip:
-        pos = nx.get_node_attributes(graph, "pos")
-        node_border[vehicle_trip[0]] = GREEN
-        trip_labels = {}
-        trip_alignment = []
-        for i in range(len(vehicle_trip) - 1):
-            start, end = vehicle_trip[i], vehicle_trip[i + 1]
-            graph.add_edge(start, end, color=GREEN, width=2)
-            trip_labels[(start, end)] = f"{i}"
-            alignment.append(choose_label_alignment(start, end, pos))
-
-        alt_draw_networkx_edge_labels(
-            graph, pos, edge_labels=trip_labels, verticalalignment=trip_alignment, ax=ax
-        )
-
     if next_state_id != -1:
         graph.add_edge(state.current_cluster.id, next_state_id, color=RED, width=3)
 
     # displays plot
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
 
-    return graph, ax
+    return graph, fig, ax, graph, labels, node_border, node_color, node_size, font_size
 
 
 def make_scooter_visualize(state, ax, scooter_battery=False):
