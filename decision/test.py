@@ -2,7 +2,7 @@ import unittest
 
 from classes import World, Action
 from clustering.scripts import get_initial_state
-from decision.policies import RandomRolloutPolicy
+from decision.policies import RandomRolloutPolicy, SwapAllPolicy
 
 
 class BasicDecisionTests(unittest.TestCase):
@@ -179,6 +179,12 @@ class BasicDecisionTests(unittest.TestCase):
 
     def test_random_rollout_policy(self):
         self.assertIsInstance(RandomRolloutPolicy.get_best_action(World(40)), Action)
+
+    def test_swap_all_policy(self):
+        action = SwapAllPolicy.get_best_action(World(40))
+        self.assertIsInstance(action, Action)
+        self.assertEqual(len(action.pick_ups), 0)
+        self.assertEqual(len(action.delivery_scooters), 0)
 
 
 if __name__ == "__main__":
