@@ -2,17 +2,66 @@ import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
 import classes
-
-from decision.policies import RandomRolloutPolicy
+from globals import BATTERY_LIMIT, LOST_TRIP_REWARD
+import decision.policies
 
 
 class World:
+    class WorldMetric:
+        def __init__(self):
+            self.lost_demand = []
+            self.average_deviation_ideal_state = []
+            self.deficient_battery = []
+
+        def add_analysis_metrics(self, rewards: [int], clusters: [classes.Cluster]):
+            self.lost_demand.append(
+                sum([1 for reward in rewards if reward == LOST_TRIP_REWARD])
+            )
+            self.average_deviation_ideal_state.append(
+                sum(
+                    [
+                        abs(
+                            sum(cluster.get_valid_scooters(BATTERY_LIMIT))
+                            - cluster.ideal_state
+                        )
+                        for cluster in clusters
+                    ]
+                )
+                / len(clusters)
+            )
+            self.deficient_battery.append(
+                [
+                    sum(
+                        cluster.ideal_state
+                        - sum(cluster.get_valid_scooters(BATTERY_LIMIT))
+                    )
+                    for cluster in clusters
+                    if len(clusters.scooters) < cluster.ideal_state
+                ]
+            )
+
+        def get_lost_demand(self):
+            return self.lost_demand
+
+        def get_deviation_ideal_state(self):
+            return self.average_deviation_ideal_state
+
+        def get_deficient_battery(self):
+            return self.deficient_battery
+
+        def get_all_metrics(self):
+            return (
+                self.lost_demand,
+                self.average_deviation_ideal_state,
+                self.deficient_battery,
+            )
+
     def __init__(
         self,
         shift_duration: int,
         sample_size=100,
         number_of_clusters=20,
-        policy=RandomRolloutPolicy,
+        policy=decision.policies.RandomRolloutPolicy,
     ):
         self.shift_duration = shift_duration
         self.state = clustering_scripts.get_initial_state(
@@ -28,6 +77,7 @@ class World:
             if start != end
         }
         self.policy = policy
+        self.metrics = World.WorldMetric()
 
     def run(self):
         while self.time < self.shift_duration:
