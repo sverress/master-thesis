@@ -1,5 +1,5 @@
 import itertools
-
+from scipy.interpolate import make_interp_spline, BSpline
 from matplotlib import gridspec
 from globals import BLACK, RED, BLUE, GEOSPATIAL_BOUND_NEW, COLORS
 import networkx as nx
@@ -288,7 +288,7 @@ def create_state_trips_plot(titles=["", ""]):
 
 
 def create_subplots_from_gripspec(fig, spec, titles):
-    axis = []
+    subplots = []
     oslo = plt.imread("images/kart_oslo.png")
     for i in range(spec.ncols):
         ax = fig.add_subplot(spec[i])
@@ -300,9 +300,9 @@ def create_subplots_from_gripspec(fig, spec, titles):
             ax.imshow(
                 oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
             )
-        axis.append(ax)
+        subplots.append(ax)
 
-    return axis
+    return subplots
 
 
 def add_cluster_info(state, graph, ax):
@@ -554,3 +554,10 @@ def add_cluster_center(clusters, ax):
         ax.annotate(
             cluster.id, (center_x, center_y), ha="center", va="center", weight="bold",
         )
+
+
+def plot_smoothed_curve(x, y, ax, color, label):
+    x_smooth = np.linspace(np.min(x), np.max(x), 1000)
+    spline = make_interp_spline(x, y, k=3)
+    y_smooth = spline(x_smooth)
+    ax.plot(x_smooth, y_smooth, c=color, label=label)

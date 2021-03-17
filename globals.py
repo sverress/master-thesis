@@ -25,8 +25,13 @@ BATTERY_LIMIT = 20.0
 # Negative reward for lost trip
 LOST_TRIP_REWARD = -0.1
 
-# Testing constants
+# Testing parameters
 MAX_NUMBER_OF_NEIGHBOURS = 3
+NUMBER_OF_ROLLOUTS = 50
+SHIFT_DURATION = 500
+SAMPLE_SIZE = 100
+NUMBER_OF_CLUSTERS = 10
+POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
 
 # State cache directory
 if os.environ.get("CI"):

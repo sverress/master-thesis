@@ -163,3 +163,40 @@ def visualize_scooter_simulation(
 
     plt.tight_layout(pad=1.0)
     plt.show()
+
+
+def visualize_analysis(instances, policies):
+    # generate plot and subplots
+    fig = plt.figure(figsize=(20, 9.7))
+
+    # creating subplots
+    spec = gridspec.GridSpec(
+        figure=fig, ncols=3, nrows=1, width_ratios=[1, 1, 1], wspace=0.1, hspace=0
+    )
+
+    ax1 = fig.add_subplot(spec[0])
+    ax1.set_title("Lost demand")
+    ax2 = fig.add_subplot(spec[1])
+    ax2.set_title("Deviation IS")
+    ax3 = fig.add_subplot(spec[2])
+    ax3.set_title("Deficient battery")
+
+    x = np.arange(0, instances[0].shift_duration + 1, ITERATION_LENGTH_MINUTES)
+
+    for i, instance in enumerate(instances):
+        (
+            lost_demand,
+            deviation_ideal_state,
+            deficient_battery,
+        ) = instance.metrics.get_all_metrics()
+        plot_smoothed_curve(x, lost_demand, ax1, COLORS[i], policies[i])
+        plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], policies[i])
+        plot_smoothed_curve(x, deficient_battery, ax3, COLORS[i], policies[i])
+
+    ax1.legend()
+    ax2.legend()
+    ax3.legend()
+
+    plt.show()
+
+    return fig
