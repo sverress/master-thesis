@@ -1,6 +1,7 @@
 import copy
-from classes import World
 from globals import NUMBER_OF_ROLLOUTS
+import random
+from classes import World, Cluster, Action
 from scenario_simulation.scripts import estimate_reward
 
 
@@ -39,3 +40,32 @@ class RandomRolloutPolicy(Policy):
                 best_action = action
 
         return best_action
+
+
+class SwapAllPolicy(Policy):
+    @staticmethod
+    def get_best_action(world: World):
+        # Choose a random cluster
+        next_cluster: Cluster = random.choice(
+            [
+                cluster
+                for cluster in world.state.clusters
+                if cluster.id != world.state.current_cluster.id
+            ]
+        )
+
+        # Find all scooters that can be swapped there
+        swappable_scooters_ids = [
+            scooter.id for scooter in next_cluster.get_swappable_scooters()
+        ]
+
+        # Calculate how many scooters that can be swapped
+        number_of_scooters_to_swap = world.state.get_max_number_of_swaps(next_cluster)
+
+        # Return an action with no re-balancing, only scooter swapping
+        return Action(
+            battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
+            pick_ups=[],
+            delivery_scooters=[],
+            next_cluster=next_cluster.id,
+        )
