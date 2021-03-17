@@ -46,10 +46,14 @@ class EventsTests(unittest.TestCase):
 
         scooter_battery = scooter.battery
 
-        arrival_cluster = random.choice(self.world.state.clusters)
+        arrival_cluster = self.world.state.get_random_cluster()
 
         arrival_event = ScooterArrival(
-            self.departure_time + self.travel_time, scooter, arrival_cluster.id, 0, 3
+            self.departure_time + self.travel_time,
+            scooter,
+            arrival_cluster.id,
+            self.world.state.get_random_cluster(exclude=arrival_cluster).id,
+            3,
         )
 
         arrival_event.perform(self.world)
@@ -64,12 +68,8 @@ class EventsTests(unittest.TestCase):
         self.assertLess(scooter.battery, scooter_battery)
 
     def test_vehicle_arrival(self):
-        random_cluster_in_state = random.choice(
-            [
-                cluster
-                for cluster in self.large_world.state.clusters
-                if cluster.id != self.large_world.state.current_cluster.id
-            ]
+        random_cluster_in_state = self.world.state.get_random_cluster(
+            exclude=self.world.state.current_cluster
         )
         # Create a vehicle arrival event with a arrival time of 20 arriving at a random cluster in the world state
         vehicle_arrival = VehicleArrival(20, random_cluster_in_state.id)
