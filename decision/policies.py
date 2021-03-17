@@ -1,8 +1,6 @@
 import copy
 import random
-
 from classes import World, Cluster, Action
-
 from scenario_simulation.scripts import estimate_reward
 
 

@@ -1,11 +1,13 @@
 import copy
 import numpy as np
 from classes.State import State
-from globals import ITERATION_LENGTH_MINUTES
+from globals import ITERATION_LENGTH_MINUTES, NUMBER_OF_ROLLOUTS
 
 
 def estimate_reward(
-    state: State, remaining_shift_duration: int, number_of_simulations=10
+    state: State,
+    remaining_shift_duration: int,
+    number_of_simulations=NUMBER_OF_ROLLOUTS,
 ):
     """
     Does n times scenario simulations and returns the highest conducted reward from simulation

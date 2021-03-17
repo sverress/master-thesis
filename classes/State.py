@@ -295,11 +295,16 @@ class State:
     def visualize(self):
         visualize_state(self)
 
-    def visualize_flow(self, flows: [(int, int, int)], next_state_id: int):
-        visualize_cluster_flow(self, flows, next_state_id)
+    def visualize_flow(
+        self, flows: [(int, int, int)],
+    ):
+        visualize_cluster_flow(self, flows)
 
     def visualize_action(self, state_after_action, action: Action):
         visualize_action(self, state_after_action, action)
+
+    def visualize_vehicle_route(self, vehicle_trip: [int], next_state_id: int):
+        visualize_vehicle_route(self, vehicle_trip, next_state_id)
 
     def visualize_current_trips(self, trips: [(int, int, Scooter)]):
         visualize_scooters_on_trip(self, trips)

@@ -20,13 +20,14 @@ SCOOTER_SPEED = 7
 
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
+NUMBER_OF_ROLLOUTS = 20
 BATTERY_LIMIT = 20.0
 
 # Negative reward for lost trip
 LOST_TRIP_REWARD = -0.1
 
 # Testing constants
-MAX_NUMBER_OF_NEIGHBOURS = 3
+MAX_NUMBER_OF_NEIGHBOURS = 5
 
 # State cache directory
 if os.environ.get("CI"):
@@ -41,6 +42,9 @@ TEST_DATA_DIRECTORY = "test_data"
 
 # RUNTIME SETTINGS
 SEED = 69
+
+# Visualization parameters
+ACTION_OFFSET = 0.018
 
 COLORS = [
     "#B52CC2",
