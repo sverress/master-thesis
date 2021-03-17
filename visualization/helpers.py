@@ -141,7 +141,7 @@ def plot_trips(trips, ax):
 
     for trip in trips:
         start, end, scooter = trip
-        trips_string += f"{start} -> {end}: {scooter.id}\n"
+        trips_string += f"{start.id} -> {end.id}: {scooter.id}\n"
 
     ax.text(
         0,
