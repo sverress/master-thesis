@@ -3,7 +3,7 @@ import numpy as np
 import bisect
 import classes
 from globals import BATTERY_LIMIT, LOST_TRIP_REWARD
-import decision.policies
+from decision.get_policy import get_policy
 
 
 class World:
@@ -16,12 +16,24 @@ class World:
         def add_analysis_metrics(self, rewards: [int], clusters: [classes.Cluster]):
             self.lost_demand.append(
                 sum([1 for reward in rewards if reward == LOST_TRIP_REWARD])
+                if len(rewards) > 0
+                else 0
             )
             self.average_deviation_ideal_state.append(
                 sum(
                     [
                         abs(
-                            sum(cluster.get_valid_scooters(BATTERY_LIMIT))
+                            (
+                                sum(
+                                    [
+                                        scooter.battery
+                                        for scooter in cluster.get_valid_scooters(
+                                            BATTERY_LIMIT
+                                        )
+                                    ]
+                                )
+                                / 100
+                            )
                             - cluster.ideal_state
                         )
                         for cluster in clusters
@@ -30,14 +42,24 @@ class World:
                 / len(clusters)
             )
             self.deficient_battery.append(
-                [
-                    sum(
+                sum(
+                    [
                         cluster.ideal_state
-                        - sum(cluster.get_valid_scooters(BATTERY_LIMIT))
-                    )
-                    for cluster in clusters
-                    if len(clusters.scooters) < cluster.ideal_state
-                ]
+                        - (
+                            sum(
+                                [
+                                    scooter.battery
+                                    for scooter in cluster.get_valid_scooters(
+                                        BATTERY_LIMIT
+                                    )
+                                ]
+                            )
+                            / 100
+                        )
+                        for cluster in clusters
+                        if len(cluster.scooters) < cluster.ideal_state
+                    ]
+                )
             )
 
         def get_lost_demand(self):
@@ -61,7 +83,7 @@ class World:
         shift_duration: int,
         sample_size=100,
         number_of_clusters=20,
-        policy=decision.policies.RandomRolloutPolicy,
+        policy="RandomRolloutPolicy",
     ):
         self.shift_duration = shift_duration
         self.state = clustering_scripts.get_initial_state(
@@ -76,7 +98,7 @@ class World:
             for end in np.arange(len(self.state.clusters))
             if start != end
         }
-        self.policy = policy
+        self.policy = get_policy(policy)
         self.metrics = World.WorldMetric()
 
     def run(self):
