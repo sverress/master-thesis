@@ -2,8 +2,9 @@ import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
 import classes
-from globals import BATTERY_LIMIT, LOST_TRIP_REWARD
+from globals import BATTERY_LIMIT, LOST_TRIP_REWARD, ITERATION_LENGTH_MINUTES, WHITE
 from decision.get_policy import get_policy
+from progress.bar import IncrementalBar
 
 
 class World:
@@ -105,12 +106,22 @@ class World:
         }
         self.policy = get_policy(policy)
         self.metrics = World.WorldMetric()
+        self.progress_bar = IncrementalBar(
+            "Running World",
+            check_tty=False,
+            max=round(shift_duration / ITERATION_LENGTH_MINUTES) + 1,
+            color=WHITE,
+            suffix="%(percent)d%% - ETA %(eta)ds",
+        )
 
     def run(self):
         while self.time < self.shift_duration:
             event = self.stack.pop(0)
             event.perform(self)
             event.add_metric(self, self.time)
+            if isinstance(event, classes.GenerateScooterTrips):
+                self.progress_bar.next()
+        self.progress_bar.finish()
 
     def get_remaining_time(self) -> int:
         """

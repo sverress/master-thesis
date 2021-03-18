@@ -171,15 +171,23 @@ def visualize_analysis(instances, policies, smooth_curve=True):
 
     # creating subplots
     spec = gridspec.GridSpec(
-        figure=fig, ncols=3, nrows=1, width_ratios=[1, 1, 1], wspace=0.1, hspace=0
+        figure=fig, ncols=3, nrows=1, width_ratios=[1, 1, 1], wspace=0.2, hspace=0
     )
 
     ax1 = fig.add_subplot(spec[0])
-    ax1.set_title("Lost demand")
+    ax1.set_xlabel("Time", labelpad=10, fontsize=12)
+    ax1.set_ylabel("Number of lost trips", labelpad=10, fontsize=12)
+    ax1.set_title("Lost demand", fontsize=14)
     ax2 = fig.add_subplot(spec[1])
-    ax2.set_title("Deviation ideal state")
+    ax2.set_xlabel("Time", labelpad=10, fontsize=12)
+    ax2.set_ylabel("Avg. number of scooters - absolute value", labelpad=10, fontsize=12)
+    ax2.set_title("Deviation ideal state", fontsize=14)
     ax3 = fig.add_subplot(spec[2])
-    ax3.set_title("Deficient battery")
+    ax3.set_xlabel("Time", labelpad=10, fontsize=12)
+    ax3.set_ylabel("Total deficient battery in the world", labelpad=10, fontsize=12)
+    ax3.yaxis.tick_right()
+    ax3.yaxis.set_label_position("right")
+    ax3.set_title("Deficient battery", fontsize=14)
 
     for i, instance in enumerate(instances):
         (
@@ -198,8 +206,11 @@ def visualize_analysis(instances, policies, smooth_curve=True):
             ax3.plot(x, deficient_battery, c=COLORS[i], label=policies[i])
 
     ax1.legend()
+    ax1.set_ylim(ymin=0)
     ax2.legend()
+    ax2.set_ylim(ymin=0)
     ax3.legend()
+    ax3.set_ylim(ymin=0)
 
     fig.suptitle(
         f"Sample size {SAMPLE_SIZE} - Shift duration {SHIFT_DURATION} - Number of clusters {NUMBER_OF_CLUSTERS} - "
