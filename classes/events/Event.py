@@ -10,3 +10,7 @@ class Event:
                 f"{self.__class__.__name__} object tries to move the world backwards in time. Event time: {self.time}"
                 f", World time: {world.time}"
             )
+
+    @staticmethod
+    def add_metric(world, time):
+        world.metrics.add_analysis_metrics(world.rewards, world.state.clusters, time)

@@ -12,8 +12,11 @@ class World:
             self.lost_demand = []
             self.average_deviation_ideal_state = []
             self.deficient_battery = []
+            self.time = []
 
-        def add_analysis_metrics(self, rewards: [int], clusters: [classes.Cluster]):
+        def add_analysis_metrics(
+            self, rewards: [int], clusters: [classes.Cluster], time: int
+        ):
             self.lost_demand.append(
                 sum([1 for reward in rewards if reward == LOST_TRIP_REWARD])
                 if len(rewards) > 0
@@ -26,13 +29,12 @@ class World:
                             (
                                 sum(
                                     [
-                                        scooter.battery
-                                        for scooter in cluster.get_valid_scooters(
+                                        1
+                                        for _ in cluster.get_valid_scooters(
                                             BATTERY_LIMIT
                                         )
                                     ]
                                 )
-                                / 100
                             )
                             - cluster.ideal_state
                         )
@@ -44,7 +46,7 @@ class World:
             self.deficient_battery.append(
                 sum(
                     [
-                        cluster.ideal_state
+                        cluster.ideal_state * 100
                         - (
                             sum(
                                 [
@@ -54,13 +56,13 @@ class World:
                                     )
                                 ]
                             )
-                            / 100
                         )
                         for cluster in clusters
                         if len(cluster.scooters) < cluster.ideal_state
                     ]
                 )
             )
+            self.time.append(time)
 
         def get_lost_demand(self):
             return self.lost_demand
@@ -70,6 +72,9 @@ class World:
 
         def get_deficient_battery(self):
             return self.deficient_battery
+
+        def get_time_array(self):
+            return self.time
 
         def get_all_metrics(self):
             return (
@@ -103,7 +108,9 @@ class World:
 
     def run(self):
         while self.time < self.shift_duration:
-            self.stack.pop(0).perform(self)
+            event = self.stack.pop(0)
+            event.perform(self)
+            event.add_metric(self, self.time)
 
     def get_remaining_time(self) -> int:
         """

@@ -557,7 +557,26 @@ def add_cluster_center(clusters, ax):
 
 
 def plot_smoothed_curve(x, y, ax, color, label):
+    x, y = post_process_curve(x, y)
     x_smooth = np.linspace(np.min(x), np.max(x), 1000)
     spline = make_interp_spline(x, y, k=3)
     y_smooth = spline(x_smooth)
     ax.plot(x_smooth, y_smooth, c=color, label=label)
+
+
+def post_process_curve(x, y):
+    start = x[0]
+    start_index = 0
+    value = 0
+    x_new, y_new = [], []
+    for i, time in enumerate(x):
+        if start == time and i != len(x) - 1:
+            value += y[i]
+        else:
+            x_new.append(start)
+            y_new.append(value / (i - start_index))
+            start = time
+            start_index = i
+            value = y[i]
+
+    return x_new, y_new

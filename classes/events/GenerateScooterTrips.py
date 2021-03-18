@@ -34,5 +34,3 @@ class GenerateScooterTrips(Event):
         world.add_event(GenerateScooterTrips(self.time + ITERATION_LENGTH_MINUTES))
 
         super(GenerateScooterTrips, self).perform(world)
-
-        world.metrics.add_analysis_metrics(world.rewards, world.state.clusters)

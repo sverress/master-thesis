@@ -8,6 +8,7 @@ def run_analysis(
     number_of_clusters=10,
     policies=None,
     visualize_world=False,
+    smooth_curve=True,
 ):
     instances = []
     figures = []
@@ -25,6 +26,6 @@ def run_analysis(
         world.run()
         instances.append(world)
 
-    figures.append(visualize_analysis(instances, policies))
+    figures.append(visualize_analysis(instances, policies, smooth_curve))
 
     return figures

@@ -165,7 +165,7 @@ def visualize_scooter_simulation(
     plt.show()
 
 
-def visualize_analysis(instances, policies):
+def visualize_analysis(instances, policies, smooth_curve=True):
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
 
@@ -177,11 +177,9 @@ def visualize_analysis(instances, policies):
     ax1 = fig.add_subplot(spec[0])
     ax1.set_title("Lost demand")
     ax2 = fig.add_subplot(spec[1])
-    ax2.set_title("Deviation IS")
+    ax2.set_title("Deviation ideal state")
     ax3 = fig.add_subplot(spec[2])
     ax3.set_title("Deficient battery")
-
-    x = np.arange(0, instances[0].shift_duration + 1, ITERATION_LENGTH_MINUTES)
 
     for i, instance in enumerate(instances):
         (
@@ -189,13 +187,25 @@ def visualize_analysis(instances, policies):
             deviation_ideal_state,
             deficient_battery,
         ) = instance.metrics.get_all_metrics()
-        plot_smoothed_curve(x, lost_demand, ax1, COLORS[i], policies[i])
-        plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], policies[i])
-        plot_smoothed_curve(x, deficient_battery, ax3, COLORS[i], policies[i])
+        x = instance.metrics.get_time_array()
+        if smooth_curve:
+            plot_smoothed_curve(x, lost_demand, ax1, COLORS[i], policies[i])
+            plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], policies[i])
+            plot_smoothed_curve(x, deficient_battery, ax3, COLORS[i], policies[i])
+        else:
+            ax1.plot(x, lost_demand, c=COLORS[i], label=policies[i])
+            ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=policies[i])
+            ax3.plot(x, deficient_battery, c=COLORS[i], label=policies[i])
 
     ax1.legend()
     ax2.legend()
     ax3.legend()
+
+    fig.suptitle(
+        f"Sample size {SAMPLE_SIZE} - Shift duration {SHIFT_DURATION} - Number of clusters {NUMBER_OF_CLUSTERS} - "
+        f"Rollouts {NUMBER_OF_ROLLOUTS} - Max number of neighbours {MAX_NUMBER_OF_NEIGHBOURS}",
+        fontsize=16,
+    )
 
     plt.show()
 
