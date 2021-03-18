@@ -23,6 +23,7 @@ def run_analysis(
     instances = []
     # loop over all policies to be analysed - default RandomRolloutPolicy if no policy is given
     for policy in policies if policies else ["RandomRolloutPolicy"]:
+        print(f"\n---------- {policy} ----------")
         # create the world object with given input parameters
         world = classes.World(
             shift_duration,

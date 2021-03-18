@@ -188,14 +188,14 @@ def visualize_analysis(instances, policies, smooth_curve=True):
         y_label="Number of lost trips",
         plot_title="Lost demand",
     )
-    ax3 = create_plot_with_axis_labels(
+    ax2 = create_plot_with_axis_labels(
         fig,
         spec[1],
         x_label="Time",
         y_label="Avg. number of scooters - absolute value",
         plot_title="Deviation ideal state",
     )
-    ax2 = create_plot_with_axis_labels(
+    ax3 = create_plot_with_axis_labels(
         fig,
         spec[2],
         x_label="Time",
@@ -213,7 +213,7 @@ def visualize_analysis(instances, policies, smooth_curve=True):
         ) = instance.metrics.get_all_metrics()
         x = instance.metrics.get_time_array()
         if smooth_curve:
-            plot_smoothed_curve(x, lost_demand, ax1, COLORS[i], policies[i])
+            ax1.plot(x, lost_demand, c=COLORS[i], label=policies[i])
             plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], policies[i])
             plot_smoothed_curve(x, deficient_battery, ax3, COLORS[i], policies[i])
         else:
