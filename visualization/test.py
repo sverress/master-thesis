@@ -36,6 +36,7 @@ class BasicVisualizerTests(unittest.TestCase):
 
     @staticmethod
     def test_analysis():
+        # test the analysis plot
         run_analysis(
             shift_duration=300,
             sample_size=100,

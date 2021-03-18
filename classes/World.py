@@ -18,6 +18,12 @@ class World:
         def add_analysis_metrics(
             self, rewards: [int], clusters: [classes.Cluster], time: int
         ):
+            """
+            Add data to analysis
+            :param rewards: rewards collected by a vehicle and lost demand
+            :param clusters: clusters in the world
+            :param time: total time of analysis period
+            """
             self.lost_demand.append(
                 sum([1 for reward in rewards if reward == LOST_TRIP_REWARD])
                 if len(rewards) > 0
@@ -66,18 +72,33 @@ class World:
             self.time.append(time)
 
         def get_lost_demand(self):
+            """
+            Returns list of all lost demand
+            """
             return self.lost_demand
 
         def get_deviation_ideal_state(self):
+            """
+            Returns list of average deviation from ideal state during the time analysed
+            """
             return self.average_deviation_ideal_state
 
         def get_deficient_battery(self):
+            """
+            Returns list of total deficient battery in the system during the analysed time
+            """
             return self.deficient_battery
 
         def get_time_array(self):
+            """
+            Returns a list of all timestamps when when data used for analysis is recorded
+            """
             return self.time
 
         def get_all_metrics(self):
+            """
+            Returns all metrics recorded for analysis
+            """
             return (
                 self.lost_demand,
                 self.average_deviation_ideal_state,

@@ -166,6 +166,12 @@ def visualize_scooter_simulation(
 
 
 def visualize_analysis(instances, policies, smooth_curve=True):
+    """
+    :param instances: world instances to analyse
+    :param policies: different policies used on the world instances
+    :param smooth_curve: boolean if plot of the analysis is to be smoothed out
+    :return: plot for the analysis
+    """
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
 
@@ -174,20 +180,30 @@ def visualize_analysis(instances, policies, smooth_curve=True):
         figure=fig, ncols=3, nrows=1, width_ratios=[1, 1, 1], wspace=0.2, hspace=0
     )
 
-    ax1 = fig.add_subplot(spec[0])
-    ax1.set_xlabel("Time", labelpad=10, fontsize=12)
-    ax1.set_ylabel("Number of lost trips", labelpad=10, fontsize=12)
-    ax1.set_title("Lost demand", fontsize=14)
-    ax2 = fig.add_subplot(spec[1])
-    ax2.set_xlabel("Time", labelpad=10, fontsize=12)
-    ax2.set_ylabel("Avg. number of scooters - absolute value", labelpad=10, fontsize=12)
-    ax2.set_title("Deviation ideal state", fontsize=14)
-    ax3 = fig.add_subplot(spec[2])
-    ax3.set_xlabel("Time", labelpad=10, fontsize=12)
-    ax3.set_ylabel("Total deficient battery in the world", labelpad=10, fontsize=12)
+    # figure
+    ax1 = create_plot_with_axis_labels(
+        fig,
+        spec[0],
+        x_label="Time",
+        y_label="Number of lost trips",
+        plot_title="Lost demand",
+    )
+    ax3 = create_plot_with_axis_labels(
+        fig,
+        spec[1],
+        x_label="Time",
+        y_label="Avg. number of scooters - absolute value",
+        plot_title="Deviation ideal state",
+    )
+    ax2 = create_plot_with_axis_labels(
+        fig,
+        spec[2],
+        x_label="Time",
+        y_label="Total deficient battery in the world",
+        plot_title="Deficient battery",
+    )
     ax3.yaxis.tick_right()
     ax3.yaxis.set_label_position("right")
-    ax3.set_title("Deficient battery", fontsize=14)
 
     for i, instance in enumerate(instances):
         (

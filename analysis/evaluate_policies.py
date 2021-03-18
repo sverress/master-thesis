@@ -10,22 +10,36 @@ def run_analysis(
     visualize_world=False,
     smooth_curve=True,
 ):
+    """
+    Method to run different policies and analysis their performance
+    :param shift_duration: total shift to be analysed
+    :param sample_size: size of instances
+    :param number_of_clusters: number of clusters in the world
+    :param policies: different policies to be analysed
+    :param visualize_world: boolean - if the running of the world should be visualized
+    :param smooth_curve: boolean - if the analysed metrics is to be smoothed out in the analysis plot
+    :return: matplotlib figure - figure containing plot of the analysis
+    """
     instances = []
-    figures = []
+    # loop over all policies to be analysed - default RandomRolloutPolicy if no policy is given
     for policy in policies if policies else ["RandomRolloutPolicy"]:
+        # create the world object with given input parameters
         world = classes.World(
             shift_duration,
             sample_size=sample_size,
             number_of_clusters=number_of_clusters,
             policy=policy,
         )
-        world.stack.append(classes.GenerateScooterTrips(0))
-        world.stack.append(
+        # add scooter trip generation event and a vehicle arrival event
+        world.add_event(classes.GenerateScooterTrips(0))
+        world.add_event(
             classes.VehicleArrival(0, world.state.current_cluster.id, visualize_world)
         )
+        # run the world and add the world object to a list containing all world instances
         world.run()
         instances.append(world)
 
-    figures.append(visualize_analysis(instances, policies, smooth_curve))
+    # visualize the world instances that have been run
+    figure = visualize_analysis(instances, policies, smooth_curve)
 
-    return figures
+    return figure

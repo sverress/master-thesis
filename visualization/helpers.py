@@ -288,6 +288,9 @@ def create_state_trips_plot(titles=["", ""]):
 
 
 def create_subplots_from_gripspec(fig, spec, titles):
+    """
+    Create subplot with normalized axis
+    """
     subplots = []
     oslo = plt.imread("images/kart_oslo.png")
     for i in range(spec.ncols):
@@ -303,6 +306,17 @@ def create_subplots_from_gripspec(fig, spec, titles):
         subplots.append(ax)
 
     return subplots
+
+
+def create_plot_with_axis_labels(fig, spec, x_label, y_label, plot_title):
+    """
+    Creates subplot with axis label and plot title
+    """
+    ax = fig.add_subplot(spec)
+    ax.set_xlabel(x_label, labelpad=10, fontsize=12)
+    ax.set_ylabel(y_label, labelpad=10, fontsize=12)
+    ax.set_title(plot_title, fontsize=14)
+    return ax
 
 
 def add_cluster_info(state, graph, ax):
