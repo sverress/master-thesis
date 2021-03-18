@@ -4,8 +4,7 @@ A file for testing stuff without dealing with circular imports
 from clustering.scripts import get_initial_state
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
-from classes.Cluster import Cluster
-from classes.Scooter import Scooter
+
 import unittest
 
 
@@ -33,7 +32,7 @@ class BasicVisualizerTests(unittest.TestCase):
 
         current_state.visualize_system_simulation(scooter_trips)
 
-        current_state.visualize_flow(flows, next_state.current_cluster.id)
+        current_state.visualize_flow(flows,)
 
 
 if __name__ == "__main__":
