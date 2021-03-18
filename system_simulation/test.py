@@ -78,6 +78,7 @@ class BasicSystemSimulationTests(unittest.TestCase):
         self.assertEqual(sum(out_flow.values()), sum(in_flow.values()))
 
     def test_lost_demand(self):
+        # set all scooter batteries to 0 and increase trip intensity to ensure lost demand
         for cluster in self.state.clusters:
             cluster.trip_intensity_per_iteration = 5
             for scooter in cluster.scooters:
@@ -85,6 +86,7 @@ class BasicSystemSimulationTests(unittest.TestCase):
 
         _, _, lost_demand = self.state.system_simulate()
 
+        # test that system simulate generate lost demand
         self.assertGreater(lost_demand, 0)
 
 

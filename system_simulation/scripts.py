@@ -23,7 +23,7 @@ def system_simulate(state):
             np.random.poisson(start_cluster.trip_intensity_per_iteration)
         )
 
-        # can't complete more trips then there is scooters with battery over min_battery
+        # if there is more trips than scooters available, the system has lost demand
         valid_scooters = start_cluster.get_valid_scooters(BATTERY_LIMIT)
         if number_of_trips > len(valid_scooters):
             lost_demand.append(number_of_trips - len(valid_scooters))
