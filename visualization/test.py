@@ -4,8 +4,6 @@ A file for testing stuff without dealing with circular imports
 from clustering.scripts import get_initial_state
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
-from classes.Cluster import Cluster
-from classes.Scooter import Scooter
 import unittest
 
 
