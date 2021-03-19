@@ -3,7 +3,14 @@ import bisect
 import numpy as np
 
 
-def filtering_neighbours(state, number_of_neighbours=3, random_neighbour=False):
+def filtering_neighbours(state, number_of_neighbours=3, random_neighbours=0):
+    """
+    Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
+    :param state: state object to evaluate
+    :param number_of_neighbours: number of neighbours to be returned
+    :param random_neighbours: int - number of random neighbours to be added to the neighbourhood list
+    :return:
+    """
     clusters = state.clusters
     distance_to_all_clusters = state.get_distance_to_all(state.current_cluster.id)
     max_dist, min_dist = max(distance_to_all_clusters), min(distance_to_all_clusters)
@@ -12,16 +19,7 @@ def filtering_neighbours(state, number_of_neighbours=3, random_neighbour=False):
     ]
 
     deviation_ideal_states = [
-        abs(
-            cluster.ideal_state
-            - sum(
-                [
-                    scooter.battery
-                    for scooter in cluster.get_valid_scooters(BATTERY_LIMIT)
-                ]
-            )
-            / 100
-        )
+        abs(cluster.ideal_state - len(cluster.get_valid_scooters(BATTERY_LIMIT)))
         for cluster in clusters
     ]
 
@@ -46,8 +44,17 @@ def filtering_neighbours(state, number_of_neighbours=3, random_neighbour=False):
             score_indices.insert(index, cluster_id)
 
     return (
-        [clusters[index] for index in score_indices[: number_of_neighbours - 1]]
-        + [clusters[np.random.choice(score_indices[number_of_neighbours - 1 :])]]
-        if random_neighbour
+        [
+            clusters[index]
+            for index in score_indices[: number_of_neighbours - random_neighbours]
+        ]
+        + [
+            clusters[
+                np.random.choice(
+                    score_indices[number_of_neighbours - random_neighbours :]
+                )
+            ]
+        ]
+        if random_neighbours > 0
         else [clusters[index] for index in score_indices[:number_of_neighbours]]
     )
