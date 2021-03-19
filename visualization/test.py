@@ -4,6 +4,7 @@ A file for testing stuff without dealing with circular imports
 from clustering.scripts import get_initial_state
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
+from analysis.evaluate_policies import run_analysis
 import unittest
 
 
@@ -32,6 +33,18 @@ class BasicVisualizerTests(unittest.TestCase):
         current_state.visualize_system_simulation(scooter_trips)
 
         current_state.visualize_flow(flows)
+
+    @staticmethod
+    def test_analysis():
+        # test the analysis plot
+        run_analysis(
+            shift_duration=300,
+            sample_size=100,
+            number_of_clusters=10,
+            policies=["SwapAllPolicy"],
+            visualize_world=False,
+            smooth_curve=True,
+        )
 
 
 if __name__ == "__main__":

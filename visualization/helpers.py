@@ -1,4 +1,5 @@
 import itertools
+from scipy.interpolate import make_interp_spline, BSpline
 from matplotlib import gridspec
 from globals import BLACK, RED, BLUE, GREEN, GEOSPATIAL_BOUND_NEW, COLORS, ACTION_OFFSET
 import networkx as nx
@@ -286,7 +287,10 @@ def create_state_trips_plot(titles=["", ""]):
 
 
 def create_subplots_from_gripspec(fig, spec, titles):
-    axis = []
+    """
+    Create subplot with normalized axis
+    """
+    subplots = []
     oslo = plt.imread("images/kart_oslo.png")
     for i in range(spec.ncols):
         ax = fig.add_subplot(spec[i])
@@ -298,9 +302,20 @@ def create_subplots_from_gripspec(fig, spec, titles):
             ax.imshow(
                 oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
             )
-        axis.append(ax)
+        subplots.append(ax)
 
-    return axis
+    return subplots
+
+
+def create_plot_with_axis_labels(fig, spec, x_label, y_label, plot_title):
+    """
+    Creates subplot with axis label and plot title
+    """
+    ax = fig.add_subplot(spec)
+    ax.set_xlabel(x_label, labelpad=10, fontsize=12)
+    ax.set_ylabel(y_label, labelpad=10, fontsize=12)
+    ax.set_title(plot_title, fontsize=14)
+    return ax
 
 
 def add_cluster_info(state, graph, ax):
@@ -555,3 +570,29 @@ def add_cluster_center(clusters, ax, current_cluster=-1, next_cluster=-1):
         ax.annotate(
             cluster.id, (center_x, center_y), ha="center", va="center", weight="bold",
         )
+
+
+def plot_smoothed_curve(x, y, ax, color, label):
+    x, y = post_process_curve(x, y)
+    x_smooth = np.linspace(np.min(x), np.max(x), 1000)
+    spline = make_interp_spline(x, y, k=3)
+    y_smooth = spline(x_smooth)
+    ax.plot(x_smooth, y_smooth, c=color, label=label)
+
+
+def post_process_curve(x, y):
+    start = x[0]
+    start_index = 0
+    value = 0
+    x_new, y_new = [], []
+    for i, time in enumerate(x):
+        if start == time and i != len(x) - 1:
+            value += y[i]
+        else:
+            x_new.append(start)
+            y_new.append(value / (i - start_index))
+            start = time
+            start_index = i
+            value = y[i]
+
+    return x_new, y_new
