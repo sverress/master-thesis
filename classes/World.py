@@ -15,18 +15,14 @@ class World:
             self.deficient_battery = []
             self.time = []
 
-        def add_analysis_metrics(
-            self, rewards: [int], clusters: [classes.Cluster], time: int
-        ):
+        def add_analysis_metrics(self, world):
             """
             Add data to analysis
-            :param rewards: rewards collected by a vehicle and lost demand
-            :param clusters: clusters in the world
-            :param time: total time of analysis period
+            :param world: world object to record state from
             """
             self.lost_demand.append(
-                sum([1 for reward in rewards if reward == LOST_TRIP_REWARD])
-                if len(rewards) > 0
+                sum([1 for reward in world.rewards if reward == LOST_TRIP_REWARD])
+                if len(world.rewards) > 0
                 else 0
             )
             self.average_deviation_ideal_state.append(
@@ -45,10 +41,10 @@ class World:
                             )
                             - cluster.ideal_state
                         )
-                        for cluster in clusters
+                        for cluster in world.state.clusters
                     ]
                 )
-                / len(clusters)
+                / len(world.state.clusters)
             )
             self.deficient_battery.append(
                 sum(
@@ -64,12 +60,12 @@ class World:
                                 ]
                             )
                         )
-                        for cluster in clusters
+                        for cluster in world.state.clusters
                         if len(cluster.scooters) < cluster.ideal_state
                     ]
                 )
             )
-            self.time.append(time)
+            self.time.append(world.time)
 
         def get_lost_demand(self):
             """
@@ -139,7 +135,6 @@ class World:
         while self.time < self.shift_duration:
             event = self.stack.pop(0)
             event.perform(self)
-            event.add_metric(self, self.time)
             if isinstance(event, classes.GenerateScooterTrips):
                 self.progress_bar.next()
         self.progress_bar.finish()

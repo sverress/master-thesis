@@ -244,31 +244,25 @@ def visualize_analysis(instances, policies, smooth_curve=True):
 
     # creating subplots
     spec = gridspec.GridSpec(
-        figure=fig, ncols=3, nrows=1, width_ratios=[1, 1, 1], wspace=0.2, hspace=0
+        figure=fig, ncols=3, nrows=1, width_ratios=[1] * 3, wspace=0.2, hspace=0
     )
 
+    subplots_labels = [
+        ("Time", "Number of lost trips", " Lost demand"),
+        ("Time", "Avg. number of scooters - absolute value", "Deviation ideal state"),
+        ("Time", "Total deficient battery in the world", "Deficient battery"),
+    ]
     # figure
-    ax1 = create_plot_with_axis_labels(
-        fig,
-        spec[0],
-        x_label="Time",
-        y_label="Number of lost trips",
-        plot_title="Lost demand",
-    )
-    ax2 = create_plot_with_axis_labels(
-        fig,
-        spec[1],
-        x_label="Time",
-        y_label="Avg. number of scooters - absolute value",
-        plot_title="Deviation ideal state",
-    )
-    ax3 = create_plot_with_axis_labels(
-        fig,
-        spec[2],
-        x_label="Time",
-        y_label="Total deficient battery in the world",
-        plot_title="Deficient battery",
-    )
+    subplots = []
+    for i, (x_label, y_label, plot_title) in enumerate(subplots_labels):
+        ax = create_plot_with_axis_labels(
+            fig, spec[i], x_label=x_label, y_label=y_label, plot_title=plot_title,
+        )
+        ax.legend()
+        ax.set_ylim(ymin=0)
+        subplots.append(ax)
+
+    ax1, ax2, ax3 = subplots
     ax3.yaxis.tick_right()
     ax3.yaxis.set_label_position("right")
 
@@ -279,21 +273,18 @@ def visualize_analysis(instances, policies, smooth_curve=True):
             deficient_battery,
         ) = instance.metrics.get_all_metrics()
         x = instance.metrics.get_time_array()
+
+        ax1.plot(x, lost_demand, c=COLORS[i], label=policies[i])
         if smooth_curve:
-            ax1.plot(x, lost_demand, c=COLORS[i], label=policies[i])
             plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], policies[i])
             plot_smoothed_curve(x, deficient_battery, ax3, COLORS[i], policies[i])
         else:
-            ax1.plot(x, lost_demand, c=COLORS[i], label=policies[i])
             ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=policies[i])
             ax3.plot(x, deficient_battery, c=COLORS[i], label=policies[i])
 
-    ax1.legend()
-    ax1.set_ylim(ymin=0)
-    ax2.legend()
-    ax2.set_ylim(ymin=0)
-    ax3.legend()
-    ax3.set_ylim(ymin=0)
+    for subplot in subplots:
+        subplot.legend()
+        subplot.set_ylim(ymin=0)
 
     fig.suptitle(
         f"Sample size {SAMPLE_SIZE} - Shift duration {SHIFT_DURATION} - Number of clusters {NUMBER_OF_CLUSTERS} - "
