@@ -3,6 +3,7 @@ import unittest
 from classes import World, Action
 from clustering.scripts import get_initial_state
 from decision.policies import RandomRolloutPolicy, SwapAllPolicy
+from decision.neighbour_filtering import filtering_neighbours
 
 
 class BasicDecisionTests(unittest.TestCase):
@@ -185,6 +186,28 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
+
+    def test_filtering_neighbours(self):
+        state = get_initial_state(100, 10)
+
+        best_neighbours_with_random = filtering_neighbours(
+            state, number_of_neighbours=3, random_neighbour=True
+        )
+
+        # test if the number of neighbours is the same, even though one is random
+        self.assertEqual(len(best_neighbours_with_random), 3)
+
+        sorted_neighbours = state.get_neighbours(state.current_cluster, is_sorted=True)
+        for cluster in state.clusters:
+            if sorted_neighbours[:3].__contains__(cluster):
+                cluster.ideal_state = 100
+                for scooter in cluster.scooters:
+                    scooter.battery = 0
+
+        best_neighbours = filtering_neighbours(state, number_of_neighbours=3)
+
+        # check if clusters are closest and with the highest deviation -> best neighbours
+        self.assertEqual(sorted_neighbours[:3], best_neighbours)
 
 
 if __name__ == "__main__":

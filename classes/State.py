@@ -62,6 +62,9 @@ class State:
             self.get_cluster_by_id(start), self.get_cluster_by_id(end)
         )
 
+    def get_distance_to_all(self, cluster_id):
+        return self.distance_matrix[cluster_id]
+
     def calculate_distance_matrix(self):
         """
         Computes distance matrix for all clusters
@@ -259,23 +262,28 @@ class State:
             )
         plt.show()
 
-    def get_neighbours(self, cluster: Cluster, number_of_neighbours=None):
+    def get_neighbours(
+        self, cluster: Cluster, number_of_neighbours=None, is_sorted=True
+    ):
         """
         Get sorted list of clusters closest to input cluster
+        :param is_sorted: Boolean if the neighbours list should be sorted in a ascending order based on distance
         :param cluster: cluster to find neighbours for
         :param number_of_neighbours: number of neighbours to return
         :return:
         """
-        neighbours = sorted(
-            [
-                state_cluster
-                for state_cluster in self.clusters
-                if state_cluster.id != cluster.id
-            ],
-            key=lambda state_cluster: self.distance_matrix[cluster.id][
-                state_cluster.id
-            ],
-        )
+        neighbours = [
+            state_cluster
+            for state_cluster in self.clusters
+            if state_cluster.id != cluster.id
+        ]
+        if is_sorted:
+            neighbours = sorted(
+                neighbours,
+                key=lambda state_cluster: self.distance_matrix[cluster.id][
+                    state_cluster.id
+                ],
+            )
         return neighbours[:number_of_neighbours] if number_of_neighbours else neighbours
 
     def get_cluster_by_id(self, cluster_id: int):
