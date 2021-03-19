@@ -15,7 +15,7 @@ class BasicVisualizerTests(unittest.TestCase):
 
         state.visualize()
 
-        flows, trips = system_simulate(state)
+        flows, trips, _ = system_simulate(state)
 
         visualize_cluster_flow(state, flows)
 
@@ -27,7 +27,7 @@ class BasicVisualizerTests(unittest.TestCase):
 
         next_state = copy.deepcopy(current_state)
 
-        flows, scooter_trips = next_state.system_simulate()
+        flows, scooter_trips, _ = next_state.system_simulate()
 
         current_state.visualize_system_simulation(scooter_trips)
 
