@@ -16,15 +16,17 @@ def system_simulate(state):
         if start != end
     }
     trips = []
+    lost_demand = []
     for i, start_cluster in enumerate(state.clusters):
         # poisson process to select number of trips in a iteration
         number_of_trips = round(
             np.random.poisson(start_cluster.trip_intensity_per_iteration)
         )
 
-        # can't complete more trips then there is scooters with battery over min_battery
+        # if there is more trips than scooters available, the system has lost demand
         valid_scooters = start_cluster.get_valid_scooters(BATTERY_LIMIT)
         if number_of_trips > len(valid_scooters):
+            lost_demand.append(number_of_trips - len(valid_scooters))
             number_of_trips = len(valid_scooters)
 
         # loop to generate trips from the cluster
@@ -47,4 +49,5 @@ def system_simulate(state):
     return (
         [(start, end, flow) for (start, end), flow in list(flow_counter.items())],
         trips,
+        sum(lost_demand),
     )

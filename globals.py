@@ -5,15 +5,15 @@ GEOSPATIAL_BOUND_NEW = (59.9040, 59.9547, 10.6478, 10.8095)
 CLUSTER_CENTER_DELTA = 0.01
 
 # Colors for visualizer
-BLUE, GREEN, RED, BLACK = "blue", "green", "red", "black"
+BLUE, GREEN, RED, BLACK, WHITE = "blue", "green", "red", "black", "white"
 
 # Speed of service vehicles
 VEHICLE_SPEED = 30
 MINUTES_IN_HOUR = 60
 
 # Inventory of vehicle
-BATTERY_INVENTORY = 100
-SCOOTER_INVENTORY = 10
+BATTERY_INVENTORY = 200
+SCOOTER_INVENTORY = 20
 
 # Speed of scooter ref - Fearnley at al. (2020, section 3.6)
 SCOOTER_SPEED = 7
@@ -27,8 +27,13 @@ DISCOUNT_RATE = 0.99
 # Negative reward for lost trip
 LOST_TRIP_REWARD = -0.1
 
-# Testing constants
-MAX_NUMBER_OF_NEIGHBOURS = 5
+# Testing parameters
+MAX_NUMBER_OF_NEIGHBOURS = 3
+NUMBER_OF_ROLLOUTS = 50
+SHIFT_DURATION = 120
+SAMPLE_SIZE = 500
+NUMBER_OF_CLUSTERS = 30
+POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
 
 # State cache directory
 if os.environ.get("CI"):

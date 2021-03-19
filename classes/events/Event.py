@@ -2,7 +2,7 @@ class Event:
     def __init__(self, time: int):
         self.time = time
 
-    def perform(self, world) -> None:
+    def perform(self, world, add_metric=True) -> None:
         if world.time <= self.time:
             world.time = self.time
         else:
@@ -10,3 +10,5 @@ class Event:
                 f"{self.__class__.__name__} object tries to move the world backwards in time. Event time: {self.time}"
                 f", World time: {world.time}"
             )
+        if add_metric:
+            world.metrics.add_analysis_metrics(world)

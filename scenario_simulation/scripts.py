@@ -2,6 +2,9 @@ import copy
 import classes
 from globals import ITERATION_LENGTH_MINUTES, NUMBER_OF_ROLLOUTS, DISCOUNT_RATE
 import decision.policies as policies
+import numpy as np
+from classes.State import State
+from globals import ITERATION_LENGTH_MINUTES, LOST_TRIP_REWARD, NUMBER_OF_ROLLOUTS
 
 
 def estimate_reward(
@@ -37,7 +40,8 @@ def estimate_reward(
                     )
                 )
             else:
-                world.state.system_simulate()
+                _, _, lost_demand = world.state.system_simulate()
+                world.add_reward(-lost_demand * LOST_TRIP_REWARD)
                 simulation_counter += 1
             next_is_vehicle_action = (
                 world.time < simulation_counter * ITERATION_LENGTH_MINUTES

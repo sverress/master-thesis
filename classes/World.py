@@ -4,17 +4,118 @@ import bisect
 import classes
 
 from decision.policies import RandomRolloutPolicy
-from globals import DISCOUNT_RATE
+from globals import (
+    BATTERY_LIMIT,
+    LOST_TRIP_REWARD,
+    ITERATION_LENGTH_MINUTES,
+    WHITE,
+    DISCOUNT_RATE,
+)
+from decision.get_policy import get_policy
+from progress.bar import IncrementalBar
 
 
 class World:
+    class WorldMetric:
+        def __init__(self):
+            self.lost_demand = []
+            self.average_deviation_ideal_state = []
+            self.deficient_battery = []
+            self.time = []
+
+        def add_analysis_metrics(self, world):
+            """
+            Add data to analysis
+            :param world: world object to record state from
+            """
+            self.lost_demand.append(
+                sum([1 for reward in world.rewards if reward == LOST_TRIP_REWARD])
+                if len(world.rewards) > 0
+                else 0
+            )
+            self.average_deviation_ideal_state.append(
+                sum(
+                    [
+                        abs(
+                            (
+                                sum(
+                                    [
+                                        1
+                                        for _ in cluster.get_valid_scooters(
+                                            BATTERY_LIMIT
+                                        )
+                                    ]
+                                )
+                            )
+                            - cluster.ideal_state
+                        )
+                        for cluster in world.state.clusters
+                    ]
+                )
+                / len(world.state.clusters)
+            )
+            self.deficient_battery.append(
+                sum(
+                    [
+                        cluster.ideal_state * 100
+                        - (
+                            sum(
+                                [
+                                    scooter.battery
+                                    for scooter in cluster.get_valid_scooters(
+                                        BATTERY_LIMIT
+                                    )
+                                ]
+                            )
+                        )
+                        for cluster in world.state.clusters
+                        if len(cluster.scooters) < cluster.ideal_state
+                    ]
+                )
+            )
+            self.time.append(world.time)
+
+        def get_lost_demand(self):
+            """
+            Returns list of all lost demand
+            """
+            return self.lost_demand
+
+        def get_deviation_ideal_state(self):
+            """
+            Returns list of average deviation from ideal state during the time analysed
+            """
+            return self.average_deviation_ideal_state
+
+        def get_deficient_battery(self):
+            """
+            Returns list of total deficient battery in the system during the analysed time
+            """
+            return self.deficient_battery
+
+        def get_time_array(self):
+            """
+            Returns a list of all timestamps when when data used for analysis is recorded
+            """
+            return self.time
+
+        def get_all_metrics(self):
+            """
+            Returns all metrics recorded for analysis
+            """
+            return (
+                self.lost_demand,
+                self.average_deviation_ideal_state,
+                self.deficient_battery,
+            )
+
     def __init__(
         self,
         shift_duration: int,
         sample_size=100,
         number_of_clusters=20,
-        policy=RandomRolloutPolicy,
         initial_state=None,
+        policy="RandomRolloutPolicy",
     ):
         self.shift_duration = shift_duration
         if initial_state:
@@ -32,11 +133,23 @@ class World:
             for end in np.arange(len(self.state.clusters))
             if start != end
         }
-        self.policy = policy
+        self.policy = get_policy(policy)
+        self.metrics = World.WorldMetric()
+        self.progress_bar = IncrementalBar(
+            "Running World",
+            check_tty=False,
+            max=round(shift_duration / ITERATION_LENGTH_MINUTES) + 1,
+            color=WHITE,
+            suffix="%(percent)d%% - ETA %(eta)ds",
+        )
 
     def run(self):
         while self.time < self.shift_duration:
-            self.stack.pop(0).perform(self)
+            event = self.stack.pop(0)
+            event.perform(self)
+            if isinstance(event, classes.GenerateScooterTrips):
+                self.progress_bar.next()
+        self.progress_bar.finish()
 
     def get_remaining_time(self) -> int:
         """
