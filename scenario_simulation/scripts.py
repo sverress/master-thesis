@@ -1,7 +1,7 @@
 import copy
 import numpy as np
 from classes.State import State
-from globals import ITERATION_LENGTH_MINUTES, NUMBER_OF_ROLLOUTS
+from globals import ITERATION_LENGTH_MINUTES, LOST_TRIP_REWARD, NUMBER_OF_ROLLOUTS
 
 
 def estimate_reward(
@@ -37,7 +37,9 @@ def estimate_reward(
             ]
             total_reward += child_state.do_action(random_action)
 
-            child_state.system_simulate()
+            _, _, lost_demand = child_state.system_simulate()
+
+            total_reward -= lost_demand * LOST_TRIP_REWARD
 
         all_rewards.append(total_reward)
 
