@@ -4,6 +4,7 @@ import bisect
 import classes
 
 from decision.policies import RandomRolloutPolicy
+from globals import DISCOUNT_RATE
 
 
 class World:
@@ -100,3 +101,7 @@ class World:
             for event in self.stack
             if isinstance(event, classes.ScooterArrival)
         ]
+
+    def get_discount(self):
+        # Divide by 60 as there is 60 minutes in an hour. We want this number in hours to avoid big numbers is the power
+        return DISCOUNT_RATE ** (self.time / 60)

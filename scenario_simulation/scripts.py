@@ -30,9 +30,7 @@ def estimate_reward(
         while world.time < remaining_shift_duration:
             if next_is_vehicle_action:
                 action = policies.RandomActionPolicy.get_best_action(world)
-                world.add_reward(
-                    (DISCOUNT_RATE ** world.time) * world.state.do_action(action)
-                )
+                world.add_reward(world.get_discount() * world.state.do_action(action))
                 world.time = world.time + action.get_action_time(
                     world.state.get_distance_id(
                         world.state.current_cluster.id, action.next_cluster

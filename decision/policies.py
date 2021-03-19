@@ -27,7 +27,7 @@ class RandomRolloutPolicy(Policy):
             reward = new_state.do_action(action)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            reward += (DISCOUNT_RATE ** world.time) * estimate_reward(
+            reward += world.get_discount() * estimate_reward(
                 new_state, world.get_remaining_time()
             )
 
