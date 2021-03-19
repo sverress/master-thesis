@@ -21,19 +21,27 @@ def estimate_reward(
 
     # Do n scenario simulations
     for i in range(number_of_simulations):
-        iteration_counter = 0
+        simulation_counter = 1
         world = classes.World(
             remaining_shift_duration, initial_state=copy.deepcopy(state)
         )
+        next_is_vehicle_action = True
         # Simulate until shift ends
-        while iteration_counter * ITERATION_LENGTH_MINUTES < remaining_shift_duration:
-            world.add_reward(
-                world.state.do_action(
-                    policies.RandomActionPolicy.get_best_action(world)
+        while world.time < remaining_shift_duration:
+            if next_is_vehicle_action:
+                action = policies.RandomActionPolicy.get_best_action(world)
+                world.add_reward(world.state.do_action(action))
+                world.time = world.time + action.get_action_time(
+                    world.state.get_distance_id(
+                        world.state.current_cluster.id, action.next_cluster
+                    )
                 )
+            else:
+                world.state.system_simulate()
+                simulation_counter += 1
+            next_is_vehicle_action = (
+                world.time < simulation_counter * ITERATION_LENGTH_MINUTES
             )
-            world.state.system_simulate()
-            iteration_counter += 1
 
         all_rewards.append(world.get_total_reward())
 
