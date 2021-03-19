@@ -23,11 +23,16 @@ class VehicleArrival(Event):
         action = world.policy.get_best_action(world)
 
         if self.visualize:
-            # visualize cluster flows since last vehicle arrival
-            world.state.visualize_flow(world.get_cluster_flow(), action.next_cluster)
+            # visualize vehicle route
+            world.state.visualize_vehicle_route(
+                world.state.vehicle.get_route(), action.next_cluster,
+            )
 
             # visualize scooters currently out on a trip
             world.state.visualize_current_trips(world.get_scooters_on_trip())
+
+        # add the cluster id for the cluster the vehicle arrives at to the vehicles trip
+        world.state.vehicle.add_cluster_id_to_route(world.state.current_cluster.id)
 
         # clear world flow counter dictionary
         world.clear_flow_dict()

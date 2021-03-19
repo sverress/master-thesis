@@ -32,7 +32,7 @@ class BasicVisualizerTests(unittest.TestCase):
 
         current_state.visualize_system_simulation(scooter_trips)
 
-        current_state.visualize_flow(flows, next_state.current_cluster.id)
+        current_state.visualize_flow(flows)
 
     @staticmethod
     def test_analysis():

@@ -167,7 +167,7 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(len(actions), 5)
 
     def test_number_of_actions(self):
-        bigger_state = get_initial_state(sample_size=100)
+        bigger_state = get_initial_state(sample_size=500)
         self.assertLess(
             len(bigger_state.get_possible_actions(divide=2)),
             len(bigger_state.get_possible_actions()),

@@ -20,6 +20,7 @@ SCOOTER_SPEED = 7
 
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
+NUMBER_OF_ROLLOUTS = 20
 BATTERY_LIMIT = 20.0
 
 # Negative reward for lost trip
@@ -46,6 +47,9 @@ TEST_DATA_DIRECTORY = "test_data"
 
 # RUNTIME SETTINGS
 SEED = 69
+
+# Visualization parameters
+ACTION_OFFSET = 0.018
 
 COLORS = [
     "#B52CC2",

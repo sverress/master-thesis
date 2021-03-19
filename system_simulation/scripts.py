@@ -45,9 +45,6 @@ def system_simulate(state):
         end_cluster.add_scooter(scooter)
 
     return (
-        [
-            (start_end[0], start_end[1], flow)
-            for start_end, flow in list(flow_counter.items())
-        ],
+        [(start, end, flow) for (start, end), flow in list(flow_counter.items())],
         trips,
     )
