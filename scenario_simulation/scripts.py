@@ -1,11 +1,11 @@
 import copy
-import numpy as np
-from classes.State import State
+import classes
 from globals import ITERATION_LENGTH_MINUTES, NUMBER_OF_ROLLOUTS
+import decision.policies as policies
 
 
 def estimate_reward(
-    state: State,
+    state: classes.State,
     remaining_shift_duration: int,
     number_of_simulations=NUMBER_OF_ROLLOUTS,
 ):
@@ -22,23 +22,19 @@ def estimate_reward(
     # Do n scenario simulations
     for i in range(number_of_simulations):
         iteration_counter = 0
-        child_state = copy.deepcopy(state)
-        total_reward = 0
-
+        world = classes.World(
+            remaining_shift_duration, initial_state=copy.deepcopy(state)
+        )
         # Simulate until shift ends
         while iteration_counter * ITERATION_LENGTH_MINUTES < remaining_shift_duration:
+            world.add_reward(
+                world.state.do_action(
+                    policies.RandomActionPolicy.get_best_action(world)
+                )
+            )
+            world.state.system_simulate()
             iteration_counter += 1
-            # all possible actions in this state
-            possible_actions = child_state.get_possible_actions(number_of_neighbours=3)
 
-            # pick a random action
-            random_action = possible_actions[
-                np.random.randint(0, len(possible_actions))
-            ]
-            total_reward += child_state.do_action(random_action)
-
-            child_state.system_simulate()
-
-        all_rewards.append(total_reward)
+        all_rewards.append(world.get_total_reward())
 
     return max(all_rewards)

@@ -64,3 +64,13 @@ class SwapAllPolicy(Policy):
             delivery_scooters=[],
             next_cluster=next_cluster.id,
         )
+
+
+class RandomActionPolicy(Policy):
+    @staticmethod
+    def get_best_action(world: World):
+        # all possible actions in this state
+        possible_actions = world.state.get_possible_actions(number_of_neighbours=3)
+
+        # pick a random action
+        return random.choice(possible_actions)
