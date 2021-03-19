@@ -16,15 +16,79 @@ def visualize_state(state):
     plt.show()
 
 
-def visualize_cluster_flow(state: State, flows: [(int, int, int)], next_state_id=-1):
+def visualize_cluster_flow(state: State, flows: [(int, int, int)]):
     """
     Visualize the flow in a state from a simulation
-    :param next_state_id: id of next state
     :param state: State to display
     :param flows: flow of scooter from one cluster to another
     :return:
     """
-    setup_cluster_visualize(state, flows, next_state_id)
+    (
+        graph,
+        fig,
+        ax,
+        graph,
+        labels,
+        node_border,
+        node_color,
+        node_size,
+        font_size,
+    ) = setup_cluster_visualize(state)
+
+    if flows:
+        # adds edges of flow between the clusters
+        edge_labels, alignment = add_flow_edges(graph, flows)
+
+        # displays edges on plot
+        alt_draw_networkx_edge_labels(
+            graph,
+            edge_labels=edge_labels,
+            verticalalignment=alignment,
+            bbox=dict(alpha=0),
+            ax=ax,
+        )
+
+    # displays plot
+    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
+
+    # shows the plots in IDE
+    plt.tight_layout(pad=1.0)
+    plt.show()
+
+
+def visualize_vehicle_route(state, vehicle_route=None, next_state_id=-1):
+    """
+    Visualize the vehicle route in a state from a simulation
+    :param state: State to display
+    :param vehicle_route: passed route for the vehicle entering a
+    :param next_state_id: id of next state
+    :return:
+    """
+    (
+        graph,
+        fig,
+        ax,
+        graph,
+        labels,
+        node_border,
+        node_color,
+        node_size,
+        font_size,
+    ) = setup_cluster_visualize(state, next_state_id)
+
+    if vehicle_route:
+        route_labels, alignment = add_vehicle_route(graph, node_border, vehicle_route)
+
+        alt_draw_networkx_edge_labels(
+            graph,
+            edge_labels=route_labels,
+            verticalalignment=alignment,
+            bbox=dict(alpha=0),
+            ax=ax,
+        )
+
+    # displays plot
+    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
 
     # shows the plots in IDE
     plt.tight_layout(pad=1.0)
@@ -42,17 +106,20 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     plot_vehicle_info(state_before_action.vehicle, current_state.vehicle, ax1)
     plot_action(
         action,
+        state_before_action.current_cluster.id,
         ax1,
         offset=(
             len(state_before_action.vehicle.scooter_inventory)
             + len(current_state.vehicle.scooter_inventory)
         )
-        * 0.015,
+        * ACTION_OFFSET,
     )
 
     make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
+    add_cluster_center(state_before_action.clusters, ax2)
 
     make_scooter_visualize(current_state, ax3, scooter_battery=True)
+    add_cluster_center(state_before_action.clusters, ax3)
 
     plt.tight_layout(pad=1.0)
     plt.show()

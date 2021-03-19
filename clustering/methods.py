@@ -1,11 +1,10 @@
-import pandas as pd
-import numpy as np
 from sklearn.cluster import KMeans
 import os
 
 from classes import State, Scooter, Cluster
 from globals import GEOSPATIAL_BOUND_NEW, TEST_DATA_DIRECTORY
 from progress.bar import Bar
+from .helpers import *
 
 
 def read_bounded_csv_file(
@@ -75,38 +74,14 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
         :param second_snapshot_data: geospatial data for scooters in first snapshot
         :return: probability matrix
         """
-
-        # Join tables on scooter id
-        merged_tables = pd.merge(
-            left=first_snapshot_data,
-            right=second_snapshot_data,
-            left_on="id",
-            right_on="id",
-            how="inner",
+        (_, filtered_moved_scooters, disappeared_scooters) = get_moved_scooters(
+            initial_state, first_snapshot_data, second_snapshot_data
         )
-
-        # Filtering out scooters that has moved during the 20 minutes
-        moved_scooters = merged_tables[
-            merged_tables["battery_x"] != merged_tables["battery_y"]
-        ]
-
-        # Due to the dataset only showing available scooters we need to find out how many scooters leave the zone
-        # resulting in a battery percent below 20. To find these scooters we find scooters from the first snapshot
-        # that is not in the merge. The "~" symbol indicates "not" in pandas boolean indexing
-        disappeared_scooters: pd.DataFrame = first_snapshot_data.loc[
-            ~first_snapshot_data["id"].isin(merged_tables["id"])
-        ].copy()
-        # Find the origin cluster for these scooters
-        disappeared_scooters["cluster_id"] = [
-            initial_state.get_cluster_by_lat_lon(row["lat"], row["lon"])
-            for index, row in disappeared_scooters.iterrows()
-        ]
-
         # Get list of cluster ids and find number of clusters for dimensions of arrays
         cluster_labels = [cluster.id for cluster in initial_state.clusters]
         number_of_clusters = len(cluster_labels)
 
-        # Initialize probability_matrix with number of scooters in each cluster
+        # Initialize probability_matrix with number of scooters in each cluster222
         number_of_scooters = np.array(
             [[cluster.number_of_scooters() for cluster in initial_state.clusters]]
             * number_of_clusters,
@@ -116,18 +91,9 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
         # Create counter for every combination of cluster
         move_count = np.zeros((number_of_clusters, number_of_clusters), dtype="float64")
         # Count how many scooters move
-        for index, row in moved_scooters.iterrows():
-            # Find the cluster the scooter belonged to
-            old_cluster = initial_state.get_cluster_by_lat_lon(
-                row["lat_x"], row["lon_x"]
-            )
-            # Find the nearest cluster the scooter now belongs to
-            new_cluster = initial_state.get_cluster_by_lat_lon(
-                row["lat_y"], row["lon_y"]
-            )
+        for _, row in filtered_moved_scooters.iterrows():
             # Increase the counter for every visit if the scooter has moved to a new cluster
-            if old_cluster.id != new_cluster.id:
-                move_count[old_cluster.id][new_cluster.id] += 1
+            move_count[row["cluster_x"]][row["cluster_y"]] += 1
 
         # Calculate number of scooters who stayed in each zone
         for cluster_id in cluster_labels:
@@ -246,18 +212,6 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
     progressbar.finish()
 
 
-def normalize_to_integers(array, sum_to=1):
-    normalized_cluster_ideal_states = sum_to * array / sum(array)
-    rests = normalized_cluster_ideal_states - np.floor(normalized_cluster_ideal_states)
-    number_of_ones = round(sum(rests))
-    sorted_rests = np.sort(rests)
-    return np.array(
-        np.floor(normalized_cluster_ideal_states)
-        + [1 if rest in sorted_rests[number_of_ones:] else 0 for rest in rests],
-        dtype="int32",
-    ).tolist()
-
-
 def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     progress = Bar(
         "| Computing trip intensity", max=len(os.listdir(TEST_DATA_DIRECTORY)),
@@ -272,35 +226,39 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
             current_snapshot["id"].isin(sample_scooters)
         ]
         if previous_snapshot is not None:
-            # Join tables on scooter id
-            merged_tables = pd.merge(
-                left=previous_snapshot,
-                right=current_snapshot,
-                left_on="id",
-                right_on="id",
-                how="inner",
-            )
-
-            # Filtering out scooters that has moved during the 20 minutes
-            moved_scooters = merged_tables[
-                merged_tables["battery_x"] != merged_tables["battery_y"]
-            ].copy()
-            moved_scooters["cluster"] = [
-                state.get_cluster_by_lat_lon(row["lat_x"], row["lon_x"]).id
-                for index, row in moved_scooters.iterrows()
-            ]
+            (
+                moved_scooters,
+                filtered_moved_scooters,
+                disappeared_scooters,
+            ) = get_moved_scooters(state, current_snapshot, previous_snapshot)
             for cluster in state.clusters:
+                filtered_moved_scooters_in_cluster = filtered_moved_scooters[
+                    filtered_moved_scooters["cluster_x"] == cluster.id
+                ]
+                non_filtered_moved_scooters_in_cluster = moved_scooters[
+                    moved_scooters["cluster_x"] == cluster.id
+                ]
+                # Number of scooters leaving the cluster
+                # + number of disappeared scooters likely to leave ( # of disappeared * ratio of leaving)
                 trip_counter[cluster.id][index] = len(
-                    moved_scooters[moved_scooters["cluster"] == cluster.id]
+                    filtered_moved_scooters_in_cluster
+                ) + round(
+                    len(
+                        disappeared_scooters[
+                            disappeared_scooters["cluster_id"] == cluster.id
+                        ]
+                    )
+                    * (
+                        (
+                            len(filtered_moved_scooters_in_cluster)
+                            / len(non_filtered_moved_scooters_in_cluster)
+                        )
+                        if len(non_filtered_moved_scooters_in_cluster)
+                        else 1
+                    )
                 )
         previous_snapshot = current_snapshot
     cluster_trip_intensities = np.mean(trip_counter, axis=1)
     for cluster in state.clusters:
         cluster.trip_intensity_per_iteration = cluster_trip_intensities[cluster.id]
     progress.finish()
-
-
-def scooter_sample_filter(dataframe: pd.DataFrame, sample_size=None):
-    if sample_size:
-        dataframe = dataframe.sample(sample_size)
-    return dataframe["id"].tolist()

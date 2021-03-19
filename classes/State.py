@@ -80,6 +80,12 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
+    def get_max_number_of_swaps(self, cluster: Cluster):
+        return min(
+            min(len(cluster.scooters), self.vehicle.battery_inventory),
+            cluster.ideal_state,
+        )
+
     def get_possible_actions(self, number_of_neighbours=None, divide=None):
         """
         Enumerate all possible actions from the current state
@@ -103,10 +109,7 @@ class State:
             self.vehicle.scooter_inventory_capacity
             - len(self.vehicle.scooter_inventory),
         )
-        swaps = min(
-            min(len(self.current_cluster.scooters), self.vehicle.battery_inventory),
-            self.current_cluster.ideal_state,
-        )
+        swaps = self.get_max_number_of_swaps(self.current_cluster)
         drop_offs = max(
             min(
                 self.current_cluster.ideal_state - len(self.current_cluster.scooters),
@@ -292,11 +295,16 @@ class State:
     def visualize(self):
         visualize_state(self)
 
-    def visualize_flow(self, flows: [(int, int, int)], next_state_id: int):
-        visualize_cluster_flow(self, flows, next_state_id)
+    def visualize_flow(
+        self, flows: [(int, int, int)],
+    ):
+        visualize_cluster_flow(self, flows)
 
     def visualize_action(self, state_after_action, action: Action):
         visualize_action(self, state_after_action, action)
+
+    def visualize_vehicle_route(self, vehicle_trip: [int], next_state_id: int):
+        visualize_vehicle_route(self, vehicle_trip, next_state_id)
 
     def visualize_current_trips(self, trips: [(int, int, Scooter)]):
         visualize_scooters_on_trip(self, trips)
@@ -347,3 +355,10 @@ class State:
                 for scooter in cluster.scooters
                 if scooter.id in sampled_scooter_ids
             ]
+
+    def get_random_cluster(self, exclude=None):
+        return random.choice(
+            [cluster for cluster in self.clusters if cluster.id != exclude.id]
+            if exclude
+            else self.clusters
+        )
