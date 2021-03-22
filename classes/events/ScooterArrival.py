@@ -17,7 +17,7 @@ class ScooterArrival(Event):
         self.departure_cluster_id = departure_cluster_id
         self.distance = distance
 
-    def perform(self, world, add_metric=True) -> None:
+    def perform(self, world, **kwargs) -> None:
         """
             :param world: world object
         """
@@ -35,4 +35,4 @@ class ScooterArrival(Event):
         world.add_trip_to_flow(self.departure_cluster_id, self.arrival_cluster_id)
 
         # set time of world to this event's time
-        super(ScooterArrival, self).perform(world, add_metric)
+        super(ScooterArrival, self).perform(world, **kwargs)
