@@ -9,7 +9,7 @@ class ScooterDeparture(Event):
         super().__init__(departure_time)
         self.departure_cluster_id = departure_cluster_id
 
-    def perform(self, world, add_metric=True) -> None:
+    def perform(self, world, **kwargs) -> None:
         """
         :param world: world object
         """
@@ -53,4 +53,4 @@ class ScooterDeparture(Event):
             world.add_event(classes.LostTrip(self.time))
 
         # set time of world to this event's time
-        super(ScooterDeparture, self).perform(world, add_metric)
+        super(ScooterDeparture, self).perform(world, **kwargs)
