@@ -1,8 +1,9 @@
 from itertools import cycle
 import random
-
+from classes.Location import Location
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
+from classes.Depot import Depot
 from clustering.methods import (
     compute_and_set_ideal_state,
     compute_and_set_trip_intensity,
@@ -19,11 +20,18 @@ from globals import GEOSPATIAL_BOUND_NEW, STATE_CACHE_DIR
 
 
 class State:
-    def __init__(self, clusters: [Cluster], current: Cluster, vehicle: Vehicle):
+    def __init__(
+        self, clusters: [Cluster], depots: [Depot], current: Location, vehicle: Vehicle
+    ):
         self.clusters = clusters
+        self.depots = depots
+        self.locations = self.depots + self.clusters
         self.current_cluster = current
         self.vehicle = vehicle
         self.distance_matrix = self.calculate_distance_matrix()
+
+    def get_all_locations(self):
+        return self.locations
 
     def get_cluster_by_lat_lon(self, lat: float, lon: float):
         """
@@ -40,7 +48,7 @@ class State:
                 all_scooters.append(scooter)
         return all_scooters
 
-    def get_distance(self, start: Cluster, end: Cluster):
+    def get_distance(self, start: Location, end: Location):
         """
         Calculate distance between two clusters
         :param start: Cluster object
