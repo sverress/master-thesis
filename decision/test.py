@@ -12,14 +12,14 @@ class BasicDecisionTests(unittest.TestCase):
     def test_battery_swaps(self):
         # Modify initial state. 5 battery swaps possible.
         self.initial_state.vehicle.scooter_inventory = []
-        self.initial_state.current_cluster.scooters = self.initial_state.current_cluster.scooters[
+        self.initial_state.current_location.scooters = self.initial_state.current_location.scooters[
             :5
         ]
-        self.initial_state.current_cluster.ideal_state = 5
-        start_number_of_scooters = len(self.initial_state.current_cluster.scooters)
-        current_cluster = self.initial_state.current_cluster
+        self.initial_state.current_location.ideal_state = 5
+        start_number_of_scooters = len(self.initial_state.current_location.scooters)
+        current_cluster = self.initial_state.current_location
 
-        for scooter in self.initial_state.current_cluster.scooters:
+        for scooter in self.initial_state.current_location.scooters:
             scooter.battery = 80.0
         start_battery_percentage = current_cluster.get_current_state() * 100
 
@@ -30,7 +30,7 @@ class BasicDecisionTests(unittest.TestCase):
         for action in actions:
             self.assertLessEqual(
                 len(action.battery_swaps),
-                self.initial_state.current_cluster.ideal_state,
+                self.initial_state.current_location.ideal_state,
             )
 
         # Test number of actions
@@ -54,15 +54,15 @@ class BasicDecisionTests(unittest.TestCase):
     def test_pick_ups(self):
         # Modify initial state. 5 battery swaps and 2 pick ups possible
         self.initial_state.vehicle.scooter_inventory = []
-        self.initial_state.current_cluster.scooters = self.initial_state.current_cluster.scooters[
+        self.initial_state.current_location.scooters = self.initial_state.current_location.scooters[
             :5
         ]
-        self.initial_state.current_cluster.ideal_state = 3
-        start_number_of_scooters = len(self.initial_state.current_cluster.scooters)
-        current_cluster = self.initial_state.current_cluster
+        self.initial_state.current_location.ideal_state = 3
+        start_number_of_scooters = len(self.initial_state.current_location.scooters)
+        current_cluster = self.initial_state.current_location
 
         # Set all battery to 20% to calculate expected reward
-        for scooter in self.initial_state.current_cluster.scooters:
+        for scooter in self.initial_state.current_location.scooters:
             scooter.battery = 20.0
         start_battery_percentage = current_cluster.get_current_state() * 100
 
@@ -102,18 +102,18 @@ class BasicDecisionTests(unittest.TestCase):
 
     def test_deliveries(self):
         # Modify initial state. 5 battery swaps and 2 drop-offs possible
-        self.initial_state.vehicle.scooter_inventory = self.initial_state.current_cluster.scooters[
+        self.initial_state.vehicle.scooter_inventory = self.initial_state.current_location.scooters[
             7:9
         ]
-        self.initial_state.current_cluster.scooters = self.initial_state.current_cluster.scooters[
+        self.initial_state.current_location.scooters = self.initial_state.current_location.scooters[
             :5
         ]
-        self.initial_state.current_cluster.ideal_state = 7
-        start_number_of_scooters = len(self.initial_state.current_cluster.scooters)
-        current_cluster = self.initial_state.current_cluster
+        self.initial_state.current_location.ideal_state = 7
+        start_number_of_scooters = len(self.initial_state.current_location.scooters)
+        current_cluster = self.initial_state.current_location
 
         # Set all battery to 80% to calculate expected reward
-        for scooter in self.initial_state.current_cluster.scooters:
+        for scooter in self.initial_state.current_location.scooters:
             scooter.battery = 80.0
         start_battery_percentage = current_cluster.get_current_state() * 100
 
@@ -158,7 +158,7 @@ class BasicDecisionTests(unittest.TestCase):
         initial_state = get_initial_state(sample_size=100, number_of_clusters=6)
         # Modify initial state. 5 battery swaps and 2 drop-offs possible
         initial_state.vehicle.scooter_inventory = []
-        initial_state.current_cluster.scooters = []
+        initial_state.current_location.scooters = []
 
         # Get all possible actions
         actions = initial_state.get_possible_actions(number_of_neighbours=5)

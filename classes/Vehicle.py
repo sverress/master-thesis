@@ -43,5 +43,14 @@ class Vehicle:
     def add_cluster_id_to_route(self, cluster_id: int):
         self.service_route.append(cluster_id)
 
+    def add_battery_inventory(self, number_of_batteries):
+        if number_of_batteries + self.battery_inventory > BATTERY_INVENTORY:
+            raise ValueError(
+                f"Adding {number_of_batteries} exceeds the vehicles capacity ({BATTERY_INVENTORY})."
+                f"Current battery inventory: {self.battery_inventory}"
+            )
+        else:
+            self.battery_inventory += number_of_batteries
+
     def get_route(self):
         return self.service_route

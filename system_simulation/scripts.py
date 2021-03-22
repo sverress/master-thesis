@@ -42,7 +42,7 @@ def system_simulate(state):
     # compute trip after all trips are generated to avoid handling inflow in cluster
     for start_cluster, end_cluster, scooter in trips:
         start_cluster.scooters.remove(scooter)
-        trip_distance = state.get_distance(start_cluster, end_cluster)
+        trip_distance = state.get_distance_clusters(start_cluster, end_cluster)
         scooter.travel(trip_distance)
         end_cluster.add_scooter(scooter)
 

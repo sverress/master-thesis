@@ -36,7 +36,7 @@ def get_initial_state(
     clustering.next()
 
     # generate depots and adding them to clusters list
-    depots = methods.generate_depots()
+    depots = methods.generate_depots(number_of_clusters=len(clusters))
     clusters += depots
     clustering.next()
 

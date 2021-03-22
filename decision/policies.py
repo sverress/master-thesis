@@ -45,19 +45,19 @@ class SwapAllPolicy(Policy):
             [
                 cluster
                 for cluster in world.state.clusters
-                if cluster.id != world.state.current_cluster.id
+                if cluster.id != world.state.current_location.id
             ]
         )
 
         # Find all scooters that can be swapped here
         swappable_scooters_ids = [
             scooter.id
-            for scooter in world.state.current_cluster.get_swappable_scooters()
+            for scooter in world.state.current_location.get_swappable_scooters()
         ]
 
         # Calculate how many scooters that can be swapped
         number_of_scooters_to_swap = world.state.get_max_number_of_swaps(
-            world.state.current_cluster
+            world.state.current_location
         )
 
         # Return an action with no re-balancing, only scooter swapping

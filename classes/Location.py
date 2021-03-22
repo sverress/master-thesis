@@ -3,9 +3,10 @@ from globals import GEOSPATIAL_BOUND_NEW
 
 
 class Location:
-    def __init__(self, lat: float, lon: float):
+    def __init__(self, lat: float, lon: float, location_id: int):
         self.lat = lat
         self.lon = lon
+        self.id = location_id
 
     def get_lat(self):
         return self.lat

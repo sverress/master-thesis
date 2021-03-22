@@ -106,7 +106,7 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     plot_vehicle_info(state_before_action.vehicle, current_state.vehicle, ax1)
     plot_action(
         action,
-        state_before_action.current_cluster.id,
+        state_before_action.current_location.id,
         ax1,
         offset=(
             len(state_before_action.vehicle.scooter_inventory)

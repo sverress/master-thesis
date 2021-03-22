@@ -21,7 +21,7 @@ class EventsTests(unittest.TestCase):
 
     def test_scooter_departure(self):
         departure_event = ScooterDeparture(
-            self.departure_time, self.world.state.current_cluster.id
+            self.departure_time, self.world.state.current_location.id
         )
 
         departure_event.perform(self.world)
@@ -42,7 +42,7 @@ class EventsTests(unittest.TestCase):
         )
 
     def test_scooter_arrival(self):
-        scooter = self.world.state.current_cluster.get_valid_scooters(20.0)[0]
+        scooter = self.world.state.current_location.get_valid_scooters(20.0)[0]
 
         scooter_battery = scooter.battery
 
@@ -69,7 +69,7 @@ class EventsTests(unittest.TestCase):
 
     def test_vehicle_arrival(self):
         random_cluster_in_state = self.world.state.get_random_cluster(
-            exclude=self.world.state.current_cluster
+            exclude=self.world.state.current_location
         )
         # Create a vehicle arrival event with a arrival time of 20 arriving at a random cluster in the world state
         vehicle_arrival = VehicleArrival(20, random_cluster_in_state.id)
@@ -82,7 +82,7 @@ class EventsTests(unittest.TestCase):
 
         # New current cluster is not the arrival cluster, as the action takes the state to a new cluster
         self.assertNotEqual(
-            random_cluster_in_state.id, self.large_world.state.current_cluster.id
+            random_cluster_in_state.id, self.large_world.state.current_location.id
         )
 
         # Vehicle arrival event created a new vehicle arrival event

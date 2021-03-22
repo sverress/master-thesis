@@ -34,7 +34,7 @@ def run_analysis(
         # add scooter trip generation event and a vehicle arrival event
         world.add_event(classes.GenerateScooterTrips(0))
         world.add_event(
-            classes.VehicleArrival(0, world.state.current_cluster.id, visualize_world)
+            classes.VehicleArrival(0, world.state.current_location.id, visualize_world)
         )
         # run the world and add the world object to a list containing all world instances
         world.run()

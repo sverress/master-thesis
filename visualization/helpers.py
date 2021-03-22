@@ -118,7 +118,7 @@ def plot_action(action, current_cluster, ax, offset=0):
     for delivery in action.delivery_scooters:
         action_string += f"{delivery}\n"
 
-    action_string += f"\nCurrent : {current_cluster}\nNext : {action.next_cluster}"
+    action_string += f"\nCurrent : {current_cluster}\nNext : {action.next_location}"
 
     ax.text(
         0,
@@ -483,7 +483,7 @@ def setup_cluster_visualize(state: State, next_state_id=-1):
     graph, labels, node_border, node_color = make_graph(
         [(cluster.get_location()) for cluster in state.clusters],
         [cluster.id for cluster in state.clusters],
-        state.current_cluster.id,
+        state.current_location.id,
         next_state_id,
     )
 
@@ -491,7 +491,7 @@ def setup_cluster_visualize(state: State, next_state_id=-1):
     add_cluster_info(state, graph, ax)
 
     if next_state_id != -1:
-        graph.add_edge(state.current_cluster.id, next_state_id, color=RED, width=3)
+        graph.add_edge(state.current_location.id, next_state_id, color=RED, width=3)
 
     # displays plot
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)

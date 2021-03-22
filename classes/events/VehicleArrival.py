@@ -1,12 +1,13 @@
 import classes
 from classes import Event
+from globals import BATTERY_INVENTORY
 import copy
 
 
 class VehicleArrival(Event):
-    def __init__(self, arrival_time: int, arrival_cluster_id: int, visualize=True):
+    def __init__(self, arrival_time: int, arrival_location_id: int, visualize=True):
         super().__init__(arrival_time)
-        self.arrival_cluster_id = arrival_cluster_id
+        self.arrival_location_id = arrival_location_id
         self.visualize = visualize
 
     def perform(self, world) -> None:
@@ -14,10 +15,10 @@ class VehicleArrival(Event):
         :param world: world object
         """
         # get the cluster object that the vehicle has arrived to
-        arrival_cluster = world.state.get_cluster_by_id(self.arrival_cluster_id)
+        arrival_cluster = world.state.get_location_by_id(self.arrival_location_id)
 
         # set the arrival cluster as current cluster in state
-        world.state.current_cluster = arrival_cluster
+        world.state.current_location = arrival_cluster
 
         # find the best action from the current world state
         action = world.policy.get_best_action(world)
@@ -25,14 +26,14 @@ class VehicleArrival(Event):
         if self.visualize:
             # visualize vehicle route
             world.state.visualize_vehicle_route(
-                world.state.vehicle.get_route(), action.next_cluster,
+                world.state.vehicle.get_route(), action.next_location,
             )
 
             # visualize scooters currently out on a trip
             world.state.visualize_current_trips(world.get_scooters_on_trip())
 
         # add the cluster id for the cluster the vehicle arrives at to the vehicles trip
-        world.state.vehicle.add_cluster_id_to_route(world.state.current_cluster.id)
+        world.state.vehicle.add_cluster_id_to_route(world.state.current_location.id)
 
         # clear world flow counter dictionary
         world.clear_flow_dict()
@@ -55,9 +56,19 @@ class VehicleArrival(Event):
 
         # Compute the arrival time for the Vehicle arrival event created by the action
         arrival_time = self.time + action.get_action_time(
-            world.state.get_distance_id(self.arrival_cluster_id, action.next_cluster)
+            world.state.get_distance_id(self.arrival_location_id, action.next_location)
         )
+        if isinstance(world.state.current_location, classes.Depot):
+            batteries_to_swap = min(
+                world.state.current_location.get_available_battery_swaps(world.time),
+                BATTERY_INVENTORY - world.state.vehicle.battery_inventory,
+            )
+            arrival_time += world.state.current_location.swap_battery_inventory(
+                world.time, batteries_to_swap
+            )
+            world.state.vehicle.add_battery_inventory(batteries_to_swap)
+
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack
         world.add_event(
-            VehicleArrival(arrival_time, action.next_cluster, self.visualize)
+            VehicleArrival(arrival_time, action.next_location, self.visualize)
         )
