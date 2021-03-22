@@ -41,7 +41,7 @@ def estimate_reward(
                 )
             else:
                 _, _, lost_demand = world.state.system_simulate()
-                world.add_reward(-lost_demand * LOST_TRIP_REWARD)
+                world.add_reward(lost_demand * LOST_TRIP_REWARD)
                 simulation_counter += 1
             next_is_vehicle_action = (
                 world.time < simulation_counter * ITERATION_LENGTH_MINUTES

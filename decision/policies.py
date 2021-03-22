@@ -1,8 +1,7 @@
 import copy
 import random
-import classes
+from classes import World, Action, Cluster
 from scenario_simulation.scripts import estimate_reward
-from globals import DISCOUNT_RATE
 
 
 class Policy:
@@ -44,7 +43,7 @@ class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world):
         # Choose a random cluster
-        next_cluster: classes.Cluster = random.choice(
+        next_cluster: Cluster = random.choice(
             [
                 cluster
                 for cluster in world.state.clusters
@@ -64,7 +63,7 @@ class SwapAllPolicy(Policy):
         )
 
         # Return an action with no re-balancing, only scooter swapping
-        return classes.Action(
+        return Action(
             battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
             pick_ups=[],
             delivery_scooters=[],
