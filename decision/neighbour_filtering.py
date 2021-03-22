@@ -28,10 +28,13 @@ def filtering_neighbours(state, number_of_neighbours=3, random_neighbours=0):
         min(deviation_ideal_states),
     )
 
-    deviation_scores = [
-        1 - ((deviation - min_deviation) / (max_deviation - min_deviation))
-        for deviation in deviation_ideal_states
-    ]
+    if max_deviation == min_deviation:
+        deviation_scores = [1] * len(deviation_ideal_states)
+    else:
+        deviation_scores = [
+            1 - ((deviation - min_deviation) / (max_deviation - min_deviation))
+            for deviation in deviation_ideal_states
+        ]
 
     score_indices = []
     total_score_list = []
