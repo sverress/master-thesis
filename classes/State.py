@@ -3,10 +3,7 @@ import random
 
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
-from clustering.methods import (
-    compute_and_set_ideal_state,
-    compute_and_set_trip_intensity,
-)
+import clustering.methods
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 import matplotlib.pyplot as plt
@@ -339,10 +336,10 @@ class State:
             return pickle.load(file)
 
     def compute_and_set_ideal_state(self, sample_scooters):
-        compute_and_set_ideal_state(self, sample_scooters)
+        clustering.methods.compute_and_set_ideal_state(self, sample_scooters)
 
     def compute_and_set_trip_intensity(self, sample_scooters):
-        compute_and_set_trip_intensity(self, sample_scooters)
+        clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
 
     def sample(self, sample_size: int):
         # Filter out scooters not in sample

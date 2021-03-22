@@ -74,7 +74,7 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
         :param second_snapshot_data: geospatial data for scooters in first snapshot
         :return: probability matrix
         """
-        (_, filtered_moved_scooters, disappeared_scooters) = get_moved_scooters(
+        (_, filtered_moved_scooters, disappeared_scooters) = merge_scooter_snapshots(
             initial_state, first_snapshot_data, second_snapshot_data
         )
         # Get list of cluster ids and find number of clusters for dimensions of arrays
@@ -230,7 +230,7 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
                 moved_scooters,
                 filtered_moved_scooters,
                 disappeared_scooters,
-            ) = get_moved_scooters(state, current_snapshot, previous_snapshot)
+            ) = merge_scooter_snapshots(state, current_snapshot, previous_snapshot)
             for cluster in state.clusters:
                 filtered_moved_scooters_in_cluster = filtered_moved_scooters[
                     filtered_moved_scooters["cluster_x"] == cluster.id
