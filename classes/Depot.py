@@ -1,4 +1,4 @@
-import Location
+from classes.Location import Location
 from globals import (
     MAIN_DEPOT_CAPACITY,
     SMALL_DEPOT_CAPACITY,

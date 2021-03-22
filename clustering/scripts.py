@@ -37,18 +37,17 @@ def get_initial_state(
 
     # generate depots and adding them to clusters list
     depots = methods.generate_depots(number_of_clusters=len(clusters))
-    clusters += depots
     clustering.next()
 
     # Choosing first cluster as starting cluster in state
-    current_cluster = depots[0]
+    current_location = depots[0]
     clustering.finish()
 
     # Choosing a default vehicle as the vehicle in the new state
     vehicle = Vehicle()
 
     # Create state object
-    initial_state = State(clusters, current_cluster, vehicle)
+    initial_state = State(clusters, depots, current_location, vehicle)
 
     # Sample size filtering. Create list of scooter ids to include
     sample_scooters = methods.scooter_sample_filter(entur_dataframe, sample_size)

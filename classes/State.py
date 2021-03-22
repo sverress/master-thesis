@@ -53,25 +53,25 @@ class State:
                 all_scooters.append(scooter)
         return all_scooters
 
-    def get_distance_clusters(self, start: Cluster, end: Cluster):
+    def get_distance_locations(self, start: Location, end: Location):
         """
         Calculate distance between two clusters
         :param start: Cluster object
         :param end: Cluster object
         :return: float - distance in kilometers
         """
-        if start not in self.clusters:
-            raise ValueError("Start cluster not in state")
-        elif end not in self.clusters:
-            raise ValueError("End cluster not in state")
+        if start not in self.locations:
+            raise ValueError("Start location not in state")
+        elif end not in self.locations:
+            raise ValueError("End location not in state")
 
-        start_index = self.clusters.index(start)
-        end_index = self.clusters.index(end)
+        start_index = self.locations.index(start)
+        end_index = self.locations.index(end)
 
         return self.distance_matrix[start_index][end_index]
 
     def get_distance_id(self, start: int, end: int):
-        return self.get_distance_clusters(
+        return self.get_distance_locations(
             self.get_location_by_id(start), self.get_location_by_id(end)
         )
 
@@ -83,7 +83,7 @@ class State:
         distance_matrix = []
         for location in self.locations:
             neighbour_distance = []
-            for neighbour in self.clusters:
+            for neighbour in self.locations:
                 if location == neighbour:
                     neighbour_distance.append(0.0)
                 else:
@@ -108,8 +108,8 @@ class State:
         """
         # TODO implement with filtering neighbours get best action
         if isinstance(self.current_location, Depot):
-
-            actions = [Action(0, 0, 0, 1)]
+            location = np.random.choice(self.locations)
+            actions = [Action([], [], [], location.id)]
 
         else:
 
@@ -177,48 +177,52 @@ class State:
         :param action: Action - action to be performed on the state
         :return: float - reward for doing the action on the state
         """
-        reward = 0
-        # Retrieve all scooters that you can change battery on (and therefore also pick up)
-        swappable_scooters = self.current_location.get_swappable_scooters()
+        if not isinstance(self.current_location, Depot):
+            reward = 0
+            # Retrieve all scooters that you can change battery on (and therefore also pick up)
+            swappable_scooters = self.current_location.get_swappable_scooters()
 
-        # Perform all pickups
-        for pick_up_scooter_id in action.pick_ups:
-            pick_up_scooter = self.current_location.get_scooter_from_id(
-                pick_up_scooter_id
-            )
-            swappable_scooters.remove(pick_up_scooter)
+            # Perform all pickups
+            for pick_up_scooter_id in action.pick_ups:
+                pick_up_scooter = self.current_location.get_scooter_from_id(
+                    pick_up_scooter_id
+                )
+                swappable_scooters.remove(pick_up_scooter)
 
-            reward -= pick_up_scooter.battery / 100.0
+                reward -= pick_up_scooter.battery / 100.0
 
-            # Picking up scooter and adding to vehicle inventory and swapping battery
-            self.vehicle.pick_up(pick_up_scooter)
+                # Picking up scooter and adding to vehicle inventory and swapping battery
+                self.vehicle.pick_up(pick_up_scooter)
 
-            # Remove scooter from current cluster
-            self.current_location.remove_scooter(pick_up_scooter)
+                # Remove scooter from current cluster
+                self.current_location.remove_scooter(pick_up_scooter)
 
-        # Perform all battery swaps
-        for battery_swap_scooter_id in action.battery_swaps:
-            battery_swap_scooter = self.current_location.get_scooter_from_id(
-                battery_swap_scooter_id
-            )
-            swappable_scooters.remove(battery_swap_scooter)
+            # Perform all battery swaps
+            for battery_swap_scooter_id in action.battery_swaps:
+                battery_swap_scooter = self.current_location.get_scooter_from_id(
+                    battery_swap_scooter_id
+                )
+                swappable_scooters.remove(battery_swap_scooter)
 
-            # Calculate reward of doing the battery swap
-            reward += (100.0 - battery_swap_scooter.battery) / 100.0
+                # Calculate reward of doing the battery swap
+                reward += (100.0 - battery_swap_scooter.battery) / 100.0
 
-            # Decreasing vehicle battery inventory
-            self.vehicle.change_battery(battery_swap_scooter)
+                # Decreasing vehicle battery inventory
+                self.vehicle.change_battery(battery_swap_scooter)
 
-        # Dropping of scooters
-        for delivery_scooter_id in action.delivery_scooters:
-            # Rewarding 1 for delivery
-            reward += 1.0
+            # Dropping of scooters
+            for delivery_scooter_id in action.delivery_scooters:
+                # Rewarding 1 for delivery
+                reward += 1.0
 
-            # Removing scooter from vehicle inventory
-            delivery_scooter = self.vehicle.drop_off(delivery_scooter_id)
+                # Removing scooter from vehicle inventory
+                delivery_scooter = self.vehicle.drop_off(delivery_scooter_id)
 
-            # Adding scooter to current cluster and changing coordinates of scooter
-            self.current_location.add_scooter(delivery_scooter)
+                # Adding scooter to current cluster and changing coordinates of scooter
+                self.current_location.add_scooter(delivery_scooter)
+
+        else:
+            reward = 0
 
         # Moving the state/vehicle from this to next cluster
         self.current_location = self.get_location_by_id(action.next_location)

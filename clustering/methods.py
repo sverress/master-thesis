@@ -7,8 +7,6 @@ from globals import (
     TEST_DATA_DIRECTORY,
     MAIN_DEPOT_LOCATION,
     SMALL_DEPOT_LOCATIONS,
-    MAIN_DEPOT_CAPACITY,
-    SMALL_DEPOT_CAPACITY,
 )
 from progress.bar import Bar
 from .helpers import *

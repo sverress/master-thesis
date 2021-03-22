@@ -1,6 +1,6 @@
 import copy
 import random
-import classes
+from classes import World, Action, Cluster
 from scenario_simulation.scripts import estimate_reward
 
 
@@ -26,7 +26,9 @@ class RandomRolloutPolicy(Policy):
             reward = new_state.do_action(action)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            reward += estimate_reward(new_state, world.get_remaining_time())
+            reward += world.get_discount() * estimate_reward(
+                new_state, world.get_remaining_time()
+            )
 
             # If the action is better than previous actions, make best_action
             # Add next cluster distance to update shift duration used later.
@@ -41,7 +43,7 @@ class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world):
         # Choose a random cluster
-        next_cluster: classes.Cluster = random.choice(
+        next_cluster: Cluster = random.choice(
             [
                 cluster
                 for cluster in world.state.clusters
@@ -61,9 +63,19 @@ class SwapAllPolicy(Policy):
         )
 
         # Return an action with no re-balancing, only scooter swapping
-        return classes.Action(
+        return Action(
             battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
             pick_ups=[],
             delivery_scooters=[],
             next_cluster=next_cluster.id,
         )
+
+
+class RandomActionPolicy(Policy):
+    @staticmethod
+    def get_best_action(world: World):
+        # all possible actions in this state
+        possible_actions = world.state.get_possible_actions(number_of_neighbours=3)
+
+        # pick a random action
+        return random.choice(possible_actions)

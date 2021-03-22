@@ -1,5 +1,4 @@
 import unittest
-
 from clustering.scripts import get_initial_state
 
 

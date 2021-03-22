@@ -14,11 +14,22 @@ class VehicleArrival(Event):
         """
         :param world: world object
         """
+        arrival_time = 0
         # get the cluster object that the vehicle has arrived to
         arrival_cluster = world.state.get_location_by_id(self.arrival_location_id)
 
         # set the arrival cluster as current cluster in state
         world.state.current_location = arrival_cluster
+
+        if isinstance(world.state.current_location, classes.Depot):
+            batteries_to_swap = min(
+                world.state.current_location.get_available_battery_swaps(world.time),
+                BATTERY_INVENTORY - world.state.vehicle.battery_inventory,
+            )
+            arrival_time += world.state.current_location.swap_battery_inventory(
+                world.time, batteries_to_swap
+            )
+            world.state.vehicle.add_battery_inventory(batteries_to_swap)
 
         # find the best action from the current world state
         action = world.policy.get_best_action(world)
@@ -55,18 +66,9 @@ class VehicleArrival(Event):
         super(VehicleArrival, self).perform(world)
 
         # Compute the arrival time for the Vehicle arrival event created by the action
-        arrival_time = self.time + action.get_action_time(
+        arrival_time += self.time + action.get_action_time(
             world.state.get_distance_id(self.arrival_location_id, action.next_location)
         )
-        if isinstance(world.state.current_location, classes.Depot):
-            batteries_to_swap = min(
-                world.state.current_location.get_available_battery_swaps(world.time),
-                BATTERY_INVENTORY - world.state.vehicle.battery_inventory,
-            )
-            arrival_time += world.state.current_location.swap_battery_inventory(
-                world.time, batteries_to_swap
-            )
-            world.state.vehicle.add_battery_inventory(batteries_to_swap)
 
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack
         world.add_event(
