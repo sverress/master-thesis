@@ -161,8 +161,6 @@ class State:
             )
             swappable_scooters.remove(pick_up_scooter)
 
-            reward -= pick_up_scooter.battery / 100.0
-
             # Picking up scooter and adding to vehicle inventory and swapping battery
             self.vehicle.pick_up(pick_up_scooter)
 
@@ -177,7 +175,14 @@ class State:
             swappable_scooters.remove(battery_swap_scooter)
 
             # Calculate reward of doing the battery swap
-            reward += (100.0 - battery_swap_scooter.battery) / 100.0
+            if reward < self.current_cluster.ideal_state:
+                reward += ((100.0 - battery_swap_scooter.battery) / 100.0) * (
+                    1
+                    - (
+                        self.current_cluster.number_of_scooters()
+                        / self.current_cluster.ideal_state
+                    )
+                )
 
             # Decreasing vehicle battery inventory
             self.vehicle.change_battery(battery_swap_scooter)
