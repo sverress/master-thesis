@@ -2,7 +2,15 @@ import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
 import classes
-from globals import BATTERY_LIMIT, LOST_TRIP_REWARD, ITERATION_LENGTH_MINUTES, WHITE
+
+from decision.policies import RandomRolloutPolicy
+from globals import (
+    BATTERY_LIMIT,
+    LOST_TRIP_REWARD,
+    ITERATION_LENGTH_MINUTES,
+    WHITE,
+    DISCOUNT_RATE,
+)
 from decision.get_policy import get_policy
 from progress.bar import IncrementalBar
 
@@ -106,12 +114,16 @@ class World:
         shift_duration: int,
         sample_size=100,
         number_of_clusters=20,
+        initial_state=None,
         policy="RandomRolloutPolicy",
     ):
         self.shift_duration = shift_duration
-        self.state = clustering_scripts.get_initial_state(
-            sample_size=sample_size, number_of_clusters=number_of_clusters
-        )
+        if initial_state:
+            self.state = initial_state
+        else:
+            self.state = clustering_scripts.get_initial_state(
+                sample_size=sample_size, number_of_clusters=number_of_clusters
+            )
         self.stack = []
         self.time = 0
         self.rewards = []
@@ -202,3 +214,7 @@ class World:
             for event in self.stack
             if isinstance(event, classes.ScooterArrival)
         ]
+
+    def get_discount(self):
+        # Divide by 60 as there is 60 minutes in an hour. We want this number in hours to avoid big numbers is the power
+        return DISCOUNT_RATE ** (self.time / 60)
