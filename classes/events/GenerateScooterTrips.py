@@ -8,7 +8,7 @@ class GenerateScooterTrips(Event):
     def __init__(self, time: int):
         super().__init__(time)
 
-    def perform(self, world) -> None:
+    def perform(self, world, add_metric=False) -> None:
         for departure_cluster in world.state.clusters:
             # poisson process to select number of trips in a iteration
             number_of_trips = round(
@@ -33,4 +33,4 @@ class GenerateScooterTrips(Event):
 
         world.add_event(GenerateScooterTrips(self.time + ITERATION_LENGTH_MINUTES))
 
-        super(GenerateScooterTrips, self).perform(world)
+        super(GenerateScooterTrips, self).perform(world, add_metric)

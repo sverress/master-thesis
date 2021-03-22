@@ -9,6 +9,7 @@ from clustering.methods import (
 )
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
+import decision.neighbour_filtering
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -89,7 +90,9 @@ class State:
             cluster.ideal_state,
         )
 
-    def get_possible_actions(self, number_of_neighbours=None, divide=None):
+    def get_possible_actions(
+        self, number_of_neighbours=None, divide=None, random_neighbours=0
+    ):
         """
         Enumerate all possible actions from the current state
         :param number_of_neighbours: number of neighbours to evaluate
@@ -123,8 +126,10 @@ class State:
 
         combinations = []
         # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-        for cluster in self.get_neighbours(
-            self.current_cluster, number_of_neighbours=number_of_neighbours
+        for cluster in decision.neighbour_filtering.filtering_neighbours(
+            self,
+            number_of_neighbours=number_of_neighbours,
+            random_neighbours=random_neighbours,
         ):
             for pick_up in get_range(pick_ups):
                 for swap in get_range(swaps):

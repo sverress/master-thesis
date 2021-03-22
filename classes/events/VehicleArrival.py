@@ -9,7 +9,7 @@ class VehicleArrival(Event):
         self.arrival_cluster_id = arrival_cluster_id
         self.visualize = visualize
 
-    def perform(self, world) -> None:
+    def perform(self, world, add_metric=True) -> None:
         """
         :param world: world object
         """
@@ -51,7 +51,7 @@ class VehicleArrival(Event):
         world.add_reward(reward)
 
         # set time of world to this event's time
-        super(VehicleArrival, self).perform(world)
+        super(VehicleArrival, self).perform(world, add_metric)
 
         # Compute the arrival time for the Vehicle arrival event created by the action
         arrival_time = self.time + action.get_action_time(

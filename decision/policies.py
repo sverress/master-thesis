@@ -1,5 +1,5 @@
 import copy
-import random
+import decision.neighbour_filtering
 import classes
 from scenario_simulation.scripts import estimate_reward
 
@@ -41,13 +41,11 @@ class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world):
         # Choose a random cluster
-        next_cluster: classes.Cluster = random.choice(
-            [
-                cluster
-                for cluster in world.state.clusters
-                if cluster.id != world.state.current_cluster.id
-            ]
-        )
+        next_cluster: classes.Cluster = decision.neighbour_filtering.filtering_neighbours(
+            world.state, number_of_neighbours=1
+        )[
+            0
+        ]
 
         # Find all scooters that can be swapped here
         swappable_scooters_ids = [
