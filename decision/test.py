@@ -7,7 +7,9 @@ from decision.policies import RandomRolloutPolicy, SwapAllPolicy
 
 class BasicDecisionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.initial_state = get_initial_state(sample_size=100, number_of_clusters=2)
+        self.initial_state = get_initial_state(
+            sample_size=100, number_of_clusters=2, initial_location_depot=False
+        )
 
     def test_battery_swaps(self):
         # Modify initial state. 5 battery swaps possible.

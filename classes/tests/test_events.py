@@ -14,8 +14,10 @@ from globals import ITERATION_LENGTH_MINUTES
 
 class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = World(40)
-        self.large_world = World(40, sample_size=500, number_of_clusters=20)
+        self.world = World(40, initial_location_depot=False)
+        self.large_world = World(
+            40, sample_size=500, number_of_clusters=20, initial_location_depot=False
+        )
         self.departure_time = 1
         self.travel_time = 5
 

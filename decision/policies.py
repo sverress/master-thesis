@@ -1,6 +1,6 @@
 import copy
 import random
-from classes import World, Action, Cluster
+from classes import World, Action, Cluster, Depot
 from scenario_simulation.scripts import estimate_reward
 
 
@@ -43,7 +43,7 @@ class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world):
         # Choose a random cluster
-        next_cluster: Cluster = random.choice(
+        next_location: Cluster = random.choice(
             [
                 cluster
                 for cluster in world.state.clusters
@@ -51,23 +51,27 @@ class SwapAllPolicy(Policy):
             ]
         )
 
-        # Find all scooters that can be swapped here
-        swappable_scooters_ids = [
-            scooter.id
-            for scooter in world.state.current_location.get_swappable_scooters()
-        ]
+        if isinstance(world.state.current_location, Depot):
+            swappable_scooters_ids = []
+            number_of_scooters_to_swap = 0
+        else:
+            # Find all scooters that can be swapped here
+            swappable_scooters_ids = [
+                scooter.id
+                for scooter in world.state.current_location.get_swappable_scooters()
+            ]
 
-        # Calculate how many scooters that can be swapped
-        number_of_scooters_to_swap = world.state.get_max_number_of_swaps(
-            world.state.current_location
-        )
+            # Calculate how many scooters that can be swapped
+            number_of_scooters_to_swap = world.state.get_max_number_of_swaps(
+                world.state.current_location
+            )
 
         # Return an action with no re-balancing, only scooter swapping
         return Action(
             battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
             pick_ups=[],
             delivery_scooters=[],
-            next_cluster=next_cluster.id,
+            next_location=next_location.id,
         )
 
 

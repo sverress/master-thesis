@@ -6,7 +6,11 @@ from progress.bar import Bar
 
 
 def get_initial_state(
-    sample_size=None, number_of_clusters=20, save=True, cache=True
+    sample_size=None,
+    number_of_clusters=20,
+    save=True,
+    cache=True,
+    initial_location_depot=True,
 ) -> State:
     # If this combination has been requested before we fetch a cached version
     if cache and os.path.exists(
@@ -40,7 +44,7 @@ def get_initial_state(
     clustering.next()
 
     # Choosing first cluster as starting cluster in state
-    current_location = depots[0]
+    current_location = depots[0] if initial_location_depot else clusters[0]
     clustering.finish()
 
     # Choosing a default vehicle as the vehicle in the new state

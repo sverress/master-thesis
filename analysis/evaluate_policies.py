@@ -9,6 +9,7 @@ def run_analysis(
     policies=None,
     visualize_world=False,
     smooth_curve=True,
+    verbose=False,
 ):
     """
     Method to run different policies and analysis their performance
@@ -30,7 +31,11 @@ def run_analysis(
             sample_size=sample_size,
             number_of_clusters=number_of_clusters,
             policy=policy,
+            verbose=verbose,
         )
+        # pumping up the trip intensity
+        for cluster in world.state.clusters:
+            cluster.trip_intensity_per_iteration = round(len(cluster.scooters) * 0.4)
         # add scooter trip generation event and a vehicle arrival event
         world.add_event(classes.GenerateScooterTrips(0))
         world.add_event(

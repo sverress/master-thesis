@@ -12,15 +12,20 @@ class VehicleArrival(Event):
 
     def perform(self, world) -> None:
         """
-        :param world: world object
-        """
+            :param world: world object
+            """
+        # copy state before action for visualization purposes
+        state_before_action = copy.deepcopy(world.state)
+
         arrival_time = 0
+
         # get the cluster object that the vehicle has arrived to
         arrival_cluster = world.state.get_location_by_id(self.arrival_location_id)
 
         # set the arrival cluster as current cluster in state
         world.state.current_location = arrival_cluster
 
+        # if current location is a depot -> refill battery inventory
         if isinstance(world.state.current_location, classes.Depot):
             batteries_to_swap = min(
                 world.state.current_location.get_available_battery_swaps(world.time),
@@ -34,6 +39,9 @@ class VehicleArrival(Event):
         # find the best action from the current world state
         action = world.policy.get_best_action(world)
 
+        # add the cluster id for the cluster the vehicle arrives at to the vehicles trip
+        world.state.vehicle.add_cluster_id_to_route(world.state.current_location.id)
+
         if self.visualize:
             # visualize vehicle route
             world.state.visualize_vehicle_route(
@@ -43,14 +51,8 @@ class VehicleArrival(Event):
             # visualize scooters currently out on a trip
             world.state.visualize_current_trips(world.get_scooters_on_trip())
 
-        # add the cluster id for the cluster the vehicle arrives at to the vehicles trip
-        world.state.vehicle.add_cluster_id_to_route(world.state.current_location.id)
-
         # clear world flow counter dictionary
         world.clear_flow_dict()
-
-        # copy state before action for visualization purposes
-        state_before_action = copy.deepcopy(world.state)
 
         # perform the best action on the state
         reward = world.state.do_action(action)

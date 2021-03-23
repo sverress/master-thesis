@@ -40,8 +40,8 @@ class Vehicle:
         self.scooter_inventory.remove(scooter)
         return scooter
 
-    def add_cluster_id_to_route(self, cluster_id: int):
-        self.service_route.append(cluster_id)
+    def add_cluster_id_to_route(self, location_id: int):
+        self.service_route.append(location_id)
 
     def add_battery_inventory(self, number_of_batteries):
         if number_of_batteries + self.battery_inventory > BATTERY_INVENTORY:

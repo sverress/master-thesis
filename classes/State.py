@@ -333,8 +333,8 @@ class State:
     def visualize_action(self, state_after_action, action: Action):
         visualize_action(self, state_after_action, action)
 
-    def visualize_vehicle_route(self, vehicle_trip: [int], next_state_id: int):
-        visualize_vehicle_route(self, vehicle_trip, next_state_id)
+    def visualize_vehicle_route(self, vehicle_trip: [int], next_location_id: int):
+        visualize_vehicle_route(self, vehicle_trip, next_location_id)
 
     def visualize_current_trips(self, trips: [(int, int, Scooter)]):
         visualize_scooters_on_trip(self, trips)

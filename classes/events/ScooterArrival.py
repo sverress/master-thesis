@@ -23,7 +23,7 @@ class ScooterArrival(Event):
         """
 
         # get arrival cluster
-        arrival_cluster = world.state.get_cluster_by_id(self.arrival_cluster_id)
+        arrival_cluster = world.state.get_location_by_id(self.arrival_cluster_id)
 
         # make the scooter travel the distance to change battery
         self.scooter.travel(self.distance)
