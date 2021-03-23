@@ -157,6 +157,7 @@ class State:
                 self,
                 number_of_neighbours=number_of_neighbours,
                 random_neighbours=random_neighbours,
+                time=time,
             ):
                 for pick_up in get_range(pick_ups):
                     for swap in get_range(swaps):
