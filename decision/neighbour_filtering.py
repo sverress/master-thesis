@@ -75,7 +75,7 @@ def add_depots_as_neighbours(state, time):
     else:
         closest_small_depot = None
         closest_distance = MAX_DISTANCE
-        for i, depot in state.depots:
+        for i, depot in enumerate(state.depots):
             if i == 0:
                 depots.append(depot)
             else:
