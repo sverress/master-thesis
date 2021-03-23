@@ -37,7 +37,11 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(len(actions), 6)
 
         # Calculate the expected reward
-        reward = len(actions[-1].battery_swaps) * 0.2
+        reward = (
+            len(actions[-1].battery_swaps)
+            * 0.2
+            * (1 - self.initial_state.current_cluster.prob_of_scooter_usage())
+        )
 
         # Test reward
         self.assertEqual(self.initial_state.do_action(actions[-1]), reward)
@@ -72,13 +76,8 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of actions
         self.assertEqual(len(actions), 12)
 
-        # Calculate the expected reward
-        reward = len(actions[-1].battery_swaps) * 0.8 - len(actions[-1].pick_ups) * 0.2
-
-        # Test reward
-        self.assertEqual(
-            round(self.initial_state.do_action(actions[-1]), 1), round(reward, 1)
-        )
+        # Test no reward for pickup
+        self.assertEqual(round(self.initial_state.do_action(actions[-1]), 1), 0)
 
         # Test number of scooters
         self.assertEqual(
@@ -125,12 +124,14 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Calculate the expected reward
         reward = (
-            len(actions[-1].battery_swaps) * 0.2
+            len(actions[-1].battery_swaps)
+            * 0.2
+            * (1 - self.initial_state.current_cluster.prob_of_scooter_usage())
             + len(actions[-1].delivery_scooters) * 1.0
         )
 
         # Test reward
-        self.assertEqual(self.initial_state.do_action(actions[-1]), round(reward, 1))
+        self.assertEqual(self.initial_state.do_action(actions[-1]), reward)
 
         # Test number of scooters
         self.assertEqual(

@@ -1,5 +1,4 @@
 import numpy as np
-from globals import BATTERY_LIMIT
 
 
 def system_simulate(state):
@@ -24,7 +23,7 @@ def system_simulate(state):
         )
 
         # if there is more trips than scooters available, the system has lost demand
-        valid_scooters = start_cluster.get_valid_scooters(BATTERY_LIMIT)
+        valid_scooters = start_cluster.get_available_scooters()
         if number_of_trips > len(valid_scooters):
             lost_demand.append(number_of_trips - len(valid_scooters))
             number_of_trips = len(valid_scooters)

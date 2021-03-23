@@ -1,8 +1,60 @@
-from classes import Action, State, Scooter
+from classes import Action, Scooter
 from visualization.helpers import *
 from globals import *
 import matplotlib.pyplot as plt
 import copy
+from itertools import cycle
+
+
+def visualize_clustering(clusters):
+    fig, ax = plt.subplots(figsize=[10, 6])
+
+    # Add image to background
+    oslo = plt.imread("images/kart_oslo.png")
+    lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
+    ax.imshow(
+        oslo,
+        zorder=0,
+        extent=(lon_min, lon_max, lat_min, lat_max),
+        aspect="auto",
+        alpha=0.6,
+    )
+    colors = cycle("bgrcmyk")
+    # Add clusters to figure
+    for cluster in clusters:
+        scooter_locations = [
+            (scooter.get_lat(), scooter.get_lon()) for scooter in cluster.scooters
+        ]
+        cluster_color = next(colors)
+        df_scatter = ax.scatter(
+            [lon for lat, lon in scooter_locations],
+            [lat for lat, lon in scooter_locations],
+            c=cluster_color,
+            alpha=0.6,
+            s=3,
+        )
+        center_lat, center_lon = cluster.get_location()
+        rs_scatter = ax.scatter(
+            center_lon, center_lat, c=cluster_color, edgecolor="None", alpha=0.8, s=200,
+        )
+        ax.annotate(
+            cluster.id,
+            (center_lon, center_lat),
+            ha="center",
+            va="center",
+            weight="bold",
+        )
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+
+    if len(clusters) > 0:
+        # Legend will use the last cluster color. Check for clusters to avoid None object
+        ax.legend(
+            [df_scatter, rs_scatter],
+            ["Full dataset", "Cluster centers"],
+            loc="upper right",
+        )
+    plt.show()
 
 
 def visualize_state(state):

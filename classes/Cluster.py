@@ -2,7 +2,7 @@ from shapely.geometry import MultiPoint
 import numpy as np
 from classes.Scooter import Scooter
 from classes.Location import Location
-from globals import CLUSTER_CENTER_DELTA
+from globals import CLUSTER_CENTER_DELTA, BATTERY_LIMIT
 
 
 class Cluster(Location):
@@ -79,7 +79,7 @@ class Cluster(Location):
     def remove_scooter(self, scooter: Scooter):
         self.scooters.remove(self.get_scooter_from_id(scooter.id))
 
-    def get_valid_scooters(self, battery_limit: float):
+    def get_available_scooters(self, battery_limit=BATTERY_LIMIT):
         return [
             scooter for scooter in self.scooters if scooter.battery >= battery_limit
         ]
@@ -120,3 +120,6 @@ class Cluster(Location):
             f"Cluster {self.id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
             f" ideal state: {self.ideal_state}"
         )
+
+    def prob_of_scooter_usage(self):
+        return len(self.get_available_scooters()) / self.ideal_state
