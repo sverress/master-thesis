@@ -79,6 +79,9 @@ class State:
     def get_distance_to_all(self, location_id):
         return self.distance_matrix[location_id]
 
+    def get_distance_to_all_clusters(self, location_id):
+        return self.distance_matrix[location_id][: len(self.clusters)]
+
     def calculate_distance_matrix(self):
         """
         Computes distance matrix for all clusters
@@ -104,7 +107,7 @@ class State:
         )
 
     def get_possible_actions(
-        self, number_of_neighbours=None, divide=None, random_neighbours=0
+        self, number_of_neighbours=None, divide=None, random_neighbours=0, time=-1
     ):
         """
         Enumerate all possible actions from the current state
@@ -112,10 +115,16 @@ class State:
         :param divide: number to divide by to create range increment
         :return: List of Action objects
         """
-        # TODO implement with filtering neighbours get best action
         if isinstance(self.current_location, Depot):
-            location = np.random.choice(self.locations)
-            actions = [Action([], [], [], location.id)]
+            neighbours = decision.neighbour_filtering.filtering_neighbours(
+                self,
+                number_of_neighbours=number_of_neighbours,
+                random_neighbours=random_neighbours,
+            )
+            actions = []
+
+            for neighbour in neighbours:
+                actions.append(Action([], [], [], neighbour.id))
 
         else:
 
