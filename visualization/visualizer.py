@@ -310,8 +310,6 @@ def visualize_analysis(instances, policies, smooth_curve=True):
         ax = create_plot_with_axis_labels(
             fig, spec[i], x_label=x_label, y_label=y_label, plot_title=plot_title,
         )
-        ax.legend()
-        ax.set_ylim(ymin=0)
         subplots.append(ax)
 
     ax1, ax2, ax3 = subplots
