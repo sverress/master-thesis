@@ -1,7 +1,8 @@
 import copy
-import random
-from classes import World, Action, Cluster, Depot
-from scenario_simulation.scripts import estimate_reward
+import decision.neighbour_filtering
+import classes
+import numpy.random as random
+import scenario_simulation.scripts
 
 
 class Policy:
@@ -26,7 +27,7 @@ class RandomRolloutPolicy(Policy):
             reward = new_state.do_action(action)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            reward += world.get_discount() * estimate_reward(
+            reward += world.get_discount() * scenario_simulation.scripts.estimate_reward(
                 new_state, world.get_remaining_time()
             )
 
@@ -43,15 +44,13 @@ class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world):
         # Choose a random cluster
-        next_location: Cluster = random.choice(
-            [
-                cluster
-                for cluster in world.state.clusters
-                if cluster.id != world.state.current_location.id
-            ]
-        )
+        next_location: classes.Cluster = decision.neighbour_filtering.filtering_neighbours(
+            world.state, number_of_neighbours=1
+        )[
+            0
+        ]
 
-        if isinstance(world.state.current_location, Depot):
+        if isinstance(world.state.current_location, classes.Depot):
             swappable_scooters_ids = []
             number_of_scooters_to_swap = 0
         else:
@@ -67,7 +66,7 @@ class SwapAllPolicy(Policy):
             )
 
         # Return an action with no re-balancing, only scooter swapping
-        return Action(
+        return classes.Action(
             battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
             pick_ups=[],
             delivery_scooters=[],
@@ -77,7 +76,7 @@ class SwapAllPolicy(Policy):
 
 class RandomActionPolicy(Policy):
     @staticmethod
-    def get_best_action(world: World):
+    def get_best_action(world):
         # all possible actions in this state
         possible_actions = world.state.get_possible_actions(number_of_neighbours=3)
 

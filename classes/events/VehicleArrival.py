@@ -10,7 +10,7 @@ class VehicleArrival(Event):
         self.arrival_location_id = arrival_location_id
         self.visualize = visualize
 
-    def perform(self, world) -> None:
+    def perform(self, world, **kwargs) -> None:
         """
             :param world: world object
             """
@@ -65,7 +65,7 @@ class VehicleArrival(Event):
         world.add_reward(reward)
 
         # set time of world to this event's time
-        super(VehicleArrival, self).perform(world)
+        super(VehicleArrival, self).perform(world, **kwargs)
 
         # Compute the arrival time for the Vehicle arrival event created by the action
         arrival_time += self.time + action.get_action_time(
