@@ -26,7 +26,7 @@ class State:
         self,
         clusters: [Cluster],
         depots: [Depot],
-        current_location: Union[Location, Depot],
+        current_location: Union[Cluster, Depot],
         vehicle: Vehicle,
     ):
         self.clusters = clusters
