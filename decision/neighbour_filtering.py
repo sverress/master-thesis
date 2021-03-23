@@ -90,4 +90,7 @@ def add_depots_as_neighbours(state, time):
                     closest_small_depot = depot
                     closest_distance = distance_to_depot
 
-        return depots.append(closest_small_depot) if closest_small_depot else depots
+        if closest_small_depot:
+            depots.append(closest_small_depot)
+
+        return depots
