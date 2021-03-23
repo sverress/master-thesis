@@ -39,6 +39,9 @@ class State:
     def get_all_locations(self):
         return self.locations
 
+    def is_at_depot(self):
+        return isinstance(self.current_location, Depot)
+
     def get_cluster_by_lat_lon(self, lat: float, lon: float):
         """
         :param lat: lat location of scooter

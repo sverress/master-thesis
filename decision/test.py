@@ -211,7 +211,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         sorted_neighbours = state.get_neighbours(state.current_location, is_sorted=True)
         for cluster in state.clusters:
-            if sorted_neighbours[:3].__contains__(cluster):
+            if cluster in sorted_neighbours[:3]:
                 cluster.ideal_state = 100
                 for scooter in cluster.scooters:
                     scooter.battery = 0

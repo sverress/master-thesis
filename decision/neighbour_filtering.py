@@ -70,7 +70,7 @@ def filtering_neighbours(state, number_of_neighbours=3, random_neighbours=0, tim
 
 def add_depots_as_neighbours(state, time):
     depots = []
-    if isinstance(state.current_location, classes.Depot):
+    if state.is_at_depot():
         return depots
     else:
         closest_small_depot = None
