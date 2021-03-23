@@ -158,7 +158,9 @@ class BasicDecisionTests(unittest.TestCase):
         )
 
     def test_number_of_actions_clusters(self):
-        initial_state = get_initial_state(sample_size=100, number_of_clusters=6)
+        initial_state = get_initial_state(
+            sample_size=100, number_of_clusters=6, initial_location_depot=False
+        )
         # Modify initial state. 5 battery swaps and 2 drop-offs possible
         initial_state.vehicle.scooter_inventory = []
         initial_state.current_location.scooters = []
@@ -170,7 +172,7 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(len(actions), 5)
 
     def test_number_of_actions(self):
-        bigger_state = get_initial_state(sample_size=500)
+        bigger_state = get_initial_state(sample_size=500, initial_location_depot=False)
         self.assertLess(
             len(bigger_state.get_possible_actions(divide=2)),
             len(bigger_state.get_possible_actions()),
@@ -199,7 +201,7 @@ class BasicDecisionTests(unittest.TestCase):
         # test if the number of neighbours is the same, even though one is random
         self.assertEqual(len(best_neighbours_with_random), 3)
 
-        sorted_neighbours = state.get_neighbours(state.current_cluster, is_sorted=True)
+        sorted_neighbours = state.get_neighbours(state.current_location, is_sorted=True)
         for cluster in state.clusters:
             if sorted_neighbours[:3].__contains__(cluster):
                 cluster.ideal_state = 100

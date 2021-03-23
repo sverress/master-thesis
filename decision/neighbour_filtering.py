@@ -12,7 +12,7 @@ def filtering_neighbours(state, number_of_neighbours=3, random_neighbours=0):
     :return:
     """
     clusters = state.clusters
-    distance_to_all_clusters = state.get_distance_to_all(state.current_cluster.id)
+    distance_to_all_clusters = state.get_distance_to_all(state.current_location.id)
     max_dist, min_dist = max(distance_to_all_clusters), min(distance_to_all_clusters)
     distance_scores = [
         (dist - min_dist) / (max_dist - min_dist) for dist in distance_to_all_clusters
@@ -40,7 +40,7 @@ def filtering_neighbours(state, number_of_neighbours=3, random_neighbours=0):
     total_score_list = []
     for cluster in clusters:
         cluster_id = cluster.id
-        if cluster_id != state.current_cluster.id:
+        if cluster_id != state.current_location.id:
             total_score = distance_scores[cluster_id] + deviation_scores[cluster_id]
             index = bisect.bisect(total_score_list, total_score)
             total_score_list.insert(index, total_score)

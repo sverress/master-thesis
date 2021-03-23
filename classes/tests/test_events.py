@@ -18,6 +18,8 @@ class EventsTests(unittest.TestCase):
         self.large_world = World(
             40, sample_size=500, number_of_clusters=20, initial_location_depot=False
         )
+        self.world.state.current_location = self.world.state.clusters[0]
+        self.large_world.state.current_location = self.large_world.state.clusters[0]
         self.departure_time = 1
         self.travel_time = 5
 
@@ -44,6 +46,7 @@ class EventsTests(unittest.TestCase):
         )
 
     def test_scooter_arrival(self):
+        self.world.state.current_location = self.world.state.clusters[0]
         scooter = self.world.state.current_location.get_valid_scooters(20.0)[0]
 
         scooter_battery = scooter.battery

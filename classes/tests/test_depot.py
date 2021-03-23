@@ -13,6 +13,7 @@ class DepotTests(unittest.TestCase):
             number_of_clusters=10,
             initial_state=get_initial_state(500),
         )
+        self.world.state.current_location = self.world.state.depots[0]
 
     def test_depot_charge(self):
         self.world.stack.append(
