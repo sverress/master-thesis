@@ -9,6 +9,7 @@ from clustering.methods import (
 )
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
+import decision.neighbour_filtering
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -62,6 +63,9 @@ class State:
             self.get_cluster_by_id(start), self.get_cluster_by_id(end)
         )
 
+    def get_distance_to_all(self, cluster_id):
+        return self.distance_matrix[cluster_id]
+
     def calculate_distance_matrix(self):
         """
         Computes distance matrix for all clusters
@@ -86,7 +90,9 @@ class State:
             cluster.ideal_state,
         )
 
-    def get_possible_actions(self, number_of_neighbours=None, divide=None):
+    def get_possible_actions(
+        self, number_of_neighbours=None, divide=None, random_neighbours=0
+    ):
         """
         Enumerate all possible actions from the current state
         :param number_of_neighbours: number of neighbours to evaluate
@@ -120,8 +126,10 @@ class State:
 
         combinations = []
         # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-        for cluster in self.get_neighbours(
-            self.current_cluster, number_of_neighbours=number_of_neighbours
+        for cluster in decision.neighbour_filtering.filtering_neighbours(
+            self,
+            number_of_neighbours=number_of_neighbours,
+            random_neighbours=random_neighbours,
         ):
             for pick_up in get_range(pick_ups):
                 for swap in get_range(swaps):
@@ -259,23 +267,28 @@ class State:
             )
         plt.show()
 
-    def get_neighbours(self, cluster: Cluster, number_of_neighbours=None):
+    def get_neighbours(
+        self, cluster: Cluster, number_of_neighbours=None, is_sorted=True
+    ):
         """
         Get sorted list of clusters closest to input cluster
+        :param is_sorted: Boolean if the neighbours list should be sorted in a ascending order based on distance
         :param cluster: cluster to find neighbours for
         :param number_of_neighbours: number of neighbours to return
         :return:
         """
-        neighbours = sorted(
-            [
-                state_cluster
-                for state_cluster in self.clusters
-                if state_cluster.id != cluster.id
-            ],
-            key=lambda state_cluster: self.distance_matrix[cluster.id][
-                state_cluster.id
-            ],
-        )
+        neighbours = [
+            state_cluster
+            for state_cluster in self.clusters
+            if state_cluster.id != cluster.id
+        ]
+        if is_sorted:
+            neighbours = sorted(
+                neighbours,
+                key=lambda state_cluster: self.distance_matrix[cluster.id][
+                    state_cluster.id
+                ],
+            )
         return neighbours[:number_of_neighbours] if number_of_neighbours else neighbours
 
     def get_cluster_by_id(self, cluster_id: int):
