@@ -58,13 +58,12 @@ def filtering_neighbours(
             for index in score_indices[
                 : number_of_neighbours - number_of_random_neighbours
             ]
-        ] + [
-            clusters[
-                np.random.choice(
-                    score_indices[number_of_neighbours - number_of_random_neighbours :]
-                )
-            ]
+            + np.random.choice(
+                score_indices[number_of_neighbours - number_of_random_neighbours :],
+                size=number_of_random_neighbours,
+            ).tolist()
         ]
+
     else:
         neighbours = [clusters[index] for index in score_indices[:number_of_neighbours]]
 
