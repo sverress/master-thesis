@@ -54,7 +54,7 @@ class SwapAllPolicy(Policy):
             0
         ]
 
-        if isinstance(world.state.current_location, classes.Depot):
+        if world.state.is_at_depot():
             swappable_scooters_ids = []
             number_of_scooters_to_swap = 0
         else:

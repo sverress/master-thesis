@@ -1,4 +1,5 @@
 import unittest
+import random
 
 from classes import World, Action
 from clustering.scripts import get_initial_state
@@ -173,6 +174,13 @@ class BasicDecisionTests(unittest.TestCase):
 
     def test_number_of_actions(self):
         bigger_state = get_initial_state(sample_size=500, initial_location_depot=False)
+        bigger_state.current_location = random.choice(
+            [
+                cluster
+                for cluster in bigger_state.clusters
+                if cluster.number_of_scooters() > 0
+            ]
+        )
         self.assertLess(
             len(bigger_state.get_possible_actions(divide=2)),
             len(bigger_state.get_possible_actions()),
@@ -203,7 +211,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         sorted_neighbours = state.get_neighbours(state.current_location, is_sorted=True)
         for cluster in state.clusters:
-            if sorted_neighbours[:3].__contains__(cluster):
+            if cluster in sorted_neighbours[:3]:
                 cluster.ideal_state = 100
                 for scooter in cluster.scooters:
                     scooter.battery = 0
