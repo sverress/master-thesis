@@ -13,9 +13,10 @@ class VehicleArrival(Event):
     def perform(self, world, **kwargs) -> None:
         """
             :param world: world object
-            """
-        # copy state before action for visualization purposes
-        state_before_action = copy.deepcopy(world.state)
+        """
+        if self.visualize:
+            # copy state before action for visualization purposes
+            state_before_action = copy.deepcopy(world.state)
 
         arrival_time = 0
 
@@ -54,15 +55,12 @@ class VehicleArrival(Event):
         # clear world flow counter dictionary
         world.clear_flow_dict()
 
-        # perform the best action on the state
-        reward = world.state.do_action(action)
+        # perform the best action on the state and add the reward from the action to a reward list
+        world.add_reward(world.state.do_action(action))
 
         if self.visualize:
             # visualize action performed by vehicle
             state_before_action.visualize_action(world.state, action)
-
-        # add the reward from the action to a reward list for a posterior analysis
-        world.add_reward(reward)
 
         # set time of world to this event's time
         super(VehicleArrival, self).perform(world, **kwargs)

@@ -116,10 +116,10 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     )
 
     make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
-    add_cluster_center(state_before_action.clusters, ax2)
+    add_location_center(state_before_action.locations, ax2)
 
     make_scooter_visualize(current_state, ax3, scooter_battery=True)
-    add_cluster_center(state_before_action.clusters, ax3)
+    add_location_center(state_before_action.locations, ax3)
 
     plt.tight_layout(pad=1.0)
     plt.show()
@@ -132,7 +132,7 @@ def visualize_scooters_on_trip(current_state: State, trips: [(int, int, Scooter)
 
     make_scooter_visualize(current_state, ax2, scooter_battery=True)
 
-    add_cluster_center(current_state.clusters, ax2)
+    add_location_center(current_state.locations, ax2)
 
     plt.tight_layout(pad=1.0)
     plt.show()

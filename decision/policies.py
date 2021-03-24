@@ -1,6 +1,7 @@
 import copy
 import decision.neighbour_filtering
 import classes
+from globals import BATTERY_INVENTORY
 import numpy.random as random
 import scenario_simulation.scripts
 
@@ -50,7 +51,7 @@ class SwapAllPolicy(Policy):
             world.state, number_of_neighbours=1
         )[
             0
-        ] if world.state.vehicle.battery_inventory > 10 else world.state.depots[
+        ] if world.state.vehicle.battery_inventory > BATTERY_INVENTORY * 0.1 else world.state.depots[
             0
         ]
 

@@ -4,12 +4,15 @@ import bisect
 import numpy as np
 
 
-def filtering_neighbours(state, number_of_neighbours=3, random_neighbours=0, time=-1):
+def filtering_neighbours(
+    state, number_of_neighbours=3, number_of_random_neighbours=0, time=None
+):
     """
     Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
+    :param time: time of the world so charging at depot can be controlled
     :param state: state object to evaluate
     :param number_of_neighbours: number of neighbours to be returned
-    :param random_neighbours: int - number of random neighbours to be added to the neighbourhood list
+    :param number_of_random_neighbours: int - number of random neighbours to be added to the neighbourhood list
     :return:
     """
     clusters = state.clusters
@@ -49,23 +52,23 @@ def filtering_neighbours(state, number_of_neighbours=3, random_neighbours=0, tim
             total_score_list.insert(index, total_score)
             score_indices.insert(index, cluster_id)
 
-    if random_neighbours > 0:
+    if number_of_random_neighbours > 0:
         neighbours = [
             clusters[index]
-            for index in score_indices[: number_of_neighbours - random_neighbours]
+            for index in score_indices[
+                : number_of_neighbours - number_of_random_neighbours
+            ]
         ] + [
             clusters[
                 np.random.choice(
-                    score_indices[number_of_neighbours - random_neighbours :]
+                    score_indices[number_of_neighbours - number_of_random_neighbours :]
                 )
             ]
         ]
     else:
         neighbours = [clusters[index] for index in score_indices[:number_of_neighbours]]
 
-    return (
-        neighbours + add_depots_as_neighbours(state, time) if time > -1 else neighbours
-    )
+    return neighbours + add_depots_as_neighbours(state, time) if time else neighbours
 
 
 def add_depots_as_neighbours(state, time):

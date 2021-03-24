@@ -5,7 +5,7 @@ from globals import BLACK, RED, BLUE, GREEN, GEOSPATIAL_BOUND_NEW, COLORS, ACTIO
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from classes import State
+from classes import State, Depot
 
 
 def display_graph(
@@ -478,7 +478,7 @@ def alt_draw_networkx_edge_labels(
     return text_items
 
 
-def setup_cluster_visualize(state: State, next_location_id=-1):
+def setup_cluster_visualize(state: State, next_location_id=None):
     node_size = 1000
     font_size = 14
 
@@ -497,7 +497,7 @@ def setup_cluster_visualize(state: State, next_location_id=-1):
     # adds cluster info (#scooters and tot battery) on plot
     add_cluster_info(state, graph, ax)
 
-    if next_location_id != -1:
+    if next_location_id:
         graph.add_edge(state.current_location.id, next_location_id, color=RED, width=3)
 
     # displays plot
@@ -558,24 +558,30 @@ def make_scooter_visualize(state, ax, scooter_battery=False):
     )
 
 
-def add_cluster_center(clusters, ax, current_cluster=-1, next_cluster=-1):
+def add_location_center(locations, ax):
 
     cluster_locations = convert_geographic_to_cart(
-        [cluster.get_location() for cluster in clusters], GEOSPATIAL_BOUND_NEW
+        [location.get_location() for location in locations], GEOSPATIAL_BOUND_NEW
     )
 
-    for cluster in clusters:
-        center_x, center_y = cluster_locations[cluster.id]
+    for location in locations:
+        center_x, center_y = cluster_locations[location.id]
         ax.scatter(
             center_x,
             center_y,
-            c=COLORS[cluster.id],
+            c=BLUE if isinstance(location, Depot) else COLORS[location.id],
             edgecolor="None",
             alpha=0.8,
             s=200,
+            zorder=10,
         )
         ax.annotate(
-            cluster.id, (center_x, center_y), ha="center", va="center", weight="bold",
+            location.id,
+            (center_x, center_y),
+            ha="center",
+            va="center",
+            weight="bold",
+            zorder=11,
         )
 
 

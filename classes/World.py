@@ -164,12 +164,13 @@ class World:
         """
         return self.shift_duration - self.time
 
-    def add_reward(self, reward: float) -> None:
+    def add_reward(self, reward: float, discount=False) -> None:
         """
         Adds the input reward to the rewards list of the world object
+        :param discount: boolean if the reward is to be discounted
         :param reward: reward given
         """
-        self.rewards.append(reward)
+        self.rewards.append(reward * self.get_discount() if discount else 1)
 
     def get_total_reward(self) -> float:
         """

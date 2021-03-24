@@ -28,15 +28,16 @@ def estimate_reward(
         while world.time < remaining_shift_duration:
             if next_is_vehicle_action:
                 action = policies.RandomActionPolicy.get_best_action(world)
+                # TODO action time doesn't take into account the time of battery change in depot
                 world.time = world.time + action.get_action_time(
                     world.state.get_distance_id(
                         world.state.current_location.id, action.next_location
                     )
                 )
-                world.add_reward(world.get_discount() * world.state.do_action(action))
+                world.add_reward(world.state.do_action(action), discount=True)
             else:
                 _, _, lost_demand = world.state.system_simulate()
-                world.add_reward(lost_demand * LOST_TRIP_REWARD)
+                world.add_reward(lost_demand * LOST_TRIP_REWARD, discount=True)
                 simulation_counter += 1
             next_is_vehicle_action = (
                 world.time < simulation_counter * ITERATION_LENGTH_MINUTES

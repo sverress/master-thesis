@@ -269,7 +269,7 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     progress.finish()
 
 
-def generate_depots(number_of_clusters=10):
+def generate_depots(number_of_clusters=None):
     main_depot_lat, main_depot_lon = MAIN_DEPOT_LOCATION
     depots = [
         Depot(main_depot_lat, main_depot_lon, number_of_clusters, main_depot=True)

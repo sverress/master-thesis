@@ -203,7 +203,7 @@ class BasicDecisionTests(unittest.TestCase):
         state = get_initial_state(100, 10)
 
         best_neighbours_with_random = filtering_neighbours(
-            state, number_of_neighbours=3, random_neighbours=1
+            state, number_of_neighbours=3, number_of_random_neighbours=1
         )
 
         # test if the number of neighbours is the same, even though one is random

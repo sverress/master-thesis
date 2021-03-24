@@ -102,7 +102,7 @@ class State:
     def get_max_number_of_swaps(self, cluster: Cluster):
         return min(
             min(len(cluster.scooters), self.vehicle.battery_inventory),
-            cluster.ideal_state,
+            len(self.current_location.get_swappable_scooters()),
         )
 
     def get_possible_actions(
@@ -110,16 +110,17 @@ class State:
     ):
         """
         Enumerate all possible actions from the current state
+        :param time: time of the world when the actions is to be performed
         :param random_neighbours: number of random neighbours to add to the possible next location
         :param number_of_neighbours: number of neighbours to evaluate
         :param divide: number to divide by to create range increment
         :return: List of Action objects
         """
-        if isinstance(self.current_location, Depot):
+        if self.is_at_depot():
             neighbours = decision.neighbour_filtering.filtering_neighbours(
                 self,
                 number_of_neighbours=number_of_neighbours,
-                random_neighbours=random_neighbours,
+                number_of_random_neighbours=random_neighbours,
             )
             actions = []
 
@@ -135,17 +136,21 @@ class State:
                     math.ceil((max_int / divide) if divide else 1) if max_int else 1,
                 )
 
-            current_cluster = self.get_location_by_id(self.current_location.id)
             # Initiate constraints for battery swap, pick-up and drop-off
             pick_ups = min(
-                max(len(current_cluster.scooters) - current_cluster.ideal_state, 0),
+                max(
+                    len(self.current_location.scooters)
+                    - self.current_location.ideal_state,
+                    0,
+                ),
                 self.vehicle.scooter_inventory_capacity
                 - len(self.vehicle.scooter_inventory),
             )
-            swaps = self.get_max_number_of_swaps(current_cluster)
+            swaps = self.get_max_number_of_swaps(self.current_location)
             drop_offs = max(
                 min(
-                    current_cluster.ideal_state - len(current_cluster.scooters),
+                    self.current_location.ideal_state
+                    - len(self.current_location.scooters),
                     len(self.vehicle.scooter_inventory),
                 ),
                 0,
@@ -156,7 +161,7 @@ class State:
             for cluster in decision.neighbour_filtering.filtering_neighbours(
                 self,
                 number_of_neighbours=number_of_neighbours,
-                random_neighbours=random_neighbours,
+                number_of_random_neighbours=random_neighbours,
                 time=time,
             ):
                 for pick_up in get_range(pick_ups):
@@ -164,7 +169,7 @@ class State:
                         for drop_off in get_range(drop_offs):
                             if (pick_up + swap) <= self.vehicle.battery_inventory and (
                                 pick_up + swap
-                            ) <= len(current_cluster.scooters):
+                            ) <= len(self.current_location.scooters):
                                 combinations.append(
                                     [swap, pick_up, drop_off, cluster.id]
                                 )
@@ -172,7 +177,7 @@ class State:
             # Assume that no battery swap or pick-up of scooters with 100% battery and
             # that the scooters with the lowest battery are prioritized
             swappable_scooters_id = [
-                scooter.id for scooter in current_cluster.get_swappable_scooters()
+                scooter.id for scooter in self.current_location.get_swappable_scooters()
             ]
             # Adding every action. Actions are the IDs of the scooters to be handled.
             actions = [
@@ -194,8 +199,10 @@ class State:
         :param action: Action - action to be performed on the state
         :return: float - reward for doing the action on the state
         """
-        if not isinstance(self.current_location, Depot):
-            reward = 0
+        reward = 0
+        if self.is_at_depot():
+            pass
+        else:
             # Retrieve all scooters that you can change battery on (and therefore also pick up)
             swappable_scooters = self.current_location.get_swappable_scooters()
 
@@ -237,9 +244,6 @@ class State:
 
                 # Adding scooter to current cluster and changing coordinates of scooter
                 self.current_location.add_scooter(delivery_scooter)
-
-        else:
-            reward = 0
 
         # Moving the state/vehicle from this to next cluster
         self.current_location = self.get_location_by_id(action.next_location)
