@@ -179,9 +179,9 @@ class State:
 
             # Calculate reward of doing the battery swap
             if reward < self.current_cluster.ideal_state:
-                reward += ((100.0 - battery_swap_scooter.battery) / 100.0) * (
-                    1 - self.current_cluster.prob_of_scooter_usage()
-                )
+                reward += (
+                    (100.0 - battery_swap_scooter.battery) / 100.0
+                ) * self.current_cluster.prob_of_scooter_usage()
 
             # Decreasing vehicle battery inventory
             self.vehicle.change_battery(battery_swap_scooter)

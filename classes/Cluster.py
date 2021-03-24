@@ -122,4 +122,4 @@ class Cluster(Location):
         )
 
     def prob_of_scooter_usage(self):
-        return len(self.get_available_scooters()) / self.ideal_state
+        return max(0.0, 1 - len(self.get_available_scooters()) / self.ideal_state)
