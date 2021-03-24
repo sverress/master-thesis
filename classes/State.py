@@ -106,7 +106,7 @@ class State:
         )
 
     def get_possible_actions(
-        self, number_of_neighbours=None, divide=None, random_neighbours=0, time=-1
+        self, number_of_neighbours=None, divide=None, random_neighbours=0, time=None
     ):
         """
         Enumerate all possible actions from the current state

@@ -170,7 +170,7 @@ class World:
         :param discount: boolean if the reward is to be discounted
         :param reward: reward given
         """
-        self.rewards.append(reward * self.get_discount() if discount else 1)
+        self.rewards.append(reward * self.get_discount() if discount else reward)
 
     def get_total_reward(self) -> float:
         """
