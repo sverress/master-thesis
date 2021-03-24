@@ -47,11 +47,7 @@ class State:
             raise ValueError("Start cluster not in state")
         elif end not in self.clusters:
             raise ValueError("End cluster not in state")
-
-        start_index = self.clusters.index(start)
-        end_index = self.clusters.index(end)
-
-        return self.distance_matrix[start_index][end_index]
+        return self.distance_matrix[start.id][end.id]
 
     def get_distance_id(self, start: int, end: int):
         return self.get_distance(
@@ -90,6 +86,7 @@ class State:
     ):
         """
         Enumerate all possible actions from the current state
+        :param random_neighbours: number of random neighbours to add to the possible next location
         :param number_of_neighbours: number of neighbours to evaluate
         :param divide: number to divide by to create range increment
         :return: List of Action objects

@@ -9,7 +9,7 @@ def normalize_to_integers(array, sum_to=1):
     sorted_rests = np.sort(rests)
     return np.array(
         np.floor(normalized_cluster_ideal_states)
-        + [1 if rest in sorted_rests[number_of_ones:] else 0 for rest in rests],
+        + [1 if rest in sorted_rests[-number_of_ones:] else 0 for rest in rests],
         dtype="int32",
     ).tolist()
 
