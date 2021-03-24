@@ -26,7 +26,7 @@ class State:
         self,
         clusters: [Cluster],
         depots: [Depot],
-        current_location: Union[Location, Depot],
+        current_location: Union[Cluster, Depot],
         vehicle: Vehicle,
     ):
         self.clusters = clusters
@@ -61,15 +61,11 @@ class State:
         :param end: Cluster object
         :return: float - distance in kilometers
         """
-        if start not in self.locations:
-            raise ValueError("Start location not in state")
-        elif end not in self.locations:
-            raise ValueError("End location not in state")
-
-        start_index = self.locations.index(start)
-        end_index = self.locations.index(end)
-
-        return self.distance_matrix[start_index][end_index]
+        if start not in self.clusters:
+            raise ValueError("Start cluster not in state")
+        elif end not in self.clusters:
+            raise ValueError("End cluster not in state")
+        return self.distance_matrix[start.id][end.id]
 
     def get_distance_id(self, start: int, end: int):
         return self.get_distance_locations(
@@ -111,6 +107,7 @@ class State:
     ):
         """
         Enumerate all possible actions from the current state
+        :param random_neighbours: number of random neighbours to add to the possible next location
         :param number_of_neighbours: number of neighbours to evaluate
         :param divide: number to divide by to create range increment
         :return: List of Action objects

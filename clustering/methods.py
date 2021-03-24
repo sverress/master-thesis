@@ -184,7 +184,7 @@ def generate_cluster_objects(
         ]
         # Adding all scooters to cluster to find center location
         clusters.append(Cluster(cluster_label, scooters))
-    return clusters
+    return sorted(clusters, key=lambda cluster: cluster.id)
 
 
 def compute_and_set_ideal_state(state: State, sample_scooters: list):
