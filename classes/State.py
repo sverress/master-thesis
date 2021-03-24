@@ -3,10 +3,7 @@ from typing import Union
 from classes.Location import Location
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
-from clustering.methods import (
-    compute_and_set_ideal_state,
-    compute_and_set_trip_intensity,
-)
+import clustering.methods
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 import decision.neighbour_filtering
@@ -14,7 +11,6 @@ import numpy as np
 import math
 import pickle
 import os
-
 from globals import GEOSPATIAL_BOUND_NEW, STATE_CACHE_DIR
 
 
@@ -197,9 +193,7 @@ class State:
         :return: float - reward for doing the action on the state
         """
         reward = 0
-        if self.is_at_depot():
-            pass
-        else:
+        if not self.is_at_depot():
             # Retrieve all scooters that you can change battery on (and therefore also pick up)
             swappable_scooters = self.current_location.get_swappable_scooters()
 
@@ -210,8 +204,8 @@ class State:
                 )
                 swappable_scooters.remove(pick_up_scooter)
 
-            # Picking up scooter and adding to vehicle inventory and swapping battery
-            self.vehicle.pick_up(pick_up_scooter)
+                # Picking up scooter and adding to vehicle inventory and swapping battery
+                self.vehicle.pick_up(pick_up_scooter)
 
                 # Remove scooter from current cluster
                 self.current_location.remove_scooter(pick_up_scooter)
@@ -223,14 +217,14 @@ class State:
                 )
                 swappable_scooters.remove(battery_swap_scooter)
 
-            # Calculate reward of doing the battery swap
-            if reward < self.current_location.ideal_state:
-                reward += (
-                    (100.0 - battery_swap_scooter.battery) / 100.0
-                ) * self.current_location.prob_of_scooter_usage()
+                # Calculate reward of doing the battery swap
+                if reward < self.current_location.ideal_state:
+                    reward += (
+                        (100.0 - battery_swap_scooter.battery) / 100.0
+                    ) * self.current_location.prob_of_scooter_usage()
 
-                # Decreasing vehicle battery inventory
-                self.vehicle.change_battery(battery_swap_scooter)
+                    # Decreasing vehicle battery inventory
+                    self.vehicle.change_battery(battery_swap_scooter)
 
             # Dropping of scooters
             for delivery_scooter_id in action.delivery_scooters:
@@ -243,7 +237,7 @@ class State:
                 # Adding scooter to current cluster and changing coordinates of scooter
                 self.current_location.add_scooter(delivery_scooter)
 
-        # Moving the state/vehicle from this to next cluster
+            # Moving the state/vehicle from this to next cluster
         self.current_location = self.get_location_by_id(action.next_location)
 
         return reward

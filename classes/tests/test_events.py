@@ -46,7 +46,7 @@ class EventsTests(unittest.TestCase):
 
     def test_scooter_arrival(self):
         self.world.state.current_location = self.world.state.clusters[0]
-        scooter = self.world.state.current_location.get_valid_scooters(20.0)[0]
+        scooter = self.world.state.current_location.get_available_scooters(20.0)[0]
 
         scooter_battery = scooter.battery
 

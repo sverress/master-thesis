@@ -44,7 +44,7 @@ class BasicDecisionTests(unittest.TestCase):
         reward = (
             len(actions[-1].battery_swaps)
             * 0.2
-            * self.initial_state.current_cluster.prob_of_scooter_usage()
+            * self.initial_state.current_location.prob_of_scooter_usage()
         )
 
         # Test reward
@@ -130,7 +130,7 @@ class BasicDecisionTests(unittest.TestCase):
         reward = (
             len(actions[-1].battery_swaps)
             * 0.2
-            * self.initial_state.current_cluster.prob_of_scooter_usage()
+            * self.initial_state.current_location.prob_of_scooter_usage()
             + len(actions[-1].delivery_scooters) * 1.0
         )
 
@@ -149,14 +149,14 @@ class BasicDecisionTests(unittest.TestCase):
             for scooter in current_cluster.scooters
             if scooter.id in actions[-1].delivery_scooters
         ]
-        delivery_scootery_battery = sum(
+        delivery_scooter_battery = sum(
             map(lambda scooter: scooter.battery, delivery_scooter_objects)
         )
         self.assertAlmostEqual(
             current_cluster.get_current_state() * 100,
             start_battery_percentage
             + len(actions[-1].battery_swaps) * 20.0
-            + delivery_scootery_battery,
+            + delivery_scooter_battery,
         )
 
     def test_number_of_actions_clusters(self):
