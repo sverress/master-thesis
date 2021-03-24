@@ -64,9 +64,9 @@ class State:
         :param end: Cluster object
         :return: float - distance in kilometers
         """
-        if start not in self.clusters:
+        if start not in self.locations:
             raise ValueError("Start cluster not in state")
-        elif end not in self.clusters:
+        elif end not in self.locations:
             raise ValueError("End cluster not in state")
         return self.distance_matrix[start.id][end.id]
 
