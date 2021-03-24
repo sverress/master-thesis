@@ -1,2 +1,2 @@
-from decision.policies import RandomRolloutPolicy
-from decision.policies import SwapAllPolicy
+from .policies import RandomRolloutPolicy
+from .policies import SwapAllPolicy

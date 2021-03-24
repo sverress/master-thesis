@@ -23,15 +23,19 @@ def estimate_reward(
         world = classes.World(
             remaining_shift_duration, initial_state=copy.deepcopy(state)
         )
+        # TODO: able to handle multiple vehicles
+        vehicle = world.state.vehicles[0]
         next_is_vehicle_action = True
         # Simulate until shift ends
         while world.time < remaining_shift_duration:
             if next_is_vehicle_action:
-                action = policies.RandomActionPolicy.get_best_action(world)
-                world.add_reward(world.get_discount() * world.state.do_action(action))
+                action = policies.RandomActionPolicy.get_best_action(world, vehicle)
+                world.add_reward(
+                    world.get_discount() * world.state.do_action(action, vehicle)
+                )
                 world.time = world.time + action.get_action_time(
                     world.state.get_distance_id(
-                        world.state.current_cluster.id, action.next_cluster
+                        vehicle.current_location.id, action.next_cluster
                     )
                 )
             else:

@@ -1,13 +1,16 @@
+from classes import Cluster
 from classes.Scooter import Scooter
 from globals import BATTERY_INVENTORY, SCOOTER_INVENTORY
 
 
 class Vehicle:
-    def __init__(self):
+    def __init__(self, vehicle_id: int, start_location: Cluster):
+        self.id = vehicle_id
         self.battery_inventory = BATTERY_INVENTORY
         self.scooter_inventory = []
         self.scooter_inventory_capacity = SCOOTER_INVENTORY
         self.service_route = []
+        self.current_location: Cluster = start_location
 
     def change_battery(self, scooter: Scooter):
         if self.battery_inventory <= 0:

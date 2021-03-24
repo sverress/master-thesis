@@ -8,13 +8,13 @@ from classes import (
     LostTrip,
     World,
 )
-import random
 from globals import ITERATION_LENGTH_MINUTES
 
 
 class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = World(40)
+        self.vehicle =
         self.large_world = World(40, sample_size=500, number_of_clusters=20)
         self.departure_time = 1
         self.travel_time = 5

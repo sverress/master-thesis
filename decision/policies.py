@@ -7,24 +7,32 @@ import scenario_simulation.scripts
 
 class Policy:
     @staticmethod
-    def get_best_action(world):
+    def get_best_action(world, vehicle) -> classes.Action:
+        """
+        Returns the best action for the input vehicle in the world context
+        :param world: world object that contains the whole world state
+        :param vehicle: the vehicle to perform an action
+        :return: the best action according to the policy
+        """
         pass
 
 
 class RandomRolloutPolicy(Policy):
     @staticmethod
-    def get_best_action(world):
+    def get_best_action(world, vehicle):
         max_reward = 0
         best_action = None
 
         # Find all possible actions
-        actions = world.state.get_possible_actions(number_of_neighbours=3, divide=2)
+        actions = world.state.get_possible_actions(
+            vehicle, number_of_neighbours=3, divide=2
+        )
 
         # For every possible action
         for action in actions:
             # Get new state of performing action
             new_state = copy.deepcopy(world.state)
-            reward = new_state.do_action(action)
+            reward = new_state.do_action(action, vehicle)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
             reward += world.get_discount() * scenario_simulation.scripts.estimate_reward(
@@ -42,18 +50,17 @@ class RandomRolloutPolicy(Policy):
 
 class SwapAllPolicy(Policy):
     @staticmethod
-    def get_best_action(world):
+    def get_best_action(world, vehicle):
         # Choose a random cluster
         next_cluster: classes.Cluster = decision.neighbour_filtering.filtering_neighbours(
-            world.state, number_of_neighbours=1
+            world.state, vehicle.current_location, number_of_neighbours=1
         )[
             0
         ]
 
         # Find all scooters that can be swapped here
         swappable_scooters_ids = [
-            scooter.id
-            for scooter in world.state.current_cluster.get_swappable_scooters()
+            scooter.id for scooter in vehicle.current_location.get_swappable_scooters()
         ]
 
         # Calculate how many scooters that can be swapped
@@ -72,9 +79,11 @@ class SwapAllPolicy(Policy):
 
 class RandomActionPolicy(Policy):
     @staticmethod
-    def get_best_action(world):
+    def get_best_action(world, vehicle):
         # all possible actions in this state
-        possible_actions = world.state.get_possible_actions(number_of_neighbours=3)
+        possible_actions = world.state.get_possible_actions(
+            vehicle, number_of_neighbours=3
+        )
 
         # pick a random action
         return random.choice(possible_actions)

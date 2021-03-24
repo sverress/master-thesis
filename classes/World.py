@@ -3,7 +3,6 @@ import numpy as np
 import bisect
 import classes
 
-from decision.policies import RandomRolloutPolicy
 from globals import (
     BATTERY_LIMIT,
     LOST_TRIP_REWARD,
