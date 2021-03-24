@@ -8,7 +8,6 @@ from classes import (
     LostTrip,
     World,
 )
-import random
 from globals import ITERATION_LENGTH_MINUTES
 
 
@@ -42,7 +41,7 @@ class EventsTests(unittest.TestCase):
         )
 
     def test_scooter_arrival(self):
-        scooter = self.world.state.current_cluster.get_valid_scooters(20.0)[0]
+        scooter = self.world.state.current_cluster.get_available_scooters()[0]
 
         scooter_battery = scooter.battery
 

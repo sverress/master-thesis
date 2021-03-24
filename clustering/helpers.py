@@ -20,7 +20,7 @@ def scooter_sample_filter(dataframe: pd.DataFrame, sample_size=None):
     return dataframe["id"].tolist()
 
 
-def get_moved_scooters(state, first_snapshot_data, second_snapshot_data):
+def merge_scooter_snapshots(state, first_snapshot_data, second_snapshot_data):
     # Join tables on scooter id
     merged_tables = pd.merge(
         left=first_snapshot_data,
@@ -31,9 +31,7 @@ def get_moved_scooters(state, first_snapshot_data, second_snapshot_data):
     )
 
     # Filtering out scooters that has moved during the 20 minutes
-    moved_scooters = merged_tables[
-        merged_tables["battery_x"] != merged_tables["battery_y"]
-    ].copy()
+    moved_scooters = get_moved_scooters(merged_tables)
     moved_scooters["cluster_x"] = [
         state.get_cluster_by_lat_lon(row["lat_x"], row["lon_x"]).id
         for index, row in moved_scooters.iterrows()
@@ -59,3 +57,11 @@ def get_moved_scooters(state, first_snapshot_data, second_snapshot_data):
         for index, row in disappeared_scooters.iterrows()
     ]
     return moved_scooters, filtered_moved_scooters, disappeared_scooters
+
+
+def get_moved_scooters(merged_tables):
+    return merged_tables[
+        (merged_tables["battery_x"] > merged_tables["battery_y"])
+        & (abs(merged_tables["lat_x"] - merged_tables["lat_y"]) >= 0.0001)
+        & (abs(merged_tables["lon_x"] - merged_tables["lon_y"]) >= 0.0001)
+    ].copy()

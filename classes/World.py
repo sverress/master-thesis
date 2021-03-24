@@ -2,8 +2,6 @@ import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
 import classes
-
-from decision.policies import RandomRolloutPolicy
 from globals import (
     BATTERY_LIMIT,
     LOST_TRIP_REWARD,
@@ -37,16 +35,7 @@ class World:
                 sum(
                     [
                         abs(
-                            (
-                                sum(
-                                    [
-                                        1
-                                        for _ in cluster.get_valid_scooters(
-                                            BATTERY_LIMIT
-                                        )
-                                    ]
-                                )
-                            )
+                            (sum([1 for _ in cluster.get_available_scooters()]))
                             - cluster.ideal_state
                         )
                         for cluster in world.state.clusters
@@ -62,9 +51,7 @@ class World:
                             sum(
                                 [
                                     scooter.battery
-                                    for scooter in cluster.get_valid_scooters(
-                                        BATTERY_LIMIT
-                                    )
+                                    for scooter in cluster.get_available_scooters()
                                 ]
                             )
                         )
