@@ -103,13 +103,17 @@ class World:
         number_of_clusters=20,
         initial_state=None,
         policy="RandomRolloutPolicy",
+        initial_location_depot=True,
+        verbose=False,
     ):
         self.shift_duration = shift_duration
         if initial_state:
             self.state = initial_state
         else:
             self.state = clustering_scripts.get_initial_state(
-                sample_size=sample_size, number_of_clusters=number_of_clusters
+                sample_size=sample_size,
+                number_of_clusters=number_of_clusters,
+                initial_location_depot=initial_location_depot,
             )
         self.stack = []
         self.time = 0
@@ -122,21 +126,24 @@ class World:
         }
         self.policy = get_policy(policy)
         self.metrics = World.WorldMetric()
-        self.progress_bar = IncrementalBar(
-            "Running World",
-            check_tty=False,
-            max=round(shift_duration / ITERATION_LENGTH_MINUTES) + 1,
-            color=WHITE,
-            suffix="%(percent)d%% - ETA %(eta)ds",
-        )
+        self.verbose = verbose
+        if verbose:
+            self.progress_bar = IncrementalBar(
+                "Running World",
+                check_tty=False,
+                max=round(shift_duration / ITERATION_LENGTH_MINUTES) + 1,
+                color=WHITE,
+                suffix="%(percent)d%% - ETA %(eta)ds",
+            )
 
     def run(self):
         while self.time < self.shift_duration:
             event = self.stack.pop(0)
             event.perform(self)
-            if isinstance(event, classes.GenerateScooterTrips):
+            if isinstance(event, classes.GenerateScooterTrips) and self.verbose:
                 self.progress_bar.next()
-        self.progress_bar.finish()
+        if self.verbose:
+            self.progress_bar.finish()
 
     def get_remaining_time(self) -> int:
         """
@@ -146,12 +153,13 @@ class World:
         """
         return self.shift_duration - self.time
 
-    def add_reward(self, reward: float) -> None:
+    def add_reward(self, reward: float, discount=False) -> None:
         """
         Adds the input reward to the rewards list of the world object
+        :param discount: boolean if the reward is to be discounted
         :param reward: reward given
         """
-        self.rewards.append(reward)
+        self.rewards.append(reward * self.get_discount() if discount else reward)
 
     def get_total_reward(self) -> float:
         """
@@ -199,7 +207,7 @@ class World:
         return [
             (event.departure_cluster_id, event.arrival_cluster_id, event.scooter)
             for event in self.stack
-            if isinstance(event, classes.ScooterArrival)
+            if isinstance(event, classes.ScooterArrival) and event.time < self.time
         ]
 
     def get_discount(self):

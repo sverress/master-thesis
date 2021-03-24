@@ -1,6 +1,7 @@
 import copy
 import decision.neighbour_filtering
 import classes
+from globals import BATTERY_INVENTORY
 import numpy.random as random
 import scenario_simulation.scripts
 
@@ -18,7 +19,9 @@ class RandomRolloutPolicy(Policy):
         best_action = None
 
         # Find all possible actions
-        actions = world.state.get_possible_actions(number_of_neighbours=3, divide=2)
+        actions = world.state.get_possible_actions(
+            number_of_neighbours=3, divide=2, time=world.time
+        )
 
         # For every possible action
         for action in actions:
@@ -44,29 +47,35 @@ class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world):
         # Choose a random cluster
-        next_cluster: classes.Cluster = decision.neighbour_filtering.filtering_neighbours(
+        next_location: classes.Location = decision.neighbour_filtering.filtering_neighbours(
             world.state, number_of_neighbours=1
         )[
             0
+        ] if world.state.vehicle.battery_inventory > BATTERY_INVENTORY * 0.1 else world.state.depots[
+            0
         ]
 
-        # Find all scooters that can be swapped here
-        swappable_scooters_ids = [
-            scooter.id
-            for scooter in world.state.current_cluster.get_swappable_scooters()
-        ]
+        if world.state.is_at_depot():
+            swappable_scooters_ids = []
+            number_of_scooters_to_swap = 0
+        else:
+            # Find all scooters that can be swapped here
+            swappable_scooters_ids = [
+                scooter.id
+                for scooter in world.state.current_location.get_swappable_scooters()
+            ]
 
-        # Calculate how many scooters that can be swapped
-        number_of_scooters_to_swap = world.state.get_max_number_of_swaps(
-            world.state.current_cluster
-        )
+            # Calculate how many scooters that can be swapped
+            number_of_scooters_to_swap = world.state.get_max_number_of_swaps(
+                world.state.current_location
+            )
 
         # Return an action with no re-balancing, only scooter swapping
         return classes.Action(
             battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
             pick_ups=[],
             delivery_scooters=[],
-            next_cluster=next_cluster.id,
+            next_location=next_location.id,
         )
 
 
@@ -74,7 +83,9 @@ class RandomActionPolicy(Policy):
     @staticmethod
     def get_best_action(world):
         # all possible actions in this state
-        possible_actions = world.state.get_possible_actions(number_of_neighbours=3)
+        possible_actions = world.state.get_possible_actions(
+            number_of_neighbours=3, time=world.time
+        )
 
         # pick a random action
         return random.choice(possible_actions)

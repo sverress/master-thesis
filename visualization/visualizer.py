@@ -158,7 +158,7 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     plot_vehicle_info(state_before_action.vehicle, current_state.vehicle, ax1)
     plot_action(
         action,
-        state_before_action.current_cluster.id,
+        state_before_action.current_location.id,
         ax1,
         offset=(
             len(state_before_action.vehicle.scooter_inventory)
@@ -168,10 +168,10 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     )
 
     make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
-    add_cluster_center(state_before_action.clusters, ax2)
+    add_location_center(state_before_action.locations, ax2)
 
     make_scooter_visualize(current_state, ax3, scooter_battery=True)
-    add_cluster_center(state_before_action.clusters, ax3)
+    add_location_center(state_before_action.locations, ax3)
 
     plt.tight_layout(pad=1.0)
     plt.show()
@@ -184,7 +184,7 @@ def visualize_scooters_on_trip(current_state: State, trips: [(int, int, Scooter)
 
     make_scooter_visualize(current_state, ax2, scooter_battery=True)
 
-    add_cluster_center(current_state.clusters, ax2)
+    add_location_center(current_state.locations, ax2)
 
     plt.tight_layout(pad=1.0)
     plt.show()
@@ -338,7 +338,7 @@ def visualize_analysis(instances, policies, smooth_curve=True):
 
     fig.suptitle(
         f"Sample size {SAMPLE_SIZE} - Shift duration {SHIFT_DURATION} - Number of clusters {NUMBER_OF_CLUSTERS} - "
-        f"Rollouts {NUMBER_OF_ROLLOUTS} - Max number of neighbours {MAX_NUMBER_OF_NEIGHBOURS}",
+        f"Rollouts {NUMBER_OF_ROLLOUTS} - Max number of neighbours {NUMBER_OF_NEIGHBOURS}",
         fontsize=16,
     )
 

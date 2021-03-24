@@ -13,14 +13,18 @@ from globals import ITERATION_LENGTH_MINUTES
 
 class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = World(40)
-        self.large_world = World(40, sample_size=500, number_of_clusters=20)
+        self.world = World(40, initial_location_depot=False)
+        self.large_world = World(
+            40, sample_size=500, number_of_clusters=20, initial_location_depot=False
+        )
+        self.world.state.current_location = self.world.state.clusters[0]
+        self.large_world.state.current_location = self.large_world.state.clusters[0]
         self.departure_time = 1
         self.travel_time = 5
 
     def test_scooter_departure(self):
         departure_event = ScooterDeparture(
-            self.departure_time, self.world.state.current_cluster.id
+            self.departure_time, self.world.state.current_location.id
         )
 
         departure_event.perform(self.world)
@@ -41,7 +45,8 @@ class EventsTests(unittest.TestCase):
         )
 
     def test_scooter_arrival(self):
-        scooter = self.world.state.current_cluster.get_available_scooters()[0]
+        self.world.state.current_location = self.world.state.clusters[0]
+        scooter = self.world.state.current_location.get_available_scooters(20.0)[0]
 
         scooter_battery = scooter.battery
 
@@ -68,7 +73,7 @@ class EventsTests(unittest.TestCase):
 
     def test_vehicle_arrival(self):
         random_cluster_in_state = self.world.state.get_random_cluster(
-            exclude=self.world.state.current_cluster
+            exclude=self.world.state.current_location
         )
         # Create a vehicle arrival event with a arrival time of 20 arriving at a random cluster in the world state
         vehicle_arrival = VehicleArrival(20, random_cluster_in_state.id)
@@ -81,7 +86,7 @@ class EventsTests(unittest.TestCase):
 
         # New current cluster is not the arrival cluster, as the action takes the state to a new cluster
         self.assertNotEqual(
-            random_cluster_in_state.id, self.large_world.state.current_cluster.id
+            random_cluster_in_state.id, self.large_world.state.current_location.id
         )
 
         # Vehicle arrival event created a new vehicle arrival event

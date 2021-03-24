@@ -1,8 +1,13 @@
 from sklearn.cluster import KMeans
 import os
 
-from classes import State, Scooter, Cluster
-from globals import GEOSPATIAL_BOUND_NEW, TEST_DATA_DIRECTORY
+from classes import State, Scooter, Cluster, Depot
+from globals import (
+    GEOSPATIAL_BOUND_NEW,
+    TEST_DATA_DIRECTORY,
+    MAIN_DEPOT_LOCATION,
+    SMALL_DEPOT_LOCATIONS,
+)
 from progress.bar import Bar
 from .helpers import *
 
@@ -262,3 +267,15 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     for cluster in state.clusters:
         cluster.trip_intensity_per_iteration = cluster_trip_intensities[cluster.id]
     progress.finish()
+
+
+def generate_depots(number_of_clusters=None):
+    main_depot_lat, main_depot_lon = MAIN_DEPOT_LOCATION
+    depots = [
+        Depot(main_depot_lat, main_depot_lon, number_of_clusters, main_depot=True)
+    ]
+
+    for i, (lat, lon) in enumerate(SMALL_DEPOT_LOCATIONS):
+        depots.append(Depot(lat, lon, i + number_of_clusters + 1, main_depot=False))
+
+    return depots

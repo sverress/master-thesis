@@ -6,7 +6,11 @@ from progress.bar import Bar
 
 
 def get_initial_state(
-    sample_size=None, number_of_clusters=20, save=True, cache=True
+    sample_size=None,
+    number_of_clusters=20,
+    save=True,
+    cache=True,
+    initial_location_depot=True,
 ) -> State:
     # If this combination has been requested before we fetch a cached version
     if cache and os.path.exists(
@@ -22,7 +26,7 @@ def get_initial_state(
         f"\nSetup initial state from entur dataset with {number_of_clusters} clusters and {sample_size} scooters"
     )
 
-    clustering = Bar("| Clustering data", max=3)
+    clustering = Bar("| Clustering data", max=4)
     # Get dataframe from EnTur CSV file within boundary
     entur_dataframe = methods.read_bounded_csv_file("test_data/0900-entur-snapshot.csv")
     clustering.next()
@@ -34,15 +38,20 @@ def get_initial_state(
     # Structure data into objects
     clusters = methods.generate_cluster_objects(entur_dataframe, cluster_labels)
     clustering.next()
+
+    # generate depots and adding them to clusters list
+    depots = methods.generate_depots(number_of_clusters=len(clusters))
+    clustering.next()
+
     # Choosing first cluster as starting cluster in state
-    current_cluster = clusters[0]
+    current_location = depots[0] if initial_location_depot else clusters[0]
     clustering.finish()
 
     # Choosing a default vehicle as the vehicle in the new state
     vehicle = Vehicle()
 
     # Create state object
-    initial_state = State(clusters, current_cluster, vehicle)
+    initial_state = State(clusters, depots, current_location, vehicle)
 
     # Sample size filtering. Create list of scooter ids to include
     sample_scooters = methods.scooter_sample_filter(entur_dataframe, sample_size)

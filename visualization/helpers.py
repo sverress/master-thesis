@@ -5,7 +5,7 @@ from globals import BLACK, RED, BLUE, GREEN, GEOSPATIAL_BOUND_NEW, COLORS, ACTIO
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from classes import State
+from classes import State, Depot
 
 
 def display_graph(
@@ -41,7 +41,7 @@ def display_graph(
             pos,
             labels,
             font_size=font_size,
-            font_color="black",
+            font_color="white",
             font_weight="bold",
             ax=ax,
         )
@@ -118,7 +118,7 @@ def plot_action(action, current_cluster, ax, offset=0):
     for delivery in action.delivery_scooters:
         action_string += f"{delivery}\n"
 
-    action_string += f"\nCurrent : {current_cluster}\nNext : {action.next_cluster}"
+    action_string += f"\nCurrent : {current_cluster}\nNext : {action.next_location}"
 
     ax.text(
         0,
@@ -142,7 +142,7 @@ def plot_trips(trips, ax):
 
     for trip in trips:
         start, end, scooter = trip
-        trips_string += f"{start.id} -> {end.id}: {scooter.id}\n"
+        trips_string += f"{start} -> {end}: {scooter.id}\n"
 
     ax.text(
         0,
@@ -157,14 +157,18 @@ def plot_trips(trips, ax):
 
 
 def make_graph(
-    coordinates: [(float, float)], cluster_ids: [int], current_node=-1, next_state=-1
+    coordinates: [(float, float)],
+    location_ids: [int],
+    depot_ids=None,
+    current_location=-1,
+    next_location=-1,
 ):
     """
     Makes a networkx graph of a list of locations and uses cluster id to give the locations color
     Location/coordinates can both be clusters and scooters
     """
     cartesian_clusters = convert_geographic_to_cart(coordinates, GEOSPATIAL_BOUND_NEW)
-
+    depot_ids = depot_ids if depot_ids else []
     # make graph object
     graph = nx.DiGraph()
     graph.add_nodes_from([c for c in np.arange(len(cartesian_clusters))])
@@ -174,10 +178,12 @@ def make_graph(
     node_color = []
     node_border = []
     for i, cartesian_cluster_coordinates in enumerate(cartesian_clusters):
-        labels[i] = cluster_ids[i]
-        border_color = BLUE if current_node == cluster_ids[i] else BLACK
-        node_color.append(COLORS[cluster_ids[i]])
-        node_border.append(RED if next_state == cluster_ids[i] else border_color)
+        labels[i] = location_ids[i]
+        border_color = BLUE if current_location == location_ids[i] else BLACK
+        node_color.append(
+            BLUE if depot_ids.__contains__(location_ids[i]) else COLORS[location_ids[i]]
+        )
+        node_border.append(RED if next_location == location_ids[i] else border_color)
         graph.nodes[i]["pos"] = cartesian_cluster_coordinates
 
     return graph, labels, node_border, node_color
@@ -472,7 +478,7 @@ def alt_draw_networkx_edge_labels(
     return text_items
 
 
-def setup_cluster_visualize(state: State, next_state_id=-1):
+def setup_cluster_visualize(state: State, next_location_id=None):
     node_size = 1000
     font_size = 14
 
@@ -481,17 +487,18 @@ def setup_cluster_visualize(state: State, next_state_id=-1):
 
     # constructs the networkx graph from cluster location and with cluster id
     graph, labels, node_border, node_color = make_graph(
-        [(cluster.get_location()) for cluster in state.clusters],
-        [cluster.id for cluster in state.clusters],
-        state.current_cluster.id,
-        next_state_id,
+        [(location.get_location()) for location in state.locations],
+        [location.id for location in state.locations],
+        depot_ids=[depot.id for depot in state.depots],
+        current_location=state.current_location.id,
+        next_location=next_location_id,
     )
 
     # adds cluster info (#scooters and tot battery) on plot
     add_cluster_info(state, graph, ax)
 
-    if next_state_id != -1:
-        graph.add_edge(state.current_cluster.id, next_state_id, color=RED, width=3)
+    if next_location_id:
+        graph.add_edge(state.current_location.id, next_location_id, color=RED, width=3)
 
     # displays plot
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
@@ -551,24 +558,30 @@ def make_scooter_visualize(state, ax, scooter_battery=False):
     )
 
 
-def add_cluster_center(clusters, ax, current_cluster=-1, next_cluster=-1):
+def add_location_center(locations, ax):
 
     cluster_locations = convert_geographic_to_cart(
-        [cluster.get_location() for cluster in clusters], GEOSPATIAL_BOUND_NEW
+        [location.get_location() for location in locations], GEOSPATIAL_BOUND_NEW
     )
 
-    for cluster in clusters:
-        center_x, center_y = cluster_locations[cluster.id]
+    for location in locations:
+        center_x, center_y = cluster_locations[location.id]
         ax.scatter(
             center_x,
             center_y,
-            c=COLORS[cluster.id],
+            c=BLUE if isinstance(location, Depot) else COLORS[location.id],
             edgecolor="None",
             alpha=0.8,
             s=200,
+            zorder=10,
         )
         ax.annotate(
-            cluster.id, (center_x, center_y), ha="center", va="center", weight="bold",
+            location.id,
+            (center_x, center_y),
+            ha="center",
+            va="center",
+            weight="bold",
+            zorder=11,
         )
 
 

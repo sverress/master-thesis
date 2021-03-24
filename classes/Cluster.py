@@ -7,11 +7,10 @@ from globals import CLUSTER_CENTER_DELTA, BATTERY_LIMIT
 
 class Cluster(Location):
     def __init__(self, cluster_id: int, scooters: [Scooter]):
-        self.id = cluster_id
         self.scooters = scooters
         self.ideal_state = 10
         self.trip_intensity_per_iteration = 2
-        super().__init__(*self.__compute_center())
+        super().__init__(*self.__compute_center(), cluster_id)
         self.move_probabilities = None
 
     class Decorators:
