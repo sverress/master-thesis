@@ -35,16 +35,7 @@ class World:
                 sum(
                     [
                         abs(
-                            (
-                                sum(
-                                    [
-                                        1
-                                        for _ in cluster.get_valid_scooters(
-                                            BATTERY_LIMIT
-                                        )
-                                    ]
-                                )
-                            )
+                            (sum([1 for _ in cluster.get_available_scooters()]))
                             - cluster.ideal_state
                         )
                         for cluster in world.state.clusters
@@ -60,9 +51,7 @@ class World:
                             sum(
                                 [
                                     scooter.battery
-                                    for scooter in cluster.get_valid_scooters(
-                                        BATTERY_LIMIT
-                                    )
+                                    for scooter in cluster.get_available_scooters()
                                 ]
                             )
                         )

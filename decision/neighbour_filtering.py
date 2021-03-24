@@ -25,7 +25,7 @@ def filtering_neighbours(
     ]
 
     deviation_ideal_states = [
-        abs(cluster.ideal_state - len(cluster.get_valid_scooters(BATTERY_LIMIT)))
+        abs(cluster.ideal_state - len(cluster.get_available_scooters()))
         for cluster in clusters
     ]
 

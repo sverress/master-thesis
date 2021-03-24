@@ -33,7 +33,7 @@ NUMBER_OF_ROLLOUTS = 50
 BATTERY_LIMIT = 20.0
 DISCOUNT_RATE = 0.80
 
-# Negative reward for lost trip
+# Negative reward for lost trips
 LOST_TRIP_REWARD = -0.1
 
 # Testing parameters
@@ -43,11 +43,7 @@ SAMPLE_SIZE = 200
 NUMBER_OF_CLUSTERS = 20
 POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
 
-# State cache directory
-if os.environ.get("CI"):
-    STATE_CACHE_DIR = "test_state_cache"
-else:
-    STATE_CACHE_DIR = "state_cache"
+STATE_CACHE_DIR = "test_state_cache"
 
 
 # Test data directory

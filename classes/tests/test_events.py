@@ -8,7 +8,6 @@ from classes import (
     LostTrip,
     World,
 )
-import random
 from globals import ITERATION_LENGTH_MINUTES
 
 

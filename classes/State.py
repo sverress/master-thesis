@@ -1,10 +1,8 @@
-from itertools import cycle
 import random
 from typing import Union
 from classes.Location import Location
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
-from classes.Depot import Depot
 from clustering.methods import (
     compute_and_set_ideal_state,
     compute_and_set_trip_intensity,
@@ -12,7 +10,6 @@ from clustering.methods import (
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 import decision.neighbour_filtering
-import matplotlib.pyplot as plt
 import numpy as np
 import math
 import pickle
@@ -213,10 +210,8 @@ class State:
                 )
                 swappable_scooters.remove(pick_up_scooter)
 
-                reward -= pick_up_scooter.battery / 100.0
-
-                # Picking up scooter and adding to vehicle inventory and swapping battery
-                self.vehicle.pick_up(pick_up_scooter)
+            # Picking up scooter and adding to vehicle inventory and swapping battery
+            self.vehicle.pick_up(pick_up_scooter)
 
                 # Remove scooter from current cluster
                 self.current_location.remove_scooter(pick_up_scooter)
@@ -228,8 +223,11 @@ class State:
                 )
                 swappable_scooters.remove(battery_swap_scooter)
 
-                # Calculate reward of doing the battery swap
-                reward += (100.0 - battery_swap_scooter.battery) / 100.0
+            # Calculate reward of doing the battery swap
+            if reward < self.current_location.ideal_state:
+                reward += (
+                    (100.0 - battery_swap_scooter.battery) / 100.0
+                ) * self.current_location.prob_of_scooter_usage()
 
                 # Decreasing vehicle battery inventory
                 self.vehicle.change_battery(battery_swap_scooter)
@@ -252,61 +250,6 @@ class State:
 
     def __repr__(self):
         return f"State: Current location={self.current_location}"
-
-    def visualize_clustering(self):
-        fig, ax = plt.subplots(figsize=[10, 6])
-
-        # Add image to background
-        oslo = plt.imread("images/kart_oslo.png")
-        lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
-        ax.imshow(
-            oslo,
-            zorder=0,
-            extent=(lon_min, lon_max, lat_min, lat_max),
-            aspect="auto",
-            alpha=0.6,
-        )
-        colors = cycle("bgrcmyk")
-        # Add clusters to figure
-        for cluster in self.clusters:
-            scooter_locations = [
-                (scooter.get_lat(), scooter.get_lon()) for scooter in cluster.scooters
-            ]
-            cluster_color = next(colors)
-            df_scatter = ax.scatter(
-                [lon for lat, lon in scooter_locations],
-                [lat for lat, lon in scooter_locations],
-                c=cluster_color,
-                alpha=0.6,
-                s=3,
-            )
-            center_lat, center_lon = cluster.get_location()
-            rs_scatter = ax.scatter(
-                center_lon,
-                center_lat,
-                c=cluster_color,
-                edgecolor="None",
-                alpha=0.8,
-                s=200,
-            )
-            ax.annotate(
-                cluster.id,
-                (center_lon, center_lat),
-                ha="center",
-                va="center",
-                weight="bold",
-            )
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-
-        if len(self.clusters) > 0:
-            # Legend will use the last cluster color. Check for clusters to avoid None object
-            ax.legend(
-                [df_scatter, rs_scatter],
-                ["Full dataset", "Cluster centers"],
-                loc="upper right",
-            )
-        plt.show()
 
     def get_neighbours(
         self, location: Location, number_of_neighbours=None, is_sorted=True
@@ -355,6 +298,9 @@ class State:
     def visualize(self):
         visualize_state(self)
 
+    def visualize_clustering(self):
+        visualize_clustering(self.clusters)
+
     def visualize_flow(
         self, flows: [(int, int, int)],
     ):
@@ -399,10 +345,10 @@ class State:
             return pickle.load(file)
 
     def compute_and_set_ideal_state(self, sample_scooters):
-        compute_and_set_ideal_state(self, sample_scooters)
+        clustering.methods.compute_and_set_ideal_state(self, sample_scooters)
 
     def compute_and_set_trip_intensity(self, sample_scooters):
-        compute_and_set_trip_intensity(self, sample_scooters)
+        clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
 
     def sample(self, sample_size: int):
         # Filter out scooters not in sample
