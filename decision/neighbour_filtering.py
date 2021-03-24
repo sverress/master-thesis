@@ -5,17 +5,30 @@ import numpy as np
 
 
 def filtering_neighbours(
-    state, number_of_neighbours=3, number_of_random_neighbours=0, time=None
+    state,
+    number_of_neighbours=3,
+    number_of_random_neighbours=0,
+    vehicle_scooter_inventory=0,
+    time=None,
 ):
     """
     Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
+    :param vehicle_scooter_inventory: current vehicle scooter inventory
     :param time: time of the world so charging at depot can be controlled
     :param state: state object to evaluate
     :param number_of_neighbours: number of neighbours to be returned
     :param number_of_random_neighbours: int - number of random neighbours to be added to the neighbourhood list
     :return:
     """
-    clusters = state.clusters
+    clusters = (
+        state.clusters
+        if vehicle_scooter_inventory > 0
+        else [
+            cluster
+            for cluster in state.clusters
+            if len(cluster.scooters) > cluster.ideal_state
+        ]
+    )
     distance_to_all_clusters = state.get_distance_to_all_clusters(
         state.current_location.id
     )
