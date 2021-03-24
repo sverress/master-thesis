@@ -48,3 +48,6 @@ class Vehicle:
 
     def get_route(self):
         return self.service_route
+
+    def __repr__(self):
+        return f"Vehicle at {self.current_location}"

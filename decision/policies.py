@@ -31,12 +31,13 @@ class RandomRolloutPolicy(Policy):
         # For every possible action
         for action in actions:
             # Get new state of performing action
-            new_state = copy.deepcopy(world.state)
-            reward = new_state.do_action(action, vehicle)
+            world_copy = copy.deepcopy(world)
+            vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
+            reward = world_copy.state.do_action(action, vehicle_copy)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
             reward += world.get_discount() * scenario_simulation.scripts.estimate_reward(
-                new_state, world.get_remaining_time()
+                world_copy, vehicle_copy, world.get_remaining_time()
             )
 
             # If the action is better than previous actions, make best_action
@@ -64,9 +65,7 @@ class SwapAllPolicy(Policy):
         ]
 
         # Calculate how many scooters that can be swapped
-        number_of_scooters_to_swap = world.state.get_max_number_of_swaps(
-            world.state.current_cluster
-        )
+        number_of_scooters_to_swap = world.state.get_max_number_of_swaps(vehicle)
 
         # Return an action with no re-balancing, only scooter swapping
         return classes.Action(
