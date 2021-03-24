@@ -1,13 +1,17 @@
 import unittest
 from clustering.scripts import get_initial_state
-from classes.World import World
-from classes.events.VehicleArrival import VehicleArrival
-from globals import BATTERY_INVENTORY, SWAP_TIME_PER_BATTERY
+import classes
+from globals import (
+    BATTERY_INVENTORY,
+    SMALL_DEPOT_CAPACITY,
+    SWAP_TIME_PER_BATTERY,
+    CHARGE_TIME_PER_BATTERY,
+)
 
 
 class DepotTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = World(
+        self.world = classes.World(
             shift_duration=BATTERY_INVENTORY * SWAP_TIME_PER_BATTERY + 1,
             sample_size=100,
             number_of_clusters=10,
@@ -16,15 +20,23 @@ class DepotTests(unittest.TestCase):
         self.world.state.current_location = self.world.state.depots[0]
 
     def test_depot_charge(self):
+        depot = classes.Depot(lat=0.0, lon=0.0, depot_id=0)
+        depot.swap_battery_inventory(0, number_of_battery_to_change=10)
+        self.assertLess(depot.get_available_battery_swaps(time=1), SMALL_DEPOT_CAPACITY)
+        self.assertEqual(
+            depot.get_available_battery_swaps(time=CHARGE_TIME_PER_BATTERY + 1),
+            SMALL_DEPOT_CAPACITY,
+        )
+
+    def test_vehicle_battery_inventory_change(self):
         self.world.stack.append(
-            VehicleArrival(0, self.world.state.current_location.id, visualize=False)
+            classes.VehicleArrival(
+                0, self.world.state.current_location.id, visualize=False
+            )
         )
         self.world.state.vehicle.battery_inventory = 0
         self.world.run()
         self.assertGreater(self.world.state.vehicle.battery_inventory, 0)
-
-    def test_vehicle_battery_inventory_change(self):
-        pass
 
 
 if __name__ == "__main__":
