@@ -39,7 +39,7 @@ LOST_TRIP_REWARD = -0.1
 # Testing parameters
 NUMBER_OF_NEIGHBOURS = 3
 SHIFT_DURATION = 300
-SAMPLE_SIZE = 200
+SAMPLE_SIZE = 500
 NUMBER_OF_CLUSTERS = 30
 # different policies: "RandomRolloutPolicy", "SwapAllPolicy"
 POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
