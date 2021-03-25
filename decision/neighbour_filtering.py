@@ -1,5 +1,4 @@
-from globals import BATTERY_LIMIT, BATTERY_INVENTORY, MAX_DISTANCE
-import classes
+from globals import BATTERY_INVENTORY, MAX_DISTANCE
 import bisect
 import numpy as np
 
@@ -9,10 +8,12 @@ def filtering_neighbours(
     number_of_neighbours=3,
     number_of_random_neighbours=0,
     vehicle_scooter_inventory=0,
+    vehicle_battery_inventory=BATTERY_INVENTORY,
     time=None,
 ):
     """
     Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
+    :param vehicle_battery_inventory: current vehicle battery inventory
     :param vehicle_scooter_inventory: current vehicle scooter inventory
     :param time: time of the world so charging at depot can be controlled
     :param state: state object to evaluate
@@ -20,15 +21,7 @@ def filtering_neighbours(
     :param number_of_random_neighbours: int - number of random neighbours to be added to the neighbourhood list
     :return:
     """
-    clusters = (
-        state.clusters
-        if vehicle_scooter_inventory > 0
-        else [
-            cluster
-            for cluster in state.clusters
-            if len(cluster.scooters) > cluster.ideal_state
-        ]
-    )
+    clusters = state.clusters
     distance_to_all_clusters = state.get_distance_to_all_clusters(
         state.current_location.id
     )
@@ -37,22 +30,23 @@ def filtering_neighbours(
         (dist - min_dist) / (max_dist - min_dist) for dist in distance_to_all_clusters
     ]
 
-    deviation_ideal_states = [
-        abs(cluster.ideal_state - len(cluster.get_available_scooters()))
-        for cluster in clusters
-    ]
+    cluster_value = get_cluster_value(state, vehicle_scooter_inventory)
 
-    max_deviation, min_deviation = (
-        max(deviation_ideal_states),
-        min(deviation_ideal_states),
+    max_cluster_value, min_cluster_value = (
+        max(cluster_value),
+        min(cluster_value),
     )
 
-    if max_deviation == min_deviation:
-        deviation_scores = [1] * len(deviation_ideal_states)
+    if max_cluster_value == min_cluster_value:
+        cluster_score = [1] * len(cluster_value)
     else:
-        deviation_scores = [
-            1 - ((deviation - min_deviation) / (max_deviation - min_deviation))
-            for deviation in deviation_ideal_states
+        cluster_score = [
+            1
+            - (
+                (deviation - min_cluster_value)
+                / (max_cluster_value - min_cluster_value)
+            )
+            for deviation in cluster_value
         ]
 
     score_indices = []
@@ -60,10 +54,23 @@ def filtering_neighbours(
     for cluster in clusters:
         cluster_id = cluster.id
         if cluster_id != state.current_location.id:
-            total_score = distance_scores[cluster_id] + deviation_scores[cluster_id]
+            total_score = distance_scores[cluster_id] + cluster_score[cluster_id]
             index = bisect.bisect(total_score_list, total_score)
             total_score_list.insert(index, total_score)
             score_indices.insert(index, cluster_id)
+
+    # TODO can be removed if cluster_value function is a good solution else we use this and old implementation
+    """
+        if vehicle_scooter_inventory == 0:
+        score_indices = list(
+            filter(
+                lambda score: len(clusters[score].scooters)
+                > clusters[score].ideal_state,
+                score_indices,
+            )
+        )
+
+    """
 
     if number_of_random_neighbours > 0:
         neighbours = [
@@ -80,7 +87,11 @@ def filtering_neighbours(
     else:
         neighbours = [clusters[index] for index in score_indices[:number_of_neighbours]]
 
-    return neighbours + add_depots_as_neighbours(state, time) if time else neighbours
+    return (
+        neighbours + add_depots_as_neighbours(state, time)
+        if time and vehicle_scooter_inventory < BATTERY_INVENTORY * 0.2
+        else neighbours
+    )
 
 
 def add_depots_as_neighbours(state, time):
@@ -109,3 +120,19 @@ def add_depots_as_neighbours(state, time):
             depots.append(closest_small_depot)
 
         return depots
+
+
+def get_cluster_value(state, vehicle_scooter_inventory=0):
+
+    if vehicle_scooter_inventory > 0:
+        # cluster score based on deviation
+        return [
+            abs(cluster.ideal_state - len(cluster.get_available_scooters()))
+            for cluster in state.clusters
+        ]
+    else:
+        # cluster score based on how much deficient of battery the cluster have
+        return [
+            len(cluster.scooters) - cluster.get_current_state()
+            for cluster in state.clusters
+        ]

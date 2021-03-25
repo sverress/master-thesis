@@ -34,8 +34,8 @@ def run_analysis(
             verbose=verbose,
         )
         # pumping up the trip intensity
-        for cluster in world.state.clusters:
-            cluster.trip_intensity_per_iteration = round(cluster.ideal_state * 0.4)
+        # for cluster in world.state.clusters:
+        #    cluster.trip_intensity_per_iteration = round(cluster.ideal_state * 0.4)
         # add scooter trip generation event and a vehicle arrival event
         world.add_event(classes.GenerateScooterTrips(0))
         world.add_event(
