@@ -120,7 +120,7 @@ def get_cluster_value(state):
     if len(state.vehicle.scooter_inventory) > 0:
         # cluster score based on deviation
         return [
-            abs(cluster.ideal_state - len(cluster.get_available_scooters()))
+            abs(cluster.ideal_state - len(cluster.scooters))
             for cluster in state.clusters
         ]
     else:
