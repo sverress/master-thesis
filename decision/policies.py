@@ -48,9 +48,7 @@ class SwapAllPolicy(Policy):
     def get_best_action(world):
         # Choose a random cluster
         next_location: classes.Location = decision.neighbour_filtering.filtering_neighbours(
-            world.state,
-            number_of_neighbours=1,
-            vehicle_scooter_inventory=len(world.state.vehicle.scooter_inventory),
+            world.state, number_of_neighbours=1,
         )[
             0
         ] if world.state.vehicle.battery_inventory > BATTERY_INVENTORY * 0.1 else world.state.depots[

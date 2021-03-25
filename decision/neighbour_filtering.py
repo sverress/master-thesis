@@ -4,17 +4,10 @@ import numpy as np
 
 
 def filtering_neighbours(
-    state,
-    number_of_neighbours=3,
-    number_of_random_neighbours=0,
-    vehicle_scooter_inventory=0,
-    vehicle_battery_inventory=BATTERY_INVENTORY,
-    time=None,
+    state, number_of_neighbours=3, number_of_random_neighbours=0, time=None,
 ):
     """
     Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
-    :param vehicle_battery_inventory: current vehicle battery inventory
-    :param vehicle_scooter_inventory: current vehicle scooter inventory
     :param time: time of the world so charging at depot can be controlled
     :param state: state object to evaluate
     :param number_of_neighbours: number of neighbours to be returned
@@ -30,7 +23,7 @@ def filtering_neighbours(
         (dist - min_dist) / (max_dist - min_dist) for dist in distance_to_all_clusters
     ]
 
-    cluster_value = get_cluster_value(state, vehicle_scooter_inventory)
+    cluster_value = get_cluster_value(state)
 
     max_cluster_value, min_cluster_value = (
         max(cluster_value),
@@ -89,7 +82,7 @@ def filtering_neighbours(
 
     return (
         neighbours + add_depots_as_neighbours(state, time)
-        if time and vehicle_scooter_inventory < BATTERY_INVENTORY * 0.2
+        if time and state.vehicle.battery_inventory < BATTERY_INVENTORY * 0.2
         else neighbours
     )
 
@@ -122,9 +115,9 @@ def add_depots_as_neighbours(state, time):
         return depots
 
 
-def get_cluster_value(state, vehicle_scooter_inventory=0):
+def get_cluster_value(state):
 
-    if vehicle_scooter_inventory > 0:
+    if len(state.vehicle.scooter_inventory) > 0:
         # cluster score based on deviation
         return [
             abs(cluster.ideal_state - len(cluster.get_available_scooters()))
