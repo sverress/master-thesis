@@ -22,8 +22,10 @@ def filtering_neighbours(
     distance_scores = [
         (dist - min_dist) / (max_dist - min_dist) for dist in distance_to_all_clusters
     ]
-
-    cluster_value = get_cluster_value(state)
+    if len(state.vehicle.scooter_inventory) > 0:
+        cluster_value = get_deviation_ideal_state(state)
+    else:
+        cluster_value = get_battery_deficient_in_clusters(state)
 
     max_cluster_value, min_cluster_value = (
         max(cluster_value),
@@ -51,19 +53,6 @@ def filtering_neighbours(
             index = bisect.bisect(total_score_list, total_score)
             total_score_list.insert(index, total_score)
             score_indices.insert(index, cluster_id)
-
-    # TODO can be removed if cluster_value function is a good solution else we use this and old implementation
-    """
-        if vehicle_scooter_inventory == 0:
-        score_indices = list(
-            filter(
-                lambda score: len(clusters[score].scooters)
-                > clusters[score].ideal_state,
-                score_indices,
-            )
-        )
-
-    """
 
     if number_of_random_neighbours > 0:
         neighbours = [
@@ -115,17 +104,16 @@ def add_depots_as_neighbours(state, time):
         return depots
 
 
-def get_cluster_value(state):
+def get_deviation_ideal_state(state):
+    # cluster score based on deviation
+    return [
+        abs(cluster.ideal_state - len(cluster.scooters)) for cluster in state.clusters
+    ]
 
-    if len(state.vehicle.scooter_inventory) > 0:
-        # cluster score based on deviation
-        return [
-            abs(cluster.ideal_state - len(cluster.scooters))
-            for cluster in state.clusters
-        ]
-    else:
-        # cluster score based on how much deficient of battery the cluster have
-        return [
-            len(cluster.scooters) - cluster.get_current_state()
-            for cluster in state.clusters
-        ]
+
+def get_battery_deficient_in_clusters(state):
+    # cluster score based on how much deficient of battery the cluster have
+    return [
+        len(cluster.scooters) - cluster.get_current_state()
+        for cluster in state.clusters
+    ]

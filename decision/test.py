@@ -174,7 +174,7 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(len(actions), 5)
 
     def test_number_of_actions(self):
-        bigger_state = get_initial_state(sample_size=500, initial_location_depot=False)
+        bigger_state = get_initial_state(sample_size=1000, initial_location_depot=False)
         bigger_state.current_location = random.choice(
             [
                 cluster
