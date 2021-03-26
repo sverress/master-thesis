@@ -16,6 +16,7 @@ def system_simulate(state):
     }
     trips = []
     lost_demand = []
+    cluster_indices = np.arange(len(state.clusters))
     for i, start_cluster in enumerate(state.clusters):
         # poisson process to select number of trips in a iteration
         number_of_trips = round(
@@ -28,15 +29,20 @@ def system_simulate(state):
             lost_demand.append(number_of_trips - len(valid_scooters))
             number_of_trips = len(valid_scooters)
 
+        leave_distribution = start_cluster.get_leave_distribution()
+        end_cluster_indices = np.random.choice(
+            cluster_indices, p=leave_distribution, size=number_of_trips
+        )
         # loop to generate trips from the cluster
-        for j in range(number_of_trips):
-            end_cluster = np.random.choice(
-                sorted(state.clusters, key=lambda state_cluster: state_cluster.id),
-                p=start_cluster.get_leave_distribution(),
+        for j, end_cluster_index in enumerate(end_cluster_indices):
+            trips.append(
+                (
+                    start_cluster,
+                    state.clusters[end_cluster_index],
+                    valid_scooters.pop(0),
+                )
             )
-
-            trips.append((start_cluster, end_cluster, valid_scooters[j]))
-            flow_counter[(start_cluster.id, end_cluster.id)] += 1
+            flow_counter[(start_cluster.id, end_cluster_index)] += 1
 
     # compute trip after all trips are generated to avoid handling inflow in cluster
     for start_cluster, end_cluster, scooter in trips:
