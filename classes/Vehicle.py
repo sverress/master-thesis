@@ -43,8 +43,9 @@ class Vehicle:
         self.scooter_inventory.remove(scooter)
         return scooter
 
-    def add_cluster_id_to_route(self, cluster_id: int):
-        self.service_route.append(cluster_id)
+    def set_current_location(self, location: Cluster):
+        self.current_location = location
+        self.service_route.append(location)
 
     def get_route(self):
         return self.service_route

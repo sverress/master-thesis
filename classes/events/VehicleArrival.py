@@ -3,47 +3,38 @@ import copy
 
 
 class VehicleArrival(Event):
-    def __init__(
-        self, arrival_time: int, arrival_cluster_id: int, vehicle, visualize=True
-    ):
+    def __init__(self, arrival_time: int, vehicle_id: int, visualize=True):
         super().__init__(arrival_time)
-        self.arrival_cluster_id = arrival_cluster_id
         self.visualize = visualize
-        self.vehicle = vehicle
+        self.vehicle_id = vehicle_id
 
     def perform(self, world, **kwargs) -> None:
         """
         :param world: world object
         """
-        # get the cluster object that the vehicle has arrived to
-        arrival_cluster = world.state.get_cluster_by_id(self.arrival_cluster_id)
 
-        # Check the arrival cluster as current location for the vehicle
-        if self.vehicle.current_location.id != arrival_cluster.id:
-            raise ValueError(
-                "OBS! Something went wrong. The vehicle is not in this cluster."
-            )
-
-        # Check if the world contains the vehicle
-        if self.vehicle not in [vehicle for vehicle in world.state.vehicles]:
+        try:
+            vehicle = [
+                vehicle
+                for vehicle in world.state.vehicles
+                if vehicle.id == self.vehicle_id
+            ][0]
+        except IndexError:
             raise ValueError(
                 "OBS! Something went wrong. The vehicle is not in this state."
             )
 
         # find the best action from the current world state
-        action = world.policy.get_best_action(world, self.vehicle)
+        action = world.policy.get_best_action(world, vehicle)
 
         if self.visualize:
             # visualize vehicle route
             world.state.visualize_vehicle_route(
-                self.vehicle.get_route(), action.next_cluster,
+                vehicle.get_route(), action.next_cluster,
             )
 
             # visualize scooters currently out on a trip
             world.state.visualize_current_trips(world.get_scooters_on_trip())
-
-        # add the cluster id for the cluster the vehicle arrives at to the vehicles trip
-        self.vehicle.add_cluster_id_to_route(self.vehicle.current_location.id)
 
         # clear world flow counter dictionary
         world.clear_flow_dict()
@@ -51,8 +42,11 @@ class VehicleArrival(Event):
         # copy state before action for visualization purposes
         state_before_action = copy.deepcopy(world.state)
 
-        # perform the best action on the state
-        reward = world.state.do_action(action, self.vehicle)
+        # Record current location of vehicle to compute action time
+        arrival_cluster_id = vehicle.current_location.id
+
+        # perform the best action on the state and send vehicle to new location
+        reward = world.state.do_action(action, vehicle)
 
         if self.visualize:
             # visualize action performed by vehicle
@@ -66,11 +60,7 @@ class VehicleArrival(Event):
 
         # Compute the arrival time for the Vehicle arrival event created by the action
         arrival_time = self.time + action.get_action_time(
-            world.state.get_distance_id(self.arrival_cluster_id, action.next_cluster)
+            world.state.get_distance_id(arrival_cluster_id, action.next_cluster)
         )
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack
-        world.add_event(
-            VehicleArrival(
-                arrival_time, action.next_cluster, self.vehicle, self.visualize
-            )
-        )
+        world.add_event(VehicleArrival(arrival_time, vehicle.id, self.visualize))

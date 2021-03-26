@@ -215,7 +215,7 @@ class State:
             vehicle.current_location.add_scooter(delivery_scooter)
 
         # Moving the state/vehicle from this to next cluster
-        vehicle.current_location = self.get_cluster_by_id(action.next_cluster)
+        vehicle.set_current_location(self.get_cluster_by_id(action.next_cluster))
 
         return reward
 

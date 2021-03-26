@@ -16,8 +16,10 @@ from globals import ITERATION_LENGTH_MINUTES
 class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = World(40)
+        self.world.stack = []
         self.vehicle = self.world.state.vehicles[0]
         self.large_world = World(40, sample_size=500, number_of_clusters=20)
+        self.world.stack = []
         self.vehicle_large_world = self.large_world.state.vehicles[0]
         self.departure_time = 1
         self.travel_time = 5
@@ -49,6 +51,9 @@ class EventsTests(unittest.TestCase):
         departure_event.perform(self.world)
 
         arrival_event = self.world.stack.pop()
+
+        # Check that a lost trip event is created
+        self.assertIsInstance(arrival_event, ScooterArrival)
 
         # test if the arrival event created in departure has the same departure cluster id
         self.assertEqual(
@@ -87,15 +92,15 @@ class EventsTests(unittest.TestCase):
         self.assertLess(scooter.battery, scooter_battery)
 
     def test_vehicle_arrival(self):
+        # Clear stack to check specific vehicle arrival event
+        self.large_world.stack = []
         # Choose a random cluster for the vehicle to be in
         arrival_cluster = self.large_world.state.get_random_cluster(
             exclude=self.vehicle_large_world.current_location
         )
         self.vehicle_large_world.current_location = arrival_cluster
         # Create a vehicle arrival event with a arrival time of 20 arriving at a random cluster in the world state
-        vehicle_arrival_event = VehicleArrival(
-            20, arrival_cluster.id, self.vehicle_large_world, False
-        )
+        vehicle_arrival_event = VehicleArrival(20, self.vehicle_large_world.id, False)
 
         # Perform the vehicle arrival event
         vehicle_arrival_event.perform(self.large_world)
