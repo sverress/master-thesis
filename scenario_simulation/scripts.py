@@ -35,7 +35,8 @@ def estimate_reward(
                 )
                 previous_cluster_id = vehicle_copy.current_location.id
                 world_copy.add_reward(
-                    world.get_discount() * world.state.do_action(action, vehicle_copy)
+                    world_copy.get_discount()
+                    * world_copy.state.do_action(action, vehicle_copy)
                 )
                 world_copy.time = world_copy.time + action.get_action_time(
                     world_copy.state.get_distance_id(
@@ -44,13 +45,12 @@ def estimate_reward(
                 )
 
             else:
-                _, _, lost_demand = world.state.system_simulate()
-                world.add_reward(lost_demand * LOST_TRIP_REWARD)
+                _, _, lost_demand = world_copy.state.system_simulate()
+                world_copy.add_reward(lost_demand * LOST_TRIP_REWARD)
                 simulation_counter += 1
             next_is_vehicle_action = (
-                world.time < simulation_counter * ITERATION_LENGTH_MINUTES
+                world_copy.time < simulation_counter * ITERATION_LENGTH_MINUTES
             )
-
-        all_rewards.append(world.get_total_reward())
+        all_rewards.append(world_copy.get_total_reward())
 
     return max(all_rewards)

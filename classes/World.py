@@ -152,6 +152,9 @@ class World:
             suffix="%(percent)d%% - ETA %(eta)ds",
         )
 
+    def __repr__(self):
+        return f"<World - time: {self.time} of {self.shift_duration} >"
+
     def run(self):
         while self.time < self.shift_duration:
             event = self.stack.pop(0)

@@ -220,7 +220,7 @@ class State:
         return reward
 
     def __repr__(self):
-        return f"State: vehicle_clusters: {[vehicle.current_location.id for vehicle in self.vehicles]}"
+        return f"<State: vehicle_clusters: {[vehicle.current_location.id for vehicle in self.vehicles]}>"
 
     def visualize_clustering(self):
         fig, ax = plt.subplots(figsize=[10, 6])
