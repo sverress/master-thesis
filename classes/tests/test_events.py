@@ -94,7 +94,7 @@ class EventsTests(unittest.TestCase):
         self.vehicle_large_world.current_location = arrival_cluster
         # Create a vehicle arrival event with a arrival time of 20 arriving at a random cluster in the world state
         vehicle_arrival_event = VehicleArrival(
-            20, arrival_cluster.id, self.vehicle_large_world
+            20, arrival_cluster.id, self.vehicle_large_world, False
         )
 
         # Perform the vehicle arrival event
@@ -104,9 +104,7 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(vehicle_arrival_event.time, self.large_world.time)
 
         # New current cluster is not the arrival cluster, as the do_action takes the vehicle to a new cluster
-        self.assertNotEqual(
-            arrival_cluster.id, self.large_world.state.current_cluster.id
-        )
+        self.assertNotEqual(arrival_cluster.id, self.vehicle.current_location.id)
 
         # Vehicle arrival event created a new vehicle arrival event
         self.assertEqual(1, len(self.large_world.stack))

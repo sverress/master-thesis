@@ -25,7 +25,7 @@ class VehicleArrival(Event):
             )
 
         # Check if the world contains the vehicle
-        if self.vehicle.id not in [vehicle.id for vehicle in world.state.vehicles]:
+        if self.vehicle not in [vehicle for vehicle in world.state.vehicles]:
             raise ValueError(
                 "OBS! Something went wrong. The vehicle is not in this state."
             )

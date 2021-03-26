@@ -31,11 +31,12 @@ def run_analysis(
             number_of_clusters=number_of_clusters,
             policy=policy,
         )
+        vehicle = world.state.vehicles[0]
         # add scooter trip generation event and a vehicle arrival event
         world.add_event(classes.GenerateScooterTrips(0))
         world.add_event(
             classes.VehicleArrival(
-                0, world.state.vehicles[0].current_location.id, visualize_world
+                0, world.state.vehicles[0].current_location.id, vehicle, visualize_world
             )
         )
         # run the world and add the world object to a list containing all world instances

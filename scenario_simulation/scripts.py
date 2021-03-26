@@ -20,7 +20,7 @@ def estimate_reward(
         simulation_counter = 1
         next_is_vehicle_action = True
         # Simulate until shift ends
-        while world.time < world.get_remaining_time():
+        while world.time < world.shift_duration:
             if next_is_vehicle_action:
                 action = policies.RandomActionPolicy.get_best_action(world, vehicle)
                 world.add_reward(
