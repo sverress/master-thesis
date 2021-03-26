@@ -1,3 +1,5 @@
+import copy
+
 import decision.policies as policies
 from globals import ITERATION_LENGTH_MINUTES, LOST_TRIP_REWARD, NUMBER_OF_ROLLOUTS
 
@@ -19,18 +21,28 @@ def estimate_reward(
     for i in range(number_of_simulations):
         simulation_counter = 1
         next_is_vehicle_action = True
+        world_copy = copy.deepcopy(world)
+        vehicle_copy = [
+            new_vehicle_copy
+            for new_vehicle_copy in world_copy.state.vehicles
+            if vehicle.id == new_vehicle_copy.id
+        ][0]
         # Simulate until shift ends
-        while world.time < world.shift_duration:
+        while world_copy.time < world_copy.shift_duration:
             if next_is_vehicle_action:
-                action = policies.RandomActionPolicy.get_best_action(world, vehicle)
-                world.add_reward(
-                    world.get_discount() * world.state.do_action(action, vehicle)
+                action = policies.RandomActionPolicy.get_best_action(
+                    world_copy, vehicle_copy
                 )
-                world.time = world.time + action.get_action_time(
-                    world.state.get_distance_id(
-                        vehicle.current_location.id, action.next_cluster
+                previous_cluster_id = vehicle_copy.current_location.id
+                world_copy.add_reward(
+                    world.get_discount() * world.state.do_action(action, vehicle_copy)
+                )
+                world_copy.time = world_copy.time + action.get_action_time(
+                    world_copy.state.get_distance_id(
+                        previous_cluster_id, action.next_cluster
                     )
                 )
+
             else:
                 _, _, lost_demand = world.state.system_simulate()
                 world.add_reward(lost_demand * LOST_TRIP_REWARD)

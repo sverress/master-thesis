@@ -5,7 +5,7 @@ from classes import World, Event
 
 class WorldTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = World(40, visualize=False)
+        self.world = World(40, number_of_clusters=5, visualize=False)
 
     def test_run(self):
         self.world.stack = [Event(time) for time in range(10, 41, 10)]

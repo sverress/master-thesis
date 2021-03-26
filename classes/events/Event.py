@@ -12,3 +12,6 @@ class Event:
             )
         if add_metric:
             world.metrics.add_analysis_metrics(world)
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} at time {self.time}>"

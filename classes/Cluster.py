@@ -117,6 +117,6 @@ class Cluster(Location):
 
     def __repr__(self):
         return (
-            f"Cluster {self.id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
-            f" ideal state: {self.ideal_state}"
+            f"<Cluster {self.id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
+            f" ideal state: {self.ideal_state}>"
         )

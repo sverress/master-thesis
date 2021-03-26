@@ -4,11 +4,17 @@ from globals import BATTERY_INVENTORY, SCOOTER_INVENTORY
 
 
 class Vehicle:
-    def __init__(self, vehicle_id: int, start_location: Cluster):
+    def __init__(
+        self,
+        vehicle_id: int,
+        start_location: Cluster,
+        battery_inventory=BATTERY_INVENTORY,
+        scooter_inventory_capacity=SCOOTER_INVENTORY,
+    ):
         self.id = vehicle_id
-        self.battery_inventory = BATTERY_INVENTORY
+        self.battery_inventory = battery_inventory
         self.scooter_inventory = []
-        self.scooter_inventory_capacity = SCOOTER_INVENTORY
+        self.scooter_inventory_capacity = scooter_inventory_capacity
         self.service_route = []
         self.current_location: Cluster = start_location
 
@@ -51,4 +57,7 @@ class Vehicle:
         return self.service_route
 
     def __repr__(self):
-        return f"Vehicle at {self.current_location}"
+        return (
+            f"<Vehicle at {self.current_location}, {len(self.scooter_inventory)} scooters,"
+            f" {self.battery_inventory} batteries>"
+        )

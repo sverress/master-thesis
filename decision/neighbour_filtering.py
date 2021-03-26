@@ -46,8 +46,7 @@ def filtering_neighbours(state, cluster, number_of_neighbours=3, random_neighbou
             index = bisect.bisect(total_score_list, total_score)
             total_score_list.insert(index, total_score)
             score_indices.insert(index, cluster_id)
-
-    return (
+    output = (
         [
             clusters[index]
             for index in score_indices[: number_of_neighbours - random_neighbours]
@@ -62,3 +61,6 @@ def filtering_neighbours(state, cluster, number_of_neighbours=3, random_neighbou
         if random_neighbours > 0
         else [clusters[index] for index in score_indices[:number_of_neighbours]]
     )
+    return [
+        output_cluster for output_cluster in output if output_cluster.id != cluster.id
+    ]

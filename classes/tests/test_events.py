@@ -93,26 +93,26 @@ class EventsTests(unittest.TestCase):
 
     def test_vehicle_arrival(self):
         # Clear stack to check specific vehicle arrival event
-        self.large_world.stack = []
+        self.world.stack = []
         # Choose a random cluster for the vehicle to be in
-        arrival_cluster = self.large_world.state.get_random_cluster(
-            exclude=self.vehicle_large_world.current_location
+        arrival_cluster = self.world.state.get_random_cluster(
+            exclude=self.vehicle.current_location
         )
-        self.vehicle_large_world.current_location = arrival_cluster
+        self.vehicle.current_location = arrival_cluster
         # Create a vehicle arrival event with a arrival time of 20 arriving at a random cluster in the world state
-        vehicle_arrival_event = VehicleArrival(20, self.vehicle_large_world.id, False)
+        vehicle_arrival_event = VehicleArrival(20, self.vehicle.id, False)
 
         # Perform the vehicle arrival event
-        vehicle_arrival_event.perform(self.large_world)
+        vehicle_arrival_event.perform(self.world)
 
         # test if the time of world object is set to the departure time
-        self.assertEqual(vehicle_arrival_event.time, self.large_world.time)
+        self.assertEqual(vehicle_arrival_event.time, self.world.time)
 
         # New current cluster is not the arrival cluster, as the do_action takes the vehicle to a new cluster
         self.assertNotEqual(arrival_cluster.id, self.vehicle.current_location.id)
 
         # Vehicle arrival event created a new vehicle arrival event
-        self.assertEqual(1, len(self.large_world.stack))
+        self.assertEqual(1, len(self.world.stack))
 
     def test_generate_scooter_trips(self):
         generate_trips_event = GenerateScooterTrips(0)
