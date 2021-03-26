@@ -25,7 +25,7 @@ class RandomRolloutPolicy(Policy):
 
         # Find all possible actions
         actions = world.state.get_possible_actions(
-            vehicle, number_of_neighbours=3, divide=2
+            vehicle, number_of_neighbours=3, divide=2, exclude=world.tabu_list
         )
 
         # For every possible action
@@ -53,11 +53,14 @@ class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world, vehicle):
         # Choose a random cluster
-        next_cluster: classes.Cluster = decision.neighbour_filtering.filtering_neighbours(
-            world.state, vehicle.current_location, number_of_neighbours=1
-        )[
-            0
-        ]
+        next_cluster: classes.Cluster = list(
+            filter(
+                lambda location: location.id not in world.tabu_list,
+                decision.neighbour_filtering.filtering_neighbours(
+                    world.state, vehicle.current_location, number_of_neighbours=1,
+                ),
+            )
+        )[0]
 
         # Find all scooters that can be swapped here
         swappable_scooters_ids = [
@@ -81,7 +84,7 @@ class RandomActionPolicy(Policy):
     def get_best_action(world, vehicle):
         # all possible actions in this state
         possible_actions = world.state.get_possible_actions(
-            vehicle, number_of_neighbours=3
+            vehicle, number_of_neighbours=3, exclude=world.tabu_list
         )
 
         # pick a random action

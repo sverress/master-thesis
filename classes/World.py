@@ -151,6 +151,7 @@ class World:
             color=WHITE,
             suffix="%(percent)d%% - ETA %(eta)ds",
         )
+        self.tabu_list = []
 
     def __repr__(self):
         return f"<World - time: {self.time} of {self.shift_duration} >"

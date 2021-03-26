@@ -24,8 +24,18 @@ class VehicleArrival(Event):
                 "OBS! Something went wrong. The vehicle is not in this state."
             )
 
+        # Remove current vehicle state from tabu list
+        world.tabu_list = [
+            cluster_id
+            for cluster_id in world.tabu_list
+            if cluster_id != vehicle.current_location.id
+        ]
+
         # find the best action from the current world state
         action = world.policy.get_best_action(world, vehicle)
+
+        # Add next vehicle location to tabu list
+        world.tabu_list.append(action.next_cluster)
 
         if self.visualize:
             # visualize vehicle route

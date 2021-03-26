@@ -9,7 +9,7 @@ from clustering.methods import (
 )
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
-import decision
+import decision.neighbour_filtering
 import matplotlib.pyplot as plt
 import numpy as np
 import math
@@ -96,9 +96,11 @@ class State:
         number_of_neighbours=None,
         divide=None,
         random_neighbours=0,
+        exclude=None,
     ):
         """
         Enumerate all possible actions from the current state
+        :param exclude: clusters to exclude from next cluster
         :param random_neighbours: number of random neighbours to add to possible next locations
         :param vehicle: vehicle to perform this action
         :param number_of_neighbours: number of neighbours to evaluate
@@ -134,11 +136,17 @@ class State:
 
         combinations = []
         # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-        for cluster in decision.neighbour_filtering.filtering_neighbours(
-            self,
-            vehicle.current_location,
-            number_of_neighbours=number_of_neighbours,
-            random_neighbours=random_neighbours,
+        for cluster in list(
+            filter(
+                lambda filtered_cluster: filtered_cluster.id
+                not in (exclude if exclude else []),
+                decision.neighbour_filtering.filtering_neighbours(
+                    self,
+                    vehicle.current_location,
+                    number_of_neighbours=number_of_neighbours,
+                    random_neighbours=random_neighbours,
+                ),
+            )
         ):
             for pick_up in get_range(pick_ups):
                 for swap in get_range(swaps):
