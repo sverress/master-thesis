@@ -42,7 +42,6 @@ class BasicVisualizerTests(unittest.TestCase):
             sample_size=100,
             number_of_clusters=10,
             policies=["SwapAllPolicy"],
-            visualize_world=False,
             smooth_curve=True,
         )
 

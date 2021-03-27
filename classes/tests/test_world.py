@@ -43,7 +43,7 @@ class WorldTestCase(unittest.TestCase):
         self.assertNotIn(
             first_vehicle_location,
             [
-                action.next_cluster
+                action.next_location
                 for action in self.world.state.get_possible_actions(
                     vehicle, exclude=self.world.tabu_list
                 )

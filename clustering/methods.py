@@ -2,7 +2,13 @@ from sklearn.cluster import KMeans
 import os
 
 from classes import State, Scooter, Cluster
-from globals import GEOSPATIAL_BOUND_NEW, TEST_DATA_DIRECTORY
+from classes.Depot import Depot
+from globals import (
+    GEOSPATIAL_BOUND_NEW,
+    TEST_DATA_DIRECTORY,
+    MAIN_DEPOT_LOCATION,
+    SMALL_DEPOT_LOCATIONS,
+)
 from progress.bar import Bar
 from .helpers import *
 
@@ -74,7 +80,7 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
         :param second_snapshot_data: geospatial data for scooters in first snapshot
         :return: probability matrix
         """
-        (_, filtered_moved_scooters, disappeared_scooters) = get_moved_scooters(
+        (_, filtered_moved_scooters, disappeared_scooters) = merge_scooter_snapshots(
             initial_state, first_snapshot_data, second_snapshot_data
         )
         # Get list of cluster ids and find number of clusters for dimensions of arrays
@@ -179,7 +185,7 @@ def generate_cluster_objects(
         ]
         # Adding all scooters to cluster to find center location
         clusters.append(Cluster(cluster_label, scooters))
-    return clusters
+    return sorted(clusters, key=lambda cluster: cluster.id)
 
 
 def compute_and_set_ideal_state(state: State, sample_scooters: list):
@@ -230,7 +236,7 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
                 moved_scooters,
                 filtered_moved_scooters,
                 disappeared_scooters,
-            ) = get_moved_scooters(state, current_snapshot, previous_snapshot)
+            ) = merge_scooter_snapshots(state, current_snapshot, previous_snapshot)
             for cluster in state.clusters:
                 filtered_moved_scooters_in_cluster = filtered_moved_scooters[
                     filtered_moved_scooters["cluster_x"] == cluster.id
@@ -262,3 +268,15 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     for cluster in state.clusters:
         cluster.trip_intensity_per_iteration = cluster_trip_intensities[cluster.id]
     progress.finish()
+
+
+def generate_depots(number_of_clusters=None):
+    main_depot_lat, main_depot_lon = MAIN_DEPOT_LOCATION
+    depots = [
+        Depot(main_depot_lat, main_depot_lon, number_of_clusters, main_depot=True)
+    ]
+
+    for i, (lat, lon) in enumerate(SMALL_DEPOT_LOCATIONS):
+        depots.append(Depot(lat, lon, i + number_of_clusters + 1, main_depot=False))
+
+    return depots

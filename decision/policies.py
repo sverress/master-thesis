@@ -1,6 +1,8 @@
 import copy
+import math
 import decision.neighbour_filtering
 import classes
+from globals import BATTERY_INVENTORY, NUMBER_OF_NEIGHBOURS
 import numpy.random as random
 import scenario_simulation.scripts
 
@@ -20,12 +22,16 @@ class Policy:
 class RandomRolloutPolicy(Policy):
     @staticmethod
     def get_best_action(world, vehicle):
-        max_reward = 0
+        max_reward = -math.inf
         best_action = None
 
         # Find all possible actions
         actions = world.state.get_possible_actions(
-            vehicle, number_of_neighbours=3, divide=2, exclude=world.tabu_list
+            vehicle,
+            number_of_neighbours=NUMBER_OF_NEIGHBOURS,
+            divide=2,
+            exclude=world.tabu_list,
+            time=world.time,
         )
 
         # For every possible action
@@ -37,7 +43,7 @@ class RandomRolloutPolicy(Policy):
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
             reward += world.get_discount() * scenario_simulation.scripts.estimate_reward(
-                world_copy, vehicle_copy, world.get_remaining_time()
+                world_copy, vehicle_copy
             )
 
             # If the action is better than previous actions, make best_action
@@ -53,29 +59,35 @@ class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world, vehicle):
         # Choose a random cluster
-        next_cluster: classes.Cluster = list(
-            filter(
-                lambda location: location.id not in world.tabu_list,
-                decision.neighbour_filtering.filtering_neighbours(
-                    world.state, vehicle.current_location, number_of_neighbours=1,
-                ),
-            )
-        )[0]
-
-        # Find all scooters that can be swapped here
-        swappable_scooters_ids = [
-            scooter.id for scooter in vehicle.current_location.get_swappable_scooters()
+        next_location: classes.Location = decision.neighbour_filtering.filtering_neighbours(
+            world.state, vehicle, number_of_neighbours=1,
+        )[
+            0
+        ] if vehicle.battery_inventory > BATTERY_INVENTORY * 0.1 else world.state.depots[
+            0
         ]
 
-        # Calculate how many scooters that can be swapped
-        number_of_scooters_to_swap = world.state.get_max_number_of_swaps(vehicle)
+        if vehicle.is_at_depot():
+            swappable_scooters_ids = []
+            number_of_scooters_to_swap = 0
+        else:
+            # Find all scooters that can be swapped here
+            swappable_scooters_ids = [
+                scooter.id
+                for scooter in vehicle.current_location.get_swappable_scooters()
+            ]
+
+            # Calculate how many scooters that can be swapped
+            number_of_scooters_to_swap = world.state.get_max_number_of_swaps(
+                vehicle.current_location
+            )
 
         # Return an action with no re-balancing, only scooter swapping
         return classes.Action(
             battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
             pick_ups=[],
             delivery_scooters=[],
-            next_cluster=next_cluster.id,
+            next_location=next_location.id,
         )
 
 
@@ -84,7 +96,7 @@ class RandomActionPolicy(Policy):
     def get_best_action(world, vehicle):
         # all possible actions in this state
         possible_actions = world.state.get_possible_actions(
-            vehicle, number_of_neighbours=3, exclude=world.tabu_list
+            vehicle, number_of_neighbours=3, exclude=world.tabu_list, time=world.time
         )
 
         # pick a random action

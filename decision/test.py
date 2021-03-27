@@ -1,6 +1,7 @@
 import unittest
+import random
 
-from classes import World, Action
+from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.policies import RandomRolloutPolicy, SwapAllPolicy
 from decision.neighbour_filtering import filtering_neighbours
@@ -8,7 +9,9 @@ from decision.neighbour_filtering import filtering_neighbours
 
 class BasicDecisionTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.initial_state = get_initial_state(sample_size=100, number_of_clusters=2)
+        self.initial_state = get_initial_state(
+            sample_size=100, number_of_clusters=2, initial_location_depot=False
+        )
         self.vehicle = self.initial_state.vehicles[0]
 
     def test_battery_swaps(self):
@@ -27,7 +30,9 @@ class BasicDecisionTests(unittest.TestCase):
         start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
-        actions = self.initial_state.get_possible_actions(self.vehicle)
+        actions = self.initial_state.get_possible_actions(
+            self.vehicle, number_of_neighbours=6
+        )
 
         # Test number of swaps less or equal to ideal state
         for action in actions:
@@ -39,7 +44,11 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(len(actions), 6)
 
         # Calculate the expected reward
-        reward = len(actions[-1].battery_swaps) * 0.2
+        reward = (
+            len(actions[-1].battery_swaps)
+            * 0.2
+            * self.vehicle.current_location.prob_of_scooter_usage()
+        )
 
         # Test reward
         self.assertEqual(
@@ -74,15 +83,11 @@ class BasicDecisionTests(unittest.TestCase):
         actions = self.initial_state.get_possible_actions(self.vehicle)
 
         # Test number of actions
-        self.assertEqual(len(actions), 12)
+        self.assertEqual(len(actions), 15)
 
-        # Calculate the expected reward
-        reward = len(actions[-1].battery_swaps) * 0.8 - len(actions[-1].pick_ups) * 0.2
-
-        # Test reward
+        # Test no reward for pickup
         self.assertEqual(
-            round(self.initial_state.do_action(actions[-1], self.vehicle), 1),
-            round(reward, 1),
+            round(self.initial_state.do_action(actions[-1], self.vehicle), 1), 0
         )
 
         # Test number of scooters
@@ -121,20 +126,24 @@ class BasicDecisionTests(unittest.TestCase):
         start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
-        actions = self.initial_state.get_possible_actions(self.vehicle)
+        actions = self.initial_state.get_possible_actions(
+            self.vehicle, number_of_neighbours=6
+        )
 
         # Test number of actions
         self.assertEqual(len(actions), 18)
 
         # Calculate the expected reward
         reward = (
-            len(actions[-1].battery_swaps) * 0.2
+            len(actions[-1].battery_swaps)
+            * 0.2
+            * self.vehicle.current_location.prob_of_scooter_usage()
             + len(actions[-1].delivery_scooters) * 1.0
         )
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle), round(reward, 1)
+            self.initial_state.do_action(actions[-1], self.vehicle), reward
         )
 
         # Test number of scooters
@@ -163,7 +172,9 @@ class BasicDecisionTests(unittest.TestCase):
         )
 
     def test_number_of_actions_clusters(self):
-        initial_state = get_initial_state(sample_size=100, number_of_clusters=6)
+        initial_state = get_initial_state(
+            sample_size=100, number_of_clusters=6, initial_location_depot=False
+        )
         vehicle = initial_state.vehicles[0]
         # Modify initial state. 5 battery swaps and 2 drop-offs possible
         vehicle.scooter_inventory = []
@@ -176,7 +187,14 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(5, len(actions))
 
     def test_number_of_actions(self):
-        bigger_state = get_initial_state(sample_size=500)
+        bigger_state = get_initial_state(sample_size=1000, initial_location_depot=False)
+        bigger_state.current_location = random.choice(
+            [
+                cluster
+                for cluster in bigger_state.clusters
+                if cluster.number_of_scooters() > 0
+            ]
+        )
         self.assertLess(
             len(bigger_state.get_possible_actions(self.vehicle, divide=2)),
             len(bigger_state.get_possible_actions(self.vehicle)),
@@ -210,7 +228,7 @@ class NeighbourFilteringTests(unittest.TestCase):
         vehicle = state.vehicles[0]
 
         best_neighbours_with_random = filtering_neighbours(
-            state, vehicle.current_location, number_of_neighbours=3, random_neighbours=1
+            state, vehicle, number_of_neighbours=3, number_of_random_neighbours=1,
         )
 
         # test if the number of neighbours is the same, even though one is random
@@ -218,19 +236,21 @@ class NeighbourFilteringTests(unittest.TestCase):
 
         sorted_neighbours = state.get_neighbours(
             vehicle.current_location, is_sorted=True
-        )
+        )[:3]
         for cluster in state.clusters:
-            if sorted_neighbours[:3].__contains__(cluster):
+            if cluster in sorted_neighbours:
                 cluster.ideal_state = 100
                 for scooter in cluster.scooters:
                     scooter.battery = 0
 
-        best_neighbours = filtering_neighbours(
-            state, vehicle.current_location, number_of_neighbours=3
-        )
+        best_neighbours = filtering_neighbours(state, vehicle, number_of_neighbours=3)
+
+        # add one scooter to vehicle inventory so filtering neighbours uses the right filtering method
+        vehicle.pick_up(Scooter(0, 0, 0.9, 0))
 
         # check if clusters are closest and with the highest deviation -> best neighbours
-        self.assertEqual(sorted_neighbours[:3], best_neighbours)
+        for neighbour in best_neighbours:
+            self.assertTrue(neighbour in sorted_neighbours)
 
 
 if __name__ == "__main__":

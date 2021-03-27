@@ -1,6 +1,6 @@
 import classes
 from classes import Event
-from globals import BATTERY_LIMIT, SCOOTER_SPEED
+from globals import SCOOTER_SPEED, BATTERY_LIMIT
 import numpy as np
 
 
@@ -15,10 +15,12 @@ class ScooterDeparture(Event):
         """
 
         # get departure cluster
-        departure_cluster = world.state.get_cluster_by_id(self.departure_cluster_id)
+        departure_cluster = world.state.get_location_by_id(self.departure_cluster_id)
 
         # get all available scooter in the cluster
-        available_scooters = departure_cluster.get_valid_scooters(BATTERY_LIMIT)
+        available_scooters = departure_cluster.get_available_scooters(
+            battery_limit=BATTERY_LIMIT
+        )
 
         # if there are no more available scooters -> make a LostTrip event for that departure time
         if len(available_scooters) > 0:
@@ -29,7 +31,7 @@ class ScooterDeparture(Event):
                 world.state.clusters, p=departure_cluster.get_leave_distribution()
             )
 
-            trip_distance = world.state.get_distance(
+            trip_distance = world.state.get_distance_locations(
                 departure_cluster, arrival_cluster,
             )
 

@@ -7,19 +7,19 @@ class Action:
         battery_swaps: [int],
         pick_ups: [int],
         delivery_scooters: [int],
-        next_cluster: int,
+        next_location: int,
     ):
         """
         Object to represent an action
         :param battery_swaps: ids of scooters to swap batteries on
         :param pick_ups: ids of scooters to pick up
         :param delivery_scooters: ids of scooters to deliver
-        :param next_cluster: id of next cluster to visit
+        :param next_location: id of next location to visit
         """
         self.battery_swaps = battery_swaps
         self.pick_ups = pick_ups
         self.delivery_scooters = delivery_scooters
-        self.next_cluster = next_cluster
+        self.next_location = next_location
 
     def get_action_time(self, distance):
         """
@@ -37,5 +37,5 @@ class Action:
     def __repr__(self):
         return (
             f"<Action - ({len(self.battery_swaps)} bat. swaps, {len(self.pick_ups)} pickups,"
-            f" {len(self.delivery_scooters)} deliveries), next: {self.next_cluster} >"
+            f" {len(self.delivery_scooters)} deliveries), next: {self.next_location} >"
         )

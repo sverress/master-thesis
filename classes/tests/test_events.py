@@ -15,12 +15,17 @@ from globals import ITERATION_LENGTH_MINUTES
 
 class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = World(40)
+        self.world = World(40, initial_location_depot=False)
         self.world.stack = []
         self.vehicle = self.world.state.vehicles[0]
-        self.large_world = World(40, sample_size=500, number_of_clusters=20)
-        self.world.stack = []
+        self.vehicle.current_location = self.world.state.clusters[0]
+        self.large_world = World(
+            40, sample_size=500, number_of_clusters=20, initial_location_depot=False
+        )
+        self.large_world.stack = []
         self.vehicle_large_world = self.large_world.state.vehicles[0]
+        self.vehicle_large_world.current_location = self.large_world.state.clusters[0]
+
         self.departure_time = 1
         self.travel_time = 5
 
@@ -77,7 +82,9 @@ class EventsTests(unittest.TestCase):
             scooter,
             arrival_cluster.id,
             departure_cluster.id,
-            self.world.state.get_distance(departure_cluster, arrival_cluster),
+            self.world.state.get_distance_to_all(departure_cluster.id)[
+                arrival_cluster.id
+            ],
         )
 
         arrival_event.perform(self.world)

@@ -40,7 +40,7 @@ def estimate_reward(
                 )
                 world_copy.time = world_copy.time + action.get_action_time(
                     world_copy.state.get_distance_id(
-                        previous_cluster_id, action.next_cluster
+                        previous_cluster_id, action.next_location
                     )
                 )
 

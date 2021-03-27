@@ -1,8 +1,60 @@
-from classes import Action, State, Scooter
+from classes import Action, Scooter
 from visualization.helpers import *
 from globals import *
 import matplotlib.pyplot as plt
 import copy
+from itertools import cycle
+
+
+def visualize_clustering(clusters):
+    fig, ax = plt.subplots(figsize=[10, 6])
+
+    # Add image to background
+    oslo = plt.imread("images/kart_oslo.png")
+    lat_min, lat_max, lon_min, lon_max = GEOSPATIAL_BOUND_NEW
+    ax.imshow(
+        oslo,
+        zorder=0,
+        extent=(lon_min, lon_max, lat_min, lat_max),
+        aspect="auto",
+        alpha=0.6,
+    )
+    colors = cycle("bgrcmyk")
+    # Add clusters to figure
+    for cluster in clusters:
+        scooter_locations = [
+            (scooter.get_lat(), scooter.get_lon()) for scooter in cluster.scooters
+        ]
+        cluster_color = next(colors)
+        df_scatter = ax.scatter(
+            [lon for lat, lon in scooter_locations],
+            [lat for lat, lon in scooter_locations],
+            c=cluster_color,
+            alpha=0.6,
+            s=3,
+        )
+        center_lat, center_lon = cluster.get_location()
+        rs_scatter = ax.scatter(
+            center_lon, center_lat, c=cluster_color, edgecolor="None", alpha=0.8, s=200,
+        )
+        ax.annotate(
+            cluster.id,
+            (center_lon, center_lat),
+            ha="center",
+            va="center",
+            weight="bold",
+        )
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+
+    if len(clusters) > 0:
+        # Legend will use the last cluster color. Check for clusters to avoid None object
+        ax.legend(
+            [df_scatter, rs_scatter],
+            ["Full dataset", "Cluster centers"],
+            loc="upper right",
+        )
+    plt.show()
 
 
 def visualize_state(state):
@@ -106,7 +158,7 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     plot_vehicle_info(state_before_action.vehicle, current_state.vehicle, ax1)
     plot_action(
         action,
-        state_before_action.current_cluster.id,
+        state_before_action.current_location.id,
         ax1,
         offset=(
             len(state_before_action.vehicle.scooter_inventory)
@@ -116,10 +168,10 @@ def visualize_action(state_before_action: State, current_state: State, action: A
     )
 
     make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
-    add_cluster_center(state_before_action.clusters, ax2)
+    add_location_center(state_before_action.locations, ax2)
 
     make_scooter_visualize(current_state, ax3, scooter_battery=True)
-    add_cluster_center(state_before_action.clusters, ax3)
+    add_location_center(state_before_action.locations, ax3)
 
     plt.tight_layout(pad=1.0)
     plt.show()
@@ -132,7 +184,7 @@ def visualize_scooters_on_trip(current_state: State, trips: [(int, int, Scooter)
 
     make_scooter_visualize(current_state, ax2, scooter_battery=True)
 
-    add_cluster_center(current_state.clusters, ax2)
+    add_location_center(current_state.locations, ax2)
 
     plt.tight_layout(pad=1.0)
     plt.show()
@@ -286,7 +338,7 @@ def visualize_analysis(instances, policies, smooth_curve=True):
 
     fig.suptitle(
         f"Sample size {SAMPLE_SIZE} - Shift duration {SHIFT_DURATION} - Number of clusters {NUMBER_OF_CLUSTERS} - "
-        f"Rollouts {NUMBER_OF_ROLLOUTS} - Max number of neighbours {MAX_NUMBER_OF_NEIGHBOURS}",
+        f"Rollouts {NUMBER_OF_ROLLOUTS} - Max number of neighbours {NUMBER_OF_NEIGHBOURS}",
         fontsize=16,
     )
 

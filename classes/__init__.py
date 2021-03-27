@@ -4,6 +4,7 @@ from .Scooter import Scooter
 from .State import State
 from .Vehicle import Vehicle
 from .Location import Location
+from .Depot import Depot
 from .events.Event import Event
 from .World import World
 from .events.LostTrip import LostTrip

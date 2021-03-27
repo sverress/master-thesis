@@ -2,10 +2,9 @@ from classes.Location import Location
 
 
 class Scooter(Location):
-    def __init__(self, lat: float, lon: float, battery: float, id: int):
-        super().__init__(lat, lon)
+    def __init__(self, lat: float, lon: float, battery: float, scooter_id: int):
+        super().__init__(lat, lon, scooter_id)
         self.battery = battery
-        self.id = id
         self.battery_change_per_kilometer = 5.0
 
     def travel(self, distance):

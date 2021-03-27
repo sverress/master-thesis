@@ -7,16 +7,16 @@ def run_analysis(
     sample_size=100,
     number_of_clusters=10,
     policies=None,
-    visualize_world=False,
     smooth_curve=True,
+    verbose=False,
 ):
     """
     Method to run different policies and analysis their performance
+    :param verbose: show verbose in console
     :param shift_duration: total shift to be analysed
     :param sample_size: size of instances
     :param number_of_clusters: number of clusters in the world
     :param policies: different policies to be analysed
-    :param visualize_world: boolean - if the running of the world should be visualized
     :param smooth_curve: boolean - if the analysed metrics is to be smoothed out in the analysis plot
     :return: matplotlib figure - figure containing plot of the analysis
     """
@@ -30,7 +30,11 @@ def run_analysis(
             sample_size=sample_size,
             number_of_clusters=number_of_clusters,
             policy=policy,
+            verbose=verbose,
         )
+        # pumping up the trip intensity
+        for cluster in world.state.clusters:
+            cluster.trip_intensity_per_iteration = round(cluster.ideal_state * 0.1)
         # run the world and add the world object to a list containing all world instances
         world.run()
         instances.append(world)
