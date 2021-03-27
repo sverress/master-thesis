@@ -1,7 +1,8 @@
 import copy
+import math
 import decision.neighbour_filtering
 import classes
-from globals import BATTERY_INVENTORY
+from globals import BATTERY_INVENTORY, NUMBER_OF_NEIGHBOURS
 import numpy.random as random
 import scenario_simulation.scripts
 
@@ -15,12 +16,12 @@ class Policy:
 class RandomRolloutPolicy(Policy):
     @staticmethod
     def get_best_action(world):
-        max_reward = 0
+        max_reward = -math.inf
         best_action = None
 
         # Find all possible actions
         actions = world.state.get_possible_actions(
-            number_of_neighbours=3, divide=2, time=world.time
+            number_of_neighbours=NUMBER_OF_NEIGHBOURS, divide=2, time=world.time
         )
 
         # For every possible action
@@ -48,7 +49,7 @@ class SwapAllPolicy(Policy):
     def get_best_action(world):
         # Choose a random cluster
         next_location: classes.Location = decision.neighbour_filtering.filtering_neighbours(
-            world.state, number_of_neighbours=1
+            world.state, number_of_neighbours=1,
         )[
             0
         ] if world.state.vehicle.battery_inventory > BATTERY_INVENTORY * 0.1 else world.state.depots[

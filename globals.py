@@ -38,9 +38,10 @@ LOST_TRIP_REWARD = -0.1
 
 # Testing parameters
 NUMBER_OF_NEIGHBOURS = 3
-SHIFT_DURATION = 120
-SAMPLE_SIZE = 200
-NUMBER_OF_CLUSTERS = 20
+SHIFT_DURATION = 300
+SAMPLE_SIZE = 500
+NUMBER_OF_CLUSTERS = 30
+# different policies: "RandomRolloutPolicy", "SwapAllPolicy"
 POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
 
 STATE_CACHE_DIR = "test_state_cache"

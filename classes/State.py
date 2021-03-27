@@ -306,7 +306,7 @@ class State:
     def visualize_vehicle_route(self, vehicle_trip: [int], next_location_id: int):
         visualize_vehicle_route(self, vehicle_trip, next_location_id)
 
-    def visualize_current_trips(self, trips: [(int, int, Scooter)]):
+    def visualize_current_trips(self, trips: [(int, int, int)]):
         visualize_scooters_on_trip(self, trips)
 
     def visualize_system_simulation(self, trips):

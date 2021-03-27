@@ -1,11 +1,10 @@
-from globals import BATTERY_LIMIT, BATTERY_INVENTORY, MAX_DISTANCE
-import classes
+from globals import BATTERY_INVENTORY, MAX_DISTANCE
 import bisect
 import numpy as np
 
 
 def filtering_neighbours(
-    state, number_of_neighbours=3, number_of_random_neighbours=0, time=None
+    state, number_of_neighbours=3, number_of_random_neighbours=0, time=None,
 ):
     """
     Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
@@ -23,23 +22,26 @@ def filtering_neighbours(
     distance_scores = [
         (dist - min_dist) / (max_dist - min_dist) for dist in distance_to_all_clusters
     ]
+    if len(state.vehicle.scooter_inventory) > 0:
+        cluster_value = get_deviation_ideal_state(state)
+    else:
+        cluster_value = get_battery_deficient_in_clusters(state)
 
-    deviation_ideal_states = [
-        abs(cluster.ideal_state - len(cluster.get_available_scooters()))
-        for cluster in clusters
-    ]
-
-    max_deviation, min_deviation = (
-        max(deviation_ideal_states),
-        min(deviation_ideal_states),
+    max_cluster_value, min_cluster_value = (
+        max(cluster_value),
+        min(cluster_value),
     )
 
-    if max_deviation == min_deviation:
-        deviation_scores = [1] * len(deviation_ideal_states)
+    if max_cluster_value == min_cluster_value:
+        cluster_score = [1] * len(cluster_value)
     else:
-        deviation_scores = [
-            1 - ((deviation - min_deviation) / (max_deviation - min_deviation))
-            for deviation in deviation_ideal_states
+        cluster_score = [
+            1
+            - (
+                (deviation - min_cluster_value)
+                / (max_cluster_value - min_cluster_value)
+            )
+            for deviation in cluster_value
         ]
 
     score_indices = []
@@ -47,7 +49,7 @@ def filtering_neighbours(
     for cluster in clusters:
         cluster_id = cluster.id
         if cluster_id != state.current_location.id:
-            total_score = distance_scores[cluster_id] + deviation_scores[cluster_id]
+            total_score = distance_scores[cluster_id] + cluster_score[cluster_id]
             index = bisect.bisect(total_score_list, total_score)
             total_score_list.insert(index, total_score)
             score_indices.insert(index, cluster_id)
@@ -67,7 +69,11 @@ def filtering_neighbours(
     else:
         neighbours = [clusters[index] for index in score_indices[:number_of_neighbours]]
 
-    return neighbours + add_depots_as_neighbours(state, time) if time else neighbours
+    return (
+        neighbours + add_depots_as_neighbours(state, time)
+        if time and state.vehicle.battery_inventory < BATTERY_INVENTORY * 0.2
+        else neighbours
+    )
 
 
 def add_depots_as_neighbours(state, time):
@@ -96,3 +102,18 @@ def add_depots_as_neighbours(state, time):
             depots.append(closest_small_depot)
 
         return depots
+
+
+def get_deviation_ideal_state(state):
+    # cluster score based on deviation
+    return [
+        abs(cluster.ideal_state - len(cluster.scooters)) for cluster in state.clusters
+    ]
+
+
+def get_battery_deficient_in_clusters(state):
+    # cluster score based on how much deficient of battery the cluster have
+    return [
+        len(cluster.scooters) - cluster.get_current_state()
+        for cluster in state.clusters
+    ]
