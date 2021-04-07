@@ -31,15 +31,10 @@ class VehicleArrival(Event):
             if cluster_id != vehicle.current_location.id
         ]
 
-        # find the best action from the current world state
-        action = world.policy.get_best_action(world, vehicle)
-
-        # Add next vehicle location to tabu list
-        world.tabu_list.append(action.next_location)
-
         if self.visualize:
             # copy state before action for visualization purposes
             state_before_action = copy.deepcopy(world.state)
+            vehicle_before_action = copy.deepcopy(vehicle)
 
         arrival_time = 0
 
@@ -62,12 +57,17 @@ class VehicleArrival(Event):
 
         if self.visualize:
             # visualize vehicle route
-            world.state.visualize_vehicle_route(
-                vehicle.get_route(), action.next_location,
+            world.state.visualize_vehicle_routes(
+                self.vehicle_id,
+                vehicle.current_location.id,
+                action.next_location,
+                world.tabu_list,
+                world.policy.__str__(),
             )
 
             # visualize scooters currently out on a trip
-            world.state.visualize_current_trips(world.get_scooters_on_trip())
+            if False:
+                world.state.visualize_current_trips(world.get_scooters_on_trip())
 
         # clear world flow counter dictionary
         world.clear_flow_dict()
@@ -82,7 +82,13 @@ class VehicleArrival(Event):
 
         if self.visualize:
             # visualize action performed by vehicle
-            state_before_action.visualize_action(world.state, action)
+            state_before_action.visualize_action(
+                vehicle_before_action,
+                world.state,
+                vehicle,
+                action,
+                world.policy.__str__(),
+            )
 
         # set time of world to this event's time
         super(VehicleArrival, self).perform(world, **kwargs)

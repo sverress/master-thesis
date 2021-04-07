@@ -128,6 +128,7 @@ class World:
             self.stack.append(
                 classes.VehicleArrival(0, vehicle.id, visualize=visualize)
             )
+            vehicle.service_route.append(vehicle.current_location)
         # Add Generate Scooter Trip event to the stack
         self.stack.append(classes.GenerateScooterTrips(ITERATION_LENGTH_MINUTES))
         self.cluster_flow = {

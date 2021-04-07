@@ -7,6 +7,7 @@ def run_analysis(
     sample_size=100,
     number_of_clusters=10,
     policies=None,
+    visualize_world=True,
     smooth_curve=True,
     verbose=False,
 ):
@@ -30,6 +31,7 @@ def run_analysis(
             sample_size=sample_size,
             number_of_clusters=number_of_clusters,
             policy=policy,
+            visualize=visualize_world,
             verbose=verbose,
         )
         # pumping up the trip intensity

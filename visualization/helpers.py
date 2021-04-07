@@ -1,11 +1,20 @@
 import itertools
 from scipy.interpolate import make_interp_spline, BSpline
 from matplotlib import gridspec
-from globals import BLACK, RED, BLUE, GREEN, GEOSPATIAL_BOUND_NEW, COLORS, ACTION_OFFSET
+from globals import (
+    BLACK,
+    RED,
+    BLUE,
+    GREEN,
+    GEOSPATIAL_BOUND_NEW,
+    COLORS,
+    ACTION_OFFSET,
+    VEHICLE_COLORS,
+)
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-from classes import State, Depot
+import classes
 
 
 def display_graph(
@@ -97,7 +106,7 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
     )
 
 
-def plot_action(action, current_cluster, ax, offset=0):
+def plot_action(action, current_location, ax, offset=0):
     """
     Adds action information to a subplot
     """
@@ -118,7 +127,7 @@ def plot_action(action, current_cluster, ax, offset=0):
     for delivery in action.delivery_scooters:
         action_string += f"{delivery}\n"
 
-    action_string += f"\nCurrent : {current_cluster}\nNext : {action.next_location}"
+    action_string += f"\nCurrent : {current_location}\nNext : {action.next_location}"
 
     ax.text(
         0,
@@ -160,8 +169,8 @@ def make_graph(
     coordinates: [(float, float)],
     location_ids: [int],
     depot_ids=None,
-    current_location=-1,
-    next_location=-1,
+    current_location=None,
+    next_location=None,
 ):
     """
     Makes a networkx graph of a list of locations and uses cluster id to give the locations color
@@ -260,13 +269,15 @@ def create_standard_state_plot():
     return fig, ax
 
 
-def create_system_simulation_plot(titles=["", "", ""]):
+def create_three_subplot_fig(titles=["", "", ""], fig_title=""):
     """
     Subplot framework for the simulation visualization
     """
 
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
+
+    fig.suptitle(fig_title, fontsize=16)
 
     # creating subplots
     spec = gridspec.GridSpec(
@@ -276,13 +287,15 @@ def create_system_simulation_plot(titles=["", "", ""]):
     return (fig, *create_subplots_from_gripspec(fig, spec, titles))
 
 
-def create_state_trips_plot(titles=["", ""]):
+def create_two_subplot_fig(titles=["", ""], fig_title=""):
     """
     Subplot framework for the simulation visualization
     """
 
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
+
+    fig.suptitle(fig_title, fontsize=16)
 
     # creating subplots
     spec = gridspec.GridSpec(
@@ -355,19 +368,32 @@ def add_flow_edges(graph, flows):
     return edge_labels, alignment
 
 
-def add_vehicle_route(graph, node_border, vehicle_route):
+def add_vehicle_routes(
+    graph, node_border, vehicles, current_vehicle_id, next_location=None
+):
     pos = nx.get_node_attributes(graph, "pos")
-    node_border[vehicle_route[0]] = GREEN
     route_labels = {}
     alignment = []
-    for i in range(len(vehicle_route) - 1):
-        start, end = vehicle_route[i], vehicle_route[i + 1]
-        graph.add_edge(start, end, color=GREEN, width=2)
-        if route_labels.keys().__contains__((start, end)):
-            route_labels[(start, end)] = route_labels[(start, end)] + f", {i}"
-        else:
-            route_labels[(start, end)] = f"{i}"
-        alignment.append(choose_label_alignment(start, end, pos))
+    for vehicle in vehicles:
+        route = vehicle.service_route
+        for i in range(len(route) - 1):
+            start, end = route[i].id, route[i + 1].id
+            if i != len(route) - 1 or vehicle.id == current_vehicle_id:
+                graph.add_edge(start, end, color=VEHICLE_COLORS[vehicle.id], width=2)
+                if not route_labels.keys().__contains__((start, end)):
+                    route_labels[(start, end)] = f"{i}"
+                else:
+                    route_labels[(start, end)] = route_labels[(start, end)] + f", {i}"
+                alignment.append(choose_label_alignment(start, end, pos))
+            else:
+                graph.add_edge(start, end, color=RED, width=2)
+
+        if vehicle.id == current_vehicle_id and len(route):
+            node_border[vehicle.current_location.id] = BLUE
+            node_border[next_location] = RED
+            graph.add_edge(
+                vehicle.current_location.id, next_location, color=RED, width=3
+            )
 
     return route_labels, alignment
 
@@ -478,27 +504,27 @@ def alt_draw_networkx_edge_labels(
     return text_items
 
 
-def setup_cluster_visualize(state: State, next_location_id=None):
+def setup_cluster_visualize(
+    state, current_location_id=None, next_location_id=None, fig=None, ax=None,
+):
     node_size = 1000
     font_size = 14
 
-    # if subplot isn't specified, construct it
-    fig, ax = create_standard_state_plot()
+    if not fig and not ax:
+        # if subplot isn't specified, construct it
+        fig, ax = create_standard_state_plot()
 
     # constructs the networkx graph from cluster location and with cluster id
     graph, labels, node_border, node_color = make_graph(
         [(location.get_location()) for location in state.locations],
         [location.id for location in state.locations],
         depot_ids=[depot.id for depot in state.depots],
-        current_location=state.current_location.id,
+        current_location=current_location_id,
         next_location=next_location_id,
     )
 
     # adds cluster info (#scooters and tot battery) on plot
     add_cluster_info(state, graph, ax)
-
-    if next_location_id:
-        graph.add_edge(state.current_location.id, next_location_id, color=RED, width=3)
 
     # displays plot
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
@@ -569,7 +595,7 @@ def add_location_center(locations, ax):
         ax.scatter(
             center_x,
             center_y,
-            c=BLUE if isinstance(location, Depot) else COLORS[location.id],
+            c=BLUE if isinstance(location, classes.Depot) else COLORS[location.id],
             edgecolor="None",
             alpha=0.8,
             s=200,
@@ -583,6 +609,27 @@ def add_location_center(locations, ax):
             weight="bold",
             zorder=11,
         )
+
+
+def plot_tabu_list(ax, tabu_list):
+    tabu_string = "Locations:\n"
+
+    for tabu in tabu_list:
+        tabu_string += f" - {tabu}\n"
+
+    props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
+
+    # place a text box in upper left in axes coords
+    ax.text(
+        0,
+        0.98,
+        tabu_string,
+        transform=ax.transAxes,
+        fontsize=10,
+        horizontalalignment="left",
+        verticalalignment="top",
+        bbox=props,
+    )
 
 
 def plot_smoothed_curve(x, y, ax, color, label):

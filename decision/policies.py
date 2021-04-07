@@ -54,13 +54,16 @@ class RandomRolloutPolicy(Policy):
 
         return best_action
 
+    def __str__(self):
+        return "RandomRolloutPolicy"
+
 
 class SwapAllPolicy(Policy):
     @staticmethod
     def get_best_action(world, vehicle):
         # Choose a random cluster
         next_location: classes.Location = decision.neighbour_filtering.filtering_neighbours(
-            world.state, vehicle, number_of_neighbours=1,
+            world.state, vehicle, number_of_neighbours=1, exclude=world.tabu_list
         )[
             0
         ] if vehicle.battery_inventory > BATTERY_INVENTORY * 0.1 else world.state.depots[
@@ -78,9 +81,7 @@ class SwapAllPolicy(Policy):
             ]
 
             # Calculate how many scooters that can be swapped
-            number_of_scooters_to_swap = world.state.get_max_number_of_swaps(
-                vehicle.current_location
-            )
+            number_of_scooters_to_swap = world.state.get_max_number_of_swaps(vehicle)
 
         # Return an action with no re-balancing, only scooter swapping
         return classes.Action(
@@ -89,6 +90,9 @@ class SwapAllPolicy(Policy):
             delivery_scooters=[],
             next_location=next_location.id,
         )
+
+    def __str__(self):
+        return "SwapAllPolicy"
 
 
 class RandomActionPolicy(Policy):
@@ -101,3 +105,6 @@ class RandomActionPolicy(Policy):
 
         # pick a random action
         return random.choice(possible_actions)
+
+    def __str__(self):
+        return "RandomActionPolicy"

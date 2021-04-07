@@ -30,9 +30,6 @@ class DepotTests(unittest.TestCase):
         )
 
     def test_vehicle_battery_inventory_change(self):
-        self.world.stack.append(
-            classes.VehicleArrival(0, self.vehicle, visualize=False)
-        )
         self.vehicle.battery_inventory = 0
         self.world.run()
         self.assertGreater(self.vehicle.battery_inventory, 0)

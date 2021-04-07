@@ -1,4 +1,4 @@
-from classes import Action, Scooter
+from classes import Action, Scooter, State, Vehicle
 from visualization.helpers import *
 from globals import *
 import matplotlib.pyplot as plt
@@ -108,14 +108,34 @@ def visualize_cluster_flow(state: State, flows: [(int, int, int)]):
     plt.show()
 
 
-def visualize_vehicle_route(state, vehicle_route=None, next_state_id=-1):
+def visualize_vehicle_routes(
+    state,
+    current_vehicle_id=None,
+    current_location_id=None,
+    next_location_id=None,
+    tabu_list=None,
+    policy="",
+):
     """
     Visualize the vehicle route in a state from a simulation
+    :param policy: name of current policy
+    :param tabu_list: current tabulist
+    :param current_location_id: vehicles current location id
     :param state: State to display
-    :param vehicle_route: passed route for the vehicle entering a
-    :param next_state_id: id of next state
+    :param current_vehicle_id: current vehicle at a cluster
+    :param next_location_id: id of next state
     :return:
     """
+    fig, ax1, ax2 = create_two_subplot_fig(
+        titles=[
+            "Tabu list",
+            f"Vehicle {current_vehicle_id} arriving at location {current_location_id} and heading to location {next_location_id}",
+        ],
+        fig_title=policy,
+    )
+
+    plot_tabu_list(ax1, tabu_list)
+
     (
         graph,
         fig,
@@ -126,43 +146,58 @@ def visualize_vehicle_route(state, vehicle_route=None, next_state_id=-1):
         node_color,
         node_size,
         font_size,
-    ) = setup_cluster_visualize(state, next_state_id)
+    ) = setup_cluster_visualize(
+        state, current_location_id, next_location_id, fig=fig, ax=ax2
+    )
 
-    if vehicle_route:
-        route_labels, alignment = add_vehicle_route(graph, node_border, vehicle_route)
+    if current_vehicle_id or current_vehicle_id == 0:
+        route_labels, alignment = add_vehicle_routes(
+            graph, node_border, state.vehicles, current_vehicle_id, next_location_id
+        )
 
         alt_draw_networkx_edge_labels(
             graph,
             edge_labels=route_labels,
             verticalalignment=alignment,
             bbox=dict(alpha=0),
-            ax=ax,
+            ax=ax2,
         )
 
     # displays plot
-    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax)
+    display_graph(graph, node_color, node_border, node_size, labels, font_size, ax2)
+
+    func = lambda m, c: plt.plot([], [], marker=m, color=c, ls="none")[0]
+    handles = [func("_", VEHICLE_COLORS[i]) for i in range(len(state.vehicles))]
+    legends = [f"Vehicle {vehicle.id}" for vehicle in state.vehicles]
+    ax2.legend(handles, legends, framealpha=1)
 
     # shows the plots in IDE
     plt.tight_layout(pad=1.0)
     plt.show()
 
 
-def visualize_action(state_before_action: State, current_state: State, action: Action):
-
+def visualize_action(
+    state_before_action: State,
+    vehicle_before_action: Vehicle,
+    current_state: State,
+    current_vehicle: Vehicle,
+    action: Action,
+    policy="",
+):
     # creating the subplots for the visualization
-    fig, ax1, ax2, ax3 = create_system_simulation_plot(
-        ["Action", "State before action", "State after action"]
+    fig, ax1, ax2, ax3 = create_three_subplot_fig(
+        titles=["Action", "State before action", "State after action"], fig_title=policy
     )
 
     # plots the vehicle info and the action in the first plot
-    plot_vehicle_info(state_before_action.vehicle, current_state.vehicle, ax1)
+    plot_vehicle_info(vehicle_before_action, current_vehicle, ax1)
     plot_action(
         action,
-        state_before_action.current_location.id,
+        vehicle_before_action.current_location.id,
         ax1,
         offset=(
-            len(state_before_action.vehicle.scooter_inventory)
-            + len(current_state.vehicle.scooter_inventory)
+            len(vehicle_before_action.scooter_inventory)
+            + len(current_vehicle.scooter_inventory)
         )
         * ACTION_OFFSET,
     )
@@ -178,7 +213,7 @@ def visualize_action(state_before_action: State, current_state: State, action: A
 
 
 def visualize_scooters_on_trip(current_state: State, trips: [(int, int, Scooter)]):
-    fig, ax1, ax2 = create_state_trips_plot(["Current trips", "State"])
+    fig, ax1, ax2 = create_two_subplot_fig(["Current trips", "State"])
 
     plot_trips(trips, ax1)
 
@@ -200,7 +235,7 @@ def visualize_scooter_simulation(
     """
 
     # creating the subplots for the visualization
-    fig, ax1, ax2, ax3 = create_system_simulation_plot(
+    fig, ax1, ax2, ax3 = create_three_subplot_fig(
         ["Trips", "Current state", "Next State"]
     )
 

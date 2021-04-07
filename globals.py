@@ -7,6 +7,7 @@ CLUSTER_CENTER_DELTA = 0.01
 
 # Colors for visualizer
 BLUE, GREEN, RED, BLACK, WHITE = "blue", "green", "red", "black", "white"
+VEHICLE_COLORS = ["blue", "green", "black", "purple"]
 
 # Speed of service vehicles
 VEHICLE_SPEED = 30
@@ -38,9 +39,9 @@ LOST_TRIP_REWARD = -0.1
 
 # Testing parameters
 NUMBER_OF_NEIGHBOURS = 3
-SHIFT_DURATION = 300
+SHIFT_DURATION = 120
 SAMPLE_SIZE = 500
-NUMBER_OF_CLUSTERS = 30
+NUMBER_OF_CLUSTERS = 20
 # different policies: "RandomRolloutPolicy", "SwapAllPolicy"
 POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
 

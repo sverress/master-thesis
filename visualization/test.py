@@ -38,7 +38,7 @@ class BasicVisualizerTests(unittest.TestCase):
     def test_analysis():
         # test the analysis plot
         run_analysis(
-            shift_duration=300,
+            shift_duration=120,
             sample_size=100,
             number_of_clusters=10,
             policies=["SwapAllPolicy"],

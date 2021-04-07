@@ -4,10 +4,16 @@ import numpy as np
 
 
 def filtering_neighbours(
-    state, vehicle, number_of_neighbours=3, number_of_random_neighbours=0, time=None
+    state,
+    vehicle,
+    number_of_neighbours=3,
+    number_of_random_neighbours=0,
+    time=None,
+    exclude=None,
 ):
     """
     Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
+    :param exclude: locations to be excluded as neighbours
     :param time: time of the world so charging at depot can be controlled
     :param vehicle: vehicle to find neighbours from
     :param state: state object to evaluate
@@ -15,6 +21,7 @@ def filtering_neighbours(
     :param number_of_random_neighbours: int - number of random neighbours to be added to the neighbourhood list
     :return:
     """
+    exclude = exclude if exclude else []
     clusters = state.clusters
     distance_to_all_clusters = state.get_distance_to_all_clusters(
         vehicle.current_location.id
@@ -49,7 +56,7 @@ def filtering_neighbours(
     total_score_list = []
     for state_cluster in clusters:
         cluster_id = state_cluster.id
-        if cluster_id != vehicle.current_location.id:
+        if cluster_id != vehicle.current_location.id and cluster_id not in exclude:
             total_score = distance_scores[cluster_id] + cluster_score[cluster_id]
             index = bisect.bisect(total_score_list, total_score)
             total_score_list.insert(index, total_score)

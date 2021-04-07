@@ -201,7 +201,7 @@ class BasicDecisionTests(unittest.TestCase):
         )
         self.assertLess(
             len(bigger_state.get_possible_actions(self.vehicle, divide=2)),
-            len(bigger_state.get_possible_actions(self.vehicle, divide=3)),
+            len(bigger_state.get_possible_actions(self.vehicle, divide=4)),
         )
 
 

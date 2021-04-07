@@ -3,6 +3,7 @@ from typing import Union
 from classes.Location import Location
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
+from classes.Depot import Depot
 import clustering.methods
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
@@ -116,6 +117,7 @@ class State:
                 vehicle,
                 number_of_neighbours=number_of_neighbours,
                 number_of_random_neighbours=random_neighbours,
+                exclude=exclude,
             )
 
             for neighbour in neighbours:
@@ -157,6 +159,7 @@ class State:
                 number_of_neighbours=number_of_neighbours,
                 number_of_random_neighbours=random_neighbours,
                 time=time,
+                exclude=exclude,
             ):
                 for pick_up in get_range(pick_ups):
                     for swap in get_range(swaps):
@@ -303,11 +306,34 @@ class State:
     ):
         visualize_cluster_flow(self, flows)
 
-    def visualize_action(self, state_after_action, action: Action):
-        visualize_action(self, state_after_action, action)
+    def visualize_action(
+        self,
+        vehicle_before_action: Vehicle,
+        current_state: State,
+        vehicle: Vehicle,
+        action: Action,
+        policy: str,
+    ):
+        visualize_action(
+            self, vehicle_before_action, current_state, vehicle, action, policy
+        )
 
-    def visualize_vehicle_route(self, vehicle_trip: [int], next_location_id: int):
-        visualize_vehicle_route(self, vehicle_trip, next_location_id)
+    def visualize_vehicle_routes(
+        self,
+        current_vehicle_id: int,
+        current_location_id: int,
+        next_location_id: int,
+        tabu_list: [int],
+        policy: str,
+    ):
+        visualize_vehicle_routes(
+            self,
+            current_vehicle_id,
+            current_location_id,
+            next_location_id,
+            tabu_list,
+            policy,
+        )
 
     def visualize_current_trips(self, trips: [(int, int, int)]):
         visualize_scooters_on_trip(self, trips)
