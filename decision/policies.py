@@ -1,5 +1,6 @@
 import copy
 import math
+import time
 import decision.neighbour_filtering
 import classes
 from globals import BATTERY_INVENTORY, NUMBER_OF_NEIGHBOURS
@@ -33,6 +34,7 @@ class RandomRolloutPolicy(Policy):
             exclude=world.tabu_list,
             time=world.time,
         )
+        start = time.time()
 
         # For every possible action
         for action in actions:
@@ -51,7 +53,8 @@ class RandomRolloutPolicy(Policy):
             if reward >= max_reward:
                 max_reward = reward
                 best_action = action
-
+        end = time.time()
+        print("decision time", round(end - start))
         return best_action
 
     def __str__(self):

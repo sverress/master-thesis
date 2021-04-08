@@ -215,7 +215,6 @@ class State:
 
                 # Remove scooter from current cluster
                 vehicle.current_location.remove_scooter(pick_up_scooter)
-
             # Perform all battery swaps
             for battery_swap_scooter_id in action.battery_swaps:
                 battery_swap_scooter = vehicle.current_location.get_scooter_from_id(
@@ -224,13 +223,12 @@ class State:
                 swappable_scooters.remove(battery_swap_scooter)
 
                 # Calculate reward of doing the battery swap
-                if reward < vehicle.current_location.ideal_state:
-                    reward += (
-                        (100.0 - battery_swap_scooter.battery) / 100.0
-                    ) * vehicle.current_location.prob_of_scooter_usage()
+                reward += (
+                    (100.0 - battery_swap_scooter.battery) / 100.0
+                ) * vehicle.current_location.prob_of_scooter_usage()
 
-                    # Decreasing vehicle battery inventory
-                    vehicle.change_battery(battery_swap_scooter)
+                # Decreasing vehicle battery inventory
+                vehicle.change_battery(battery_swap_scooter)
 
             # Dropping of scooters
             for delivery_scooter_id in action.delivery_scooters:

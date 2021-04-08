@@ -45,3 +45,12 @@ def run_analysis(
     figure = visualize_analysis(instances, policies, smooth_curve)
 
     return figure
+
+
+if __name__ == "__main__":
+    run_analysis(
+        policies=["RandomRolloutPolicy", "SwapAllPolicy"],
+        sample_size=1000,
+        number_of_clusters=100,
+        verbose=True,
+    )

@@ -53,4 +53,4 @@ def estimate_reward(
             )
         all_rewards.append(world_copy.get_total_reward())
 
-    return max(all_rewards)
+    return sum(all_rewards) / len(all_rewards)
