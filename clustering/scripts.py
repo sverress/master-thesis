@@ -72,6 +72,9 @@ def get_initial_state(
     if sample_size:
         initial_state.sample(sample_size)
 
+    # Generate scenarios
+    initial_state.simulation_scenarios = methods.generate_scenarios(initial_state)
+
     if save:
         # Cache the state for later
         initial_state.save_state()

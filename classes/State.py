@@ -22,6 +22,7 @@ class State:
         self.depots = depots
         self.locations = self.clusters + self.depots
         self.distance_matrix = self.calculate_distance_matrix()
+        self.simulation_scenarios = None
 
     def get_all_locations(self):
         return self.locations
