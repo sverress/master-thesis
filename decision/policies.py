@@ -3,7 +3,7 @@ import math
 import time
 import decision.neighbour_filtering
 import classes
-from globals import BATTERY_INVENTORY, NUMBER_OF_NEIGHBOURS
+from globals import BATTERY_INVENTORY, NUMBER_OF_NEIGHBOURS, NUMBER_OF_ROLLOUTS
 import numpy.random as random
 import scenario_simulation.scripts
 
@@ -18,6 +18,17 @@ class Policy:
         :return: the best action according to the policy
         """
         pass
+
+    @staticmethod
+    def print_action_stats(
+        vehicle: classes.Vehicle, actions_info: [(classes.Action, int, int)],
+    ) -> None:
+        print(f"\n{vehicle} (#rollouts {NUMBER_OF_ROLLOUTS}):")
+        for action, reward, computational_time in actions_info:
+            print(
+                f"\n{action} Reward - {round(reward,3)} | Comp. time - {round(computational_time, 2)}"
+            )
+        print("\n----------------------------------------------------------------")
 
 
 class RandomRolloutPolicy(Policy):
@@ -34,9 +45,10 @@ class RandomRolloutPolicy(Policy):
             exclude=world.tabu_list,
             time=world.time,
         )
-
+        actions_info = []
         # For every possible action
         for action in actions:
+            start = time.time()
             # Get new state of performing action
             world_copy = copy.deepcopy(world)
             vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
@@ -52,6 +64,11 @@ class RandomRolloutPolicy(Policy):
             if reward >= max_reward:
                 max_reward = reward
                 best_action = action
+
+            actions_info.append((action, reward, time.time() - start))
+
+        Policy.print_action_stats(vehicle, actions_info)
+
         return best_action
 
     def __str__(self):
@@ -63,7 +80,11 @@ class SwapAllPolicy(Policy):
     def get_best_action(world, vehicle):
         # Choose a random cluster
         next_location: classes.Location = decision.neighbour_filtering.filtering_neighbours(
-            world.state, vehicle, number_of_neighbours=1, exclude=world.tabu_list
+            world.state,
+            vehicle,
+            number_of_neighbours=1,
+            exclude=world.tabu_list,
+            max_swaps=vehicle.get_max_number_of_swaps(),
         )[
             0
         ] if vehicle.battery_inventory > BATTERY_INVENTORY * 0.1 else world.state.depots[

@@ -71,8 +71,8 @@ class Vehicle:
 
     def __repr__(self):
         return (
-            f"<Vehicle at {self.current_location}, {len(self.scooter_inventory)} scooters,"
-            f" {self.battery_inventory} batteries>"
+            f"<Vehicle {self.id} at {self.current_location.__str__()}, "
+            f"{len(self.scooter_inventory)} scooters, {self.battery_inventory} batteries>"
         )
 
     def is_at_depot(self):

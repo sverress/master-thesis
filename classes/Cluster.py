@@ -121,7 +121,7 @@ class Cluster(Location):
         )
 
     def __str__(self):
-        return "Cluster"
+        return f"Cluster {self.id}"
 
     def prob_of_scooter_usage(self):
         return max(0.0, 1 - (len(self.get_available_scooters()) / self.ideal_state))
