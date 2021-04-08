@@ -77,3 +77,9 @@ class Vehicle:
 
     def is_at_depot(self):
         return isinstance(self.current_location, Depot)
+
+    def get_max_number_of_swaps(self):
+        return min(
+            min(len(self.current_location.scooters), self.battery_inventory),
+            len(self.current_location.get_swappable_scooters()),
+        )

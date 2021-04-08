@@ -30,7 +30,7 @@ SCOOTER_SPEED = 7
 
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
-NUMBER_OF_ROLLOUTS = 100
+NUMBER_OF_ROLLOUTS = 10
 BATTERY_LIMIT = 20.0
 DISCOUNT_RATE = 0.80
 
@@ -40,7 +40,7 @@ LOST_TRIP_REWARD = -0.1
 # Testing parameters
 NUMBER_OF_NEIGHBOURS = 3
 SHIFT_DURATION = 120
-SAMPLE_SIZE = 500
+SAMPLE_SIZE = 100
 NUMBER_OF_CLUSTERS = 20
 # different policies: "RandomRolloutPolicy", "SwapAllPolicy"
 POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
