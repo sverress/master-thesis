@@ -1,8 +1,6 @@
 import random
-from typing import Union
 from classes.Location import Location
 from classes.Cluster import Cluster
-from classes.Vehicle import Vehicle
 from classes.Depot import Depot
 import clustering.methods
 from system_simulation.scripts import system_simulate
@@ -12,17 +10,37 @@ import numpy as np
 import math
 import pickle
 import os
-from globals import GEOSPATIAL_BOUND_NEW, STATE_CACHE_DIR
+from globals import STATE_CACHE_DIR
+import copy
 
 
 class State:
-    def __init__(self, clusters: [Cluster], depots: [Depot], vehicles: [Vehicle]):
+    def __init__(
+        self,
+        clusters: [Cluster],
+        depots: [Depot],
+        vehicles: [Vehicle],
+        distance_matrix=None,
+    ):
         self.clusters = clusters
         self.vehicles = vehicles
         self.depots = depots
         self.locations = self.clusters + self.depots
-        self.distance_matrix = self.calculate_distance_matrix()
+        if distance_matrix:
+            self.distance_matrix = distance_matrix
+        else:
+            self.distance_matrix = self.calculate_distance_matrix()
         self.simulation_scenarios = None
+
+    def __deepcopy__(self, *args):
+        new_state = State(
+            copy.deepcopy(self.clusters),
+            copy.deepcopy(self.depots),
+            copy.deepcopy(self.vehicles),
+            distance_matrix=self.distance_matrix,
+        )
+        new_state.simulation_scenarios = self.simulation_scenarios
+        return new_state
 
     def get_all_locations(self):
         return self.locations

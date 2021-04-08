@@ -16,6 +16,7 @@ class DepotTests(unittest.TestCase):
             sample_size=100,
             number_of_clusters=10,
             initial_state=get_initial_state(500),
+            visualize=False,
         )
         self.vehicle = self.world.state.vehicles[0]
         self.vehicle.current_location = self.world.state.depots[0]
