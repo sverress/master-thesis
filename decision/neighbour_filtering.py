@@ -4,25 +4,33 @@ import numpy as np
 
 
 def filtering_neighbours(
-    state, number_of_neighbours=3, number_of_random_neighbours=0, time=None,
+    state,
+    vehicle,
+    number_of_neighbours=3,
+    number_of_random_neighbours=0,
+    time=None,
+    exclude=None,
 ):
     """
     Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
+    :param exclude: locations to be excluded as neighbours
     :param time: time of the world so charging at depot can be controlled
+    :param vehicle: vehicle to find neighbours from
     :param state: state object to evaluate
     :param number_of_neighbours: number of neighbours to be returned
     :param number_of_random_neighbours: int - number of random neighbours to be added to the neighbourhood list
     :return:
     """
+    exclude = exclude if exclude else []
     clusters = state.clusters
     distance_to_all_clusters = state.get_distance_to_all_clusters(
-        state.current_location.id
+        vehicle.current_location.id
     )
     max_dist, min_dist = max(distance_to_all_clusters), min(distance_to_all_clusters)
     distance_scores = [
         (dist - min_dist) / (max_dist - min_dist) for dist in distance_to_all_clusters
     ]
-    if len(state.vehicle.scooter_inventory) > 0:
+    if len(vehicle.scooter_inventory) > 0:
         cluster_value = get_deviation_ideal_state(state)
     else:
         cluster_value = get_battery_deficient_in_clusters(state)
@@ -46,9 +54,9 @@ def filtering_neighbours(
 
     score_indices = []
     total_score_list = []
-    for cluster in clusters:
-        cluster_id = cluster.id
-        if cluster_id != state.current_location.id:
+    for state_cluster in clusters:
+        cluster_id = state_cluster.id
+        if cluster_id != vehicle.current_location.id and cluster_id not in exclude:
             total_score = distance_scores[cluster_id] + cluster_score[cluster_id]
             index = bisect.bisect(total_score_list, total_score)
             total_score_list.insert(index, total_score)
@@ -70,15 +78,15 @@ def filtering_neighbours(
         neighbours = [clusters[index] for index in score_indices[:number_of_neighbours]]
 
     return (
-        neighbours + add_depots_as_neighbours(state, time)
-        if time and state.vehicle.battery_inventory < BATTERY_INVENTORY * 0.2
+        neighbours + add_depots_as_neighbours(state, time, vehicle)
+        if time and vehicle.battery_inventory < BATTERY_INVENTORY * 0.2
         else neighbours
     )
 
 
-def add_depots_as_neighbours(state, time):
+def add_depots_as_neighbours(state, time, vehicle):
     depots = []
-    if state.is_at_depot():
+    if vehicle.is_at_depot():
         return depots
     else:
         closest_small_depot = None
@@ -88,12 +96,12 @@ def add_depots_as_neighbours(state, time):
                 depots.append(depot)
             else:
                 distance_to_depot = state.get_distance_locations(
-                    state.current_location, depot
+                    vehicle.current_location, depot
                 )
                 if (
                     closest_distance > distance_to_depot
                     and depot.get_available_battery_swaps(time)
-                    >= BATTERY_INVENTORY - state.vehicle.battery_inventory
+                    >= BATTERY_INVENTORY - vehicle.battery_inventory
                 ):
                     closest_small_depot = depot
                     closest_distance = distance_to_depot

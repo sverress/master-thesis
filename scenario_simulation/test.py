@@ -1,14 +1,15 @@
 import unittest
-from clustering.scripts import get_initial_state
+
+from classes import World
 from scenario_simulation.scripts import estimate_reward
 
 
 class BasicScenarioSimulationTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.state = get_initial_state(500)
+        self.world = World(100)
 
     def test_estimate_reward(self):
-        estimate_reward(self.state, 20)
+        estimate_reward(self.world, self.world.state.vehicles[0])
 
 
 if __name__ == "__main__":

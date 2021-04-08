@@ -116,9 +116,12 @@ class Cluster(Location):
 
     def __repr__(self):
         return (
-            f"Cluster {self.id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
-            f" ideal state: {self.ideal_state}"
+            f"<Cluster {self.id}: {len(self.scooters)} scooters, current state: {self.get_current_state()},"
+            f" ideal state: {self.ideal_state}>"
         )
 
+    def __str__(self):
+        return "Cluster"
+
     def prob_of_scooter_usage(self):
-        return max(0.0, 1 - len(self.get_available_scooters()) / self.ideal_state)
+        return max(0.0, 1 - (len(self.get_available_scooters()) / self.ideal_state))

@@ -7,17 +7,17 @@ def run_analysis(
     sample_size=100,
     number_of_clusters=10,
     policies=None,
-    visualize_world=False,
+    visualize_world=True,
     smooth_curve=True,
     verbose=False,
 ):
     """
     Method to run different policies and analysis their performance
+    :param verbose: show verbose in console
     :param shift_duration: total shift to be analysed
     :param sample_size: size of instances
     :param number_of_clusters: number of clusters in the world
     :param policies: different policies to be analysed
-    :param visualize_world: boolean - if the running of the world should be visualized
     :param smooth_curve: boolean - if the analysed metrics is to be smoothed out in the analysis plot
     :return: matplotlib figure - figure containing plot of the analysis
     """
@@ -31,16 +31,12 @@ def run_analysis(
             sample_size=sample_size,
             number_of_clusters=number_of_clusters,
             policy=policy,
+            visualize=visualize_world,
             verbose=verbose,
         )
         # pumping up the trip intensity
         for cluster in world.state.clusters:
             cluster.trip_intensity_per_iteration = round(cluster.ideal_state * 0.1)
-        # add scooter trip generation event and a vehicle arrival event
-        world.add_event(classes.GenerateScooterTrips(0))
-        world.add_event(
-            classes.VehicleArrival(0, world.state.current_location.id, visualize_world)
-        )
         # run the world and add the world object to a list containing all world instances
         world.run()
         instances.append(world)
@@ -49,3 +45,12 @@ def run_analysis(
     figure = visualize_analysis(instances, policies, smooth_curve)
 
     return figure
+
+
+if __name__ == "__main__":
+    run_analysis(
+        policies=["RandomRolloutPolicy", "SwapAllPolicy"],
+        sample_size=1000,
+        number_of_clusters=100,
+        verbose=True,
+    )

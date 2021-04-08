@@ -33,3 +33,9 @@ class Action:
         ) * 2
         travel_duration = round((distance / VEHICLE_SPEED) * MINUTES_IN_HOUR)
         return operation_duration + travel_duration
+
+    def __repr__(self):
+        return (
+            f"<Action - ({len(self.battery_swaps)} bat. swaps, {len(self.pick_ups)} pickups,"
+            f" {len(self.delivery_scooters)} deliveries), next: {self.next_location} >"
+        )

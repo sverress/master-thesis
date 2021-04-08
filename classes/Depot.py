@@ -43,3 +43,6 @@ class Depot(Location):
         self.capacity += delta_capacity
 
         self.time = time
+
+    def __str__(self):
+        return "Depot"

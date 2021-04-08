@@ -3,6 +3,7 @@ from typing import Union
 from classes.Location import Location
 from classes.Cluster import Cluster
 from classes.Vehicle import Vehicle
+from classes.Depot import Depot
 import clustering.methods
 from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
@@ -15,25 +16,15 @@ from globals import GEOSPATIAL_BOUND_NEW, STATE_CACHE_DIR
 
 
 class State:
-    def __init__(
-        self,
-        clusters: [Cluster],
-        depots: [Depot],
-        current_location: Union[Cluster, Depot],
-        vehicle: Vehicle,
-    ):
+    def __init__(self, clusters: [Cluster], depots: [Depot], vehicles: [Vehicle]):
         self.clusters = clusters
+        self.vehicles = vehicles
         self.depots = depots
         self.locations = self.clusters + self.depots
-        self.current_location = current_location
-        self.vehicle = vehicle
         self.distance_matrix = self.calculate_distance_matrix()
 
     def get_all_locations(self):
         return self.locations
-
-    def is_at_depot(self):
-        return isinstance(self.current_location, Depot)
 
     def get_cluster_by_lat_lon(self, lat: float, lon: float):
         """
@@ -92,30 +83,35 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
-    def get_max_number_of_swaps(self, cluster: Cluster):
-        return min(
-            min(len(cluster.scooters), self.vehicle.battery_inventory),
-            len(self.current_location.get_swappable_scooters()),
-        )
-
     def get_possible_actions(
-        self, number_of_neighbours=None, divide=None, random_neighbours=0, time=None
+        self,
+        vehicle: Vehicle,
+        number_of_neighbours=None,
+        divide=None,
+        random_neighbours=0,
+        exclude=None,
+        time=None,
     ):
         """
         Enumerate all possible actions from the current state
         :param time: time of the world when the actions is to be performed
         :param random_neighbours: number of random neighbours to add to the possible next location
+        :param exclude: clusters to exclude from next cluster
+        :param random_neighbours: number of random neighbours to add to possible next locations
+        :param vehicle: vehicle to perform this action
         :param number_of_neighbours: number of neighbours to evaluate
         :param divide: number to divide by to create range increment
         :return: List of Action objects
         """
-        if self.is_at_depot():
+        actions = []
+        if vehicle.is_at_depot():
             neighbours = decision.neighbour_filtering.filtering_neighbours(
                 self,
+                vehicle,
                 number_of_neighbours=number_of_neighbours,
                 number_of_random_neighbours=random_neighbours,
+                exclude=exclude,
             )
-            actions = []
 
             for neighbour in neighbours:
                 actions.append(Action([], [], [], neighbour.id))
@@ -132,19 +128,18 @@ class State:
             # Initiate constraints for battery swap, pick-up and drop-off
             pick_ups = min(
                 max(
-                    len(self.current_location.scooters)
-                    - self.current_location.ideal_state,
+                    len(vehicle.current_location.scooters)
+                    - vehicle.current_location.ideal_state,
                     0,
                 ),
-                self.vehicle.scooter_inventory_capacity
-                - len(self.vehicle.scooter_inventory),
+                vehicle.scooter_inventory_capacity - len(vehicle.scooter_inventory),
             )
-            swaps = self.get_max_number_of_swaps(self.current_location)
+            swaps = vehicle.get_max_number_of_swaps()
             drop_offs = max(
                 min(
-                    self.current_location.ideal_state
-                    - len(self.current_location.scooters),
-                    len(self.vehicle.scooter_inventory),
+                    vehicle.current_location.ideal_state
+                    - len(vehicle.current_location.scooters),
+                    len(vehicle.scooter_inventory),
                 ),
                 0,
             )
@@ -153,78 +148,80 @@ class State:
             # Different combinations of battery swaps, pick-ups, drop-offs and clusters
             for cluster in decision.neighbour_filtering.filtering_neighbours(
                 self,
+                vehicle,
                 number_of_neighbours=number_of_neighbours,
                 number_of_random_neighbours=random_neighbours,
                 time=time,
+                exclude=exclude,
             ):
                 for pick_up in get_range(pick_ups):
                     for swap in get_range(swaps):
                         for drop_off in get_range(drop_offs):
-                            if (pick_up + swap) <= self.vehicle.battery_inventory and (
+                            if (pick_up + swap) <= vehicle.battery_inventory and (
                                 pick_up + swap
-                            ) <= len(self.current_location.scooters):
+                            ) <= len(vehicle.current_location.scooters):
                                 combinations.append(
                                     [swap, pick_up, drop_off, cluster.id]
                                 )
 
-            # Assume that no battery swap or pick-up of scooters with 100% battery and
-            # that the scooters with the lowest battery are prioritized
-            swappable_scooters_id = [
-                scooter.id for scooter in self.current_location.get_swappable_scooters()
-            ]
-            # Adding every action. Actions are the IDs of the scooters to be handled.
-            actions = [
-                Action(
-                    swappable_scooters_id[pick_up : battery_swap + pick_up],
-                    swappable_scooters_id[:pick_up],
-                    [scooter.id for scooter in self.vehicle.scooter_inventory][
-                        :drop_off
-                    ],
-                    cluster_id,
-                )
-                for battery_swap, pick_up, drop_off, cluster_id in combinations
-            ]
+                # Assume that no battery swap or pick-up of scooters with 100% battery and
+                # that the scooters with the lowest battery are prioritized
+                swappable_scooters_id = [
+                    scooter.id
+                    for scooter in vehicle.current_location.get_swappable_scooters()
+                ]
+                # Adding every action. Actions are the IDs of the scooters to be handled.
+                actions = [
+                    Action(
+                        swappable_scooters_id[pick_up : battery_swap + pick_up],
+                        swappable_scooters_id[:pick_up],
+                        [scooter.id for scooter in vehicle.scooter_inventory][
+                            :drop_off
+                        ],
+                        cluster_id,
+                    )
+                    for battery_swap, pick_up, drop_off, cluster_id in combinations
+                ]
         return actions
 
-    def do_action(self, action: Action):
+    def do_action(self, action: Action, vehicle: Vehicle):
         """
         Performs an action on the state -> changing the state + calculates the reward
+        :param vehicle: Vehicle to perform this action
         :param action: Action - action to be performed on the state
         :return: float - reward for doing the action on the state
         """
         reward = 0
-        if not self.is_at_depot():
+        if not vehicle.is_at_depot():
             # Retrieve all scooters that you can change battery on (and therefore also pick up)
-            swappable_scooters = self.current_location.get_swappable_scooters()
+            swappable_scooters = vehicle.current_location.get_swappable_scooters()
 
             # Perform all pickups
             for pick_up_scooter_id in action.pick_ups:
-                pick_up_scooter = self.current_location.get_scooter_from_id(
+                pick_up_scooter = vehicle.current_location.get_scooter_from_id(
                     pick_up_scooter_id
                 )
                 swappable_scooters.remove(pick_up_scooter)
 
                 # Picking up scooter and adding to vehicle inventory and swapping battery
-                self.vehicle.pick_up(pick_up_scooter)
+                vehicle.pick_up(pick_up_scooter)
 
                 # Remove scooter from current cluster
-                self.current_location.remove_scooter(pick_up_scooter)
-
+                vehicle.current_location.remove_scooter(pick_up_scooter)
             # Perform all battery swaps
             for battery_swap_scooter_id in action.battery_swaps:
-                battery_swap_scooter = self.current_location.get_scooter_from_id(
+                battery_swap_scooter = vehicle.current_location.get_scooter_from_id(
                     battery_swap_scooter_id
                 )
                 swappable_scooters.remove(battery_swap_scooter)
 
                 # Calculate reward of doing the battery swap
-                if reward < self.current_location.ideal_state:
-                    reward += (
-                        (100.0 - battery_swap_scooter.battery) / 100.0
-                    ) * self.current_location.prob_of_scooter_usage()
+                reward += (
+                    (100.0 - battery_swap_scooter.battery) / 100.0
+                ) * vehicle.current_location.prob_of_scooter_usage()
 
-                    # Decreasing vehicle battery inventory
-                    self.vehicle.change_battery(battery_swap_scooter)
+                # Decreasing vehicle battery inventory
+                vehicle.change_battery(battery_swap_scooter)
 
             # Dropping of scooters
             for delivery_scooter_id in action.delivery_scooters:
@@ -232,18 +229,18 @@ class State:
                 reward += 1.0
 
                 # Removing scooter from vehicle inventory
-                delivery_scooter = self.vehicle.drop_off(delivery_scooter_id)
+                delivery_scooter = vehicle.drop_off(delivery_scooter_id)
 
                 # Adding scooter to current cluster and changing coordinates of scooter
-                self.current_location.add_scooter(delivery_scooter)
+                vehicle.current_location.add_scooter(delivery_scooter)
 
-            # Moving the state/vehicle from this to next cluster
-        self.current_location = self.get_location_by_id(action.next_location)
+        # Moving the state/vehicle from this to next cluster
+        vehicle.set_current_location(self.get_location_by_id(action.next_location))
 
         return reward
 
     def __repr__(self):
-        return f"State: Current location={self.current_location}"
+        return f"<State: vehicle_clusters: {[vehicle.current_location.id for vehicle in self.vehicles]}>"
 
     def get_neighbours(
         self, location: Location, number_of_neighbours=None, is_sorted=True
@@ -300,11 +297,34 @@ class State:
     ):
         visualize_cluster_flow(self, flows)
 
-    def visualize_action(self, state_after_action, action: Action):
-        visualize_action(self, state_after_action, action)
+    def visualize_action(
+        self,
+        vehicle_before_action: Vehicle,
+        current_state: State,
+        vehicle: Vehicle,
+        action: Action,
+        policy: str,
+    ):
+        visualize_action(
+            self, vehicle_before_action, current_state, vehicle, action, policy
+        )
 
-    def visualize_vehicle_route(self, vehicle_trip: [int], next_location_id: int):
-        visualize_vehicle_route(self, vehicle_trip, next_location_id)
+    def visualize_vehicle_routes(
+        self,
+        current_vehicle_id: int,
+        current_location_id: int,
+        next_location_id: int,
+        tabu_list: [int],
+        policy: str,
+    ):
+        visualize_vehicle_routes(
+            self,
+            current_vehicle_id,
+            current_location_id,
+            next_location_id,
+            tabu_list,
+            policy,
+        )
 
     def visualize_current_trips(self, trips: [(int, int, int)]):
         visualize_scooters_on_trip(self, trips)
@@ -362,3 +382,16 @@ class State:
             if exclude
             else self.clusters
         )
+
+    def get_vehicle_by_id(self, vehicle_id: int) -> Vehicle:
+        """
+        Returns the vehicle object in the state corresponding to the vehicle id input
+        :param vehicle_id: the id of the vehicle to fetch
+        :return: vehicle object
+        """
+        try:
+            return [vehicle for vehicle in self.vehicles if vehicle_id == vehicle.id][0]
+        except IndexError:
+            raise ValueError(
+                f"There are no vehicle in the state with an id of {vehicle_id}"
+            )

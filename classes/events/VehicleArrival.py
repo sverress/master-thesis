@@ -1,76 +1,98 @@
-import classes
-from classes import Event
+from classes.events.Event import Event
 from globals import BATTERY_INVENTORY
 import copy
 
 
 class VehicleArrival(Event):
-    def __init__(self, arrival_time: int, arrival_location_id: int, visualize=True):
+    def __init__(self, arrival_time: int, vehicle_id: int, visualize=True):
         super().__init__(arrival_time)
-        self.arrival_location_id = arrival_location_id
         self.visualize = visualize
+        self.vehicle_id = vehicle_id
 
     def perform(self, world, **kwargs) -> None:
         """
-            :param world: world object
+        :param world: world object
         """
+        try:
+            vehicle = [
+                vehicle
+                for vehicle in world.state.vehicles
+                if vehicle.id == self.vehicle_id
+            ][0]
+        except IndexError:
+            raise ValueError(
+                "OBS! Something went wrong. The vehicle is not in this state."
+            )
+
+        # Remove current vehicle state from tabu list
+        world.tabu_list = [
+            cluster_id
+            for cluster_id in world.tabu_list
+            if cluster_id != vehicle.current_location.id
+        ]
+
         if self.visualize:
             # copy state before action for visualization purposes
             state_before_action = copy.deepcopy(world.state)
+            vehicle_before_action = copy.deepcopy(vehicle)
 
         arrival_time = 0
 
-        # get the cluster object that the vehicle has arrived to
-        arrival_cluster = world.state.get_location_by_id(self.arrival_location_id)
-
-        # set the arrival cluster as current cluster in state
-        world.state.current_location = arrival_cluster
-
         # if current location is a depot -> refill battery inventory
-        if isinstance(world.state.current_location, classes.Depot):
+        if vehicle.is_at_depot():
             batteries_to_swap = min(
-                world.state.current_location.get_available_battery_swaps(world.time),
-                BATTERY_INVENTORY - world.state.vehicle.battery_inventory,
+                vehicle.current_location.get_available_battery_swaps(world.time),
+                BATTERY_INVENTORY - vehicle.battery_inventory,
             )
-            arrival_time += world.state.current_location.swap_battery_inventory(
+            arrival_time += vehicle.current_location.swap_battery_inventory(
                 world.time, batteries_to_swap
             )
-            world.state.vehicle.add_battery_inventory(batteries_to_swap)
+            vehicle.add_battery_inventory(batteries_to_swap)
 
         # find the best action from the current world state
-        action = world.policy.get_best_action(world)
+        action = world.policy.get_best_action(world, vehicle)
 
-        # add the cluster id for the cluster the vehicle arrives at to the vehicles trip
-        world.state.vehicle.add_cluster_id_to_route(world.state.current_location.id)
+        # Add next vehicle location to tabu list
+        world.tabu_list.append(action.next_location)
 
         if self.visualize:
             # visualize vehicle route
-            world.state.visualize_vehicle_route(
-                world.state.vehicle.get_route(), action.next_location,
+            world.state.visualize_vehicle_routes(
+                self.vehicle_id,
+                vehicle.current_location.id,
+                action.next_location,
+                world.tabu_list,
+                world.policy.__str__(),
             )
-
-            # visualize scooters currently out on a trip
-            world.state.visualize_current_trips(world.get_scooters_on_trip())
 
         # clear world flow counter dictionary
         world.clear_flow_dict()
 
-        # perform the best action on the state and add the reward from the action to a reward list
-        world.add_reward(world.state.do_action(action))
+        # Record current location of vehicle to compute action time
+        arrival_cluster_id = vehicle.current_location.id
+
+        # perform the best action on the state and send vehicle to new location
+        reward = world.state.do_action(action, vehicle)
+
+        world.add_reward(reward, discount=True)
 
         if self.visualize:
             # visualize action performed by vehicle
-            state_before_action.visualize_action(world.state, action)
+            state_before_action.visualize_action(
+                vehicle_before_action,
+                world.state,
+                vehicle,
+                action,
+                world.policy.__str__(),
+            )
 
         # set time of world to this event's time
         super(VehicleArrival, self).perform(world, **kwargs)
 
         # Compute the arrival time for the Vehicle arrival event created by the action
         arrival_time += self.time + action.get_action_time(
-            world.state.get_distance_id(self.arrival_location_id, action.next_location)
+            world.state.get_distance_id(arrival_cluster_id, action.next_location)
         )
 
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack
-        world.add_event(
-            VehicleArrival(arrival_time, action.next_location, self.visualize)
-        )
+        world.add_event(VehicleArrival(arrival_time, vehicle.id, self.visualize))

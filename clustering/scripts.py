@@ -48,10 +48,13 @@ def get_initial_state(
     clustering.finish()
 
     # Choosing a default vehicle as the vehicle in the new state
-    vehicle = Vehicle()
+    van = Vehicle(0, current_location)
+    bike = Vehicle(
+        1, current_location, battery_inventory=20, scooter_inventory_capacity=0
+    )
 
     # Create state object
-    initial_state = State(clusters, depots, current_location, vehicle)
+    initial_state = State(clusters, depots, [van, bike])
 
     # Sample size filtering. Create list of scooter ids to include
     sample_scooters = methods.scooter_sample_filter(entur_dataframe, sample_size)

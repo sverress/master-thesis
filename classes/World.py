@@ -1,7 +1,10 @@
+from typing import List
+
 import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
 import classes
+
 from globals import (
     BATTERY_LIMIT,
     LOST_TRIP_REWARD,
@@ -105,6 +108,7 @@ class World:
         policy="RandomRolloutPolicy",
         initial_location_depot=True,
         verbose=False,
+        visualize=True,
     ):
         self.shift_duration = shift_duration
         if initial_state:
@@ -115,9 +119,18 @@ class World:
                 number_of_clusters=number_of_clusters,
                 initial_location_depot=initial_location_depot,
             )
-        self.stack = []
         self.time = 0
         self.rewards = []
+        self.stack: List[classes.Event] = []
+        self.tabu_list = []
+        # Initialize the stack with a vehicle arrival for every vehicle at time zero
+        for vehicle in self.state.vehicles:
+            self.stack.append(
+                classes.VehicleArrival(0, vehicle.id, visualize=visualize)
+            )
+            vehicle.service_route.append(vehicle.current_location)
+        # Add Generate Scooter Trip event to the stack
+        self.stack.append(classes.GenerateScooterTrips(ITERATION_LENGTH_MINUTES))
         self.cluster_flow = {
             (start, end): 0
             for start in np.arange(len(self.state.clusters))
@@ -168,7 +181,7 @@ class World:
         """
         return sum(self.rewards)
 
-    def add_event(self, event) -> None:
+    def add_event(self, event: classes.Event) -> None:
         """
         Adds event to the sorted stack.
         Avoids calling sort on every iteration by using the bisect package

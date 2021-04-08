@@ -1,16 +1,16 @@
 import copy
-import classes
+
 import decision.policies as policies
 from globals import ITERATION_LENGTH_MINUTES, LOST_TRIP_REWARD, NUMBER_OF_ROLLOUTS
 
 
 def estimate_reward(
-    state, remaining_shift_duration: int, number_of_simulations=NUMBER_OF_ROLLOUTS,
+    world, vehicle, number_of_simulations=NUMBER_OF_ROLLOUTS,
 ):
     """
     Does n times scenario simulations and returns the highest conducted reward from simulation
-    :param state: State - state to de the simulations from
-    :param remaining_shift_duration: int - time left on shift = length of simulation
+    :param vehicle: vehicle to estimate reward for
+    :param world: snapshot copy of world
     :param number_of_simulations: int - number of simulations to be performed (default = 10)
     :return: int - maximum reward from simulations
     """
@@ -20,29 +20,37 @@ def estimate_reward(
     # Do n scenario simulations
     for i in range(number_of_simulations):
         simulation_counter = 1
-        world = classes.World(
-            remaining_shift_duration, initial_state=copy.deepcopy(state)
-        )
         next_is_vehicle_action = True
+        world_copy = copy.deepcopy(world)
+        vehicle_copy = [
+            new_vehicle_copy
+            for new_vehicle_copy in world_copy.state.vehicles
+            if vehicle.id == new_vehicle_copy.id
+        ][0]
         # Simulate until shift ends
-        while world.time < remaining_shift_duration:
+        while world_copy.time < world_copy.shift_duration:
             if next_is_vehicle_action:
-                action = policies.RandomActionPolicy.get_best_action(world)
-                # TODO action time doesn't take into account the time of battery change in depot
-                world.time = world.time + action.get_action_time(
-                    world.state.get_distance_id(
-                        world.state.current_location.id, action.next_location
+                action = policies.RandomActionPolicy.get_best_action(
+                    world_copy, vehicle_copy
+                )
+                previous_cluster_id = vehicle_copy.current_location.id
+                world_copy.add_reward(
+                    world_copy.get_discount()
+                    * world_copy.state.do_action(action, vehicle_copy)
+                )
+                world_copy.time = world_copy.time + action.get_action_time(
+                    world_copy.state.get_distance_id(
+                        previous_cluster_id, action.next_location
                     )
                 )
-                world.add_reward(world.state.do_action(action), discount=True)
+
             else:
-                _, _, lost_demand = world.state.system_simulate()
-                world.add_reward(lost_demand * LOST_TRIP_REWARD, discount=True)
+                _, _, lost_demand = world_copy.state.system_simulate()
+                world_copy.add_reward(lost_demand * LOST_TRIP_REWARD)
                 simulation_counter += 1
             next_is_vehicle_action = (
-                world.time < simulation_counter * ITERATION_LENGTH_MINUTES
+                world_copy.time < simulation_counter * ITERATION_LENGTH_MINUTES
             )
+        all_rewards.append(world_copy.get_total_reward())
 
-        all_rewards.append(world.get_total_reward())
-
-    return max(all_rewards)
+    return sum(all_rewards) / len(all_rewards)

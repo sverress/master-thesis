@@ -1,4 +1,6 @@
 import unittest
+import random
+
 from classes import (
     ScooterDeparture,
     ScooterArrival,
@@ -14,50 +16,75 @@ from globals import ITERATION_LENGTH_MINUTES
 class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = World(40, initial_location_depot=False)
+        self.world.stack = []
+        self.vehicle = self.world.state.vehicles[0]
+        self.vehicle.current_location = self.world.state.clusters[0]
         self.large_world = World(
             40, sample_size=500, number_of_clusters=20, initial_location_depot=False
         )
-        self.world.state.current_location = self.world.state.clusters[0]
-        self.large_world.state.current_location = self.large_world.state.clusters[0]
+        self.large_world.stack = []
+        self.vehicle_large_world = self.large_world.state.vehicles[0]
+        self.vehicle_large_world.current_location = self.large_world.state.clusters[0]
+
         self.departure_time = 1
         self.travel_time = 5
 
     def test_scooter_departure(self):
         departure_event = ScooterDeparture(
-            self.departure_time, self.world.state.current_location.id
+            self.departure_time, self.vehicle.current_location.id
         )
-
+        # Remove all scooters from the scooter departure location
+        self.vehicle.current_location.scooters = []
         departure_event.perform(self.world)
 
         # test if the time of world object is set to the departure time
         self.assertEqual(departure_event.time, self.world.time)
 
-        arrival_event = next(iter(self.world.stack))
+        # Check that a lost trip event is created
+        self.assertIsInstance(self.world.stack.pop(), LostTrip)
+
+        # create new departure event with scooters in departure cluster
+        new_destination = random.choice(
+            [
+                cluster
+                for cluster in self.world.state.clusters
+                if len(cluster.scooters) > 0
+                and cluster.id != self.vehicle.current_location.id
+            ]
+        )
+        departure_event = ScooterDeparture(11, new_destination.id)
+        departure_event.perform(self.world)
+
+        arrival_event = self.world.stack.pop()
+
+        # Check that a ScooterArrival event is created
+        self.assertIsInstance(arrival_event, ScooterArrival)
 
         # test if the arrival event created in departure has the same departure cluster id
         self.assertEqual(
-            departure_event.departure_cluster_id, arrival_event.departure_cluster_id,
+            new_destination.id, arrival_event.departure_cluster_id,
         )
 
         # scooter should have been removed from the scooters in the state
-        self.assertFalse(
-            self.world.state.get_scooters().__contains__(arrival_event.scooter)
-        )
+        self.assertNotIn(arrival_event.scooter, self.world.state.get_scooters())
 
     def test_scooter_arrival(self):
-        self.world.state.current_location = self.world.state.clusters[0]
-        scooter = self.world.state.current_location.get_available_scooters(20.0)[0]
+        # Take two random clusters
+        departure_cluster = self.world.state.get_random_cluster()
+        arrival_cluster = self.world.state.get_random_cluster(exclude=departure_cluster)
 
+        # Find a scooter to move in the departure cluster
+        scooter = random.choice(departure_cluster.scooters)
         scooter_battery = scooter.battery
-
-        arrival_cluster = self.world.state.get_random_cluster()
 
         arrival_event = ScooterArrival(
             self.departure_time + self.travel_time,
             scooter,
             arrival_cluster.id,
-            self.world.state.get_random_cluster(exclude=arrival_cluster).id,
-            3,
+            departure_cluster.id,
+            self.world.state.get_distance_to_all(departure_cluster.id)[
+                arrival_cluster.id
+            ],
         )
 
         arrival_event.perform(self.world)
@@ -66,31 +93,33 @@ class EventsTests(unittest.TestCase):
         self.assertEqual(self.world.time, self.departure_time + self.travel_time)
 
         # test if arrival cluster contains the arrived scooter
-        self.assertTrue(arrival_cluster.scooters.__contains__(scooter))
+        self.assertIn(scooter, arrival_cluster.scooters)
 
         # test if battery has decreased
         self.assertLess(scooter.battery, scooter_battery)
 
     def test_vehicle_arrival(self):
-        random_cluster_in_state = self.world.state.get_random_cluster(
-            exclude=self.world.state.current_location
+        # Clear stack to check specific vehicle arrival event
+        self.world.stack = []
+        # Choose a random cluster for the vehicle to be in
+        arrival_cluster = self.world.state.get_random_cluster(
+            exclude=self.vehicle.current_location
         )
+        self.vehicle.current_location = arrival_cluster
         # Create a vehicle arrival event with a arrival time of 20 arriving at a random cluster in the world state
-        vehicle_arrival = VehicleArrival(20, random_cluster_in_state.id)
+        vehicle_arrival_event = VehicleArrival(20, self.vehicle.id, False)
 
         # Perform the vehicle arrival event
-        vehicle_arrival.perform(self.large_world)
+        vehicle_arrival_event.perform(self.world)
 
         # test if the time of world object is set to the departure time
-        self.assertEqual(vehicle_arrival.time, self.large_world.time)
+        self.assertEqual(vehicle_arrival_event.time, self.world.time)
 
-        # New current cluster is not the arrival cluster, as the action takes the state to a new cluster
-        self.assertNotEqual(
-            random_cluster_in_state.id, self.large_world.state.current_location.id
-        )
+        # New current cluster is not the arrival cluster, as the do_action takes the vehicle to a new cluster
+        self.assertNotEqual(arrival_cluster.id, self.vehicle.current_location.id)
 
         # Vehicle arrival event created a new vehicle arrival event
-        self.assertEqual(1, len(self.large_world.stack))
+        self.assertEqual(1, len(self.world.stack))
 
     def test_generate_scooter_trips(self):
         generate_trips_event = GenerateScooterTrips(0)
