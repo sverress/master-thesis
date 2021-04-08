@@ -34,7 +34,6 @@ class RandomRolloutPolicy(Policy):
             exclude=world.tabu_list,
             time=world.time,
         )
-        start = time.time()
 
         # For every possible action
         for action in actions:
@@ -53,8 +52,6 @@ class RandomRolloutPolicy(Policy):
             if reward >= max_reward:
                 max_reward = reward
                 best_action = action
-        end = time.time()
-        print("decision time", round(end - start))
         return best_action
 
     def __str__(self):
@@ -84,7 +81,7 @@ class SwapAllPolicy(Policy):
             ]
 
             # Calculate how many scooters that can be swapped
-            number_of_scooters_to_swap = world.state.get_max_number_of_swaps(vehicle)
+            number_of_scooters_to_swap = vehicle.get_max_number_of_swaps()
 
         # Return an action with no re-balancing, only scooter swapping
         return classes.Action(

@@ -57,7 +57,7 @@ class EventsTests(unittest.TestCase):
 
         arrival_event = self.world.stack.pop()
 
-        # Check that a lost trip event is created
+        # Check that a ScooterArrival event is created
         self.assertIsInstance(arrival_event, ScooterArrival)
 
         # test if the arrival event created in departure has the same departure cluster id

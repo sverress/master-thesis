@@ -83,13 +83,6 @@ class State:
             distance_matrix.append(neighbour_distance)
         return distance_matrix
 
-    @staticmethod
-    def get_max_number_of_swaps(vehicle: Vehicle):
-        return min(
-            min(len(vehicle.current_location.scooters), vehicle.battery_inventory),
-            len(vehicle.current_location.get_swappable_scooters()),
-        )
-
     def get_possible_actions(
         self,
         vehicle: Vehicle,
@@ -141,7 +134,7 @@ class State:
                 ),
                 vehicle.scooter_inventory_capacity - len(vehicle.scooter_inventory),
             )
-            swaps = State.get_max_number_of_swaps(vehicle)
+            swaps = vehicle.get_max_number_of_swaps()
             drop_offs = max(
                 min(
                     vehicle.current_location.ideal_state

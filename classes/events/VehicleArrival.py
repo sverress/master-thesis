@@ -65,10 +65,6 @@ class VehicleArrival(Event):
                 world.policy.__str__(),
             )
 
-            # visualize scooters currently out on a trip
-            if False:
-                world.state.visualize_current_trips(world.get_scooters_on_trip())
-
         # clear world flow counter dictionary
         world.clear_flow_dict()
 
