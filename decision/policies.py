@@ -67,7 +67,8 @@ class RandomRolloutPolicy(Policy):
 
             actions_info.append((action, reward, time.time() - start))
 
-        Policy.print_action_stats(vehicle, actions_info)
+        if world.verbose:
+            Policy.print_action_stats(vehicle, actions_info)
 
         return best_action
 

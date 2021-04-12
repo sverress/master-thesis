@@ -51,7 +51,7 @@ if __name__ == "__main__":
     run_analysis(
         policies=["RandomRolloutPolicy", "SwapAllPolicy"],
         shift_duration=120,
-        sample_size=1000,
+        sample_size=100,
         number_of_clusters=50,
         verbose=True,
     )
