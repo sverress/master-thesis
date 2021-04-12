@@ -180,21 +180,3 @@ class ValueFunction:
             (parameter - min_value) / (max_value - min_value)
             for parameter in parameter_list
         ]
-
-
-if __name__ == "__main__":
-    from clustering.scripts import get_initial_state
-
-    init_state = get_initial_state(100, 10)
-    VF = ValueFunction(10)
-    location_indicator, state_features = VF.convert_state_to_features(
-        init_state, init_state.vehicles[0], 0
-    )
-
-    linear_model_features = (
-        location_indicator
-        + state_features
-        + VF.create_location_features_combination(location_indicator, state_features)
-    )
-
-    print(len(linear_model_features) == len(VF.weights))
