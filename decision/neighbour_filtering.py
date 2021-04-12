@@ -10,9 +10,11 @@ def filtering_neighbours(
     number_of_random_neighbours=0,
     time=None,
     exclude=None,
+    max_swaps=0,
 ):
     """
     Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
+    :param max_swaps: max possible battery swaps of all actions
     :param exclude: locations to be excluded as neighbours
     :param time: time of the world so charging at depot can be controlled
     :param vehicle: vehicle to find neighbours from
@@ -79,7 +81,7 @@ def filtering_neighbours(
 
     return (
         neighbours + add_depots_as_neighbours(state, time, vehicle)
-        if time and vehicle.battery_inventory < BATTERY_INVENTORY * 0.2
+        if time and vehicle.battery_inventory - max_swaps < BATTERY_INVENTORY * 0.2
         else neighbours
     )
 

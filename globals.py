@@ -3,14 +3,14 @@ import os
 GEOSPATIAL_BOUND = (59.9112, 59.9438, 10.7027, 10.7772)
 GEOSPATIAL_BOUND_NEW = (59.9040, 59.9547, 10.6478, 10.8095)
 MAX_DISTANCE = 12
-CLUSTER_CENTER_DELTA = 0.01
+CLUSTER_CENTER_DELTA = 0.001
 
 # Colors for visualizer
 BLUE, GREEN, RED, BLACK, WHITE = "blue", "green", "red", "black", "white"
 VEHICLE_COLORS = ["blue", "green", "black", "purple"]
 
 # Speed of service vehicles
-VEHICLE_SPEED = 30
+VEHICLE_SPEED = 20
 MINUTES_IN_HOUR = 60
 
 # Inventory of vehicle
