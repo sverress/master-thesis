@@ -45,4 +45,4 @@ class Depot(Location):
         self.time = time
 
     def __str__(self):
-        return "Depot"
+        return f"Depot {self.id}"

@@ -71,15 +71,19 @@ class Vehicle:
 
     def __repr__(self):
         return (
-            f"<Vehicle at {self.current_location}, {len(self.scooter_inventory)} scooters,"
-            f" {self.battery_inventory} batteries>"
+            f"<Vehicle {self.id} at {self.current_location.__str__()}, "
+            f"{len(self.scooter_inventory)} scooters, {self.battery_inventory} batteries>"
         )
 
     def is_at_depot(self):
         return isinstance(self.current_location, Depot)
 
     def get_max_number_of_swaps(self):
-        return min(
-            min(len(self.current_location.scooters), self.battery_inventory),
-            len(self.current_location.get_swappable_scooters()),
+        return (
+            min(
+                min(len(self.current_location.scooters), self.battery_inventory),
+                len(self.current_location.get_swappable_scooters()),
+            )
+            if not self.is_at_depot()
+            else 0
         )

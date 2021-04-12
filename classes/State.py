@@ -153,6 +153,7 @@ class State:
                 number_of_random_neighbours=random_neighbours,
                 time=time,
                 exclude=exclude,
+                max_swaps=max(pick_ups, swaps),
             ):
                 for pick_up in get_range(pick_ups):
                     for swap in get_range(swaps):
