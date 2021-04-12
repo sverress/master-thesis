@@ -259,7 +259,10 @@ class State:
         return reward
 
     def __repr__(self):
-        return f"<State: vehicle_clusters: {[vehicle.current_location.id for vehicle in self.vehicles]}>"
+        return (
+            f"<State: {len(self.get_scooters())} scooters in {len(self.clusters)} "
+            f"clusters with {len(self.vehicles)} vehicles>"
+        )
 
     def get_neighbours(
         self, location: Location, number_of_neighbours=None, is_sorted=True
