@@ -15,6 +15,7 @@ class Vehicle:
     ):
         self.id = vehicle_id
         self.battery_inventory = battery_inventory
+        self.battery_inventory_capacity = battery_inventory
         self.scooter_inventory = []
         self.scooter_inventory_capacity = scooter_inventory_capacity
         self.service_route = []
