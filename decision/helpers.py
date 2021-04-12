@@ -19,7 +19,7 @@ def epsilon_greedy(choices: [(float, object)], epsilon=globals.EPSILON):
     :return: Either best or random object of the input choices
     """
     if random.random() > epsilon:
-        chosen = max(choices, key=lambda choice: choices[0])
+        chosen = max(choices, key=lambda choice: choice[0])
     else:
         chosen = random.choice(choices)
     value, chosen_object = chosen

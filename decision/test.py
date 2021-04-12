@@ -5,6 +5,7 @@ from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.policies import RandomRolloutPolicy, SwapAllPolicy
 from decision.neighbour_filtering import filtering_neighbours
+import decision.helpers
 
 
 class BasicDecisionTests(unittest.TestCase):
@@ -220,6 +221,11 @@ class PolicyTests(unittest.TestCase):
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
+
+    def test_epsilon_greedy_function(self):
+        choices = [(1.3, "Hello"), (214, "Hei"), (0.01, "Nix")]
+        self.assertIsInstance(decision.helpers.epsilon_greedy(choices), str)
+        self.assertEqual(decision.helpers.epsilon_greedy(choices, 0.0), "Hei")
 
 
 class NeighbourFilteringTests(unittest.TestCase):
