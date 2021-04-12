@@ -38,52 +38,14 @@ class ValueFunction:
         self.discount_factor = discount_factor
 
     def estimate_value(
-        self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
-        action: classes.Action,
-        time: int,
+        self, state: classes.State, vehicle: classes.Vehicle, time: int,
     ):
-        (
-            current_location_indicator,
-            current_state_features,
-        ) = self.convert_state_to_features(state, vehicle, time)
 
-        current_linear_model_features = (
-            current_location_indicator
-            + current_state_features
-            + ValueFunction.create_location_features_combination(
-                current_location_indicator, current_state_features
-            )
+        current_linear_model_features = ValueFunction.create_location_features_combination(
+            self.convert_state_to_features(state, vehicle, time)
         )
 
         current_state_value = float(np.dot(current_linear_model_features, self.weights))
-
-        action_distance = state.get_distance_id(
-            vehicle.current_location.id, action.next_location
-        )
-
-        action_time = action.get_action_time(action_distance)
-
-        reward = state.do_action(action, vehicle)
-
-        next_location_indicator, next_state_features = self.convert_state_to_features(
-            state, vehicle, action_time
-        )
-
-        next_linear_model_features = (
-            next_location_indicator
-            + next_state_features
-            + ValueFunction.create_location_features_combination(
-                next_location_indicator, next_state_features
-            )
-        )
-
-        next_state_value = float(np.dot(next_linear_model_features, self.weights))
-
-        self.update_weights(
-            current_linear_model_features, current_state_value, next_state_value, reward
-        )
 
         return current_state_value
 
@@ -156,10 +118,12 @@ class ValueFunction:
             + small_depot_degree_of_filling
         )
 
-        return location_indicator, state_features
+        return location_indicator + state_features
 
-    @staticmethod
-    def create_location_features_combination(location_indicator, state_features):
+    def create_location_features_combination(self, state_features):
+        location_indicator = state_features[: len(self.location_indicator)]
+        state_features = state_features[len(self.location_indicator) :]
+
         locations_features_combination = list(
             itertools.chain(
                 *[
