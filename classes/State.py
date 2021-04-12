@@ -380,8 +380,8 @@ class State:
     def compute_and_set_ideal_state(self, sample_scooters):
         clustering.methods.compute_and_set_ideal_state(self, sample_scooters)
 
-    def compute_and_set_trip_intensity(self, sample_scooters):
-        clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
+    def compute_and_set_trip_intensity(self):
+        clustering.methods.compute_and_set_trip_intensity(self)
 
     def sample(self, sample_size: int):
         # Filter out scooters not in sample
