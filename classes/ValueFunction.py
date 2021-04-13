@@ -20,19 +20,19 @@ class ValueFunction:
         # for vehicle - n bits for scooter inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # + n bits for battery inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # for every small depot - 1 float for degree of filling
-        number_of_locations_features = (number_of_clusters + number_of_depots) * 3
+        number_of_locations_indicators = (number_of_clusters + number_of_depots) * 3
         number_of_state_features = (
             (number_of_features_per_cluster * number_of_clusters)
-            + (2 * int(1 / vehicle_inventory_step_size))
+            + (2 * round(1 / vehicle_inventory_step_size))
             + number_of_small_depots
         )
 
-        self.weights = [0] * (
-            number_of_locations_features
+        self.weights = [0.1] * (
+            number_of_locations_indicators
             + number_of_state_features
-            + (number_of_locations_features * number_of_state_features)
+            + (number_of_locations_indicators * number_of_state_features)
         )
-        self.location_indicator = [0] * (3 * (number_of_clusters + number_of_depots))
+        self.location_indicator = [0] * number_of_locations_indicators
         self.vehicle_inventory_step_size = vehicle_inventory_step_size
         self.step_size = weight_update_step_size
         self.discount_factor = discount_factor
@@ -41,11 +41,11 @@ class ValueFunction:
         self, state: classes.State, vehicle: classes.Vehicle, time: int,
     ):
 
-        current_linear_model_features = ValueFunction.create_location_features_combination(
+        current_state_features = self.create_location_features_combination(
             self.convert_state_to_features(state, vehicle, time)
         )
 
-        current_state_value = float(np.dot(current_linear_model_features, self.weights))
+        current_state_value = float(np.dot(current_state_features, self.weights))
 
         return current_state_value
 
@@ -56,10 +56,12 @@ class ValueFunction:
         next_state_value: float,
         reward: float,
     ):
-        self.weights += (
+        self.weights += np.multiply(
             self.step_size
-            * (reward - (self.discount_factor * next_state_value) - current_state_value)
-            * current_state_features
+            * (
+                reward + (self.discount_factor * next_state_value) - current_state_value
+            ),
+            current_state_features,
         )
 
     def convert_state_to_features(
@@ -85,24 +87,30 @@ class ValueFunction:
         )
 
         scooter_inventory_percent = (
-            len(vehicle.scooter_inventory) / vehicle.scooter_inventory_capacity
+            0
+            if vehicle.scooter_inventory_capacity == 0
+            else (len(vehicle.scooter_inventory) / vehicle.scooter_inventory_capacity)
+            + 0.000001
         )
         battery_inventory_percent = (
-            vehicle.battery_inventory / vehicle.battery_inventory_capacity
+            0
+            if vehicle.battery_inventory_capacity == 0
+            else (vehicle.battery_inventory / vehicle.battery_inventory_capacity)
+            + 0.000001
         )
 
         scooter_inventory_indication = [
             1
-            if int(scooter_inventory_percent / self.vehicle_inventory_step_size) == i
+            if round(scooter_inventory_percent / self.vehicle_inventory_step_size) == i
             else 0
-            for i in range(int(1 / self.vehicle_inventory_step_size))
+            for i in range(round(1 / self.vehicle_inventory_step_size))
         ]
 
         battery_inventory_indication = [
             1
-            if int(battery_inventory_percent / self.vehicle_inventory_step_size) == i
+            if round(battery_inventory_percent / self.vehicle_inventory_step_size) == i
             else 0
-            for i in range(int(1 / self.vehicle_inventory_step_size))
+            for i in range(round(1 / self.vehicle_inventory_step_size))
         ]
 
         small_depot_degree_of_filling = [
@@ -133,7 +141,7 @@ class ValueFunction:
             )
         )
 
-        return locations_features_combination
+        return location_indicator + state_features + locations_features_combination
 
     @staticmethod
     def normalize_list(parameter_list: [float]):
@@ -144,3 +152,9 @@ class ValueFunction:
             (parameter - min_value) / (max_value - min_value)
             for parameter in parameter_list
         ]
+
+    # This method is to be used for selecting different value functions when more is implemented
+    # Think this function can be in the super class
+    @staticmethod
+    def get_value_function(name="ValueFunction", number_of_clusters=NUMBER_OF_CLUSTERS):
+        return ValueFunction(number_of_clusters)

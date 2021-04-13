@@ -1,6 +1,5 @@
 import copy
 import math
-import time
 import decision.neighbour_filtering
 import classes
 from globals import BATTERY_INVENTORY, NUMBER_OF_NEIGHBOURS
@@ -9,8 +8,7 @@ import scenario_simulation.scripts
 
 
 class Policy:
-    @staticmethod
-    def get_best_action(world, vehicle) -> classes.Action:
+    def get_best_action(self, world, vehicle) -> classes.Action:
         """
         Returns the best action for the input vehicle in the world context
         :param world: world object that contains the whole world state
@@ -20,9 +18,63 @@ class Policy:
         pass
 
 
+class TD0Policy(Policy):
+    def __init__(self, value_function, epsilon=0.2):
+        self.value_function = value_function
+        self.epsilon = epsilon
+
+    def get_best_action(self, world, vehicle):
+        best_next_state_value = -math.inf
+        best_reward = -math.inf
+        best_action = None
+
+        # Find all possible actions
+        actions = world.state.get_possible_actions(
+            vehicle,
+            number_of_neighbours=NUMBER_OF_NEIGHBOURS,
+            divide=2,
+            exclude=world.tabu_list,
+            time=world.time,
+        )
+
+        if self.epsilon > random.rand():
+            return random.choice(actions)
+        else:
+            for action in actions:
+                world_copy = copy.deepcopy(world)
+                vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
+                reward = world_copy.state.do_action(action, vehicle_copy)
+
+                next_state_value = self.value_function.estimate_value(
+                    world_copy.state, vehicle_copy, world_copy.time
+                )
+
+                if next_state_value > best_next_state_value:
+                    best_next_state_value = next_state_value
+                    best_reward = reward
+                    best_action = action
+
+            state_features = self.value_function.create_location_features_combination(
+                self.value_function.convert_state_to_features(
+                    world.state, vehicle, world.time
+                )
+            )
+            state_value = self.value_function.estimate_value(
+                world.state, vehicle, world.time
+            )
+
+            self.value_function.update_weights(
+                state_features, state_value, best_next_state_value, best_reward
+            )
+
+            return best_action
+
+    def __str__(self):
+        return "TD=Policy"
+
+
 class RandomRolloutPolicy(Policy):
-    @staticmethod
-    def get_best_action(world, vehicle):
+    def get_best_action(self, world, vehicle):
         max_reward = -math.inf
         best_action = None
 
@@ -59,8 +111,7 @@ class RandomRolloutPolicy(Policy):
 
 
 class SwapAllPolicy(Policy):
-    @staticmethod
-    def get_best_action(world, vehicle):
+    def get_best_action(self, world, vehicle):
         # Choose a random cluster
         next_location: classes.Location = decision.neighbour_filtering.filtering_neighbours(
             world.state, vehicle, number_of_neighbours=1, exclude=world.tabu_list
@@ -96,8 +147,7 @@ class SwapAllPolicy(Policy):
 
 
 class RandomActionPolicy(Policy):
-    @staticmethod
-    def get_best_action(world, vehicle):
+    def get_best_action(self, world, vehicle):
         # all possible actions in this state
         possible_actions = world.state.get_possible_actions(
             vehicle, number_of_neighbours=3, exclude=world.tabu_list, time=world.time

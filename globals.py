@@ -10,7 +10,7 @@ BLUE, GREEN, RED, BLACK, WHITE = "blue", "green", "red", "black", "white"
 VEHICLE_COLORS = ["blue", "green", "black", "purple"]
 
 # Speed of service vehicles
-VEHICLE_SPEED = 30
+VEHICLE_SPEED = 20
 MINUTES_IN_HOUR = 60
 
 # Inventory of vehicle
@@ -42,8 +42,12 @@ NUMBER_OF_NEIGHBOURS = 3
 SHIFT_DURATION = 120
 SAMPLE_SIZE = 100
 NUMBER_OF_CLUSTERS = 20
-# different policies: "RandomRolloutPolicy", "SwapAllPolicy"
-POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
+# different policies: "RandomRolloutPolicy", "SwapAllPolicy", "TD0Policy"
+POLICIES = ["TD0Policy", "SwapAllPolicy"]
+# different value functions:
+VALUE_FUNCTION = "ValueFunction"
+
+EPSILON = 0.1
 
 STATE_CACHE_DIR = "test_state_cache"
 

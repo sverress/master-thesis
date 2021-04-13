@@ -7,6 +7,7 @@ def run_analysis(
     sample_size=100,
     number_of_clusters=10,
     policies=None,
+    value_function=None,
     visualize_world=True,
     smooth_curve=True,
     verbose=False,
@@ -31,6 +32,7 @@ def run_analysis(
             sample_size=sample_size,
             number_of_clusters=number_of_clusters,
             policy=policy,
+            value_function=value_function,
             visualize=visualize_world,
             verbose=verbose,
         )

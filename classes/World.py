@@ -106,6 +106,7 @@ class World:
         number_of_clusters=20,
         initial_state=None,
         policy="RandomRolloutPolicy",
+        value_function=None,
         initial_location_depot=True,
         verbose=False,
         visualize=True,
@@ -137,7 +138,7 @@ class World:
             for end in np.arange(len(self.state.clusters))
             if start != end
         }
-        self.policy = get_policy(policy)
+        self.policy = get_policy(policy, value_function)
         self.metrics = World.WorldMetric()
         self.verbose = verbose
         if verbose:
