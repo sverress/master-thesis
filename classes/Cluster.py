@@ -109,7 +109,8 @@ class Cluster(Location):
             return matches[0]
         elif len(matches) > 1:
             raise ValueError(
-                f"There are more than one scooter ({len(matches)} scooters) matching on id {scooter_id} in Cluster {self.id}"
+                f"There are more than one scooter ({len(matches)} scooters) "
+                f"matching on id {scooter_id} in Cluster {self.id}"
             )
         else:
             raise ValueError(f"No scooters with id={scooter_id} where found")

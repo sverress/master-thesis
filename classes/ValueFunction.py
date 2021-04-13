@@ -7,24 +7,23 @@ import numpy as np
 class ValueFunction:
     def __init__(
         self,
-        number_of_clusters: int,
-        number_of_depots=3,
+        state: classes.State,
         weight_update_step_size=0.1,
         discount_factor=DISCOUNT_RATE,
         vehicle_inventory_step_size=0.25,
-        number_of_small_depots=2,
-        number_of_features_per_cluster=2,
+        number_of_features_per_cluster=3,
     ):
         # for every location - 3 bit for location
         # for every cluster 1 float for deviation, 1 float for battery deficient
         # for vehicle - n bits for scooter inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # + n bits for battery inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # for every small depot - 1 float for degree of filling
-        number_of_locations_indicators = (number_of_clusters + number_of_depots) * 3
+
+        number_of_locations_indicators = len(state.locations) * 3
         number_of_state_features = (
-            (number_of_features_per_cluster * number_of_clusters)
+            (number_of_features_per_cluster * len(state.clusters))
             + (2 * round(1 / vehicle_inventory_step_size))
-            + number_of_small_depots
+            + len(state.depots[1:])
         )
 
         self.weights = [0.1] * (
@@ -68,17 +67,29 @@ class ValueFunction:
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):
         location_indicator = (
-            self.location_indicator[: vehicle.current_location.id * 3]
-            + [1, 1, 1]
-            + self.location_indicator[(vehicle.current_location.id + 1) * 3 :]
+            [0] * 3 * (vehicle.current_location.id - 1)
+            + [1] * 3
+            + [0] * 3 * (len(state.locations) - vehicle.current_location.id)
         )
 
-        normalized_deviation_ideal_state = ValueFunction.normalize_list(
+        normalized_deviation_ideal_state_positive = ValueFunction.normalize_list(
             [
-                abs(len(cluster.scooters) - cluster.ideal_state)
+                len(cluster.scooters) - cluster.ideal_state
+                if len(cluster.scooters) - cluster.ideal_state > 0
+                else 0
                 for cluster in state.clusters
             ]
         )
+
+        normalized_deviation_ideal_state_negative = ValueFunction.normalize_list(
+            [
+                len(cluster.scooters) - cluster.ideal_state
+                if len(cluster.scooters) - cluster.ideal_state < 0
+                else 0
+                for cluster in state.clusters
+            ]
+        )
+
         normalized_deficient_battery = ValueFunction.normalize_list(
             [
                 len(cluster.scooters) - cluster.get_current_state()
@@ -119,7 +130,8 @@ class ValueFunction:
         ]
 
         state_features = (
-            normalized_deviation_ideal_state
+            normalized_deviation_ideal_state_positive
+            + normalized_deviation_ideal_state_negative
             + normalized_deficient_battery
             + scooter_inventory_indication
             + battery_inventory_indication
