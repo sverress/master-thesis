@@ -60,18 +60,14 @@ class State:
                 all_scooters.append(scooter)
         return all_scooters
 
-    def get_distance_locations(self, start: Location, end: Location):
+    def get_distance_locations(self, start: int, end: int):
         """
         Calculate distance between two clusters
-        :param start: Cluster object
-        :param end: Cluster object
+        :param start: Location id
+        :param end: Location id
         :return: float - distance in kilometers
         """
-        if start not in self.locations:
-            raise ValueError("Start cluster not in state")
-        elif end not in self.locations:
-            raise ValueError("End cluster not in state")
-        return self.distance_matrix[start.id][end.id]
+        return self.distance_matrix[start][end]
 
     def get_distance_id(self, start: int, end: int):
         return self.get_distance_locations(
@@ -213,16 +209,11 @@ class State:
         """
         reward = 0
         if not vehicle.is_at_depot():
-            # Retrieve all scooters that you can change battery on (and therefore also pick up)
-            swappable_scooters = vehicle.current_location.get_swappable_scooters()
-
             # Perform all pickups
             for pick_up_scooter_id in action.pick_ups:
                 pick_up_scooter = vehicle.current_location.get_scooter_from_id(
                     pick_up_scooter_id
                 )
-                swappable_scooters.remove(pick_up_scooter)
-
                 # Picking up scooter and adding to vehicle inventory and swapping battery
                 vehicle.pick_up(pick_up_scooter)
 
@@ -233,8 +224,6 @@ class State:
                 battery_swap_scooter = vehicle.current_location.get_scooter_from_id(
                     battery_swap_scooter_id
                 )
-                swappable_scooters.remove(battery_swap_scooter)
-
                 # Calculate reward of doing the battery swap
                 reward += (
                     (100.0 - battery_swap_scooter.battery) / 100.0
