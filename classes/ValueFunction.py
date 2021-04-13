@@ -5,6 +5,18 @@ import numpy as np
 
 
 class ValueFunction:
+    @staticmethod
+    def normalize_list(parameter_list: [float]):
+        min_value = min(parameter_list)
+        max_value = max(parameter_list)
+
+        return [
+            (parameter - min_value) / (max_value - min_value)
+            for parameter in parameter_list
+        ]
+
+
+class GradientDescent:
     def __init__(
         self,
         state: classes.State,
@@ -154,19 +166,3 @@ class ValueFunction:
         )
 
         return location_indicator + state_features + locations_features_combination
-
-    @staticmethod
-    def normalize_list(parameter_list: [float]):
-        min_value = min(parameter_list)
-        max_value = max(parameter_list)
-
-        return [
-            (parameter - min_value) / (max_value - min_value)
-            for parameter in parameter_list
-        ]
-
-    # This method is to be used for selecting different value functions when more is implemented
-    # Think this function can be in the super class
-    @staticmethod
-    def get_value_function(name="ValueFunction", number_of_clusters=NUMBER_OF_CLUSTERS):
-        return ValueFunction(number_of_clusters)

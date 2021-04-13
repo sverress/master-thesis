@@ -1,4 +1,5 @@
 import os
+import classes
 
 GEOSPATIAL_BOUND = (59.9112, 59.9438, 10.7027, 10.7772)
 GEOSPATIAL_BOUND_NEW = (59.9040, 59.9547, 10.6478, 10.8095)
@@ -45,7 +46,7 @@ NUMBER_OF_CLUSTERS = 20
 # different policies: "RandomRolloutPolicy", "SwapAllPolicy", "TD0Policy"
 POLICIES = ["TD0Policy", "SwapAllPolicy"]
 # different value functions:
-VALUE_FUNCTION = "ValueFunction"
+VALUE_FUNCTION = [classes.ValueFunction]
 
 EPSILON = 0.1
 

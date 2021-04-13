@@ -138,7 +138,9 @@ class World:
             for end in np.arange(len(self.state.clusters))
             if start != end
         }
-        self.policy = get_policy(policy, value_function)
+        self.policy = get_policy(
+            policy, value_function=value_function, state=self.state
+        )
         self.metrics = World.WorldMetric()
         self.verbose = verbose
         if verbose:
