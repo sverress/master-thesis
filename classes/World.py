@@ -12,7 +12,7 @@ from globals import (
     WHITE,
     DISCOUNT_RATE,
 )
-from decision.get_policy import get_policy
+from decision.helpers import get_policy
 from progress.bar import IncrementalBar
 
 
