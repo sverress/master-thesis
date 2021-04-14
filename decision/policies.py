@@ -145,7 +145,7 @@ class SwapAllPolicy(Policy):
             max_swaps=vehicle.get_max_number_of_swaps(),
         )[
             0
-        ] if vehicle.battery_inventory > BATTERY_INVENTORY * 0.1 else world.state.depots[
+        ] if vehicle.battery_inventory > vehicle.battery_inventory_capacity * 0.1 else world.state.depots[
             0
         ]
 

@@ -86,9 +86,7 @@ class EventsTests(unittest.TestCase):
             scooter,
             arrival_cluster.id,
             departure_cluster.id,
-            self.world.state.get_distance_to_all(departure_cluster.id)[
-                arrival_cluster.id
-            ],
+            self.world.state.get_distance(departure_cluster.id, arrival_cluster.id),
         )
 
         arrival_event.perform(self.world)

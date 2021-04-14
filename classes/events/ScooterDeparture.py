@@ -31,7 +31,7 @@ class ScooterDeparture(Event):
                 world.state.clusters, p=departure_cluster.get_leave_distribution()
             )
 
-            trip_distance = world.state.get_distance_locations(
+            trip_distance = world.state.get_distance(
                 departure_cluster.id, arrival_cluster.id,
             )
 

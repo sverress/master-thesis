@@ -56,22 +56,14 @@ class State:
                 all_scooters.append(scooter)
         return all_scooters
 
-    def get_distance_locations(self, start: int, end: int):
+    def get_distance(self, start_location_id: int, end_location_id: int):
         """
         Calculate distance between two clusters
-        :param start: Location id
-        :param end: Location id
+        :param start_location_id: Location id
+        :param end_location_id: Location id
         :return: float - distance in kilometers
         """
-        return self.distance_matrix[start][end]
-
-    def get_distance_id(self, start: int, end: int):
-        return self.get_distance_locations(
-            self.get_location_by_id(start), self.get_location_by_id(end)
-        )
-
-    def get_distance_to_all(self, location_id):
-        return self.distance_matrix[location_id]
+        return self.distance_matrix[start_location_id][end_location_id]
 
     def get_distance_to_all_clusters(self, location_id):
         return self.distance_matrix[location_id][: len(self.clusters)]
@@ -97,7 +89,7 @@ class State:
     def get_possible_actions(
         self,
         vehicle: Vehicle,
-        number_of_neighbours=None,
+        number_of_neighbours=3,
         divide=None,
         random_neighbours=0,
         exclude=None,

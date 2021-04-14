@@ -2,18 +2,7 @@ import classes
 import itertools
 import globals
 import numpy as np
-
-
-class ValueFunction:
-    @staticmethod
-    def normalize_list(parameter_list: [float]):
-        min_value = min(parameter_list)
-        max_value = max(parameter_list)
-
-        return [
-            (parameter - min_value) / (max_value - min_value)
-            for parameter in parameter_list
-        ]
+import helpers
 
 
 class GradientDescent:
@@ -89,7 +78,7 @@ class GradientDescent:
             + [0] * 3 * (len(state.locations) - 1 - vehicle.current_location.id)
         )
 
-        normalized_deviation_ideal_state_positive = ValueFunction.normalize_list(
+        normalized_deviation_ideal_state_positive = helpers.normalize_list(
             [
                 len(cluster.scooters) - cluster.ideal_state
                 if len(cluster.scooters) - cluster.ideal_state > 0
@@ -98,7 +87,7 @@ class GradientDescent:
             ]
         )
 
-        normalized_deviation_ideal_state_negative = ValueFunction.normalize_list(
+        normalized_deviation_ideal_state_negative = helpers.normalize_list(
             [
                 len(cluster.scooters) - cluster.ideal_state
                 if len(cluster.scooters) - cluster.ideal_state < 0
@@ -107,7 +96,7 @@ class GradientDescent:
             ]
         )
 
-        normalized_deficient_battery = ValueFunction.normalize_list(
+        normalized_deficient_battery = helpers.normalize_list(
             [
                 len(cluster.scooters) - cluster.get_current_state()
                 for cluster in state.clusters

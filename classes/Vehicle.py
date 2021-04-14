@@ -59,9 +59,12 @@ class Vehicle:
         self.service_route.append(location)
 
     def add_battery_inventory(self, number_of_batteries):
-        if number_of_batteries + self.battery_inventory > BATTERY_INVENTORY:
+        if (
+            number_of_batteries + self.battery_inventory
+            > self.battery_inventory_capacity
+        ):
             raise ValueError(
-                f"Adding {number_of_batteries} exceeds the vehicles capacity ({BATTERY_INVENTORY})."
+                f"Adding {number_of_batteries} exceeds the vehicles capacity ({self.battery_inventory_capacity})."
                 f"Current battery inventory: {self.battery_inventory}"
             )
         else:
@@ -88,3 +91,6 @@ class Vehicle:
             if not self.is_at_depot()
             else 0
         )
+
+    def flat_batteries(self):
+        return self.battery_inventory_capacity - self.battery_inventory
