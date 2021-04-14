@@ -280,3 +280,21 @@ def generate_depots(number_of_clusters=None):
         depots.append(Depot(lat, lon, i + number_of_clusters + 1, main_depot=False))
 
     return depots
+
+
+def generate_scenarios(state: State, number_of_scenarios=10000):
+    scenarios = []
+    cluster_indices = np.arange(len(state.clusters))
+    for i in range(number_of_scenarios):
+        one_scenario = []
+        for cluster in state.clusters:
+            number_of_trips = round(np.random.poisson(cluster.ideal_state * 0.1))
+            end_cluster_indices = np.random.choice(
+                cluster_indices,
+                p=cluster.get_leave_distribution(),
+                size=number_of_trips,
+            ).tolist()
+            one_scenario.append((cluster.id, number_of_trips, end_cluster_indices))
+
+        scenarios.append(one_scenario)
+    return scenarios

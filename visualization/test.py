@@ -36,6 +36,11 @@ class BasicVisualizerTests(unittest.TestCase):
         current_state.visualize_flow(flows)
 
     @staticmethod
+    def test_visualize_clusters():
+        current_state = get_initial_state(sample_size=1000, number_of_clusters=20)
+        current_state.visualize_clustering()
+
+    @staticmethod
     def test_analysis():
         policy = decision.SwapAllPolicy()
         # test the analysis plot

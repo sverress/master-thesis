@@ -76,7 +76,7 @@ class Cluster(Location):
         scooter.set_coordinates(self.get_lat() + delta_lat, self.get_lon() + delta_lon)
 
     def remove_scooter(self, scooter: Scooter):
-        self.scooters.remove(self.get_scooter_from_id(scooter.id))
+        self.scooters.remove(scooter)
 
     def get_available_scooters(self, battery_limit=BATTERY_LIMIT):
         return [
@@ -122,10 +122,12 @@ class Cluster(Location):
         )
 
     def __str__(self):
-        return "Cluster"
+        return f"Cluster {self.id}"
 
     def prob_of_scooter_usage(self):
         return max(
             0.0,
-            1 - (len(self.get_available_scooters()) / (self.ideal_state + 0.000000001)),
+            (1 - (len(self.get_available_scooters()) / self.ideal_state))
+            if self.ideal_state > 0
+            else 0.0,
         )

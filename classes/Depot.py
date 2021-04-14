@@ -45,4 +45,7 @@ class Depot(Location):
         self.time = time
 
     def __str__(self):
-        return "Depot"
+        return f"Depot {self.id}"
+
+    def __repr__(self):
+        return f"<Depot, id: {self.id}, cap: {self.capacity}>"

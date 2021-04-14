@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 def system_simulate(state):
@@ -16,23 +17,15 @@ def system_simulate(state):
     }
     trips = []
     lost_demand = []
-    cluster_indices = np.arange(len(state.clusters))
-    for i, start_cluster in enumerate(state.clusters):
-        # poisson process to select number of trips in a iteration
-        number_of_trips = round(
-            np.random.poisson(start_cluster.trip_intensity_per_iteration)
-        )
-
+    scenario = random.choice(state.simulation_scenarios)
+    for start_cluster_id, number_of_trips, end_cluster_indices in scenario:
+        start_cluster = state.clusters[start_cluster_id]
         # if there is more trips than scooters available, the system has lost demand
         valid_scooters = start_cluster.get_available_scooters()
         if number_of_trips > len(valid_scooters):
             lost_demand.append(number_of_trips - len(valid_scooters))
-            number_of_trips = len(valid_scooters)
+            end_cluster_indices = end_cluster_indices[: len(valid_scooters)]
 
-        leave_distribution = start_cluster.get_leave_distribution()
-        end_cluster_indices = np.random.choice(
-            cluster_indices, p=leave_distribution, size=number_of_trips
-        )
         # loop to generate trips from the cluster
         for j, end_cluster_index in enumerate(end_cluster_indices):
             trips.append(
@@ -47,7 +40,7 @@ def system_simulate(state):
     # compute trip after all trips are generated to avoid handling inflow in cluster
     for start_cluster, end_cluster, scooter in trips:
         start_cluster.scooters.remove(scooter)
-        trip_distance = state.get_distance_locations(start_cluster, end_cluster)
+        trip_distance = state.get_distance_locations(start_cluster.id, end_cluster.id)
         scooter.travel(trip_distance)
         end_cluster.add_scooter(scooter)
 

@@ -20,7 +20,6 @@ class EventsTests(unittest.TestCase):
         )
         self.world.stack = []
         self.vehicle = self.world.state.vehicles[0]
-        self.vehicle.current_location = self.world.state.clusters[0]
         self.large_world = World(
             40,
             policy=decision.SwapAllPolicy(),
@@ -30,7 +29,6 @@ class EventsTests(unittest.TestCase):
         )
         self.large_world.stack = []
         self.vehicle_large_world = self.large_world.state.vehicles[0]
-        self.vehicle_large_world.current_location = self.large_world.state.clusters[0]
 
         self.departure_time = 1
         self.travel_time = 5
