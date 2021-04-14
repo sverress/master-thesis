@@ -52,14 +52,16 @@ class GradientDescent:
         self.discount_factor = discount_factor
 
     def estimate_value(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
+        state_features=None,
     ):
+        if not state_features:
+            state_features = self.get_state_features(state, vehicle, time)
 
-        current_state_features = self.create_location_features_combination(
-            self.convert_state_to_features(state, vehicle, time)
-        )
-
-        current_state_value = float(np.dot(current_state_features, self.weights))
+        current_state_value = float(np.dot(state_features, self.weights))
 
         return current_state_value
 
@@ -169,3 +171,8 @@ class GradientDescent:
         )
 
         return location_indicator + state_features + locations_features_combination
+
+    def get_state_features(self, state, vehicle, time):
+        return self.create_location_features_combination(
+            self.convert_state_to_features(state, vehicle, time)
+        )

@@ -30,16 +30,12 @@ class Policy:
         print("\n----------------------------------------------------------------")
 
 
-class TD0Policy(Policy):
+class EpsilonGreedyValueFunctionPolicy(Policy):
     def __init__(self, value_function=None, epsilon=0.2):
         self.value_function = value_function
         self.epsilon = epsilon
 
     def get_best_action(self, world, vehicle):
-        best_next_state_value = -math.inf
-        best_reward = -math.inf
-        best_action = None
-
         # Find all possible actions
         actions = world.state.get_possible_actions(
             vehicle,
@@ -49,43 +45,52 @@ class TD0Policy(Policy):
             time=world.time,
         )
 
+        # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
             return random.choice(actions)
         else:
+            # Create list containing all actions and their rewards and values (action, reward, value_function_value)
+            action_info = []
             for action in actions:
+                start = time.time()
                 world_copy = copy.deepcopy(world)
                 vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
                 reward = world_copy.state.do_action(action, vehicle_copy)
-
                 next_state_value = self.value_function.estimate_value(
                     world_copy.state, vehicle_copy, world_copy.time
                 )
-
-                if next_state_value > best_next_state_value:
-                    best_next_state_value = next_state_value
-                    best_reward = reward
-                    best_action = action
-
-            state_features = self.value_function.create_location_features_combination(
-                self.value_function.convert_state_to_features(
-                    world.state, vehicle, world.time
+                stop = time.time()
+                action_info.append((action, reward, next_state_value, stop - start))
+            # Find the action with the highest reward and future expected reward - reward + value function next state
+            (
+                best_action,
+                best_action_reward,
+                best_action_next_state_value,
+                best_action_time,
+            ) = max(action_info, key=lambda pair: pair[1] + pair[2])
+            if world.verbose:
+                Policy.print_action_stats(
+                    vehicle,
+                    [
+                        (action, reward + next_state_value, elapsed_time)
+                        for action, reward, next_state_value, elapsed_time in action_info
+                    ],
                 )
+            state_features = self.value_function.get_state_features(
+                world.state, vehicle, world.time
             )
             state_value = self.value_function.estimate_value(
-                world.state, vehicle, world.time
+                world.state, vehicle, world.time, state_features=state_features
             )
 
             self.value_function.update_weights(
-                state_features, state_value, best_next_state_value, best_reward
+                state_features,
+                state_value,
+                best_action_next_state_value,
+                best_action_reward,
             )
 
-            if not best_action:
-                print(actions)
-
             return best_action
-
-    def __str__(self):
-        return "TD0Policy"
 
 
 class RandomRolloutPolicy(Policy):
@@ -128,9 +133,6 @@ class RandomRolloutPolicy(Policy):
 
         return best_action
 
-    def __str__(self):
-        return "RandomRolloutPolicy"
-
 
 class SwapAllPolicy(Policy):
     def get_best_action(self, world, vehicle):
@@ -168,9 +170,6 @@ class SwapAllPolicy(Policy):
             next_location=next_location.id,
         )
 
-    def __str__(self):
-        return "SwapAllPolicy"
-
 
 class RandomActionPolicy(Policy):
     def get_best_action(self, world, vehicle):
@@ -181,6 +180,3 @@ class RandomActionPolicy(Policy):
 
         # pick a random action
         return random.choice(possible_actions)
-
-    def __str__(self):
-        return "RandomActionPolicy"

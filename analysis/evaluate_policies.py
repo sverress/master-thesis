@@ -52,7 +52,10 @@ if __name__ == "__main__":
         number_of_clusters=NUMBER_OF_CLUSTERS,
     )
     # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
-    POLICIES = [decision.TD0Policy(VALUE_FUNCTION), decision.RandomRolloutPolicy()]
+    POLICIES = [
+        decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION),
+        decision.RandomRolloutPolicy(),
+    ]
 
     instances = []
     for current_policy in POLICIES:

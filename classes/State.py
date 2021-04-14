@@ -179,14 +179,15 @@ class State:
                                     [swap, pick_up, drop_off, cluster.id]
                                 )
 
-                # Assume that no battery swap or pick-up of scooters with 100% battery and
-                # that the scooters with the lowest battery are prioritized
-                swappable_scooters_id = [
-                    scooter.id
-                    for scooter in vehicle.current_location.get_swappable_scooters()
-                ]
-                # Adding every action. Actions are the IDs of the scooters to be handled.
-                actions = [
+            # Assume that no battery swap or pick-up of scooters with 100% battery and
+            # that the scooters with the lowest battery are prioritized
+            swappable_scooters_id = [
+                scooter.id
+                for scooter in vehicle.current_location.get_swappable_scooters()
+            ]
+            # Adding every action. Actions are the IDs of the scooters to be handled.
+            for battery_swap, pick_up, drop_off, cluster_id in combinations:
+                actions.append(
                     Action(
                         swappable_scooters_id[pick_up : battery_swap + pick_up],
                         swappable_scooters_id[:pick_up],
@@ -195,8 +196,7 @@ class State:
                         ],
                         cluster_id,
                     )
-                    for battery_swap, pick_up, drop_off, cluster_id in combinations
-                ]
+                )
         return actions
 
     def do_action(self, action: Action, vehicle: Vehicle):

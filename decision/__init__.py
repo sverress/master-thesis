@@ -1,4 +1,4 @@
 from .policies import RandomRolloutPolicy
 from .policies import SwapAllPolicy
-from .policies import TD0Policy
+from .policies import EpsilonGreedyValueFunctionPolicy
 from .policies import RandomActionPolicy
