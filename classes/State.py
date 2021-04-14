@@ -1,8 +1,6 @@
 import random
-from typing import Union
 from classes.Location import Location
 from classes.Cluster import Cluster
-from classes.Vehicle import Vehicle
 from classes.Depot import Depot
 import clustering.methods
 from system_simulation.scripts import system_simulate
@@ -12,16 +10,37 @@ import numpy as np
 import math
 import pickle
 import os
-from globals import GEOSPATIAL_BOUND_NEW, STATE_CACHE_DIR
+from globals import STATE_CACHE_DIR
+import copy
 
 
 class State:
-    def __init__(self, clusters: [Cluster], depots: [Depot], vehicles: [Vehicle]):
+    def __init__(
+        self,
+        clusters: [Cluster],
+        depots: [Depot],
+        vehicles: [Vehicle],
+        distance_matrix=None,
+    ):
         self.clusters = clusters
         self.vehicles = vehicles
         self.depots = depots
         self.locations = self.clusters + self.depots
-        self.distance_matrix = self.calculate_distance_matrix()
+        if distance_matrix:
+            self.distance_matrix = distance_matrix
+        else:
+            self.distance_matrix = self.calculate_distance_matrix()
+        self.simulation_scenarios = None
+
+    def __deepcopy__(self, *args):
+        new_state = State(
+            copy.deepcopy(self.clusters),
+            copy.deepcopy(self.depots),
+            copy.deepcopy(self.vehicles),
+            distance_matrix=self.distance_matrix,
+        )
+        new_state.simulation_scenarios = self.simulation_scenarios
+        return new_state
 
     def get_all_locations(self):
         return self.locations
@@ -41,18 +60,14 @@ class State:
                 all_scooters.append(scooter)
         return all_scooters
 
-    def get_distance_locations(self, start: Location, end: Location):
+    def get_distance_locations(self, start: int, end: int):
         """
         Calculate distance between two clusters
-        :param start: Cluster object
-        :param end: Cluster object
+        :param start: Location id
+        :param end: Location id
         :return: float - distance in kilometers
         """
-        if start not in self.locations:
-            raise ValueError("Start cluster not in state")
-        elif end not in self.locations:
-            raise ValueError("End cluster not in state")
-        return self.distance_matrix[start.id][end.id]
+        return self.distance_matrix[start][end]
 
     def get_distance_id(self, start: int, end: int):
         return self.get_distance_locations(
@@ -194,16 +209,11 @@ class State:
         """
         reward = 0
         if not vehicle.is_at_depot():
-            # Retrieve all scooters that you can change battery on (and therefore also pick up)
-            swappable_scooters = vehicle.current_location.get_swappable_scooters()
-
             # Perform all pickups
             for pick_up_scooter_id in action.pick_ups:
                 pick_up_scooter = vehicle.current_location.get_scooter_from_id(
                     pick_up_scooter_id
                 )
-                swappable_scooters.remove(pick_up_scooter)
-
                 # Picking up scooter and adding to vehicle inventory and swapping battery
                 vehicle.pick_up(pick_up_scooter)
 
@@ -214,8 +224,6 @@ class State:
                 battery_swap_scooter = vehicle.current_location.get_scooter_from_id(
                     battery_swap_scooter_id
                 )
-                swappable_scooters.remove(battery_swap_scooter)
-
                 # Calculate reward of doing the battery swap
                 reward += (
                     (100.0 - battery_swap_scooter.battery) / 100.0
@@ -241,7 +249,10 @@ class State:
         return reward
 
     def __repr__(self):
-        return f"<State: vehicle_clusters: {[vehicle.current_location.id for vehicle in self.vehicles]}>"
+        return (
+            f"<State: {len(self.get_scooters())} scooters in {len(self.clusters)} "
+            f"clusters with {len(self.vehicles)} vehicles>"
+        )
 
     def get_neighbours(
         self, location: Location, number_of_neighbours=None, is_sorted=True
@@ -362,8 +373,14 @@ class State:
     def compute_and_set_ideal_state(self, sample_scooters):
         clustering.methods.compute_and_set_ideal_state(self, sample_scooters)
 
-    def compute_and_set_trip_intensity(self, sample_scooters):
-        clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
+    def compute_and_set_trip_intensity(
+        self, sample_scooters, ideal_state_computation=False
+    ):
+        if ideal_state_computation:
+            for cluster in self.clusters:
+                cluster.trip_intensity_per_iteration = cluster.ideal_state * 0.1
+        else:
+            clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
 
     def sample(self, sample_size: int):
         # Filter out scooters not in sample

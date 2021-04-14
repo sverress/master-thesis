@@ -249,10 +249,10 @@ class NeighbourFilteringTests(unittest.TestCase):
                 for scooter in cluster.scooters:
                     scooter.battery = 0
 
-        best_neighbours = filtering_neighbours(state, vehicle, number_of_neighbours=3)
-
         # add one scooter to vehicle inventory so filtering neighbours uses the right filtering method
         vehicle.pick_up(Scooter(0, 0, 0.9, 0))
+
+        best_neighbours = filtering_neighbours(state, vehicle, number_of_neighbours=3)
 
         # check if clusters are closest and with the highest deviation -> best neighbours
         for neighbour in best_neighbours:

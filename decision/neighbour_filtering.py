@@ -98,7 +98,7 @@ def add_depots_as_neighbours(state, time, vehicle):
                 depots.append(depot)
             else:
                 distance_to_depot = state.get_distance_locations(
-                    vehicle.current_location, depot
+                    vehicle.current_location.id, depot.id
                 )
                 if (
                     closest_distance > distance_to_depot

@@ -46,3 +46,6 @@ class Depot(Location):
 
     def __str__(self):
         return f"Depot {self.id}"
+
+    def __repr__(self):
+        return f"<Depot, id: {self.id}, cap: {self.capacity}>"

@@ -8,9 +8,6 @@ class StateTests(unittest.TestCase):
         self.state_small = get_initial_state(100)
         self.state_big = get_initial_state(2000)
 
-    def test_visualize_clusters(self):
-        self.state_mid.visualize_clustering()
-
     def test_leave_probabilities(self):
         for state in [self.state_mid, self.state_small, self.state_mid]:
             for cluster in state.clusters:

@@ -76,7 +76,7 @@ class Cluster(Location):
         scooter.set_coordinates(self.get_lat() + delta_lat, self.get_lon() + delta_lon)
 
     def remove_scooter(self, scooter: Scooter):
-        self.scooters.remove(self.get_scooter_from_id(scooter.id))
+        self.scooters.remove(scooter)
 
     def get_available_scooters(self, battery_limit=BATTERY_LIMIT):
         return [
