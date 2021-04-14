@@ -16,11 +16,7 @@ import copy
 
 class State:
     def __init__(
-        self,
-        clusters: [Cluster],
-        depots: [Depot],
-        vehicles: [Vehicle],
-        distance_matrix=None,
+        self, clusters: [Cluster], depots: [Depot], vehicles=None, distance_matrix=None,
     ):
         self.clusters = clusters
         self.vehicles = vehicles

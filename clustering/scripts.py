@@ -2,7 +2,6 @@ from classes import Vehicle, State
 import clustering.methods as methods
 import os
 from globals import STATE_CACHE_DIR
-from progress.bar import Bar
 
 
 def get_initial_state(
@@ -11,6 +10,8 @@ def get_initial_state(
     save=True,
     cache=True,
     initial_location_depot=True,
+    number_of_vans=1,
+    number_of_bikes=1,
 ) -> State:
     # If this combination has been requested before we fetch a cached version
     if cache and os.path.exists(
@@ -19,66 +20,67 @@ def get_initial_state(
         print(
             f"\nUsing cached version of state from {STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle\n"
         )
-        return State.load_state(
+        initial_state = State.load_state(
             f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
         )
-    print(
-        f"\nSetup initial state from entur dataset with {number_of_clusters} clusters and {sample_size} scooters"
+    else:
+
+        print(
+            f"\nSetup initial state from entur dataset with {number_of_clusters} clusters and {sample_size} scooters"
+        )
+        # Get dataframe from EnTur CSV file within boundary
+        entur_dataframe = methods.read_bounded_csv_file(
+            "test_data/0900-entur-snapshot.csv"
+        )
+
+        # Create clusters
+        cluster_labels = methods.cluster_data(entur_dataframe, number_of_clusters)
+
+        # Structure data into objects
+        clusters = methods.generate_cluster_objects(entur_dataframe, cluster_labels)
+
+        # generate depots and adding them to clusters list
+        depots = methods.generate_depots(number_of_clusters=len(clusters))
+
+        # Create state object
+        initial_state = State(clusters, depots, [])
+
+        # Sample size filtering. Create list of scooter ids to include
+        sample_scooters = methods.scooter_sample_filter(entur_dataframe, sample_size)
+
+        # Find the ideal state for each cluster
+        initial_state.compute_and_set_ideal_state(sample_scooters)
+
+        # Trip intensity analysis
+        initial_state.compute_and_set_trip_intensity(sample_scooters)
+
+        # Get probability of movement from scooters in a cluster
+        probability_matrix = methods.scooter_movement_analysis(initial_state)
+        initial_state.set_probability_matrix(probability_matrix)
+
+        if sample_size:
+            initial_state.sample(sample_size)
+
+        # Generate scenarios
+        initial_state.simulation_scenarios = methods.generate_scenarios(initial_state)
+
+        if save:
+            # Cache the state for later
+            initial_state.save_state()
+            print("Setup state completed\n")
+
+    # Choosing a location as starting cluster for all vehicles
+    current_location = (
+        initial_state.depots[0] if initial_location_depot else initial_state.clusters[0]
     )
 
-    clustering = Bar("| Clustering data", max=4)
-    # Get dataframe from EnTur CSV file within boundary
-    entur_dataframe = methods.read_bounded_csv_file("test_data/0900-entur-snapshot.csv")
-    clustering.next()
-
-    # Create clusters
-    cluster_labels = methods.cluster_data(entur_dataframe, number_of_clusters)
-    clustering.next()
-
-    # Structure data into objects
-    clusters = methods.generate_cluster_objects(entur_dataframe, cluster_labels)
-    clustering.next()
-
-    # generate depots and adding them to clusters list
-    depots = methods.generate_depots(number_of_clusters=len(clusters))
-    clustering.next()
-
-    # Choosing first cluster as starting cluster in state
-    current_location = depots[0] if initial_location_depot else clusters[0]
-    clustering.finish()
-
-    # Choosing a default vehicle as the vehicle in the new state
-    van = Vehicle(0, current_location)
-    bike = Vehicle(
-        1, current_location, battery_inventory=20, scooter_inventory_capacity=0
-    )
-
-    # Create state object
-    initial_state = State(clusters, depots, [van, bike])
-
-    # Sample size filtering. Create list of scooter ids to include
-    sample_scooters = methods.scooter_sample_filter(entur_dataframe, sample_size)
-
-    # Find the ideal state for each cluster
-    initial_state.compute_and_set_ideal_state(sample_scooters)
-
-    # Trip intensity analysis
-    initial_state.compute_and_set_trip_intensity(sample_scooters)
-
-    # Get probability of movement from scooters in a cluster
-    probability_matrix = methods.scooter_movement_analysis(initial_state)
-    initial_state.set_probability_matrix(probability_matrix)
-
-    if sample_size:
-        initial_state.sample(sample_size)
-
-    # Generate scenarios
-    initial_state.simulation_scenarios = methods.generate_scenarios(initial_state)
-
-    if save:
-        # Cache the state for later
-        initial_state.save_state()
-        print("Setup state completed\n")
+    # Setting vehicles to initial state
+    initial_state.vehicles = [
+        Vehicle(i, current_location) for i in range(number_of_vans)
+    ] + [
+        Vehicle(i, current_location, battery_inventory=20, scooter_inventory_capacity=0)
+        for i in range(number_of_vans, number_of_vans + number_of_bikes)
+    ]
 
     return initial_state
 

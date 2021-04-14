@@ -5,6 +5,7 @@ import classes
 from globals import BATTERY_INVENTORY, NUMBER_OF_NEIGHBOURS, NUMBER_OF_ROLLOUTS
 import numpy.random as random
 import scenario_simulation.scripts
+import time
 
 
 class Policy:
