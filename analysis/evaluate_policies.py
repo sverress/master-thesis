@@ -34,9 +34,7 @@ def run_analysis(
             visualize=visualize_world,
             verbose=verbose,
         )
-        # pumping up the trip intensity
-        for cluster in world.state.clusters:
-            cluster.trip_intensity_per_iteration = round(cluster.ideal_state * 0.1)
+        world.state.compute_and_set_trip_intensity(None, ideal_state_computation=True)
         # run the world and add the world object to a list containing all world instances
         world.run()
         instances.append(world)
