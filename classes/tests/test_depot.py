@@ -1,6 +1,7 @@
 import unittest
 from clustering.scripts import get_initial_state
 import classes
+import decision
 from globals import (
     BATTERY_INVENTORY,
     SMALL_DEPOT_CAPACITY,
@@ -13,12 +14,14 @@ class DepotTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = classes.World(
             shift_duration=BATTERY_INVENTORY * SWAP_TIME_PER_BATTERY + 1,
+            policy=decision.SwapAllPolicy(),
             sample_size=100,
             number_of_clusters=10,
-            initial_state=get_initial_state(500),
+            verbose=False,
+            visualize=False,
+            initial_location_depot=True,
         )
         self.vehicle = self.world.state.vehicles[0]
-        self.vehicle.current_location = self.world.state.depots[0]
 
     def test_depot_charge(self):
         depot = classes.Depot(lat=0.0, lon=0.0, depot_id=0)

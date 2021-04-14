@@ -6,6 +6,7 @@ from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 from analysis.evaluate_policies import run_analysis
 import unittest
+import decision
 
 
 class BasicVisualizerTests(unittest.TestCase):
@@ -36,14 +37,12 @@ class BasicVisualizerTests(unittest.TestCase):
 
     @staticmethod
     def test_analysis():
+        policy = decision.SwapAllPolicy()
         # test the analysis plot
-        run_analysis(
-            shift_duration=120,
-            sample_size=100,
-            number_of_clusters=10,
-            policies=["SwapAllPolicy"],
-            smooth_curve=True,
+        world = run_analysis(
+            shift_duration=60, sample_size=100, number_of_clusters=10, policy=policy,
         )
+        visualize_analysis([world], [policy], smooth_curve=True)
 
 
 if __name__ == "__main__":

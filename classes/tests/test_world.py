@@ -1,11 +1,14 @@
 import unittest
 import random
 import classes
+import decision
 
 
 class WorldTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = classes.World(40, number_of_clusters=5, visualize=False)
+        self.world = classes.World(
+            40, policy=decision.SwapAllPolicy(), number_of_clusters=5, visualize=False
+        )
 
     def test_run(self):
         self.world.stack = [classes.Event(time) for time in range(10, 41, 10)]

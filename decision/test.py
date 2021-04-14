@@ -1,6 +1,6 @@
 import unittest
 import random
-
+import decision
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.policies import RandomRolloutPolicy, SwapAllPolicy
@@ -41,7 +41,7 @@ class BasicDecisionTests(unittest.TestCase):
             )
 
         # Test number of actions
-        self.assertEqual(len(actions), 6)
+        self.assertEqual(len(actions), 5)
 
         # Calculate the expected reward
         reward = (
@@ -83,7 +83,7 @@ class BasicDecisionTests(unittest.TestCase):
         actions = self.initial_state.get_possible_actions(self.vehicle)
 
         # Test number of actions
-        self.assertEqual(len(actions), 15)
+        self.assertEqual(len(actions), 14)
 
         # Test no reward for pickup
         self.assertEqual(
@@ -131,7 +131,7 @@ class BasicDecisionTests(unittest.TestCase):
         )
 
         # Test number of actions
-        self.assertEqual(len(actions), 18)
+        self.assertEqual(len(actions), 17)
 
         # Calculate the expected reward
         reward = (
@@ -177,8 +177,8 @@ class BasicDecisionTests(unittest.TestCase):
         )
         vehicle = initial_state.vehicles[0]
         # Modify initial state. 5 battery swaps and 2 drop-offs possible
-        vehicle.scooter_inventory = []
-        vehicle.current_location.scooters = []
+        vehicle.scooter_inventory_capacity = 0
+        vehicle.current_location.scooters = vehicle.current_location.scooters[:1]
 
         # Get all possible actions
         actions = initial_state.get_possible_actions(vehicle, number_of_neighbours=5)
@@ -207,16 +207,28 @@ class BasicDecisionTests(unittest.TestCase):
 
 class PolicyTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = World(40)
-        self.vehicle = self.world.state.vehicles[0]
+        self.world_swap_all_policy = World(40, policy=decision.SwapAllPolicy())
+        self.vehicle_swap_all_policy = self.world_swap_all_policy.state.vehicles[0]
+
+        self.world_random_rollout_policy = World(
+            40, policy=decision.RandomRolloutPolicy()
+        )
+        self.vehicle_random_rollout_policy = self.world_random_rollout_policy.state.vehicles[
+            0
+        ]
 
     def test_random_rollout_policy(self):
         self.assertIsInstance(
-            RandomRolloutPolicy.get_best_action(self.world, self.vehicle), Action,
+            self.world_random_rollout_policy.policy.get_best_action(
+                self.world_random_rollout_policy, self.vehicle_random_rollout_policy
+            ),
+            Action,
         )
 
     def test_swap_all_policy(self):
-        action = SwapAllPolicy.get_best_action(self.world, self.vehicle)
+        action = self.world_swap_all_policy.policy.get_best_action(
+            self.world_swap_all_policy, self.vehicle_swap_all_policy
+        )
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
@@ -243,10 +255,10 @@ class NeighbourFilteringTests(unittest.TestCase):
                 for scooter in cluster.scooters:
                     scooter.battery = 0
 
-        best_neighbours = filtering_neighbours(state, vehicle, number_of_neighbours=3)
-
         # add one scooter to vehicle inventory so filtering neighbours uses the right filtering method
         vehicle.pick_up(Scooter(0, 0, 0.9, 0))
+
+        best_neighbours = filtering_neighbours(state, vehicle, number_of_neighbours=3)
 
         # check if clusters are closest and with the highest deviation -> best neighbours
         for neighbour in best_neighbours:

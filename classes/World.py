@@ -100,10 +100,10 @@ class World:
     def __init__(
         self,
         shift_duration: int,
+        policy,
         sample_size=100,
-        number_of_clusters=20,
+        number_of_clusters=10,
         initial_state=None,
-        policy="RandomRolloutPolicy",
         initial_location_depot=True,
         verbose=False,
         visualize=True,
