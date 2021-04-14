@@ -19,7 +19,7 @@ class Policy:
 
 
 class TD0Policy(Policy):
-    def __init__(self, value_function, epsilon=0.2):
+    def __init__(self, value_function=None, epsilon=0.2):
         self.value_function = value_function
         self.epsilon = epsilon
 
@@ -67,10 +67,13 @@ class TD0Policy(Policy):
                 state_features, state_value, best_next_state_value, best_reward
             )
 
+            if not best_action:
+                print(actions)
+
             return best_action
 
     def __str__(self):
-        return "TD=Policy"
+        return "TD0Policy"
 
 
 class RandomRolloutPolicy(Policy):

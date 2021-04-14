@@ -361,11 +361,15 @@ def visualize_analysis(instances, policies, smooth_curve=True):
 
         ax1.plot(x, lost_demand, c=COLORS[i], label=policies[i])
         if smooth_curve:
-            plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], policies[i])
-            plot_smoothed_curve(x, deficient_battery, ax3, COLORS[i], policies[i])
+            plot_smoothed_curve(
+                x, deviation_ideal_state, ax2, COLORS[i], policies[i].__str__()
+            )
+            plot_smoothed_curve(
+                x, deficient_battery, ax3, COLORS[i], policies[i].__str__()
+            )
         else:
-            ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=policies[i])
-            ax3.plot(x, deficient_battery, c=COLORS[i], label=policies[i])
+            ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=policies[i].__str__())
+            ax3.plot(x, deficient_battery, c=COLORS[i], label=policies[i].__str__())
 
     for subplot in subplots:
         subplot.legend()

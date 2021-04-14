@@ -6,13 +6,11 @@ import bisect
 import classes
 
 from globals import (
-    BATTERY_LIMIT,
     LOST_TRIP_REWARD,
     ITERATION_LENGTH_MINUTES,
     WHITE,
     DISCOUNT_RATE,
 )
-from decision.get_policy import get_policy
 from progress.bar import IncrementalBar
 
 
@@ -106,7 +104,6 @@ class World:
         number_of_clusters=20,
         initial_state=None,
         policy="RandomRolloutPolicy",
-        value_function=None,
         initial_location_depot=True,
         verbose=False,
         visualize=True,
@@ -138,9 +135,7 @@ class World:
             for end in np.arange(len(self.state.clusters))
             if start != end
         }
-        self.policy = get_policy(
-            policy, value_function=value_function, state=self.state
-        )
+        self.policy = policy
         self.metrics = World.WorldMetric()
         self.verbose = verbose
         if verbose:

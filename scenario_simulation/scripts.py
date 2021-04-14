@@ -1,5 +1,5 @@
 import copy
-import decision.get_policy
+import decision
 from globals import ITERATION_LENGTH_MINUTES, LOST_TRIP_REWARD, NUMBER_OF_ROLLOUTS
 
 
@@ -15,7 +15,7 @@ def estimate_reward(
     """
 
     all_rewards = []
-    random_action_policy = decision.get_policy.get_policy("RandomActionPolicy")
+    random_action_policy = decision.RandomActionPolicy()
     # Do n scenario simulations
     for i in range(number_of_simulations):
         simulation_counter = 1

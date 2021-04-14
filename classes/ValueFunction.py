@@ -1,6 +1,6 @@
 import classes
 import itertools
-from globals import *
+import globals
 import numpy as np
 
 
@@ -19,23 +19,26 @@ class ValueFunction:
 class GradientDescent:
     def __init__(
         self,
-        state: classes.State,
+        number_of_locations: int,
+        number_of_clusters: int,
         weight_update_step_size=0.1,
-        discount_factor=DISCOUNT_RATE,
+        discount_factor=globals.DISCOUNT_RATE,
         vehicle_inventory_step_size=0.25,
-        number_of_features_per_cluster=3,
     ):
         # for every location - 3 bit for location
         # for every cluster 1 float for deviation, 1 float for battery deficient
         # for vehicle - n bits for scooter inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # + n bits for battery inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # for every small depot - 1 float for degree of filling
+        number_of_features_per_cluster = 3
 
-        number_of_locations_indicators = len(state.locations) * 3
+        number_of_locations_indicators = number_of_locations * 3
         number_of_state_features = (
-            (number_of_features_per_cluster * len(state.clusters))
+            (number_of_features_per_cluster * number_of_clusters)
             + (2 * round(1 / vehicle_inventory_step_size))
-            + len(state.depots[1:])
+            + number_of_locations
+            - number_of_clusters
+            - 1
         )
 
         self.weights = [0.1] * (
@@ -79,9 +82,9 @@ class GradientDescent:
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):
         location_indicator = (
-            [0] * 3 * (vehicle.current_location.id - 1)
+            [0] * 3 * vehicle.current_location.id
             + [1] * 3
-            + [0] * 3 * (len(state.locations) - vehicle.current_location.id)
+            + [0] * 3 * (len(state.locations) - 1 - vehicle.current_location.id)
         )
 
         normalized_deviation_ideal_state_positive = ValueFunction.normalize_list(
@@ -137,7 +140,7 @@ class GradientDescent:
         ]
 
         small_depot_degree_of_filling = [
-            depot.get_available_battery_swaps(time) / SMALL_DEPOT_CAPACITY
+            depot.get_available_battery_swaps(time) / globals.SMALL_DEPOT_CAPACITY
             for depot in state.depots[1:]
         ]
 
