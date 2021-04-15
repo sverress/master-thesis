@@ -1,11 +1,10 @@
 import copy
 import math
 
-import matplotlib.pyplot as plt
-import numpy as np
 import unittest
 import random
 import decision
+import decision.value_functions
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.neighbour_filtering import filtering_neighbours
@@ -237,7 +236,7 @@ class ValueFunctionTests(unittest.TestCase):
             100, number_of_clusters=10, policy=None, initial_location_depot=False
         )
         # No discount should give reward equal to TD-error
-        value_function = decision.LinearValueFunction(
+        value_function = decision.value_functions.LinearValueFunction(
             13,
             10,
             weight_update_step_size=0.001,
