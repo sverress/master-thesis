@@ -26,9 +26,31 @@ class Policy:
         print(f"\n{vehicle} (#rollouts {NUMBER_OF_ROLLOUTS}):")
         for action, reward, computational_time in actions_info:
             print(
-                f"\n{action} Reward - {round(reward,3)} | Comp. time - {round(computational_time, 2)}"
+                f"\n{action} Reward - {round(reward, 3)} | Comp. time - {round(computational_time, 2)}"
             )
         print("\n----------------------------------------------------------------")
+
+
+class SGDPolicy(Policy):
+    def __init__(self, roll_out_policy):
+        self.roll_out_policy = roll_out_policy
+
+    def get_best_action(self, world, vehicle):
+        # Find all possible actions
+        actions = world.state.get_possible_actions(
+            vehicle, divide=2, exclude=world.tabu_list, time=world.time,
+        )
+        # For every possible action
+        for action in actions:
+            start = time.time()
+            # Get new state of performing action
+            world_copy = copy.deepcopy(world)
+            world_copy.policy = self.roll_out_policy
+            vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
+            reward = world_copy.state.do_action(action)
+            next_state = copy.deepcopy(world_copy.state)
+            # Estimate value of making this action, after performing it and calculating the time it takes to perform.
+            scenario_simulation.scripts.estimate_reward(world_copy, vehicle_copy)
 
 
 class EpsilonGreedyValueFunctionPolicy(Policy):
