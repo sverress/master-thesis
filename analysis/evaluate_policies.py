@@ -47,7 +47,7 @@ if __name__ == "__main__":
     NUMBER_OF_DEPOTS = 3
 
     # different value functions: GradientDescent
-    VALUE_FUNCTION = classes.GradientDescent(
+    VALUE_FUNCTION = classes.LinearValueFunction(
         number_of_locations=NUMBER_OF_CLUSTERS + NUMBER_OF_DEPOTS,
         number_of_clusters=NUMBER_OF_CLUSTERS,
     )

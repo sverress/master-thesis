@@ -5,7 +5,7 @@ import numpy as np
 import helpers
 
 
-class GradientDescent:
+class LinearValueFunction:
     def __init__(
         self,
         number_of_locations: int,
@@ -14,16 +14,15 @@ class GradientDescent:
         discount_factor=globals.DISCOUNT_RATE,
         vehicle_inventory_step_size=globals.VEHICLE_INVENTORY_STEP_SIZE,
     ):
-        # for every location - 3 bit for location
-        # for every cluster 1 float for deviation, 1 float for battery deficient
+        # for every location - 3 bit for each location
+        # for every cluster, 1 float for deviation, 1 float for battery deficient
         # for vehicle - n bits for scooter inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # + n bits for battery inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # for every small depot - 1 float for degree of filling
         self.number_of_features_per_cluster = 3
+        self.location_repetition = 3
 
-        number_of_locations_indicators = (
-            number_of_locations * self.number_of_features_per_cluster
-        )
+        number_of_locations_indicators = number_of_locations * self.location_repetition
         number_of_state_features = (
             (self.number_of_features_per_cluster * number_of_clusters)
             + (2 * round(1 / vehicle_inventory_step_size))
@@ -32,7 +31,7 @@ class GradientDescent:
             - 1
         )
 
-        self.weights = [0.1] * (
+        self.weights = [globals.WEIGHT_INITIALIZATION_VALUE] * (
             number_of_locations_indicators
             + number_of_state_features
             + (number_of_locations_indicators * number_of_state_features)
@@ -52,7 +51,7 @@ class GradientDescent:
         if not state_features:
             state_features = self.get_state_features(state, vehicle, time)
 
-        current_state_value = float(np.dot(state_features, self.weights))
+        current_state_value = float(np.dot(self.weights, state_features))
 
         return current_state_value
 
@@ -75,10 +74,10 @@ class GradientDescent:
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):
         location_indicator = (
-            [0] * self.number_of_features_per_cluster * vehicle.current_location.id
-            + [1] * self.number_of_features_per_cluster
+            [0] * self.location_repetition * vehicle.current_location.id
+            + [1] * self.location_repetition
             + [0]
-            * self.number_of_features_per_cluster
+            * self.location_repetition
             * (len(state.locations) - 1 - vehicle.current_location.id)
         )
 

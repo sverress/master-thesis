@@ -35,7 +35,7 @@ EPSILON = 0.1  # Probability of taking a random action
 # LINEAR MODEL
 WEIGHT_UPDATE_STEP_SIZE = 0.1
 VEHICLE_INVENTORY_STEP_SIZE = 0.25
-
+WEIGHT_INITIALIZATION_VALUE = 0.1
 
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
