@@ -31,8 +31,8 @@ class Policy:
         print("\n----------------------------------------------------------------")
 
 
-class SGDPolicy(Policy):
-    def __init__(self, roll_out_policy):
+class ValueFunctionPolicy(Policy):
+    def __init__(self, roll_out_policy=None):
         self.roll_out_policy = roll_out_policy
 
     def get_best_action(self, world, vehicle):
@@ -40,17 +40,63 @@ class SGDPolicy(Policy):
         actions = world.state.get_possible_actions(
             vehicle, divide=2, exclude=world.tabu_list, time=world.time,
         )
+        action_info = []
         # For every possible action
         for action in actions:
             start = time.time()
             # Get new state of performing action
             world_copy = copy.deepcopy(world)
-            world_copy.policy = self.roll_out_policy
             vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
-            reward = world_copy.state.do_action(action)
-            next_state = copy.deepcopy(world_copy.state)
+            reward = world_copy.state.do_action(action, vehicle_copy)
+            next_world = copy.deepcopy(world_copy)
+
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            scenario_simulation.scripts.estimate_reward(world_copy, vehicle_copy)
+            scenario_simulation.scripts.estimate_reward(
+                world_copy, vehicle_copy, self.roll_out_policy
+            )
+
+            stop = time.time()
+
+            next_state_value = self.roll_out_policy.value_function.estimate_value(
+                next_world.state, vehicle_copy, next_world.time
+            )
+            action_info.append((action, reward, next_state_value, stop - start))
+
+        if world.verbose:
+            Policy.print_action_stats(
+                vehicle,
+                [
+                    (action, reward + next_state_value, elapsed_time)
+                    for action, reward, next_state_value, elapsed_time in action_info
+                ],
+            )
+
+        # Find the action with the highest reward and future expected reward - reward + value function next state
+        (
+            best_action,
+            best_action_reward,
+            best_action_next_state_value,
+            best_time,
+        ) = max(action_info, key=lambda pair: pair[1] + pair[2])
+
+        state_features = self.roll_out_policy.value_function.get_state_features(
+            world.state, vehicle, world.time
+        )
+        state_value = self.roll_out_policy.value_function.estimate_value(
+            world.state, vehicle, world.time, state_features=state_features
+        )
+
+        self.roll_out_policy.value_function.update_weights(
+            state_features,
+            state_value,
+            best_action_next_state_value,
+            best_action_reward,
+        )
+
+        return best_action
+
+    def __str__(self):
+        return "ValueFunctionPolicy w/epsilon greedy rollout"
 
 
 class EpsilonGreedyValueFunctionPolicy(Policy):
@@ -64,6 +110,11 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             vehicle, divide=2, exclude=world.tabu_list, time=world.time,
         )
 
+        if len(actions) == 0:
+            _ = world.state.get_possible_actions(
+                vehicle, divide=2, exclude=world.tabu_list, time=world.time,
+            )
+
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
             return random.choice(actions)
@@ -71,30 +122,20 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
             for action in actions:
-                start = time.time()
                 world_copy = copy.deepcopy(world)
                 vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
                 reward = world_copy.state.do_action(action, vehicle_copy)
                 next_state_value = self.value_function.estimate_value(
                     world_copy.state, vehicle_copy, world_copy.time
                 )
-                stop = time.time()
-                action_info.append((action, reward, next_state_value, stop - start))
+
+                action_info.append((action, reward, next_state_value))
+
             # Find the action with the highest reward and future expected reward - reward + value function next state
-            (
-                best_action,
-                best_action_reward,
-                best_action_next_state_value,
-                best_action_time,
-            ) = max(action_info, key=lambda pair: pair[1] + pair[2])
-            if world.verbose:
-                Policy.print_action_stats(
-                    vehicle,
-                    [
-                        (action, reward + next_state_value, elapsed_time)
-                        for action, reward, next_state_value, elapsed_time in action_info
-                    ],
-                )
+            (best_action, best_reward, best_next_state_value,) = max(
+                action_info, key=lambda pair: pair[1] + pair[2]
+            )
+
             state_features = self.value_function.get_state_features(
                 world.state, vehicle, world.time
             )
@@ -103,10 +144,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             )
 
             self.value_function.update_weights(
-                state_features,
-                state_value,
-                best_action_next_state_value,
-                best_action_reward,
+                state_features, state_value, best_next_state_value, best_reward,
             )
 
             return best_action
@@ -123,6 +161,7 @@ class RandomRolloutPolicy(Policy):
         )
         actions_info = []
         # For every possible action
+        roll_out_policy = SwapAllPolicy()
         for action in actions:
             start = time.time()
             # Get new state of performing action
@@ -132,7 +171,7 @@ class RandomRolloutPolicy(Policy):
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
             reward += world.get_discount() * scenario_simulation.scripts.estimate_reward(
-                world_copy, vehicle_copy
+                world_copy, vehicle_copy, roll_out_policy
             )
 
             # If the action is better than previous actions, make best_action

@@ -1,13 +1,13 @@
 import copy
-import decision
 from globals import ITERATION_LENGTH_MINUTES, LOST_TRIP_REWARD, NUMBER_OF_ROLLOUTS
 
 
 def estimate_reward(
-    world, vehicle, number_of_simulations=NUMBER_OF_ROLLOUTS,
+    world, vehicle, policy, number_of_simulations=NUMBER_OF_ROLLOUTS,
 ):
     """
     Does n times scenario simulations and returns the highest conducted reward from simulation
+    :param policy: which policy to use in the roll out
     :param vehicle: vehicle to estimate reward for
     :param world: snapshot copy of world
     :param number_of_simulations: int - number of simulations to be performed (default = 10)
@@ -15,7 +15,7 @@ def estimate_reward(
     """
 
     all_rewards = []
-    random_action_policy = decision.RandomActionPolicy()
+
     # Do n scenario simulations
     for i in range(number_of_simulations):
         simulation_counter = 1
@@ -29,7 +29,7 @@ def estimate_reward(
         # Simulate until shift ends
         while world_copy.time < world_copy.shift_duration:
             if next_is_vehicle_action:
-                action = random_action_policy.get_best_action(world_copy, vehicle_copy)
+                action = policy.get_best_action(world_copy, vehicle_copy)
                 previous_cluster_id = vehicle_copy.current_location.id
                 world_copy.add_reward(
                     world_copy.get_discount()

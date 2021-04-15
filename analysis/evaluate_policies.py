@@ -1,5 +1,6 @@
 import classes
 import decision
+import decision.value_functions
 from visualization.visualizer import visualize_analysis
 
 
@@ -42,18 +43,19 @@ def run_analysis(
 
 if __name__ == "__main__":
     SHIFT_DURATION = 120
-    SAMPLE_SIZE = 1000
-    NUMBER_OF_CLUSTERS = 100
+    SAMPLE_SIZE = 100
+    NUMBER_OF_CLUSTERS = 10
     NUMBER_OF_DEPOTS = 3
 
     # different value functions: GradientDescent
-    VALUE_FUNCTION = classes.LinearValueFunction(
+    VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
         number_of_locations=NUMBER_OF_CLUSTERS + NUMBER_OF_DEPOTS,
         number_of_clusters=NUMBER_OF_CLUSTERS,
     )
+    ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
     # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
     POLICIES = [
-        decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION),
+        decision.ValueFunctionPolicy(ROLL_OUT_POLICY),
         decision.RandomRolloutPolicy(),
     ]
 

@@ -107,7 +107,13 @@ class State:
         :return: List of Action objects
         """
         actions = []
-        if vehicle.is_at_depot():
+        if (
+            vehicle.is_at_depot()
+            or len(vehicle.current_location.scooters) + len(vehicle.scooter_inventory)
+            == 0
+            or len(vehicle.current_location.scooters)
+            == vehicle.current_location.get_current_state()
+        ):
             neighbours = decision.neighbour_filtering.filtering_neighbours(
                 self,
                 vehicle,
@@ -149,7 +155,7 @@ class State:
 
             combinations = []
             # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-            for cluster in decision.neighbour_filtering.filtering_neighbours(
+            for location in decision.neighbour_filtering.filtering_neighbours(
                 self,
                 vehicle,
                 number_of_neighbours=number_of_neighbours,
@@ -165,10 +171,13 @@ class State:
                                 (pick_up + swap) <= vehicle.battery_inventory
                                 and (pick_up + swap)
                                 <= len(vehicle.current_location.scooters)
-                                and pick_up + swap + drop_off > 0
+                                and (
+                                    pick_up + swap + drop_off > 0
+                                    or isinstance(location, Depot)
+                                )
                             ):
                                 combinations.append(
-                                    [swap, pick_up, drop_off, cluster.id]
+                                    [swap, pick_up, drop_off, location.id]
                                 )
 
             # Assume that no battery swap or pick-up of scooters with 100% battery and

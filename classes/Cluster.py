@@ -13,6 +13,9 @@ class Cluster(Location):
         super().__init__(*self.__compute_center(), cluster_id)
         self.move_probabilities = None
 
+        for scooter in self.scooters:
+            scooter.add_route(self.id)
+
     class Decorators:
         @classmethod
         def check_move_probabilities(cls, func):
@@ -68,6 +71,17 @@ class Cluster(Location):
         return cluster_centroid.x, cluster_centroid.y
 
     def add_scooter(self, scooter: Scooter):
+        matches = [
+            cluster_scooter
+            for cluster_scooter in self.scooters
+            if scooter.id == cluster_scooter.id
+        ]
+
+        if len(matches) > 0:
+            print("STOOOP")
+
+        scooter.add_route(self.id)
+
         # Adding scooter to scooter list
         self.scooters.append(scooter)
         # Changing coordinates of scooter to this location + some delta
@@ -108,6 +122,8 @@ class Cluster(Location):
         if len(matches) == 1:
             return matches[0]
         elif len(matches) > 1:
+            for s in matches:
+                print(s.route)
             raise ValueError(
                 f"There are more than one scooter ({len(matches)} scooters) "
                 f"matching on id {scooter_id} in Cluster {self.id}"
