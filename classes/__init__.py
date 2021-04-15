@@ -7,7 +7,6 @@ from .Location import Location
 from .Depot import Depot
 from .events.Event import Event
 from .World import World
-from .ValueFunction import LinearValueFunction
 from .events.LostTrip import LostTrip
 from .events.ScooterDeparture import ScooterDeparture
 from .events.ScooterArrival import ScooterArrival
