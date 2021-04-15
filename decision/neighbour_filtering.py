@@ -1,12 +1,12 @@
-from globals import MAX_DISTANCE
 import numpy as np
 import helpers
+from globals import DEFAULT_NUMBER_OF_NEIGHBOURS
 
 
 def filtering_neighbours(
     state,
     vehicle,
-    number_of_neighbours=3,
+    number_of_neighbours=DEFAULT_NUMBER_OF_NEIGHBOURS,
     number_of_random_neighbours=0,
     time=None,
     exclude=None,

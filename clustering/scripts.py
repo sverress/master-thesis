@@ -1,7 +1,13 @@
 from classes import Vehicle, State
 import clustering.methods as methods
 import os
-from globals import STATE_CACHE_DIR
+from globals import (
+    STATE_CACHE_DIR,
+    VAN_BATTERY_INVENTORY,
+    VAN_SCOOTER_INVENTORY,
+    BIKE_SCOOTER_INVENTORY,
+    BIKE_BATTERY_INVENTORY,
+)
 
 
 def get_initial_state(
@@ -76,9 +82,10 @@ def get_initial_state(
 
     # Setting vehicles to initial state
     initial_state.vehicles = [
-        Vehicle(i, current_location) for i in range(number_of_vans)
+        Vehicle(i, current_location, VAN_BATTERY_INVENTORY, VAN_SCOOTER_INVENTORY)
+        for i in range(number_of_vans)
     ] + [
-        Vehicle(i, current_location, battery_inventory=20, scooter_inventory_capacity=0)
+        Vehicle(i, current_location, BIKE_BATTERY_INVENTORY, BIKE_SCOOTER_INVENTORY)
         for i in range(number_of_vans, number_of_vans + number_of_bikes)
     ]
 

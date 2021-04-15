@@ -376,8 +376,7 @@ def visualize_analysis(instances, policies, smooth_curve=True):
         subplot.set_ylim(ymin=0)
 
     fig.suptitle(
-        f"Sample size {SAMPLE_SIZE} - Shift duration {SHIFT_DURATION} - Number of clusters {NUMBER_OF_CLUSTERS} - "
-        f"Rollouts {NUMBER_OF_ROLLOUTS} - Max number of neighbours {NUMBER_OF_NEIGHBOURS}",
+        f"Rollouts {NUMBER_OF_ROLLOUTS} - Max number of neighbours {DEFAULT_NUMBER_OF_NEIGHBOURS}",
         fontsize=16,
     )
 

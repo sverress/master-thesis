@@ -2,7 +2,7 @@ import copy
 import math
 import decision.neighbour_filtering
 import classes
-from globals import BATTERY_INVENTORY, NUMBER_OF_NEIGHBOURS, NUMBER_OF_ROLLOUTS
+from globals import NUMBER_OF_ROLLOUTS
 import numpy.random as random
 import scenario_simulation.scripts
 import time
@@ -38,11 +38,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
     def get_best_action(self, world, vehicle):
         # Find all possible actions
         actions = world.state.get_possible_actions(
-            vehicle,
-            number_of_neighbours=NUMBER_OF_NEIGHBOURS,
-            divide=2,
-            exclude=world.tabu_list,
-            time=world.time,
+            vehicle, divide=2, exclude=world.tabu_list, time=world.time,
         )
 
         # Epsilon greedy choose an action based on value function
@@ -100,11 +96,7 @@ class RandomRolloutPolicy(Policy):
 
         # Find all possible actions
         actions = world.state.get_possible_actions(
-            vehicle,
-            number_of_neighbours=NUMBER_OF_NEIGHBOURS,
-            divide=2,
-            exclude=world.tabu_list,
-            time=world.time,
+            vehicle, divide=2, exclude=world.tabu_list, time=world.time,
         )
         actions_info = []
         # For every possible action
@@ -175,7 +167,7 @@ class RandomActionPolicy(Policy):
     def get_best_action(self, world, vehicle):
         # all possible actions in this state
         possible_actions = world.state.get_possible_actions(
-            vehicle, number_of_neighbours=3, exclude=world.tabu_list, time=world.time
+            vehicle, exclude=world.tabu_list, time=world.time
         )
 
         # pick a random action

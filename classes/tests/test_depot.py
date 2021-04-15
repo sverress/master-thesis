@@ -2,7 +2,7 @@ import unittest
 import classes
 import decision
 from globals import (
-    BATTERY_INVENTORY,
+    VAN_BATTERY_INVENTORY,
     SMALL_DEPOT_CAPACITY,
     SWAP_TIME_PER_BATTERY,
     CHARGE_TIME_PER_BATTERY,
@@ -12,7 +12,7 @@ from globals import (
 class DepotTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = classes.World(
-            shift_duration=BATTERY_INVENTORY * SWAP_TIME_PER_BATTERY + 1,
+            shift_duration=VAN_BATTERY_INVENTORY * SWAP_TIME_PER_BATTERY + 1,
             policy=decision.SwapAllPolicy(),
             sample_size=100,
             number_of_clusters=10,

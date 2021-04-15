@@ -2,7 +2,6 @@ from typing import Union
 from classes.Depot import Depot
 from classes.Cluster import Cluster
 from classes.Scooter import Scooter
-from globals import BATTERY_INVENTORY, SCOOTER_INVENTORY
 
 
 class Vehicle:
@@ -10,12 +9,12 @@ class Vehicle:
         self,
         vehicle_id: int,
         start_location: Union[Cluster, Depot],
-        battery_inventory=BATTERY_INVENTORY,
-        scooter_inventory_capacity=SCOOTER_INVENTORY,
+        battery_inventory_capacity: int,
+        scooter_inventory_capacity: int,
     ):
         self.id = vehicle_id
-        self.battery_inventory = battery_inventory
-        self.battery_inventory_capacity = battery_inventory
+        self.battery_inventory = battery_inventory_capacity
+        self.battery_inventory_capacity = battery_inventory_capacity
         self.scooter_inventory = []
         self.scooter_inventory_capacity = scooter_inventory_capacity
         self.service_route = []

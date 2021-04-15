@@ -89,7 +89,7 @@ class State:
     def get_possible_actions(
         self,
         vehicle: Vehicle,
-        number_of_neighbours=3,
+        number_of_neighbours=DEFAULT_NUMBER_OF_NEIGHBOURS,
         divide=None,
         random_neighbours=0,
         exclude=None,
