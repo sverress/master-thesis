@@ -10,20 +10,22 @@ class GradientDescent:
         self,
         number_of_locations: int,
         number_of_clusters: int,
-        weight_update_step_size=0.1,
+        weight_update_step_size=globals.WEIGHT_UPDATE_STEP_SIZE,
         discount_factor=globals.DISCOUNT_RATE,
-        vehicle_inventory_step_size=0.25,
+        vehicle_inventory_step_size=globals.VEHICLE_INVENTORY_STEP_SIZE,
     ):
         # for every location - 3 bit for location
         # for every cluster 1 float for deviation, 1 float for battery deficient
         # for vehicle - n bits for scooter inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # + n bits for battery inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # for every small depot - 1 float for degree of filling
-        number_of_features_per_cluster = 3
+        self.number_of_features_per_cluster = 3
 
-        number_of_locations_indicators = number_of_locations * 3
+        number_of_locations_indicators = (
+            number_of_locations * self.number_of_features_per_cluster
+        )
         number_of_state_features = (
-            (number_of_features_per_cluster * number_of_clusters)
+            (self.number_of_features_per_cluster * number_of_clusters)
             + (2 * round(1 / vehicle_inventory_step_size))
             + number_of_locations
             - number_of_clusters
@@ -73,9 +75,11 @@ class GradientDescent:
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):
         location_indicator = (
-            [0] * 3 * vehicle.current_location.id
-            + [1] * 3
-            + [0] * 3 * (len(state.locations) - 1 - vehicle.current_location.id)
+            [0] * self.number_of_features_per_cluster * vehicle.current_location.id
+            + [1] * self.number_of_features_per_cluster
+            + [0]
+            * self.number_of_features_per_cluster
+            * (len(state.locations) - 1 - vehicle.current_location.id)
         )
 
         normalized_deviation_ideal_state_positive = helpers.normalize_list(
