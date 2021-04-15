@@ -2,6 +2,7 @@ import copy
 import math
 import decision.neighbour_filtering
 import classes
+import globals
 from globals import NUMBER_OF_ROLLOUTS
 import numpy.random as random
 import scenario_simulation.scripts
@@ -31,7 +32,7 @@ class Policy:
 
 
 class EpsilonGreedyValueFunctionPolicy(Policy):
-    def __init__(self, value_function=None, epsilon=0.2):
+    def __init__(self, value_function=None, epsilon=globals.EPSILON):
         self.value_function = value_function
         self.epsilon = epsilon
 

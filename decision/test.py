@@ -1,3 +1,8 @@
+import copy
+import math
+
+import matplotlib.pyplot as plt
+import numpy as np
 import unittest
 import random
 import decision
@@ -205,32 +210,61 @@ class BasicDecisionTests(unittest.TestCase):
 
 
 class PolicyTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.world_swap_all_policy = World(40, policy=decision.SwapAllPolicy())
-        self.vehicle_swap_all_policy = self.world_swap_all_policy.state.vehicles[0]
-
-        self.world_random_rollout_policy = World(
-            40, policy=decision.RandomRolloutPolicy()
-        )
-        self.vehicle_random_rollout_policy = self.world_random_rollout_policy.state.vehicles[
-            0
-        ]
-
     def test_random_rollout_policy(self):
+        world_random_rollout_policy = World(40, policy=decision.RandomRolloutPolicy())
+        vehicle_random_rollout_policy = world_random_rollout_policy.state.vehicles[0]
         self.assertIsInstance(
-            self.world_random_rollout_policy.policy.get_best_action(
-                self.world_random_rollout_policy, self.vehicle_random_rollout_policy
+            world_random_rollout_policy.policy.get_best_action(
+                world_random_rollout_policy, vehicle_random_rollout_policy
             ),
             Action,
         )
 
     def test_swap_all_policy(self):
-        action = self.world_swap_all_policy.policy.get_best_action(
-            self.world_swap_all_policy, self.vehicle_swap_all_policy
+        world_swap_all_policy = World(40, policy=decision.SwapAllPolicy())
+        vehicle_swap_all_policy = world_swap_all_policy.state.vehicles[0]
+        action = world_swap_all_policy.policy.get_best_action(
+            world_swap_all_policy, vehicle_swap_all_policy
         )
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
+
+
+class ValueFunctionTests(unittest.TestCase):
+    def test_linear_value_function(self):
+        world = World(
+            100, number_of_clusters=10, policy=None, initial_location_depot=False
+        )
+        # No discount should give reward equal to TD-error
+        value_function = decision.LinearValueFunction(
+            13,
+            10,
+            weight_update_step_size=0.001,
+            discount_factor=0.2,
+            vehicle_inventory_step_size=0.5,
+        )
+        vehicle = world.state.vehicles[0]
+        action = random.choice(world.state.get_possible_actions(vehicle))
+        state = copy.deepcopy(world.state)
+        state_features = value_function.get_state_features(state, vehicle, 0)
+        copied_vehicle = copy.deepcopy(vehicle)
+        reward = world.state.do_action(action, vehicle)
+        previous_td_error = math.inf
+        for i in range(100):
+            state_value = value_function.estimate_value(state, copied_vehicle, 0)
+            next_state_value = value_function.estimate_value(
+                world.state, vehicle, world.time
+            )
+            td_error = reward + next_state_value - state_value
+            self.assertLessEqual(td_error, previous_td_error)
+            previous_td_error = td_error
+            value_function.update_weights(
+                current_state_value=state_value,
+                current_state_features=state_features,
+                next_state_value=next_state_value,
+                reward=reward,
+            )
 
 
 class NeighbourFilteringTests(unittest.TestCase):

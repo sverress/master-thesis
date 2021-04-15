@@ -92,7 +92,7 @@ class LinearValueFunction:
 
         normalized_deviation_ideal_state_negative = helpers.normalize_list(
             [
-                len(cluster.scooters) - cluster.ideal_state
+                cluster.ideal_state - len(cluster.scooters)
                 if len(cluster.scooters) - cluster.ideal_state < 0
                 else 0
                 for cluster in state.clusters
@@ -109,26 +109,33 @@ class LinearValueFunction:
         scooter_inventory_percent = (
             0
             if vehicle.scooter_inventory_capacity == 0
-            else (len(vehicle.scooter_inventory) / vehicle.scooter_inventory_capacity)
-            + 0.000001
+            else (
+                len(vehicle.scooter_inventory)
+                / (vehicle.scooter_inventory_capacity + 0.000001)
+            )
         )
         battery_inventory_percent = (
             0
             if vehicle.battery_inventory_capacity == 0
             else (vehicle.battery_inventory / vehicle.battery_inventory_capacity)
-            + 0.000001
         )
 
         scooter_inventory_indication = [
             1
-            if round(scooter_inventory_percent / self.vehicle_inventory_step_size) == i
+            if self.vehicle_inventory_step_size * i
+            < scooter_inventory_percent
+            <= self.vehicle_inventory_step_size * (i + 1)
+            or scooter_inventory_percent == i
             else 0
             for i in range(round(1 / self.vehicle_inventory_step_size))
         ]
 
         battery_inventory_indication = [
             1
-            if round(battery_inventory_percent / self.vehicle_inventory_step_size) == i
+            if self.vehicle_inventory_step_size * i
+            < battery_inventory_percent
+            <= self.vehicle_inventory_step_size * (i + 1)
+            or battery_inventory_percent == i
             else 0
             for i in range(round(1 / self.vehicle_inventory_step_size))
         ]
