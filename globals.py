@@ -1,22 +1,22 @@
-import os
-
+"""
+WORLD SETTINGS
+"""
 # GEOSPATIAL DATA
-GEOSPATIAL_BOUND = (59.9112, 59.9438, 10.7027, 10.7772)
 GEOSPATIAL_BOUND_NEW = (59.9040, 59.9547, 10.6478, 10.8095)
-MAX_DISTANCE = 12
 CLUSTER_CENTER_DELTA = 0.001
 
-# Colors for visualizer
-BLUE, GREEN, RED, BLACK, WHITE = "blue", "green", "red", "black", "white"
-VEHICLE_COLORS = ["blue", "green", "black", "purple"]
+# Inventory of vehicle
+VAN_BATTERY_INVENTORY = 50
+VAN_SCOOTER_INVENTORY = 20
+BIKE_BATTERY_INVENTORY = 20
+BIKE_SCOOTER_INVENTORY = 0
 
 # Speed of service vehicles
 VEHICLE_SPEED = 20
 MINUTES_IN_HOUR = 60
 
-# Inventory of vehicle
-BATTERY_INVENTORY = 50
-SCOOTER_INVENTORY = 20
+# Speed of scooter ref - Fearnley at al. (2020, section 3.6)
+SCOOTER_SPEED = 7
 
 # Depot parameters
 MAIN_DEPOT_LOCATION = (59.931794, 10.788314)
@@ -26,40 +26,44 @@ SMALL_DEPOT_CAPACITY = 100
 CHARGE_TIME_PER_BATTERY = 60
 SWAP_TIME_PER_BATTERY = 0.4
 
-# Speed of scooter ref - Fearnley at al. (2020, section 3.6)
-SCOOTER_SPEED = 7
+"""
+DECISION PARAMETERS
+"""
+DISCOUNT_RATE = 0.80
+EPSILON = 0.1  # Probability of taking a random action
+
+# LINEAR MODEL
+WEIGHT_UPDATE_STEP_SIZE = 0.001
+VEHICLE_INVENTORY_STEP_SIZE = 0.25
+WEIGHT_INITIALIZATION_VALUE = 0.0
 
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
 NUMBER_OF_ROLLOUTS = 10
 BATTERY_LIMIT = 20.0
 
-# DECISION PARAMETERS
-DISCOUNT_RATE = 0.80
-EPSILON = 0.1  # Probability of taking a random action
-
 # Negative reward for lost trips
 LOST_TRIP_REWARD = -0.1
 
 # Testing parameters
-NUMBER_OF_NEIGHBOURS = 3
-SHIFT_DURATION = 120
-SAMPLE_SIZE = 100
-NUMBER_OF_CLUSTERS = 20
-# different policies: "RandomRolloutPolicy", "SwapAllPolicy"
-POLICIES = ["RandomRolloutPolicy", "SwapAllPolicy"]
+DEFAULT_NUMBER_OF_NEIGHBOURS = 3
+
+"""
+IMPORTANT PATHS
+"""
 
 STATE_CACHE_DIR = "test_state_cache"
-
 
 # Test data directory
 TEST_DATA_DIRECTORY = "test_data"
 
+"""
+VISUALIZATION
+"""
+# Colors for visualizer
+BLUE, GREEN, RED, BLACK, WHITE = "blue", "green", "red", "black", "white"
+VEHICLE_COLORS = ["blue", "green", "black", "purple"]
 
-# RUNTIME SETTINGS
-SEED = 69
-
-# Visualization parameters
 ACTION_OFFSET = 0.018
 
 COLORS = [

@@ -1,5 +1,5 @@
 from classes.events.Event import Event
-from globals import BATTERY_INVENTORY
+from globals import VAN_BATTERY_INVENTORY
 import copy
 
 
@@ -42,7 +42,7 @@ class VehicleArrival(Event):
         if vehicle.is_at_depot():
             batteries_to_swap = min(
                 vehicle.current_location.get_available_battery_swaps(world.time),
-                BATTERY_INVENTORY - vehicle.battery_inventory,
+                vehicle.flat_batteries(),
             )
             arrival_time += vehicle.current_location.swap_battery_inventory(
                 world.time, batteries_to_swap
@@ -91,7 +91,7 @@ class VehicleArrival(Event):
 
         # Compute the arrival time for the Vehicle arrival event created by the action
         arrival_time += self.time + action.get_action_time(
-            world.state.get_distance_locations(arrival_cluster_id, action.next_location)
+            world.state.get_distance(arrival_cluster_id, action.next_location)
         )
 
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack

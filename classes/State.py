@@ -16,11 +16,7 @@ import copy
 
 class State:
     def __init__(
-        self,
-        clusters: [Cluster],
-        depots: [Depot],
-        vehicles: [Vehicle],
-        distance_matrix=None,
+        self, clusters: [Cluster], depots: [Depot], vehicles=None, distance_matrix=None,
     ):
         self.clusters = clusters
         self.vehicles = vehicles
@@ -60,22 +56,14 @@ class State:
                 all_scooters.append(scooter)
         return all_scooters
 
-    def get_distance_locations(self, start: int, end: int):
+    def get_distance(self, start_location_id: int, end_location_id: int):
         """
         Calculate distance between two clusters
-        :param start: Location id
-        :param end: Location id
+        :param start_location_id: Location id
+        :param end_location_id: Location id
         :return: float - distance in kilometers
         """
-        return self.distance_matrix[start][end]
-
-    def get_distance_id(self, start: int, end: int):
-        return self.get_distance_locations(
-            self.get_location_by_id(start), self.get_location_by_id(end)
-        )
-
-    def get_distance_to_all(self, location_id):
-        return self.distance_matrix[location_id]
+        return self.distance_matrix[start_location_id][end_location_id]
 
     def get_distance_to_all_clusters(self, location_id):
         return self.distance_matrix[location_id][: len(self.clusters)]
@@ -101,7 +89,7 @@ class State:
     def get_possible_actions(
         self,
         vehicle: Vehicle,
-        number_of_neighbours=None,
+        number_of_neighbours=DEFAULT_NUMBER_OF_NEIGHBOURS,
         divide=None,
         random_neighbours=0,
         exclude=None,
@@ -173,21 +161,25 @@ class State:
                 for pick_up in get_range(pick_ups):
                     for swap in get_range(swaps):
                         for drop_off in get_range(drop_offs):
-                            if (pick_up + swap) <= vehicle.battery_inventory and (
-                                pick_up + swap
-                            ) <= len(vehicle.current_location.scooters):
+                            if (
+                                (pick_up + swap) <= vehicle.battery_inventory
+                                and (pick_up + swap)
+                                <= len(vehicle.current_location.scooters)
+                                and pick_up + swap + drop_off > 0
+                            ):
                                 combinations.append(
                                     [swap, pick_up, drop_off, cluster.id]
                                 )
 
-                # Assume that no battery swap or pick-up of scooters with 100% battery and
-                # that the scooters with the lowest battery are prioritized
-                swappable_scooters_id = [
-                    scooter.id
-                    for scooter in vehicle.current_location.get_swappable_scooters()
-                ]
-                # Adding every action. Actions are the IDs of the scooters to be handled.
-                actions = [
+            # Assume that no battery swap or pick-up of scooters with 100% battery and
+            # that the scooters with the lowest battery are prioritized
+            swappable_scooters_id = [
+                scooter.id
+                for scooter in vehicle.current_location.get_swappable_scooters()
+            ]
+            # Adding every action. Actions are the IDs of the scooters to be handled.
+            for battery_swap, pick_up, drop_off, cluster_id in combinations:
+                actions.append(
                     Action(
                         swappable_scooters_id[pick_up : battery_swap + pick_up],
                         swappable_scooters_id[:pick_up],
@@ -196,8 +188,7 @@ class State:
                         ],
                         cluster_id,
                     )
-                    for battery_swap, pick_up, drop_off, cluster_id in combinations
-                ]
+                )
         return actions
 
     def do_action(self, action: Action, vehicle: Vehicle):

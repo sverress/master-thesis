@@ -1,4 +1,5 @@
 import classes
+import decision
 from visualization.visualizer import visualize_analysis
 
 
@@ -6,50 +7,68 @@ def run_analysis(
     shift_duration=100,
     sample_size=100,
     number_of_clusters=10,
-    policies=None,
+    policy=None,
     visualize_world=True,
-    smooth_curve=True,
     verbose=False,
 ):
     """
     Method to run different policies and analysis their performance
+    :param visualize_world:
+    :param policy:
     :param verbose: show verbose in console
     :param shift_duration: total shift to be analysed
     :param sample_size: size of instances
     :param number_of_clusters: number of clusters in the world
-    :param policies: different policies to be analysed
-    :param smooth_curve: boolean - if the analysed metrics is to be smoothed out in the analysis plot
     :return: matplotlib figure - figure containing plot of the analysis
     """
-    instances = []
-    # loop over all policies to be analysed - default RandomRolloutPolicy if no policy is given
-    for policy in policies if policies else ["RandomRolloutPolicy"]:
-        print(f"\n---------- {policy} ----------")
-        # create the world object with given input parameters
-        world = classes.World(
-            shift_duration,
-            sample_size=sample_size,
-            number_of_clusters=number_of_clusters,
-            policy=policy,
-            visualize=visualize_world,
-            verbose=verbose,
-        )
-        world.state.compute_and_set_trip_intensity(None, ideal_state_computation=True)
-        # run the world and add the world object to a list containing all world instances
-        world.run()
-        instances.append(world)
 
-    # visualize the world instances that have been run
-    figure = visualize_analysis(instances, policies, smooth_curve)
+    # create the world object with given input parameters
+    world = classes.World(
+        shift_duration,
+        sample_size=sample_size,
+        number_of_clusters=number_of_clusters,
+        policy=policy,
+        visualize=visualize_world,
+        verbose=verbose,
+    )
+    # pumping up the trip intensity
+    for cluster in world.state.clusters:
+        cluster.trip_intensity_per_iteration = round(cluster.ideal_state * 0.1)
+    # run the world and add the world object to a list containing all world instances
+    world.run()
 
-    return figure
+    return world
 
 
 if __name__ == "__main__":
-    run_analysis(
-        policies=["RandomRolloutPolicy", "SwapAllPolicy"],
-        shift_duration=120,
-        sample_size=100,
-        number_of_clusters=50,
-        verbose=True,
+    SHIFT_DURATION = 120
+    SAMPLE_SIZE = 1000
+    NUMBER_OF_CLUSTERS = 100
+    NUMBER_OF_DEPOTS = 3
+
+    # different value functions: GradientDescent
+    VALUE_FUNCTION = classes.LinearValueFunction(
+        number_of_locations=NUMBER_OF_CLUSTERS + NUMBER_OF_DEPOTS,
+        number_of_clusters=NUMBER_OF_CLUSTERS,
     )
+    # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
+    POLICIES = [
+        decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION),
+        decision.RandomRolloutPolicy(),
+    ]
+
+    instances = []
+    for current_policy in POLICIES:
+        print(f"\n---------- {current_policy.__str__()} ----------")
+        policy_world = run_analysis(
+            shift_duration=SHIFT_DURATION,
+            sample_size=SAMPLE_SIZE,
+            number_of_clusters=NUMBER_OF_CLUSTERS,
+            policy=current_policy,
+            visualize_world=True,
+            verbose=True,
+        )
+        instances.append(policy_world)
+
+    # visualize the world instances that have been run
+    figure = visualize_analysis(instances, POLICIES, smooth_curve=True)

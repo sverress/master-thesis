@@ -1,6 +1,6 @@
 import unittest
 import random
-
+import decision
 from classes import (
     ScooterDeparture,
     ScooterArrival,
@@ -16,16 +16,16 @@ from globals import ITERATION_LENGTH_MINUTES
 class EventsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = World(
-            40, initial_location_depot=False, visualize=False, verbose=False
+            40, policy=decision.SwapAllPolicy(), initial_location_depot=False
         )
         self.world.stack = []
         self.vehicle = self.world.state.vehicles[0]
         self.large_world = World(
             40,
+            policy=decision.SwapAllPolicy(),
             sample_size=500,
             number_of_clusters=20,
             initial_location_depot=False,
-            visualize=False,
         )
         self.large_world.stack = []
         self.vehicle_large_world = self.large_world.state.vehicles[0]
@@ -86,9 +86,7 @@ class EventsTests(unittest.TestCase):
             scooter,
             arrival_cluster.id,
             departure_cluster.id,
-            self.world.state.get_distance_to_all(departure_cluster.id)[
-                arrival_cluster.id
-            ],
+            self.world.state.get_distance(departure_cluster.id, arrival_cluster.id),
         )
 
         arrival_event.perform(self.world)
