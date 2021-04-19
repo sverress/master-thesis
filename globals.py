@@ -12,7 +12,7 @@ BIKE_BATTERY_INVENTORY = 20
 BIKE_SCOOTER_INVENTORY = 0
 
 # Speed of service vehicles
-VEHICLE_SPEED = 20
+VEHICLE_SPEED = 15
 MINUTES_IN_HOUR = 60
 
 # Speed of scooter ref - Fearnley at al. (2020, section 3.6)

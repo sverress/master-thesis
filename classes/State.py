@@ -36,6 +36,10 @@ class State:
             distance_matrix=self.distance_matrix,
         )
         new_state.simulation_scenarios = self.simulation_scenarios
+        for vehicle in new_state.vehicles:
+            vehicle.current_location = new_state.get_location_by_id(
+                vehicle.current_location.id
+            )
         return new_state
 
     def get_all_locations(self):
@@ -128,11 +132,10 @@ class State:
         else:
 
             def get_range(max_int):
-                return range(
-                    0,
-                    max_int + 1,
-                    math.ceil((max_int / divide) if divide else 1) if max_int else 1,
-                )
+                if divide:
+                    return list({0, math.ceil(max_int / divide), max_int})
+                else:
+                    return [i for i in range(max_int + 1)]
 
             # Initiate constraints for battery swap, pick-up and drop-off
             pick_ups = min(
@@ -200,15 +203,27 @@ class State:
                 )
         return actions
 
-    def do_action(self, action: Action, vehicle: Vehicle):
+    def do_action(self, action: Action, vehicle: Vehicle, time: int):
         """
         Performs an action on the state -> changing the state + calculates the reward
+        :param time: at what time the action is performed
         :param vehicle: Vehicle to perform this action
         :param action: Action - action to be performed on the state
         :return: float - reward for doing the action on the state
         """
         reward = 0
-        if not vehicle.is_at_depot():
+        if vehicle.is_at_depot():
+            batteries_to_swap = min(
+                vehicle.flat_batteries(),
+                vehicle.current_location.get_available_battery_swaps(time),
+            )
+            vehicle.battery_inventory = (
+                vehicle.battery_inventory
+                + vehicle.current_location.swap_battery_inventory(
+                    time, batteries_to_swap
+                )
+            )
+        else:
             # Perform all pickups
             for pick_up_scooter_id in action.pick_ups:
                 pick_up_scooter = vehicle.current_location.get_scooter_from_id(

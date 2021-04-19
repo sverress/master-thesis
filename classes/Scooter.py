@@ -6,13 +6,9 @@ class Scooter(Location):
         super().__init__(lat, lon, scooter_id)
         self.battery = battery
         self.battery_change_per_kilometer = 5.0
-        self.route = []
 
     def travel(self, distance):
         self.battery -= distance * self.battery_change_per_kilometer
-
-    def add_route(self, location_id: int):
-        self.route.append(location_id)
 
     def swap_battery(self):
         self.battery = 100.0

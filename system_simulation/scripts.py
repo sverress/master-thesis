@@ -19,7 +19,7 @@ def system_simulate(state):
     lost_demand = []
     scenario = random.choice(state.simulation_scenarios)
     for start_cluster_id, number_of_trips, end_cluster_indices in scenario:
-        start_cluster = state.clusters[start_cluster_id]
+        start_cluster = state.get_location_by_id(start_cluster_id)
         # if there is more trips than scooters available, the system has lost demand
         valid_scooters = start_cluster.get_available_scooters()
         if number_of_trips > len(valid_scooters):
@@ -31,7 +31,7 @@ def system_simulate(state):
             trips.append(
                 (
                     start_cluster,
-                    state.clusters[end_cluster_index],
+                    state.get_location_by_id(end_cluster_index),
                     valid_scooters.pop(0),
                 )
             )

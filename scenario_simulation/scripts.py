@@ -33,7 +33,7 @@ def estimate_reward(
                 previous_cluster_id = vehicle_copy.current_location.id
                 world_copy.add_reward(
                     world_copy.get_discount()
-                    * world_copy.state.do_action(action, vehicle_copy)
+                    * world_copy.state.do_action(action, vehicle_copy, world_copy.time)
                 )
                 world_copy.time = world_copy.time + action.get_action_time(
                     world_copy.state.get_distance(

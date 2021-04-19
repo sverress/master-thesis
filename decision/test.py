@@ -55,7 +55,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle), reward
+            self.initial_state.do_action(actions[-1], self.vehicle, 0), reward
         )
 
         # Test number of scooters
@@ -90,7 +90,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test no reward for pickup
         self.assertEqual(
-            round(self.initial_state.do_action(actions[-1], self.vehicle), 1), 0
+            round(self.initial_state.do_action(actions[-1], self.vehicle, 0), 1), 0
         )
 
         # Test number of scooters
@@ -146,7 +146,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle), reward
+            self.initial_state.do_action(actions[-1], self.vehicle, 0), reward
         )
 
         # Test number of scooters
@@ -248,7 +248,7 @@ class ValueFunctionTests(unittest.TestCase):
         state = copy.deepcopy(world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward = world.state.do_action(action, vehicle)
+        reward = world.state.do_action(action, vehicle, world.time)
         previous_td_error = math.inf
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)

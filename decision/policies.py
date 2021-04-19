@@ -47,8 +47,7 @@ class ValueFunctionPolicy(Policy):
             # Get new state of performing action
             world_copy = copy.deepcopy(world)
             vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
-            reward = world_copy.state.do_action(action, vehicle_copy)
-            next_world = copy.deepcopy(world_copy)
+            reward = world_copy.state.do_action(action, vehicle_copy, world_copy.time)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
             scenario_simulation.scripts.estimate_reward(
@@ -58,7 +57,7 @@ class ValueFunctionPolicy(Policy):
             stop = time.time()
 
             next_state_value = self.roll_out_policy.value_function.estimate_value(
-                next_world.state, vehicle_copy, next_world.time
+                world_copy.state, vehicle_copy, world_copy.time
             )
             action_info.append((action, reward, next_state_value, stop - start))
 
@@ -122,11 +121,16 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
             for action in actions:
-                world_copy = copy.deepcopy(world)
-                vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
-                reward = world_copy.state.do_action(action, vehicle_copy)
+                state_copy = copy.deepcopy(world.state)
+                vehicle_copy = state_copy.get_vehicle_by_id(vehicle.id)
+                reward = state_copy.do_action(action, vehicle_copy, world.time)
+                action_distance = state_copy.get_distance(
+                    vehicle.current_location.id, action.next_location
+                )
                 next_state_value = self.value_function.estimate_value(
-                    world_copy.state, vehicle_copy, world_copy.time
+                    state_copy,
+                    vehicle_copy,
+                    world.time + action.get_action_time(action_distance),
                 )
 
                 action_info.append((action, reward, next_state_value))
@@ -161,13 +165,13 @@ class RandomRolloutPolicy(Policy):
         )
         actions_info = []
         # For every possible action
-        roll_out_policy = SwapAllPolicy()
+        roll_out_policy = RandomActionPolicy()
         for action in actions:
             start = time.time()
             # Get new state of performing action
             world_copy = copy.deepcopy(world)
             vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
-            reward = world_copy.state.do_action(action, vehicle_copy)
+            reward = world_copy.state.do_action(action, vehicle_copy, world_copy.time)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
             reward += world.get_discount() * scenario_simulation.scripts.estimate_reward(
@@ -186,6 +190,9 @@ class RandomRolloutPolicy(Policy):
             Policy.print_action_stats(vehicle, actions_info)
 
         return best_action
+
+    def __str__(self):
+        return "RandomRolloutPolicy"
 
 
 class SwapAllPolicy(Policy):
@@ -223,6 +230,9 @@ class SwapAllPolicy(Policy):
             delivery_scooters=[],
             next_location=next_location.id,
         )
+
+    def __str__(self):
+        return "SwapAllPolicy"
 
 
 class RandomActionPolicy(Policy):
