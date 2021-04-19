@@ -117,6 +117,7 @@ class State:
             == 0
             or len(vehicle.current_location.scooters)
             == vehicle.current_location.get_current_state()
+            or vehicle.battery_inventory == 0
         ):
             neighbours = decision.neighbour_filtering.filtering_neighbours(
                 self,
@@ -174,10 +175,7 @@ class State:
                                 (pick_up + swap) <= vehicle.battery_inventory
                                 and (pick_up + swap)
                                 <= len(vehicle.current_location.scooters)
-                                and (
-                                    pick_up + swap + drop_off > 0
-                                    or isinstance(location, Depot)
-                                )
+                                and (pick_up + swap + drop_off > 0)
                             ):
                                 combinations.append(
                                     [swap, pick_up, drop_off, location.id]
