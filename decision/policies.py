@@ -109,11 +109,6 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             vehicle, divide=2, exclude=world.tabu_list, time=world.time,
         )
 
-        if len(actions) == 0:
-            _ = world.state.get_possible_actions(
-                vehicle, divide=2, exclude=world.tabu_list, time=world.time,
-            )
-
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
             return random.choice(actions)
