@@ -8,18 +8,20 @@ def run_analysis(
     shift_duration=100,
     sample_size=100,
     number_of_clusters=10,
+    initial_location_depot=True,
     policy=None,
     visualize_world=True,
     verbose=False,
 ):
     """
     Method to run different policies and analysis their performance
-    :param visualize_world:
-    :param policy:
-    :param verbose: show verbose in console
     :param shift_duration: total shift to be analysed
     :param sample_size: size of instances
     :param number_of_clusters: number of clusters in the world
+    :param initial_location_depot:
+    :param policy:
+    :param visualize_world:
+    :param verbose: show verbose in console
     :return: matplotlib figure - figure containing plot of the analysis
     """
 
@@ -29,6 +31,7 @@ def run_analysis(
         sample_size=sample_size,
         number_of_clusters=number_of_clusters,
         policy=policy,
+        initial_location_depot=initial_location_depot,
         visualize=visualize_world,
         verbose=verbose,
     )

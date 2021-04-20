@@ -123,7 +123,7 @@ class State:
         else:
 
             def get_range(max_int):
-                if divide and divide > 0:
+                if divide and divide > 0 and max_int > 0:
                     return list(
                         {
                             *(

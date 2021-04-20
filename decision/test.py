@@ -1,10 +1,10 @@
 import copy
 import math
-
 import unittest
 import random
 import decision
 import decision.value_functions
+import analysis.evaluate_policies
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.neighbour_filtering import filtering_neighbours
@@ -264,6 +264,46 @@ class ValueFunctionTests(unittest.TestCase):
                 next_state_value=next_state_value,
                 reward=reward,
             )
+
+
+class EpsilonGreedyPolicyTest(unittest.TestCase):
+    def test_start_in_depot(self):
+        VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
+            number_of_locations=10 + 3, number_of_clusters=10,
+        )
+        ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
+        # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
+
+        policy = decision.ValueFunctionPolicy(ROLL_OUT_POLICY)
+
+        analysis.evaluate_policies.run_analysis(
+            shift_duration=60,
+            sample_size=100,
+            number_of_clusters=10,
+            policy=policy,
+            initial_location_depot=True,
+            visualize_world=False,
+            verbose=False,
+        )
+
+    def test_start_in_cluster(self):
+        VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
+            number_of_locations=10 + 3, number_of_clusters=10,
+        )
+        ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
+        # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
+
+        policy = decision.ValueFunctionPolicy(ROLL_OUT_POLICY)
+
+        analysis.evaluate_policies.run_analysis(
+            shift_duration=60,
+            sample_size=100,
+            number_of_clusters=10,
+            policy=policy,
+            initial_location_depot=False,
+            visualize_world=False,
+            verbose=False,
+        )
 
 
 class NeighbourFilteringTests(unittest.TestCase):
