@@ -133,8 +133,20 @@ class State:
         else:
 
             def get_range(max_int):
-                if divide:
-                    return list({0, math.ceil(max_int / divide), max_int})
+                if divide and divide > 0:
+                    return list(
+                        {
+                            *(
+                                [
+                                    i
+                                    for i in range(
+                                        0, max_int + 1, math.ceil(max_int / divide)
+                                    )
+                                ]
+                                + [max_int]
+                            )
+                        }
+                    )
                 else:
                     return [i for i in range(max_int + 1)]
 
