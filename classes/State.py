@@ -111,14 +111,8 @@ class State:
         :return: List of Action objects
         """
         actions = []
-        if (
-            vehicle.is_at_depot()
-            or len(vehicle.current_location.scooters) + len(vehicle.scooter_inventory)
-            == 0
-            or len(vehicle.current_location.scooters)
-            == vehicle.current_location.get_current_state()
-            or vehicle.battery_inventory == 0
-        ):
+        # Return empty action if
+        if vehicle.is_at_depot():
             neighbours = decision.neighbour_filtering.filtering_neighbours(
                 self,
                 vehicle,
@@ -126,10 +120,6 @@ class State:
                 number_of_random_neighbours=random_neighbours,
                 exclude=exclude,
             )
-
-            for neighbour in neighbours:
-                actions.append(Action([], [], [], neighbour.id))
-
         else:
 
             def get_range(max_int):
@@ -157,9 +147,7 @@ class State:
                 0,
             )
 
-            combinations = []
-            # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-            for location in decision.neighbour_filtering.filtering_neighbours(
+            neighbours = decision.neighbour_filtering.filtering_neighbours(
                 self,
                 vehicle,
                 number_of_neighbours=number_of_neighbours,
@@ -167,7 +155,10 @@ class State:
                 time=time,
                 exclude=exclude,
                 max_swaps=max(pick_ups, swaps),
-            ):
+            )
+            combinations = []
+            # Different combinations of battery swaps, pick-ups, drop-offs and clusters
+            for location in neighbours:
                 for pick_up in get_range(pick_ups):
                     for swap in get_range(swaps):
                         for drop_off in get_range(drop_offs):
@@ -199,7 +190,12 @@ class State:
                         cluster_id,
                     )
                 )
-        return actions
+
+        return (
+            actions
+            if len(actions) > 0
+            else [Action([], [], [], neighbour.id) for neighbour in neighbours]
+        )
 
     def do_action(self, action: Action, vehicle: Vehicle, time: int):
         """

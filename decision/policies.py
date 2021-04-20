@@ -10,6 +10,11 @@ import time
 
 
 class Policy:
+    def __init__(
+        self, get_possible_actions_divide=globals.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS
+    ):
+        self.get_possible_actions_divide = get_possible_actions_divide
+
     def get_best_action(self, world, vehicle) -> classes.Action:
         """
         Returns the best action for the input vehicle in the world context
@@ -21,24 +26,31 @@ class Policy:
 
     @staticmethod
     def print_action_stats(
-        vehicle: classes.Vehicle, actions_info: [(classes.Action, int, int)],
+        world: classes.World,
+        vehicle: classes.Vehicle,
+        actions_info: [(classes.Action, int, int)],
     ) -> None:
-        print(f"\n{vehicle} (#rollouts {NUMBER_OF_ROLLOUTS}):")
-        for action, reward, computational_time in actions_info:
-            print(
-                f"\n{action} Reward - {round(reward, 3)} | Comp. time - {round(computational_time, 2)}"
-            )
-        print("\n----------------------------------------------------------------")
+        if world.verbose:
+            print(f"\n{vehicle} (#rollouts {NUMBER_OF_ROLLOUTS}):")
+            for action, reward, computational_time in actions_info:
+                print(
+                    f"\n{action} Reward - {round(reward, 3)} | Comp. time - {round(computational_time, 2)}"
+                )
+            print("\n----------------------------------------------------------------")
 
 
 class ValueFunctionPolicy(Policy):
-    def __init__(self, roll_out_policy=None):
+    def __init__(self, roll_out_policy=None, **kwargs):
+        super().__init__(**kwargs)
         self.roll_out_policy = roll_out_policy
 
     def get_best_action(self, world, vehicle):
         # Find all possible actions
         actions = world.state.get_possible_actions(
-            vehicle, divide=2, exclude=world.tabu_list, time=world.time,
+            vehicle,
+            divide=self.get_possible_actions_divide,
+            exclude=world.tabu_list,
+            time=world.time,
         )
         action_info = []
         # For every possible action
@@ -50,6 +62,7 @@ class ValueFunctionPolicy(Policy):
             reward = world_copy.state.do_action(action, vehicle_copy, world_copy.time)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
+            # get_best_action in this rollout will update the value function provided by the rollout policy
             scenario_simulation.scripts.estimate_reward(
                 world_copy, vehicle_copy, self.roll_out_policy
             )
@@ -61,14 +74,14 @@ class ValueFunctionPolicy(Policy):
             )
             action_info.append((action, reward, next_state_value, stop - start))
 
-        if world.verbose:
-            Policy.print_action_stats(
-                vehicle,
-                [
-                    (action, reward + next_state_value, elapsed_time)
-                    for action, reward, next_state_value, elapsed_time in action_info
-                ],
-            )
+        Policy.print_action_stats(
+            world,
+            vehicle,
+            [
+                (action, reward + next_state_value, elapsed_time)
+                for action, reward, next_state_value, elapsed_time in action_info
+            ],
+        )
 
         # Find the action with the highest reward and future expected reward - reward + value function next state
         (
@@ -99,14 +112,18 @@ class ValueFunctionPolicy(Policy):
 
 
 class EpsilonGreedyValueFunctionPolicy(Policy):
-    def __init__(self, value_function=None, epsilon=globals.EPSILON):
+    def __init__(self, value_function=None, epsilon=globals.EPSILON, **kwargs):
+        super().__init__(**kwargs)
         self.value_function = value_function
         self.epsilon = epsilon
 
     def get_best_action(self, world, vehicle):
         # Find all possible actions
         actions = world.state.get_possible_actions(
-            vehicle, divide=2, exclude=world.tabu_list, time=world.time,
+            vehicle,
+            divide=self.get_possible_actions_divide,
+            exclude=world.tabu_list,
+            time=world.time,
         )
 
         # Epsilon greedy choose an action based on value function
@@ -156,7 +173,10 @@ class RandomRolloutPolicy(Policy):
 
         # Find all possible actions
         actions = world.state.get_possible_actions(
-            vehicle, divide=2, exclude=world.tabu_list, time=world.time,
+            vehicle,
+            divide=self.get_possible_actions_divide,
+            exclude=world.tabu_list,
+            time=world.time,
         )
         actions_info = []
         # For every possible action
@@ -181,8 +201,7 @@ class RandomRolloutPolicy(Policy):
 
             actions_info.append((action, reward, time.time() - start))
 
-        if world.verbose:
-            Policy.print_action_stats(vehicle, actions_info)
+        Policy.print_action_stats(world, vehicle, actions_info)
 
         return best_action
 
@@ -234,7 +253,10 @@ class RandomActionPolicy(Policy):
     def get_best_action(self, world, vehicle):
         # all possible actions in this state
         possible_actions = world.state.get_possible_actions(
-            vehicle, exclude=world.tabu_list, time=world.time
+            vehicle,
+            exclude=world.tabu_list,
+            time=world.time,
+            divide=self.get_possible_actions_divide,
         )
 
         # pick a random action
