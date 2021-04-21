@@ -12,7 +12,7 @@ class SaveMixin(abc.ABC):
         # If there is no world_cache directory, create it
         if not os.path.exists(directory):
             os.makedirs(directory)
-        with open(f"{directory}/{self.get_filename()}" "wb",) as file:
+        with open(f"{directory}/{self.get_filename()}", "wb") as file:
             pickle.dump(self, file)
 
     @classmethod
