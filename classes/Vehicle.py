@@ -74,7 +74,7 @@ class Vehicle:
 
     def __repr__(self):
         return (
-            f"<Vehicle at {self.current_location.id}, {len(self.scooter_inventory)} scooters,"
+            f"<Vehicle {self.id} at {self.current_location.id}, {len(self.scooter_inventory)} scooters,"
             f" {self.battery_inventory} batteries>"
         )
 

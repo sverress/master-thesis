@@ -12,7 +12,7 @@ BIKE_BATTERY_INVENTORY = 20
 BIKE_SCOOTER_INVENTORY = 0
 
 # Speed of service vehicles
-VEHICLE_SPEED = 20
+VEHICLE_SPEED = 15
 MINUTES_IN_HOUR = 60
 
 # Speed of scooter ref - Fearnley at al. (2020, section 3.6)
@@ -31,6 +31,7 @@ DECISION PARAMETERS
 """
 DISCOUNT_RATE = 0.80
 EPSILON = 0.1  # Probability of taking a random action
+DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS = 2
 
 # LINEAR MODEL
 WEIGHT_UPDATE_STEP_SIZE = 0.001
@@ -39,7 +40,7 @@ WEIGHT_INITIALIZATION_VALUE = 0.0
 
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
-NUMBER_OF_ROLLOUTS = 10
+NUMBER_OF_ROLLOUTS = 2
 BATTERY_LIMIT = 20.0
 
 # Negative reward for lost trips

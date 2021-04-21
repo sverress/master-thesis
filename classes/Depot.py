@@ -27,7 +27,7 @@ class Depot(Location):
 
         self.charging.append((time, number_of_battery_to_change))
 
-        return number_of_battery_to_change * SWAP_TIME_PER_BATTERY
+        return round(number_of_battery_to_change * SWAP_TIME_PER_BATTERY)
 
     def get_available_battery_swaps(self, time):
         self.charge_batteries(time)
