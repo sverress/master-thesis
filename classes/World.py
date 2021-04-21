@@ -107,6 +107,7 @@ class World:
         initial_location_depot=True,
         verbose=False,
         visualize=True,
+        ideal_state_computation=False,
     ):
         self.shift_duration = shift_duration
         if initial_state:
@@ -116,6 +117,7 @@ class World:
                 sample_size=sample_size,
                 number_of_clusters=number_of_clusters,
                 initial_location_depot=initial_location_depot,
+                ideal_state_computation=ideal_state_computation,
             )
         self.time = 0
         self.rewards = []

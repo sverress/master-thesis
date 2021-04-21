@@ -12,6 +12,7 @@ def run_analysis(
     policy=None,
     visualize_world=True,
     verbose=False,
+    ideal_state_computation=False,
 ):
     """
     Method to run different policies and analysis their performance
@@ -34,10 +35,8 @@ def run_analysis(
         initial_location_depot=initial_location_depot,
         visualize=visualize_world,
         verbose=verbose,
+        ideal_state_computation=ideal_state_computation,
     )
-    # pumping up the trip intensity
-    for cluster in world.state.clusters:
-        cluster.trip_intensity_per_iteration = round(cluster.ideal_state * 0.1)
     # run the world and add the world object to a list containing all world instances
     world.run()
 
@@ -46,8 +45,8 @@ def run_analysis(
 
 if __name__ == "__main__":
     SHIFT_DURATION = 120
-    SAMPLE_SIZE = 100
-    NUMBER_OF_CLUSTERS = 10
+    SAMPLE_SIZE = None
+    NUMBER_OF_CLUSTERS = 200
     NUMBER_OF_DEPOTS = 3
 
     # different value functions: GradientDescent
@@ -72,6 +71,7 @@ if __name__ == "__main__":
             policy=current_policy,
             visualize_world=True,
             verbose=True,
+            ideal_state_computation=False,
         )
         instances.append(policy_world)
 

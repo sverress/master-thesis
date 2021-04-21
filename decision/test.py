@@ -269,7 +269,7 @@ class ValueFunctionTests(unittest.TestCase):
 class EpsilonGreedyPolicyTest(unittest.TestCase):
     def test_start_in_depot(self):
         VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
-            number_of_locations=10 + 3, number_of_clusters=10,
+            number_of_locations=10 + 3, number_of_clusters=10
         )
         ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
         # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
