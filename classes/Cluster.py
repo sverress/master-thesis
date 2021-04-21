@@ -68,6 +68,15 @@ class Cluster(Location):
         return cluster_centroid.x, cluster_centroid.y
 
     def add_scooter(self, scooter: Scooter):
+        matches = [
+            cluster_scooter
+            for cluster_scooter in self.scooters
+            if scooter.id == cluster_scooter.id
+        ]
+        if len(matches) > 0:
+            raise ValueError(
+                f"The scooter you are trying to add is already in the cluster: {matches}"
+            )
         # Adding scooter to scooter list
         self.scooters.append(scooter)
         # Changing coordinates of scooter to this location + some delta

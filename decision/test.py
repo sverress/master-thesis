@@ -1,10 +1,10 @@
 import copy
 import math
-
 import unittest
 import random
 import decision
 import decision.value_functions
+import analysis.evaluate_policies
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.neighbour_filtering import filtering_neighbours
@@ -55,7 +55,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle), reward
+            self.initial_state.do_action(actions[-1], self.vehicle, 0), reward
         )
 
         # Test number of scooters
@@ -90,7 +90,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test no reward for pickup
         self.assertEqual(
-            round(self.initial_state.do_action(actions[-1], self.vehicle), 1), 0
+            round(self.initial_state.do_action(actions[-1], self.vehicle, 0), 1), 0
         )
 
         # Test number of scooters
@@ -146,7 +146,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle), reward
+            self.initial_state.do_action(actions[-1], self.vehicle, 0), reward
         )
 
         # Test number of scooters
@@ -248,7 +248,7 @@ class ValueFunctionTests(unittest.TestCase):
         state = copy.deepcopy(world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward = world.state.do_action(action, vehicle)
+        reward = world.state.do_action(action, vehicle, world.time)
         previous_td_error = math.inf
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
@@ -264,6 +264,57 @@ class ValueFunctionTests(unittest.TestCase):
                 next_state_value=next_state_value,
                 reward=reward,
             )
+
+
+class EpsilonGreedyPolicyTest(unittest.TestCase):
+    def test_start_in_depot(self):
+        VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
+            number_of_locations=5 + 3, number_of_clusters=5
+        )
+        initial_weights = VALUE_FUNCTION.weights
+
+        ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
+        # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
+
+        policy = decision.ValueFunctionPolicy(ROLL_OUT_POLICY)
+
+        world = analysis.evaluate_policies.run_analysis(
+            shift_duration=60,
+            sample_size=50,
+            number_of_clusters=5,
+            policy=policy,
+            initial_location_depot=True,
+            visualize_world=False,
+            verbose=False,
+        )
+        self.assertNotEqual(
+            sum(initial_weights),
+            sum(world.policy.roll_out_policy.value_function.weights),
+        )
+
+    def test_start_in_cluster(self):
+        VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
+            number_of_locations=5 + 3, number_of_clusters=5,
+        )
+        initial_weights = VALUE_FUNCTION.weights
+        ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
+        # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
+
+        policy = decision.ValueFunctionPolicy(ROLL_OUT_POLICY)
+
+        world = analysis.evaluate_policies.run_analysis(
+            shift_duration=60,
+            sample_size=50,
+            number_of_clusters=5,
+            policy=policy,
+            initial_location_depot=False,
+            visualize_world=False,
+            verbose=False,
+        )
+        self.assertNotEqual(
+            sum(initial_weights),
+            sum(world.policy.roll_out_policy.value_function.weights),
+        )
 
 
 class NeighbourFilteringTests(unittest.TestCase):

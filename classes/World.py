@@ -110,6 +110,7 @@ class World(SaveMixin):
         initial_location_depot=True,
         verbose=False,
         visualize=True,
+        ideal_state_computation=False,
     ):
         self.created_at = datetime.datetime.now().isoformat(timespec="minutes")
         self.shift_duration = shift_duration
@@ -120,6 +121,7 @@ class World(SaveMixin):
                 sample_size=sample_size,
                 number_of_clusters=number_of_clusters,
                 initial_location_depot=initial_location_depot,
+                ideal_state_computation=ideal_state_computation,
             )
         self.time = 0
         self.rewards = []

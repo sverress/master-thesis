@@ -91,7 +91,7 @@ def add_depots_as_neighbours(state, time, vehicle, max_swaps):
             )
         ]
         if available_small_depots
-        else []
+        else [big_depot]
     )
 
 

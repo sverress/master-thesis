@@ -99,7 +99,7 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
         # Count how many scooters move
         for _, row in filtered_moved_scooters.iterrows():
             # Increase the counter for every visit if the scooter has moved to a new cluster
-            move_count[row["cluster_x"]][row["cluster_y"]] += 1
+            move_count[row["cluster_before"]][row["cluster_after"]] += 1
 
         # Calculate number of scooters who stayed in each zone
         for cluster_id in cluster_labels:
@@ -239,10 +239,10 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
             ) = merge_scooter_snapshots(state, current_snapshot, previous_snapshot)
             for cluster in state.clusters:
                 filtered_moved_scooters_in_cluster = filtered_moved_scooters[
-                    filtered_moved_scooters["cluster_x"] == cluster.id
+                    filtered_moved_scooters["cluster_before"] == cluster.id
                 ]
                 non_filtered_moved_scooters_in_cluster = moved_scooters[
-                    moved_scooters["cluster_x"] == cluster.id
+                    moved_scooters["cluster_before"] == cluster.id
                 ]
                 # Number of scooters leaving the cluster
                 # + number of disappeared scooters likely to leave ( # of disappeared * ratio of leaving)

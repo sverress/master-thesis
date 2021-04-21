@@ -72,7 +72,7 @@ class VehicleArrival(Event):
         arrival_cluster_id = vehicle.current_location.id
 
         # perform the best action on the state and send vehicle to new location
-        reward = world.state.do_action(action, vehicle)
+        reward = world.state.do_action(action, vehicle, world.time)
 
         world.add_reward(reward, discount=True)
 

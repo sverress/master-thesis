@@ -35,6 +35,10 @@ class State(SaveMixin):
             distance_matrix=self.distance_matrix,
         )
         new_state.simulation_scenarios = self.simulation_scenarios
+        for vehicle in new_state.vehicles:
+            vehicle.current_location = new_state.get_location_by_id(
+                vehicle.current_location.id
+            )
         return new_state
 
     def get_all_locations(self):
@@ -106,6 +110,7 @@ class State(SaveMixin):
         :return: List of Action objects
         """
         actions = []
+        # Return empty action if
         if vehicle.is_at_depot():
             neighbours = decision.neighbour_filtering.filtering_neighbours(
                 self,
@@ -118,11 +123,22 @@ class State(SaveMixin):
         else:
 
             def get_range(max_int):
-                return range(
-                    0,
-                    max_int + 1,
-                    math.ceil((max_int / divide) if divide else 1) if max_int else 1,
-                )
+                if divide and divide > 0 and max_int > 0:
+                    return list(
+                        {
+                            *(
+                                [
+                                    i
+                                    for i in range(
+                                        0, max_int + 1, math.ceil(max_int / divide)
+                                    )
+                                ]
+                                + [max_int]
+                            )
+                        }
+                    )
+                else:
+                    return [i for i in range(max_int + 1)]
 
             # Initiate constraints for battery swap, pick-up and drop-off
             pick_ups = min(
@@ -153,7 +169,7 @@ class State(SaveMixin):
             )
             combinations = []
             # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-            for cluster in neighbours:
+            for location in neighbours:
                 for pick_up in get_range(pick_ups):
                     for swap in get_range(swaps):
                         for drop_off in get_range(drop_offs):
@@ -161,10 +177,10 @@ class State(SaveMixin):
                                 (pick_up + swap) <= vehicle.battery_inventory
                                 and (pick_up + swap)
                                 <= len(vehicle.current_location.scooters)
-                                and pick_up + swap + drop_off > 0
+                                and (pick_up + swap + drop_off > 0)
                             ):
                                 combinations.append(
-                                    [swap, pick_up, drop_off, cluster.id]
+                                    [swap, pick_up, drop_off, location.id]
                                 )
 
             # Assume that no battery swap or pick-up of scooters with 100% battery and
@@ -185,21 +201,34 @@ class State(SaveMixin):
                         cluster_id,
                     )
                 )
+
         return (
             actions
             if len(actions) > 0
             else [Action([], [], [], neighbour.id) for neighbour in neighbours]
         )
 
-    def do_action(self, action: Action, vehicle: Vehicle):
+    def do_action(self, action: Action, vehicle: Vehicle, time: int):
         """
         Performs an action on the state -> changing the state + calculates the reward
+        :param time: at what time the action is performed
         :param vehicle: Vehicle to perform this action
         :param action: Action - action to be performed on the state
         :return: float - reward for doing the action on the state
         """
         reward = 0
-        if not vehicle.is_at_depot():
+        if vehicle.is_at_depot():
+            batteries_to_swap = min(
+                vehicle.flat_batteries(),
+                vehicle.current_location.get_available_battery_swaps(time),
+            )
+            vehicle.battery_inventory = (
+                vehicle.battery_inventory
+                + vehicle.current_location.swap_battery_inventory(
+                    time, batteries_to_swap
+                )
+            )
+        else:
             # Perform all pickups
             for pick_up_scooter_id in action.pick_ups:
                 pick_up_scooter = vehicle.current_location.get_scooter_from_id(

@@ -6,10 +6,14 @@ from scenario_simulation.scripts import estimate_reward
 
 class BasicScenarioSimulationTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = World(100, policy=decision.SwapAllPolicy())
+        self.world = World(100, decision.RandomActionPolicy())
 
     def test_estimate_reward(self):
-        estimate_reward(self.world, self.world.state.vehicles[0])
+        estimate_reward(
+            self.world,
+            self.world.state.vehicles[1],
+            policy=decision.RandomActionPolicy(),
+        )
 
 
 if __name__ == "__main__":
