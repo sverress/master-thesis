@@ -269,40 +269,51 @@ class ValueFunctionTests(unittest.TestCase):
 class EpsilonGreedyPolicyTest(unittest.TestCase):
     def test_start_in_depot(self):
         VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
-            number_of_locations=10 + 3, number_of_clusters=10
+            number_of_locations=5 + 3, number_of_clusters=5
         )
+        initial_weights = VALUE_FUNCTION.weights
+
         ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
         # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
 
         policy = decision.ValueFunctionPolicy(ROLL_OUT_POLICY)
 
-        analysis.evaluate_policies.run_analysis(
+        world = analysis.evaluate_policies.run_analysis(
             shift_duration=60,
-            sample_size=100,
-            number_of_clusters=10,
+            sample_size=50,
+            number_of_clusters=5,
             policy=policy,
             initial_location_depot=True,
             visualize_world=False,
             verbose=False,
         )
+        self.assertNotEqual(
+            sum(initial_weights),
+            sum(world.policy.roll_out_policy.value_function.weights),
+        )
 
     def test_start_in_cluster(self):
         VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
-            number_of_locations=10 + 3, number_of_clusters=10,
+            number_of_locations=5 + 3, number_of_clusters=5,
         )
+        initial_weights = VALUE_FUNCTION.weights
         ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
         # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
 
         policy = decision.ValueFunctionPolicy(ROLL_OUT_POLICY)
 
-        analysis.evaluate_policies.run_analysis(
+        world = analysis.evaluate_policies.run_analysis(
             shift_duration=60,
-            sample_size=100,
-            number_of_clusters=10,
+            sample_size=50,
+            number_of_clusters=5,
             policy=policy,
             initial_location_depot=False,
             visualize_world=False,
             verbose=False,
+        )
+        self.assertNotEqual(
+            sum(initial_weights),
+            sum(world.policy.roll_out_policy.value_function.weights),
         )
 
 

@@ -45,8 +45,8 @@ def run_analysis(
 
 if __name__ == "__main__":
     SHIFT_DURATION = 120
-    SAMPLE_SIZE = None
-    NUMBER_OF_CLUSTERS = 200
+    SAMPLE_SIZE = 100
+    NUMBER_OF_CLUSTERS = 10
     NUMBER_OF_DEPOTS = 3
 
     # different value functions: GradientDescent
