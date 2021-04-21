@@ -1,5 +1,10 @@
+import os
+import random
 import unittest
+
+import classes
 from clustering.scripts import get_initial_state
+import globals
 
 
 class StateTests(unittest.TestCase):
@@ -21,6 +26,17 @@ class StateTests(unittest.TestCase):
                     "There are probabilities bigger than one in the move probabilities matrix",
                 )
                 self.assertEqual(0, cluster.get_leave_distribution()[cluster.id])
+
+    def test_save_state(self):
+        # Set vehicle to new location
+        random_location = random.choice(self.state_mid.locations)
+        self.state_mid.vehicles[0].set_current_location(random_location)
+        # Save, load and delete state object
+        filepath = f"{globals.STATE_CACHE_DIR}/{self.state_mid.get_filename()}"
+        self.state_mid.save_state()
+        file_state = classes.State.load(filepath)
+        self.assertEqual(random_location.id, file_state.vehicles[0].current_location.id)
+        os.remove(filepath)
 
 
 if __name__ == "__main__":

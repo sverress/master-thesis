@@ -1,19 +1,22 @@
+import datetime
 from typing import List
 
 import numpy as np
 import bisect
 import classes
+from classes.SaveMixin import SaveMixin
 
 from globals import (
     LOST_TRIP_REWARD,
     ITERATION_LENGTH_MINUTES,
     WHITE,
     DISCOUNT_RATE,
+    WORLD_CACHE_DIR,
 )
 from progress.bar import IncrementalBar
 
 
-class World:
+class World(SaveMixin):
     class WorldMetric:
         def __init__(self):
             self.lost_demand = []
@@ -99,6 +102,7 @@ class World:
     def __init__(
         self, shift_duration: int, policy, initial_state, verbose=False, visualize=True,
     ):
+        self.created_at = datetime.datetime.now().isoformat(timespec="minutes")
         self.shift_duration = shift_duration
         self.state = initial_state
         self.time = 0
@@ -215,12 +219,19 @@ class World:
 
     def set_policy(self, policy):
         # If the policy has a value function. Initialize it from the world state
-        if hasattr(policy, "value_function") and hasattr(
-            policy.roll_out_policy, "value_function"
-        ):
+        if hasattr(policy, "value_function"):
             policy.value_function.setup(self.state)
         if hasattr(policy, "roll_out_policy") and hasattr(
             policy.roll_out_policy, "value_function"
         ):
             policy.roll_out_policy.value_function.setup(self.state)
         return policy
+
+    def get_filename(self):
+        return (
+            f"{self.created_at}_World_T_e{self.time}_t_{self.shift_duration}_"
+            f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}.pickle"
+        )
+
+    def save_world(self):
+        super().save(WORLD_CACHE_DIR)
