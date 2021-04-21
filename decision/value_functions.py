@@ -6,11 +6,24 @@ import helpers
 
 
 class LinearValueFunction:
+    class Decorators:
+        @classmethod
+        def check_setup(cls, func):
+            def return_function(self, *args, **kwargs):
+                if self.weights is not None:
+                    return func(self, *args, **kwargs)
+                else:
+                    raise ValueError(
+                        "Value function is not setup with a state. "
+                        "Run value_function.setup() to initialize value function."
+                    )
+
+            return return_function
+
     def __init__(
         self,
-        number_of_locations: int,
-        number_of_clusters: int,
         weight_update_step_size=globals.WEIGHT_UPDATE_STEP_SIZE,
+        weight_init_value=globals.WEIGHT_INITIALIZATION_VALUE,
         discount_factor=globals.DISCOUNT_RATE,
         vehicle_inventory_step_size=globals.VEHICLE_INVENTORY_STEP_SIZE,
     ):
@@ -21,26 +34,32 @@ class LinearValueFunction:
         # for every small depot - 1 float for degree of filling
         self.number_of_features_per_cluster = 3
         self.location_repetition = 3
+        self.vehicle_inventory_step_size = vehicle_inventory_step_size
+        self.step_size = weight_update_step_size
+        self.discount_factor = discount_factor
+        self.weight_init_value = weight_init_value
 
-        number_of_locations_indicators = number_of_locations * self.location_repetition
+        self.weights = None
+        self.location_indicator = None
+
+    def setup(self, state):
+        number_of_locations_indicators = len(state.locations) * self.location_repetition
         number_of_state_features = (
-            (self.number_of_features_per_cluster * number_of_clusters)
-            + (2 * round(1 / vehicle_inventory_step_size))
-            + number_of_locations
-            - number_of_clusters
+            (self.number_of_features_per_cluster * len(state.clusters))
+            + (2 * round(1 / self.vehicle_inventory_step_size))
+            + len(state.locations)
+            - len(state.clusters)
             - 1
         )
 
-        self.weights = [globals.WEIGHT_INITIALIZATION_VALUE] * (
+        self.weights = [self.weight_init_value] * (
             number_of_locations_indicators
             + number_of_state_features
             + (number_of_locations_indicators * number_of_state_features)
         )
         self.location_indicator = [0] * number_of_locations_indicators
-        self.vehicle_inventory_step_size = vehicle_inventory_step_size
-        self.step_size = weight_update_step_size
-        self.discount_factor = discount_factor
 
+    @Decorators.check_setup
     def estimate_value(
         self,
         state: classes.State,
@@ -55,6 +74,7 @@ class LinearValueFunction:
 
         return current_state_value
 
+    @Decorators.check_setup
     def update_weights(
         self,
         current_state_features: [float],
@@ -70,6 +90,7 @@ class LinearValueFunction:
             current_state_features,
         )
 
+    @Decorators.check_setup
     def convert_state_to_features(
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):
@@ -156,6 +177,7 @@ class LinearValueFunction:
 
         return location_indicator + state_features
 
+    @Decorators.check_setup
     def create_location_features_combination(self, state_features):
         location_indicator = state_features[: len(self.location_indicator)]
         state_features = state_features[len(self.location_indicator) :]
@@ -171,6 +193,7 @@ class LinearValueFunction:
 
         return location_indicator + state_features + locations_features_combination
 
+    @Decorators.check_setup
     def get_state_features(self, state, vehicle, time):
         return self.create_location_features_combination(
             self.convert_state_to_features(state, vehicle, time)

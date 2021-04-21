@@ -7,20 +7,30 @@ from globals import NUMBER_OF_ROLLOUTS
 import numpy.random as random
 import scenario_simulation.scripts
 import time
+import abc
 
 
-class Policy:
+class Policy(abc.ABC):
     def __init__(
         self, get_possible_actions_divide=globals.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS
     ):
         self.get_possible_actions_divide = get_possible_actions_divide
 
+    @abc.abstractmethod
     def get_best_action(self, world, vehicle) -> classes.Action:
         """
         Returns the best action for the input vehicle in the world context
         :param world: world object that contains the whole world state
         :param vehicle: the vehicle to perform an action
         :return: the best action according to the policy
+        """
+        pass
+
+    def setup_from_state(self, state):
+        """
+        Function to be called after association with a state object is created.
+        Nice place to setup value functions.
+        :param state: state object associated with policy
         """
         pass
 
@@ -37,7 +47,11 @@ class Policy:
             print("\n----------------------------------------------------------------")
 
 
-class ValueFunctionPolicy(Policy):
+class RolloutValueFunctionPolicy(Policy):
+    """
+    Rollout possible actions to update value function.
+    """
+
     def __init__(self, roll_out_policy=None, **kwargs):
         super().__init__(**kwargs)
         self.roll_out_policy = roll_out_policy
@@ -105,11 +119,15 @@ class ValueFunctionPolicy(Policy):
 
         return best_action
 
-    def __str__(self):
+    def __repr__(self):
         return "ValueFunctionPolicy w/epsilon greedy rollout"
 
 
 class EpsilonGreedyValueFunctionPolicy(Policy):
+    """
+    Chooses an action based on a epsilon greedy policy. Will update weights after chosen action
+    """
+
     def __init__(self, value_function=None, epsilon=globals.EPSILON, **kwargs):
         super().__init__(**kwargs)
         self.value_function = value_function
@@ -163,6 +181,9 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
 
             return best_action
 
+    def setup_from_state(self, state):
+        self.value_function.setup(state)
+
 
 class RandomRolloutPolicy(Policy):
     def get_best_action(self, world, vehicle):
@@ -203,7 +224,7 @@ class RandomRolloutPolicy(Policy):
 
         return best_action
 
-    def __str__(self):
+    def __repr__(self):
         return "RandomRolloutPolicy"
 
 
@@ -243,7 +264,7 @@ class SwapAllPolicy(Policy):
             next_location=next_location.id,
         )
 
-    def __str__(self):
+    def __repr__(self):
         return "SwapAllPolicy"
 
 

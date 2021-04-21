@@ -1,6 +1,5 @@
 from typing import List
 
-import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
 import classes
@@ -120,9 +119,10 @@ class World:
             for end in np.arange(len(self.state.clusters))
             if start != end
         }
-        self.policy = policy
+        self.policy = self.set_policy(policy)
         self.metrics = World.WorldMetric()
         self.verbose = verbose
+        self.visualize = visualize
         if verbose:
             self.progress_bar = IncrementalBar(
                 "Running World",
@@ -212,3 +212,15 @@ class World:
     def get_discount(self):
         # Divide by 60 as there is 60 minutes in an hour. We want this number in hours to avoid big numbers is the power
         return DISCOUNT_RATE ** (self.time / 60)
+
+    def set_policy(self, policy):
+        # If the policy has a value function. Initialize it from the world state
+        if hasattr(policy, "value_function") and hasattr(
+            policy.roll_out_policy, "value_function"
+        ):
+            policy.value_function.setup(self.state)
+        if hasattr(policy, "roll_out_policy") and hasattr(
+            policy.roll_out_policy, "value_function"
+        ):
+            policy.roll_out_policy.value_function.setup(self.state)
+        return policy

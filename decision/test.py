@@ -244,12 +244,11 @@ class ValueFunctionTests(unittest.TestCase):
         )
         # No discount should give reward equal to TD-error
         value_function = decision.value_functions.LinearValueFunction(
-            13,
-            10,
             weight_update_step_size=0.001,
             discount_factor=0.2,
             vehicle_inventory_step_size=0.5,
         )
+        value_function.setup(world.state)
         vehicle = world.state.vehicles[0]
         action = random.choice(world.state.get_possible_actions(vehicle))
         state = copy.deepcopy(world.state)
@@ -274,54 +273,36 @@ class ValueFunctionTests(unittest.TestCase):
 
 
 class EpsilonGreedyPolicyTest(unittest.TestCase):
+    def run_analysis_test(self, starts_at_depot):
+        world = World(
+            20,
+            None,
+            clustering.scripts.get_initial_state(
+                100, 10, initial_location_depot=starts_at_depot
+            ),
+            visualize=False,
+        )
+        roll_out_policy = decision.EpsilonGreedyValueFunctionPolicy(
+            decision.value_functions.LinearValueFunction()
+        )
+        policy = decision.RolloutValueFunctionPolicy(roll_out_policy)
+        world, *rest = analysis.evaluate_policies.run_analysis([policy], world)
+        self.assertTrue(
+            any(
+                [
+                    world.policy.roll_out_policy.value_function.weight_init_value
+                    != weight
+                    for weight in world.policy.roll_out_policy.value_function.weights
+                ]
+            ),
+            "The weights have not changed after a full run analysis",
+        )
+
     def test_start_in_depot(self):
-        VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
-            number_of_locations=5 + 3, number_of_clusters=5
-        )
-        initial_weights = VALUE_FUNCTION.weights
-
-        ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
-        # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
-
-        policy = decision.ValueFunctionPolicy(ROLL_OUT_POLICY)
-
-        world = analysis.evaluate_policies.run_analysis(
-            shift_duration=60,
-            sample_size=50,
-            number_of_clusters=5,
-            policy=policy,
-            initial_location_depot=True,
-            visualize_world=False,
-            verbose=False,
-        )
-        self.assertNotEqual(
-            sum(initial_weights),
-            sum(world.policy.roll_out_policy.value_function.weights),
-        )
+        self.run_analysis_test(True)
 
     def test_start_in_cluster(self):
-        VALUE_FUNCTION = decision.value_functions.LinearValueFunction(
-            number_of_locations=5 + 3, number_of_clusters=5,
-        )
-        initial_weights = VALUE_FUNCTION.weights
-        ROLL_OUT_POLICY = decision.EpsilonGreedyValueFunctionPolicy(VALUE_FUNCTION)
-        # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
-
-        policy = decision.ValueFunctionPolicy(ROLL_OUT_POLICY)
-
-        world = analysis.evaluate_policies.run_analysis(
-            shift_duration=60,
-            sample_size=50,
-            number_of_clusters=5,
-            policy=policy,
-            initial_location_depot=False,
-            visualize_world=False,
-            verbose=False,
-        )
-        self.assertNotEqual(
-            sum(initial_weights),
-            sum(world.policy.roll_out_policy.value_function.weights),
-        )
+        self.run_analysis_test(False)
 
 
 class NeighbourFilteringTests(unittest.TestCase):
