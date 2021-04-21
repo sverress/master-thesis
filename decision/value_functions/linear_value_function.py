@@ -1,25 +1,27 @@
+import itertools
+import numpy as np
+
 from .abstract import *
 
 
 class LinearValueFunction(ValueFunction):
-    def setup(self, state):
-        number_of_locations_indicators = len(state.locations) * self.location_repetition
-        number_of_state_features = (
-            (self.number_of_features_per_cluster * len(state.clusters))
-            + (2 * round(1 / self.vehicle_inventory_step_size))
-            + len(state.locations)
-            - len(state.clusters)
-            - 1
-        )
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.weights = None
 
+    def setup(self, state):
+        (
+            number_of_locations_indicators,
+            number_of_state_features,
+        ) = self.get_number_of_location_indicators_and_state_features(state)
         self.weights = [self.weight_init_value] * (
             number_of_locations_indicators
             + number_of_state_features
             + (number_of_locations_indicators * number_of_state_features)
         )
         self.location_indicator = [0] * number_of_locations_indicators
+        super(LinearValueFunction, self).setup(state)
 
-    @Decorators.check_setup
     def estimate_value(
         self,
         state,
@@ -34,7 +36,6 @@ class LinearValueFunction(ValueFunction):
 
         return current_state_value
 
-    @Decorators.check_setup
     def update_weights(
         self,
         current_state_features: [float],
@@ -66,7 +67,6 @@ class LinearValueFunction(ValueFunction):
 
         return location_indicator + state_features + locations_features_combination
 
-    @Decorators.check_setup
     def get_state_features(self, state, vehicle, time):
         return self.create_location_features_combination(
             self.convert_state_to_features(state, vehicle, time)

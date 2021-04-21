@@ -235,7 +235,7 @@ class PolicyTests(unittest.TestCase):
 
 
 class ValueFunctionTests(unittest.TestCase):
-    def test_linear_value_function(self):
+    def setup_world_value_function(self, value_function):
         world = World(
             100,
             initial_state=clustering.scripts.get_initial_state(
@@ -244,12 +244,17 @@ class ValueFunctionTests(unittest.TestCase):
             policy=None,
         )
         # No discount should give reward equal to TD-error
-        value_function = decision.value_functions.LinearValueFunction(
-            weight_update_step_size=0.001,
-            discount_factor=0.2,
-            vehicle_inventory_step_size=0.5,
-        )
         value_function.setup(world.state)
+        return world, value_function
+
+    def test_linear_value_function(self):
+        world, value_function = self.setup_world_value_function(
+            decision.value_functions.LinearValueFunction(
+                weight_update_step_size=0.001,
+                discount_factor=0.2,
+                vehicle_inventory_step_size=0.5,
+            )
+        )
         vehicle = world.state.vehicles[0]
         action = random.choice(world.state.get_possible_actions(vehicle))
         state = copy.deepcopy(world.state)
@@ -271,6 +276,32 @@ class ValueFunctionTests(unittest.TestCase):
                 next_state_value=next_state_value,
                 reward=reward,
             )
+
+    def test_ann_value_function(self):
+        world, value_function = self.setup_world_value_function(
+            decision.value_functions.ANNValueFunction(
+                [50, 100, 50],
+                weight_update_step_size=0.001,
+                discount_factor=0.2,
+                vehicle_inventory_step_size=0.5,
+            )
+        )
+        estimate = value_function.estimate_value(
+            world.state, world.state.vehicles[0], world.time
+        )
+        self.assertIsInstance(
+            estimate,
+            float,
+        )
+        # Check if update weights run
+        value_function.update_weights(
+            value_function.get_state_features(
+                world.state, world.state.vehicles[0], world.time
+            ),
+            estimate,
+            estimate + 0.01,
+            1,
+        )
 
 
 class EpsilonGreedyPolicyTest(unittest.TestCase):

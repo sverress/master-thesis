@@ -1,7 +1,5 @@
 import classes
-import itertools
 import globals
-import numpy as np
 import helpers
 import abc
 
@@ -10,7 +8,7 @@ class Decorators:
     @classmethod
     def check_setup(cls, func):
         def return_function(self, *args, **kwargs):
-            if self.weights is not None:
+            if self.setup_complete:
                 return func(self, *args, **kwargs)
             else:
                 raise ValueError(
@@ -41,18 +39,18 @@ class ValueFunction(abc.ABC):
         self.discount_factor = discount_factor
         self.weight_init_value = weight_init_value
 
-        self.weights = None
+        self.setup_complete = False
         self.location_indicator = None
 
-    @abc.abstractmethod
     def setup(self, state: classes.State):
         """
         Method for setting up the value function when the state is known
         :param state: state to infer weights with
         """
-        pass
+        self.setup_complete = True
 
     @abc.abstractmethod
+    @Decorators.check_setup
     def estimate_value(
         self,
         state: classes.State,
@@ -63,6 +61,7 @@ class ValueFunction(abc.ABC):
         pass
 
     @abc.abstractmethod
+    @Decorators.check_setup
     def update_weights(
         self,
         current_state_features: [float],
@@ -73,10 +72,25 @@ class ValueFunction(abc.ABC):
         pass
 
     @abc.abstractmethod
+    @Decorators.check_setup
     def get_state_features(
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):
         pass
+
+    def get_number_of_location_indicators_and_state_features(
+        self, state: classes.State
+    ):
+        return (
+            len(state.locations) * self.location_repetition,
+            (
+                (self.number_of_features_per_cluster * len(state.clusters))
+                + (2 * round(1 / self.vehicle_inventory_step_size))
+                + len(state.locations)
+                - len(state.clusters)
+                - 1
+            ),
+        )
 
     @Decorators.check_setup
     def convert_state_to_features(
