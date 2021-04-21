@@ -42,7 +42,8 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of swaps less or equal to ideal state
         for action in actions:
             self.assertLessEqual(
-                len(action.battery_swaps), self.vehicle.current_location.ideal_state,
+                len(action.battery_swaps),
+                self.vehicle.current_location.ideal_state,
             )
 
         # Test number of actions
@@ -311,7 +312,10 @@ class NeighbourFilteringTests(unittest.TestCase):
         vehicle = state.vehicles[0]
 
         best_neighbours_with_random = filtering_neighbours(
-            state, vehicle, number_of_neighbours=3, number_of_random_neighbours=1,
+            state,
+            vehicle,
+            number_of_neighbours=3,
+            number_of_random_neighbours=1,
         )
 
         # test if the number of neighbours is the same, even though one is random
