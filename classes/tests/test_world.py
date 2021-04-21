@@ -2,6 +2,7 @@ import unittest
 import random
 import classes
 import decision
+import decision.value_functions
 
 
 class WorldTestCase(unittest.TestCase):

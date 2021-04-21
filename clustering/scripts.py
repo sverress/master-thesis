@@ -26,7 +26,7 @@ def get_initial_state(
         print(
             f"\nUsing cached version of state from {STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle\n"
         )
-        initial_state = State.load_state(
+        initial_state = State.load(
             f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
         )
     else:

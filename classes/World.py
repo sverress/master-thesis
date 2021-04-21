@@ -1,20 +1,23 @@
+import datetime
 from typing import List
 
 import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
 import classes
+from classes.SaveMixin import SaveMixin
 
 from globals import (
     LOST_TRIP_REWARD,
     ITERATION_LENGTH_MINUTES,
     WHITE,
     DISCOUNT_RATE,
+    WORLD_CACHE_DIR,
 )
 from progress.bar import IncrementalBar
 
 
-class World:
+class World(SaveMixin):
     class WorldMetric:
         def __init__(self):
             self.lost_demand = []
@@ -108,6 +111,7 @@ class World:
         verbose=False,
         visualize=True,
     ):
+        self.created_at = datetime.datetime.now().isoformat(timespec="minutes")
         self.shift_duration = shift_duration
         if initial_state:
             self.state = initial_state
@@ -227,3 +231,12 @@ class World:
     def get_discount(self):
         # Divide by 60 as there is 60 minutes in an hour. We want this number in hours to avoid big numbers is the power
         return DISCOUNT_RATE ** (self.time / 60)
+
+    def get_filename(self):
+        return (
+            f"{self.created_at}_World_T_e{self.time}_t_{self.shift_duration}_"
+            f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}.pickle"
+        )
+
+    def save_world(self):
+        super().save(WORLD_CACHE_DIR)
