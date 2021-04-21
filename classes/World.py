@@ -219,9 +219,7 @@ class World(SaveMixin):
 
     def set_policy(self, policy):
         # If the policy has a value function. Initialize it from the world state
-        if hasattr(policy, "value_function") and hasattr(
-            policy.roll_out_policy, "value_function"
-        ):
+        if hasattr(policy, "value_function"):
             policy.value_function.setup(self.state)
         if hasattr(policy, "roll_out_policy") and hasattr(
             policy.roll_out_policy, "value_function"
