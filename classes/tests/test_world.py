@@ -1,8 +1,11 @@
+import os
 import unittest
 import random
 import classes
 import clustering.scripts
 import decision
+import decision.value_functions
+import globals
 
 
 class WorldTestCase(unittest.TestCase):
@@ -60,6 +63,23 @@ class WorldTestCase(unittest.TestCase):
         self.world.stack.pop().perform(self.world)
         # Check that the old vehicle location is not in the tabu list
         self.assertNotIn(first_vehicle_location, self.world.tabu_list)
+
+    def test_save_world(self):
+        world = classes.World(
+            10,
+            decision.EpsilonGreedyValueFunctionPolicy(
+                value_function=decision.value_functions.LinearValueFunction(13, 10)
+            ),
+            number_of_clusters=10,
+        )
+        # Change weights in value function
+        world.policy.value_function.weights[0] = 0.1
+        # Save, load and delete world object
+        filepath = f"{globals.WORLD_CACHE_DIR}/{world.get_filename()}"
+        world.save_world()
+        file_world = classes.World.load(filepath)
+        self.assertEqual(0.1, file_world.policy.value_function.weights[0])
+        os.remove(filepath)
 
 
 if __name__ == "__main__":

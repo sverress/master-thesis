@@ -54,6 +54,7 @@ IMPORTANT PATHS
 """
 
 STATE_CACHE_DIR = "test_state_cache"
+WORLD_CACHE_DIR = "world_cache"
 
 # Test data directory
 TEST_DATA_DIRECTORY = "test_data"
