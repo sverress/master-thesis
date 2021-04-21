@@ -26,9 +26,7 @@ class Policy:
 
     @staticmethod
     def print_action_stats(
-        world: classes.World,
-        vehicle: classes.Vehicle,
-        actions_info: [(classes.Action, int, int)],
+        world, vehicle: classes.Vehicle, actions_info: [(classes.Action, int, int)],
     ) -> None:
         if world.verbose:
             print(f"\n{vehicle} (#rollouts {NUMBER_OF_ROLLOUTS}):")
