@@ -1,5 +1,5 @@
 import classes
-import decision
+import clustering.scripts
 import decision.value_functions
 from visualization.visualizer import visualize_analysis
 
@@ -29,13 +29,15 @@ def run_analysis(
     # create the world object with given input parameters
     world = classes.World(
         shift_duration,
-        sample_size=sample_size,
-        number_of_clusters=number_of_clusters,
+        initial_state=clustering.scripts.get_initial_state(
+            sample_size,
+            number_of_clusters,
+            initial_location_depot=initial_location_depot,
+            ideal_state_computation=ideal_state_computation,
+        ),
         policy=policy,
-        initial_location_depot=initial_location_depot,
         visualize=visualize_world,
         verbose=verbose,
-        ideal_state_computation=ideal_state_computation,
     )
     # run the world and add the world object to a list containing all world instances
     world.run()

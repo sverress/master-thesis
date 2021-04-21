@@ -98,27 +98,10 @@ class World:
             )
 
     def __init__(
-        self,
-        shift_duration: int,
-        policy,
-        sample_size=100,
-        number_of_clusters=10,
-        initial_state=None,
-        initial_location_depot=True,
-        verbose=False,
-        visualize=True,
-        ideal_state_computation=False,
+        self, shift_duration: int, policy, initial_state, verbose=False, visualize=True,
     ):
         self.shift_duration = shift_duration
-        if initial_state:
-            self.state = initial_state
-        else:
-            self.state = clustering_scripts.get_initial_state(
-                sample_size=sample_size,
-                number_of_clusters=number_of_clusters,
-                initial_location_depot=initial_location_depot,
-                ideal_state_computation=ideal_state_computation,
-            )
+        self.state = initial_state
         self.time = 0
         self.rewards = []
         self.stack: List[classes.Event] = []

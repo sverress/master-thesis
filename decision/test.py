@@ -2,6 +2,8 @@ import copy
 import math
 import unittest
 import random
+
+import clustering.scripts
 import decision
 import decision.value_functions
 import analysis.evaluate_policies
@@ -209,22 +211,23 @@ class BasicDecisionTests(unittest.TestCase):
 
 
 class PolicyTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.world = World(40, None, clustering.scripts.get_initial_state(100, 10))
+
     def test_random_rollout_policy(self):
-        world_random_rollout_policy = World(40, policy=decision.RandomRolloutPolicy())
-        vehicle_random_rollout_policy = world_random_rollout_policy.state.vehicles[0]
+        self.world.policy = decision.RandomRolloutPolicy()
+        vehicle_random_rollout_policy = self.world.state.vehicles[0]
         self.assertIsInstance(
-            world_random_rollout_policy.policy.get_best_action(
-                world_random_rollout_policy, vehicle_random_rollout_policy
+            self.world.policy.get_best_action(
+                self.world, vehicle_random_rollout_policy
             ),
             Action,
         )
 
     def test_swap_all_policy(self):
-        world_swap_all_policy = World(40, policy=decision.SwapAllPolicy())
-        vehicle_swap_all_policy = world_swap_all_policy.state.vehicles[0]
-        action = world_swap_all_policy.policy.get_best_action(
-            world_swap_all_policy, vehicle_swap_all_policy
-        )
+        self.world.policy = decision.SwapAllPolicy()
+        vehicle_swap_all_policy = self.world.state.vehicles[0]
+        action = self.world.policy.get_best_action(self.world, vehicle_swap_all_policy)
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
@@ -233,7 +236,11 @@ class PolicyTests(unittest.TestCase):
 class ValueFunctionTests(unittest.TestCase):
     def test_linear_value_function(self):
         world = World(
-            100, number_of_clusters=10, policy=None, initial_location_depot=False
+            100,
+            initial_state=clustering.scripts.get_initial_state(
+                100, 10, initial_location_depot=False
+            ),
+            policy=None,
         )
         # No discount should give reward equal to TD-error
         value_function = decision.value_functions.LinearValueFunction(

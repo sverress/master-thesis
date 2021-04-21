@@ -1,13 +1,17 @@
 import unittest
 import random
 import classes
+import clustering.scripts
 import decision
 
 
 class WorldTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.world = classes.World(
-            40, policy=decision.SwapAllPolicy(), number_of_clusters=5, visualize=False
+            40,
+            policy=decision.SwapAllPolicy(),
+            initial_state=clustering.scripts.get_initial_state(100, 10),
+            visualize=False,
         )
 
     def test_run(self):
