@@ -115,9 +115,6 @@ class State(SaveMixin):
                 exclude=exclude,
             )
 
-            for neighbour in neighbours:
-                actions.append(Action([], [], [], neighbour.id))
-
         else:
 
             def get_range(max_int):
@@ -145,10 +142,7 @@ class State(SaveMixin):
                 ),
                 0,
             )
-
-            combinations = []
-            # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-            for cluster in decision.neighbour_filtering.filtering_neighbours(
+            neighbours = decision.neighbour_filtering.filtering_neighbours(
                 self,
                 vehicle,
                 number_of_neighbours=number_of_neighbours,
@@ -156,7 +150,10 @@ class State(SaveMixin):
                 time=time,
                 exclude=exclude,
                 max_swaps=max(pick_ups, swaps),
-            ):
+            )
+            combinations = []
+            # Different combinations of battery swaps, pick-ups, drop-offs and clusters
+            for cluster in neighbours:
                 for pick_up in get_range(pick_ups):
                     for swap in get_range(swaps):
                         for drop_off in get_range(drop_offs):
@@ -188,7 +185,11 @@ class State(SaveMixin):
                         cluster_id,
                     )
                 )
-        return actions
+        return (
+            actions
+            if len(actions) > 0
+            else [Action([], [], [], neighbour.id) for neighbour in neighbours]
+        )
 
     def do_action(self, action: Action, vehicle: Vehicle):
         """
