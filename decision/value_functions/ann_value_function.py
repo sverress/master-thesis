@@ -41,11 +41,7 @@ class ANNValueFunction(ValueFunction):
         if not state_features:
             state_features = self.get_state_features(state, vehicle, time)
 
-        return float(
-            self.model.predict(
-                np.array(state_features).reshape(1, (len(state_features)))
-            )[0][0]
-        )
+        return float(self.model(np.array([state_features]))[0][0])
 
     def update_weights(
         self,
