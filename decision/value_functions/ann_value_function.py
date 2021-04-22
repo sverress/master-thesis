@@ -60,3 +60,17 @@ class ANNValueFunction(ValueFunction):
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):
         return self.convert_state_to_features(state, vehicle, time)
+
+    def __getstate__(self):
+        """
+        Method used to pickle value function.
+        Not able to do it out of the box due to keras model.
+        :return:
+        """
+        state = self.__dict__.copy()
+        state["model"] = self.model.to_json()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.model = keras.models.model_from_json(state["model"])
