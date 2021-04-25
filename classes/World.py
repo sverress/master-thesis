@@ -1,7 +1,6 @@
 import datetime
 from typing import List
 
-import clustering.scripts as clustering_scripts
 import numpy as np
 import bisect
 import classes
@@ -101,28 +100,11 @@ class World(SaveMixin):
             )
 
     def __init__(
-        self,
-        shift_duration: int,
-        policy,
-        sample_size=100,
-        number_of_clusters=10,
-        initial_state=None,
-        initial_location_depot=True,
-        verbose=False,
-        visualize=True,
-        ideal_state_computation=False,
+        self, shift_duration: int, policy, initial_state, verbose=False, visualize=True,
     ):
         self.created_at = datetime.datetime.now().isoformat(timespec="minutes")
         self.shift_duration = shift_duration
-        if initial_state:
-            self.state = initial_state
-        else:
-            self.state = clustering_scripts.get_initial_state(
-                sample_size=sample_size,
-                number_of_clusters=number_of_clusters,
-                initial_location_depot=initial_location_depot,
-                ideal_state_computation=ideal_state_computation,
-            )
+        self.state = initial_state
         self.time = 0
         self.rewards = []
         self.stack: List[classes.Event] = []
@@ -141,9 +123,10 @@ class World(SaveMixin):
             for end in np.arange(len(self.state.clusters))
             if start != end
         }
-        self.policy = policy
+        self.policy = self.set_policy(policy)
         self.metrics = World.WorldMetric()
         self.verbose = verbose
+        self.visualize = visualize
         if verbose:
             self.progress_bar = IncrementalBar(
                 "Running World",
@@ -233,6 +216,16 @@ class World(SaveMixin):
     def get_discount(self):
         # Divide by 60 as there is 60 minutes in an hour. We want this number in hours to avoid big numbers is the power
         return DISCOUNT_RATE ** (self.time / 60)
+
+    def set_policy(self, policy):
+        # If the policy has a value function. Initialize it from the world state
+        if hasattr(policy, "value_function"):
+            policy.value_function.setup(self.state)
+        if hasattr(policy, "roll_out_policy") and hasattr(
+            policy.roll_out_policy, "value_function"
+        ):
+            policy.roll_out_policy.value_function.setup(self.state)
+        return policy
 
     def get_filename(self):
         return (

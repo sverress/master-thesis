@@ -2,6 +2,7 @@ import os
 import unittest
 import random
 import classes
+import clustering.scripts
 import decision
 import decision.value_functions
 import globals
@@ -10,7 +11,10 @@ import globals
 class WorldTestCase(unittest.TestCase):
     def setUp(self) -> None:
         self.world = classes.World(
-            40, policy=decision.SwapAllPolicy(), number_of_clusters=5, visualize=False
+            40,
+            policy=decision.SwapAllPolicy(),
+            initial_state=clustering.scripts.get_initial_state(100, 10),
+            visualize=False,
         )
 
     def test_run(self):
@@ -61,18 +65,16 @@ class WorldTestCase(unittest.TestCase):
         self.assertNotIn(first_vehicle_location, self.world.tabu_list)
 
     def test_save_world(self):
-        world = classes.World(
-            10,
-            decision.EpsilonGreedyValueFunctionPolicy(
-                value_function=decision.value_functions.LinearValueFunction(13, 10)
-            ),
-            number_of_clusters=10,
-        )
         # Change weights in value function
-        world.policy.value_function.weights[0] = 0.1
+        self.world.policy = self.world.set_policy(
+            decision.EpsilonGreedyValueFunctionPolicy(
+                decision.value_functions.LinearValueFunction()
+            )
+        )
+        self.world.policy.value_function.weights[0] = 0.1
         # Save, load and delete world object
-        filepath = f"{globals.WORLD_CACHE_DIR}/{world.get_filename()}"
-        world.save_world()
+        filepath = f"{globals.WORLD_CACHE_DIR}/{self.world.get_filename()}"
+        self.world.save_world()
         file_world = classes.World.load(filepath)
         self.assertEqual(0.1, file_world.policy.value_function.weights[0])
         os.remove(filepath)

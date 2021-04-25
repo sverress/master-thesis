@@ -44,10 +44,12 @@ class BasicVisualizerTests(unittest.TestCase):
     def test_analysis():
         policy = decision.SwapAllPolicy()
         # test the analysis plot
-        world = run_analysis(
-            shift_duration=60, sample_size=100, number_of_clusters=10, policy=policy,
+        run_analysis(
+            [policy],
+            classes.World(
+                60, None, get_initial_state(sample_size=100, number_of_clusters=10)
+            ),
         )
-        visualize_analysis([world], [policy], smooth_curve=True)
 
 
 if __name__ == "__main__":
