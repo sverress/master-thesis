@@ -230,8 +230,13 @@ class World(SaveMixin):
     def get_filename(self):
         return (
             f"{self.created_at}_World_T_e{self.time}_t_{self.shift_duration}_"
-            f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}.pickle"
+            f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}"
         )
 
-    def save_world(self):
-        super().save(WORLD_CACHE_DIR)
+    def save_world(self, trained_world=None):
+        if trained_world:
+            training_directory, shifts_trained = trained_world
+            directory = f"{WORLD_CACHE_DIR}/{training_directory}"
+            super().save(directory, f"-{shifts_trained}")
+        else:
+            super().save(WORLD_CACHE_DIR, "")

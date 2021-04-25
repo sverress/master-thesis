@@ -8,11 +8,11 @@ class SaveMixin(abc.ABC):
     def get_filename(self):
         pass
 
-    def save(self, directory: str):
+    def save(self, directory: str, trained: str):
         # If there is no world_cache directory, create it
         if not os.path.exists(directory):
             os.makedirs(directory)
-        with open(f"{directory}/{self.get_filename()}", "wb") as file:
+        with open(f"{directory}/{self.get_filename()}{trained}.pickle", "wb") as file:
             pickle.dump(self, file)
 
     @classmethod

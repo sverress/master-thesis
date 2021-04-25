@@ -198,3 +198,6 @@ class LinearValueFunction:
         return self.create_location_features_combination(
             self.convert_state_to_features(state, vehicle, time)
         )
+
+    def __repr__(self):
+        return "LinearValueFunction"

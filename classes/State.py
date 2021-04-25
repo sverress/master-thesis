@@ -374,10 +374,10 @@ class State(SaveMixin):
             cluster.set_move_probabilities(probability_matrix[cluster.id])
 
     def save_state(self):
-        super().save(STATE_CACHE_DIR)
+        super().save(STATE_CACHE_DIR, "")
 
     def get_filename(self):
-        return f"c{len(self.clusters)}s{len(self.get_scooters())}.pickle"
+        return f"c{len(self.clusters)}s{len(self.get_scooters())}"
 
     def compute_and_set_ideal_state(self, sample_scooters):
         clustering.methods.compute_and_set_ideal_state(self, sample_scooters)

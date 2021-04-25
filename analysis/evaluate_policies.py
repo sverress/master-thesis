@@ -23,7 +23,7 @@ def run_analysis(policies, world: classes.World):
 
 
 if __name__ == "__main__":
-    SHIFT_DURATION = 120
+    SHIFT_DURATION = 60
     SAMPLE_SIZE = 100
     NUMBER_OF_CLUSTERS = 10
 
