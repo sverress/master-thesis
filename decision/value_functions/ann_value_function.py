@@ -23,11 +23,11 @@ class ANNValueFunction(ValueFunction):
             )
         )
         for layer in nodes_in_rest_of_layers:
-            self.model.add(keras.layers.Dense(layer))
+            self.model.add(keras.layers.Dense(layer, activation="relu"))
         # The last layer needs to have a single value function output
         self.model.add(keras.layers.Dense(1))
         self.model.compile(
-            loss="mean_squared_error", optimizer="SGD", metrics=["accuracy"]
+            loss="mean_squared_error", optimizer="adam", metrics=["accuracy"]
         )
         super(ANNValueFunction, self).setup(state)
 
@@ -50,7 +50,12 @@ class ANNValueFunction(ValueFunction):
         next_state_value: float,
         reward: float,
     ):
-        pass
+        self.model.fit(
+            np.array([current_state_features]),
+            np.array([self.discount_factor * next_state_value + reward]),
+            epochs=50,
+            verbose=False,
+        )
 
     def get_state_features(
         self, state: classes.State, vehicle: classes.Vehicle, time: int

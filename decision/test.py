@@ -235,7 +235,7 @@ class PolicyTests(unittest.TestCase):
 
 
 class ValueFunctionTests(unittest.TestCase):
-    def setup_world_value_function(self, value_function):
+    def world_value_function_check(self, value_function):
         world = World(
             100,
             initial_state=clustering.scripts.get_initial_state(
@@ -245,62 +245,49 @@ class ValueFunctionTests(unittest.TestCase):
         )
         # No discount should give reward equal to TD-error
         value_function.setup(world.state)
-        return world, value_function
-
-    def test_linear_value_function(self):
-        world, value_function = self.setup_world_value_function(
-            decision.value_functions.LinearValueFunction(
-                weight_update_step_size=0.001,
-                discount_factor=0.2,
-                vehicle_inventory_step_size=0.5,
-            )
-        )
         vehicle = world.state.vehicles[0]
-        action = random.choice(world.state.get_possible_actions(vehicle))
+        action = decision.policies.SwapAllPolicy().get_best_action(world, vehicle)
         state = copy.deepcopy(world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
         reward = world.state.do_action(action, vehicle, world.time)
-        previous_td_error = math.inf
+        td_errors = []
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(
                 world.state, vehicle, world.time
             )
             td_error = reward + next_state_value - state_value
-            self.assertLessEqual(td_error, previous_td_error)
-            previous_td_error = td_error
+            td_errors.append(td_error)
             value_function.update_weights(
                 current_state_value=state_value,
                 current_state_features=state_features,
                 next_state_value=next_state_value,
                 reward=reward,
             )
+        # Check that the fist td errors are bigger than the last
+        self.assertLess(
+            sum(td_errors[-3:]),
+            sum(td_errors[:3]),
+        )
 
-    def test_ann_value_function(self):
-        world, value_function = self.setup_world_value_function(
-            decision.value_functions.ANNValueFunction(
-                [50, 100, 50],
+    def test_linear_value_function(self):
+        self.world_value_function_check(
+            decision.value_functions.LinearValueFunction(
                 weight_update_step_size=0.001,
-                discount_factor=0.2,
+                discount_factor=0.8,
                 vehicle_inventory_step_size=0.5,
             )
         )
-        estimate = value_function.estimate_value(
-            world.state, world.state.vehicles[0], world.time
-        )
-        self.assertIsInstance(
-            estimate,
-            float,
-        )
-        # Check if update weights run
-        value_function.update_weights(
-            value_function.get_state_features(
-                world.state, world.state.vehicles[0], world.time
-            ),
-            estimate,
-            estimate + 0.01,
-            1,
+
+    def test_ann_value_function(self):
+        self.world_value_function_check(
+            decision.value_functions.ANNValueFunction(
+                [50, 100, 50],
+                weight_update_step_size=0.001,
+                discount_factor=0.8,
+                vehicle_inventory_step_size=0.5,
+            )
         )
 
 

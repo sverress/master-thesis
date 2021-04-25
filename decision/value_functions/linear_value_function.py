@@ -43,7 +43,7 @@ class LinearValueFunction(ValueFunction):
         next_state_value: float,
         reward: float,
     ):
-        self.weights += np.multiply(
+        self.weights -= np.multiply(
             self.step_size
             * (
                 reward + (self.discount_factor * next_state_value) - current_state_value

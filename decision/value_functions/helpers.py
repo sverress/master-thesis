@@ -87,7 +87,7 @@ class SplitGD:
     def end_of_epoch_display(self, train_ins, train_targs, val_ins, val_targs):
         self.status_display(train_ins, train_targs, mode="Train")
         if len(val_ins) > 0:
-            self.status_display(val_ins, val_targs, mode="      Validation")
+            self.status_display(val_ins, val_targs, mode="Validation")
 
 
 # A few useful auxiliary functions
@@ -119,6 +119,12 @@ def split_training_data(inputs, targets, vfrac=0.1, mix=True):
 
 class KerasModelWrapper(SplitGD):
     def __init__(self, keras_model, lambd, gamma):
+        """
+        Wrapper method with updated fit method for eligibility traces
+        :param keras_model: keras model object
+        :param lambd:
+        :param gamma:
+        """
         super().__init__(keras_model)
         self.eligibilities = []
         self.lambd = lambd
