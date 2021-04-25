@@ -267,23 +267,24 @@ class ValueFunctionTests(unittest.TestCase):
             )
         # Check that the fist td errors are bigger than the last
         self.assertLess(
-            sum(td_errors[-3:]),
-            sum(td_errors[:3]),
+            abs(sum(td_errors[-3:]) / 3),
+            abs(sum(td_errors[:3]) / 3),
         )
 
     def test_linear_value_function(self):
         self.world_value_function_check(
             decision.value_functions.LinearValueFunction(
-                weight_update_step_size=0.001,
+                weight_update_step_size=0.00001,
                 discount_factor=0.8,
                 vehicle_inventory_step_size=0.5,
+                weight_init_value=random.random(),
             )
         )
 
     def test_ann_value_function(self):
         self.world_value_function_check(
             decision.value_functions.ANNValueFunction(
-                [50, 100, 50],
+                [100, 1000, 100],
                 weight_update_step_size=0.001,
                 discount_factor=0.8,
                 vehicle_inventory_step_size=0.5,
