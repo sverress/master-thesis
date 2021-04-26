@@ -1,9 +1,20 @@
 import copy
+import os
 
 import classes
 import clustering.scripts
 import decision.value_functions
 from visualization.visualizer import visualize_analysis
+
+
+def run_analysis_from_path(path: str):
+    world_objects = [
+        classes.World.load(os.path.join(path, world_obj_path))
+        for world_obj_path in os.listdir(path)
+    ]
+    initial_state_world, *rest = world_objects
+    policies = [world.policy for world in world_objects]
+    return run_analysis(policies, initial_state_world)
 
 
 def run_analysis(policies, world: classes.World):

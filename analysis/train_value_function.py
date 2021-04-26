@@ -6,28 +6,25 @@ import decision.value_functions
 from progress.bar import IncrementalBar
 
 
-def train_value_function(world):
+def train_value_function(
+    world,
+    training_shifts_before_save=globals.TRAINING_SHIFTS_BEFORE_SAVE,
+    models_to_be_saved=globals.MODELS_TO_BE_SAVED,
+):
     progress_bar = IncrementalBar(
         "Running World",
         check_tty=False,
-        max=(globals.TRAINING_SHIFTS_BEFORE_SAVE * globals.MODELS_TO_BE_SAVED),
+        max=(training_shifts_before_save * models_to_be_saved),
         suffix="%(percent)d%% - ETA %(eta)ds",
     )
     print(
         f"-------------------- {world.policy.roll_out_policy.value_function} training --------------------"
     )
-    for shift in range(
-        globals.TRAINING_SHIFTS_BEFORE_SAVE * globals.MODELS_TO_BE_SAVED
-    ):
+    for shift in range(training_shifts_before_save * models_to_be_saved):
         policy_world = copy.deepcopy(world)
 
-        if shift % globals.TRAINING_SHIFTS_BEFORE_SAVE == 0:
-            time_stamp = policy_world.created_at
-            training_directory = (
-                f"trained_models/{policy_world.policy.roll_out_policy.value_function}/"
-                f"c{len(world.state.clusters)}_s{len(world.state.get_scooters())}/{time_stamp}"
-            )
-            policy_world.save_world([training_directory, shift])
+        if shift % training_shifts_before_save == 0:
+            policy_world.save_world([world.get_train_directory(), shift])
 
         policy_world.run()
         world.policy = policy_world.policy

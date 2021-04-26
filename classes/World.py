@@ -245,3 +245,9 @@ class World(SaveMixin):
             super().save(directory, f"-{shifts_trained}")
         else:
             super().save(WORLD_CACHE_DIR)
+
+    def get_train_directory(self):
+        return (
+            f"trained_models/{self.policy.roll_out_policy.value_function}/"
+            f"c{len(self.state.clusters)}_s{len(self.state.get_scooters())}/{self.created_at}"
+        )

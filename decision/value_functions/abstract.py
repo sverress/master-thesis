@@ -42,6 +42,9 @@ class ValueFunction(abc.ABC):
         self.setup_complete = False
         self.location_indicator = None
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}"
+
     def setup(self, state: classes.State):
         """
         Method for setting up the value function when the state is known
