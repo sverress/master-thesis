@@ -22,7 +22,7 @@ def train_value_function(world):
         policy_world = copy.deepcopy(world)
 
         if shift % globals.TRAINING_SHIFTS_BEFORE_SAVE == 0:
-            time_stamp = policy_world.created_at.split("_")[0]
+            time_stamp = policy_world.created_at
             training_directory = (
                 f"trained_models/{policy_world.policy.roll_out_policy.value_function}/"
                 f"c{len(world.state.clusters)}_s{len(world.state.get_scooters())}/{time_stamp}"
