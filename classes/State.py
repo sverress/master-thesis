@@ -15,7 +15,11 @@ import copy
 
 class State(SaveMixin):
     def __init__(
-        self, clusters: [Cluster], depots: [Depot], vehicles=None, distance_matrix=None,
+        self,
+        clusters: [Cluster],
+        depots: [Depot],
+        vehicles=None,
+        distance_matrix=None,
     ):
         self.clusters = clusters
         self.vehicles = vehicles
@@ -325,7 +329,8 @@ class State(SaveMixin):
         visualize_clustering(self.clusters)
 
     def visualize_flow(
-        self, flows: [(int, int, int)],
+        self,
+        flows: [(int, int, int)],
     ):
         visualize_cluster_flow(self, flows)
 
@@ -374,7 +379,7 @@ class State(SaveMixin):
             cluster.set_move_probabilities(probability_matrix[cluster.id])
 
     def save_state(self):
-        super().save(STATE_CACHE_DIR, "")
+        super().save(STATE_CACHE_DIR)
 
     def get_filename(self):
         return f"c{len(self.clusters)}s{len(self.get_scooters())}"

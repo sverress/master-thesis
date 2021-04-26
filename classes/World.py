@@ -100,7 +100,12 @@ class World(SaveMixin):
             )
 
     def __init__(
-        self, shift_duration: int, policy, initial_state, verbose=False, visualize=True,
+        self,
+        shift_duration: int,
+        policy,
+        initial_state,
+        verbose=False,
+        visualize=True,
     ):
         self.created_at = datetime.datetime.now().isoformat(timespec="minutes")
         self.shift_duration = shift_duration
@@ -239,4 +244,4 @@ class World(SaveMixin):
             directory = f"{WORLD_CACHE_DIR}/{training_directory}"
             super().save(directory, f"-{shifts_trained}")
         else:
-            super().save(WORLD_CACHE_DIR, "")
+            super().save(WORLD_CACHE_DIR)

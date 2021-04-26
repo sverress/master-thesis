@@ -5,45 +5,51 @@ import clustering.scripts
 import decision.value_functions
 from progress.bar import IncrementalBar
 
-SAMPLE_SIZE = 100
-NUMBER_OF_CLUSTERS = 10
 
-POLICY = decision.RolloutValueFunctionPolicy(
-    decision.EpsilonGreedyValueFunctionPolicy(
-        decision.value_functions.LinearValueFunction()
+def train_value_function(world):
+    progress_bar = IncrementalBar(
+        "Running World",
+        check_tty=False,
+        max=(globals.TRAINING_SHIFTS_BEFORE_SAVE * globals.MODELS_TO_BE_SAVED),
+        suffix="%(percent)d%% - ETA %(eta)ds",
     )
-)
+    print(
+        f"-------------------- {world.policy.roll_out_policy.value_function} training --------------------"
+    )
+    for shift in range(
+        globals.TRAINING_SHIFTS_BEFORE_SAVE * globals.MODELS_TO_BE_SAVED
+    ):
+        policy_world = copy.deepcopy(world)
 
-WORLD = classes.World(
-    globals.SHIFT_DURATION,
-    None,
-    clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
-    verbose=False,
-    visualize=False,
-)
-WORLD.policy = WORLD.set_policy(POLICY)
+        if shift % globals.TRAINING_SHIFTS_BEFORE_SAVE == 0:
+            time_stamp = policy_world.created_at.split("_")[0]
+            training_directory = (
+                f"{policy_world.policy.roll_out_policy.value_function}/"
+                f"c{len(world.state.clusters)}_s{len(world.state.get_scooters())}/{time_stamp}"
+            )
+            policy_world.save_world([training_directory, shift])
 
-progress_bar = IncrementalBar(
-    "Running World",
-    check_tty=False,
-    max=(globals.TRAINING_SHIFTS_BEFORE_SAVE * globals.MODELS_TO_BE_SAVED),
-    suffix="%(percent)d%% - ETA %(eta)ds",
-)
+        policy_world.run()
+        world.policy = policy_world.policy
+        progress_bar.next()
 
-print(
-    f"-------------------- {POLICY.roll_out_policy.value_function} training --------------------"
-)
-for shift in range(globals.TRAINING_SHIFTS_BEFORE_SAVE * globals.MODELS_TO_BE_SAVED):
-    policy_world = copy.deepcopy(WORLD)
 
-    if shift % globals.TRAINING_SHIFTS_BEFORE_SAVE == 0:
-        time_stamp = policy_world.created_at.split("_")[0]
-        training_directory = (
-            f"{policy_world.policy.roll_out_policy.value_function}/"
-            f"c{NUMBER_OF_CLUSTERS}_s{SAMPLE_SIZE}/{time_stamp}"
+if __name__ == "__main__":
+    SAMPLE_SIZE = 100
+    NUMBER_OF_CLUSTERS = 10
+
+    POLICY = decision.RolloutValueFunctionPolicy(
+        decision.EpsilonGreedyValueFunctionPolicy(
+            decision.value_functions.LinearValueFunction()
         )
-        policy_world.save_world([training_directory, shift])
+    )
 
-    policy_world.run()
-    WORLD.policy = policy_world.policy
-    progress_bar.next()
+    world_to_analyse = classes.World(
+        globals.SHIFT_DURATION,
+        None,
+        clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
+        verbose=False,
+        visualize=False,
+    )
+    world_to_analyse.policy = world_to_analyse.set_policy(POLICY)
+    train_value_function(world_to_analyse)
