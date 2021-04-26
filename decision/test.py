@@ -42,7 +42,8 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of swaps less or equal to ideal state
         for action in actions:
             self.assertLessEqual(
-                len(action.battery_swaps), self.vehicle.current_location.ideal_state,
+                len(action.battery_swaps),
+                self.vehicle.current_location.ideal_state,
             )
 
         # Test number of actions
@@ -234,7 +235,7 @@ class PolicyTests(unittest.TestCase):
 
 
 class ValueFunctionTests(unittest.TestCase):
-    def test_linear_value_function(self):
+    def world_value_function_check(self, value_function):
         world = World(
             100,
             initial_state=clustering.scripts.get_initial_state(
@@ -243,33 +244,52 @@ class ValueFunctionTests(unittest.TestCase):
             policy=None,
         )
         # No discount should give reward equal to TD-error
-        value_function = decision.value_functions.LinearValueFunction(
-            weight_update_step_size=0.001,
-            discount_factor=0.2,
-            vehicle_inventory_step_size=0.5,
-        )
         value_function.setup(world.state)
         vehicle = world.state.vehicles[0]
-        action = random.choice(world.state.get_possible_actions(vehicle))
+        action = decision.policies.SwapAllPolicy().get_best_action(world, vehicle)
         state = copy.deepcopy(world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
         reward = world.state.do_action(action, vehicle, world.time)
-        previous_td_error = math.inf
+        td_errors = []
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(
                 world.state, vehicle, world.time
             )
             td_error = reward + next_state_value - state_value
-            self.assertLessEqual(td_error, previous_td_error)
-            previous_td_error = td_error
+            td_errors.append(td_error)
             value_function.update_weights(
                 current_state_value=state_value,
                 current_state_features=state_features,
                 next_state_value=next_state_value,
                 reward=reward,
             )
+        # Check that the fist td errors are bigger than the last
+        self.assertLess(
+            abs(sum(td_errors[-3:]) / 3),
+            abs(sum(td_errors[:3]) / 3),
+        )
+
+    def test_linear_value_function(self):
+        self.world_value_function_check(
+            decision.value_functions.LinearValueFunction(
+                weight_update_step_size=0.00001,
+                discount_factor=0.8,
+                vehicle_inventory_step_size=0.5,
+                weight_init_value=random.random(),
+            )
+        )
+
+    def test_ann_value_function(self):
+        self.world_value_function_check(
+            decision.value_functions.ANNValueFunction(
+                [100, 1000, 100],
+                weight_update_step_size=0.001,
+                discount_factor=0.8,
+                vehicle_inventory_step_size=0.5,
+            )
+        )
 
 
 class EpsilonGreedyPolicyTest(unittest.TestCase):
@@ -311,7 +331,10 @@ class NeighbourFilteringTests(unittest.TestCase):
         vehicle = state.vehicles[0]
 
         best_neighbours_with_random = filtering_neighbours(
-            state, vehicle, number_of_neighbours=3, number_of_random_neighbours=1,
+            state,
+            vehicle,
+            number_of_neighbours=3,
+            number_of_random_neighbours=1,
         )
 
         # test if the number of neighbours is the same, even though one is random
