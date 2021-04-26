@@ -22,6 +22,7 @@ def train_value_function(
     )
     for shift in range(training_shifts_before_save * models_to_be_saved):
         policy_world = copy.deepcopy(world)
+        policy_world.policy.roll_out_policy.value_function.update_shifts_trained(shift)
 
         if shift % training_shifts_before_save == 0:
             policy_world.save_world([world.get_train_directory(), shift])
