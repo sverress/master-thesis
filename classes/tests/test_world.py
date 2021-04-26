@@ -73,7 +73,7 @@ class WorldTestCase(unittest.TestCase):
         )
         self.world.policy.value_function.weights[0] = 0.1
         # Save, load and delete world object
-        filepath = f"{globals.WORLD_CACHE_DIR}/{self.world.get_filename()}"
+        filepath = f"{globals.WORLD_CACHE_DIR}/{self.world.get_filename()}.pickle"
         self.world.save_world()
         file_world = classes.World.load(filepath)
         self.assertEqual(0.1, file_world.policy.value_function.weights[0])
