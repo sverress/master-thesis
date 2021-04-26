@@ -23,11 +23,7 @@ class LinearValueFunction(ValueFunction):
         super(LinearValueFunction, self).setup(state)
 
     def estimate_value(
-        self,
-        state,
-        vehicle,
-        time,
-        state_features=None,
+        self, state, vehicle, time, state_features=None,
     ):
         if not state_features:
             state_features = self.get_state_features(state, vehicle, time)
@@ -71,3 +67,6 @@ class LinearValueFunction(ValueFunction):
         return self.create_location_features_combination(
             self.convert_state_to_features(state, vehicle, time)
         )
+
+    def __repr__(self):
+        return f"LinearValueFunction t-{self.shifts_trained}"
