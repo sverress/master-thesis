@@ -13,7 +13,7 @@ def run_analysis_from_path(path: str):
         for world_obj_path in os.listdir(path)
     ]
     initial_state_world, *rest = world_objects
-    policies = [world.policy for world in world_objects]
+    policies = [world.policy.roll_out_policy for world in world_objects]
     return run_analysis(policies, initial_state_world)
 
 

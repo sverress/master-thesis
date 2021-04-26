@@ -40,7 +40,7 @@ WEIGHT_INITIALIZATION_VALUE = 0.001
 
 # Default simulation constants
 ITERATION_LENGTH_MINUTES = 20
-NUMBER_OF_ROLLOUTS = 2
+NUMBER_OF_ROLLOUTS = 1000
 BATTERY_LIMIT = 20.0
 
 # Negative reward for lost trips
