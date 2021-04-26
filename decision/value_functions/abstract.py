@@ -1,25 +1,25 @@
 import classes
-import itertools
 import globals
-import numpy as np
 import helpers
+import abc
 
 
-class LinearValueFunction:
-    class Decorators:
-        @classmethod
-        def check_setup(cls, func):
-            def return_function(self, *args, **kwargs):
-                if self.weights is not None:
-                    return func(self, *args, **kwargs)
-                else:
-                    raise ValueError(
-                        "Value function is not setup with a state. "
-                        "Run value_function.setup() to initialize value function."
-                    )
+class Decorators:
+    @classmethod
+    def check_setup(cls, func):
+        def return_function(self, *args, **kwargs):
+            if self.setup_complete:
+                return func(self, *args, **kwargs)
+            else:
+                raise ValueError(
+                    "Value function is not setup with a state. "
+                    "Run value_function.setup() to initialize value function."
+                )
 
-            return return_function
+        return return_function
 
+
+class ValueFunction(abc.ABC):
     def __init__(
         self,
         weight_update_step_size=globals.WEIGHT_UPDATE_STEP_SIZE,
@@ -39,26 +39,17 @@ class LinearValueFunction:
         self.discount_factor = discount_factor
         self.weight_init_value = weight_init_value
 
-        self.weights = None
+        self.setup_complete = False
         self.location_indicator = None
 
-    def setup(self, state):
-        number_of_locations_indicators = len(state.locations) * self.location_repetition
-        number_of_state_features = (
-            (self.number_of_features_per_cluster * len(state.clusters))
-            + (2 * round(1 / self.vehicle_inventory_step_size))
-            + len(state.locations)
-            - len(state.clusters)
-            - 1
-        )
+    def setup(self, state: classes.State):
+        """
+        Method for setting up the value function when the state is known
+        :param state: state to infer weights with
+        """
+        self.setup_complete = True
 
-        self.weights = [self.weight_init_value] * (
-            number_of_locations_indicators
-            + number_of_state_features
-            + (number_of_locations_indicators * number_of_state_features)
-        )
-        self.location_indicator = [0] * number_of_locations_indicators
-
+    @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
         self,
@@ -67,13 +58,9 @@ class LinearValueFunction:
         time: int,
         state_features=None,
     ):
-        if not state_features:
-            state_features = self.get_state_features(state, vehicle, time)
+        pass
 
-        current_state_value = float(np.dot(self.weights, state_features))
-
-        return current_state_value
-
+    @abc.abstractmethod
     @Decorators.check_setup
     def update_weights(
         self,
@@ -82,12 +69,27 @@ class LinearValueFunction:
         next_state_value: float,
         reward: float,
     ):
-        self.weights += np.multiply(
-            self.step_size
-            * (
-                reward + (self.discount_factor * next_state_value) - current_state_value
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
+    def get_state_features(
+        self, state: classes.State, vehicle: classes.Vehicle, time: int
+    ):
+        pass
+
+    def get_number_of_location_indicators_and_state_features(
+        self, state: classes.State
+    ):
+        return (
+            len(state.locations) * self.location_repetition,
+            (
+                (self.number_of_features_per_cluster * len(state.clusters))
+                + (2 * round(1 / self.vehicle_inventory_step_size))
+                + len(state.locations)
+                - len(state.clusters)
+                - 1
             ),
-            current_state_features,
         )
 
     @Decorators.check_setup
@@ -176,28 +178,3 @@ class LinearValueFunction:
         )
 
         return location_indicator + state_features
-
-    @Decorators.check_setup
-    def create_location_features_combination(self, state_features):
-        location_indicator = state_features[: len(self.location_indicator)]
-        state_features = state_features[len(self.location_indicator) :]
-
-        locations_features_combination = list(
-            itertools.chain(
-                *[
-                    np.multiply(indicator, state_features).tolist()
-                    for indicator in location_indicator
-                ]
-            )
-        )
-
-        return location_indicator + state_features + locations_features_combination
-
-    @Decorators.check_setup
-    def get_state_features(self, state, vehicle, time):
-        return self.create_location_features_combination(
-            self.convert_state_to_features(state, vehicle, time)
-        )
-
-    def __repr__(self):
-        return "LinearValueFunction"

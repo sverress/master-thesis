@@ -1,0 +1,8 @@
+shapely
+numpy
+sklearn
+progress
+pandas
+matplotlib
+networkx
+tensorflow

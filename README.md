@@ -1,46 +1,20 @@
 # Master Thesis
 This is a repository for the master thesis of Sverre Spetalen, Tord Haflan and Jonas Haga optimizing the operations for
 e-scooters with swappable batteries.
-##Setup
-
-### Gurobi
-This project uses gurobi as a solver for the optimization problem. To use gurobi we need a license file and the program
-itself. [This quickstart](https://www.gurobi.com/wp-content/plugins/hd_documentations/content/pdf/quickstart_mac_8.1.pdf#page=89&zoom=100,96,96)
- is a good starting point to obtain both of these.
-
-### Anaconda environment
-It is recommended to use anaconda for gurobi. [Download anaconda](https://docs.anaconda.com/anaconda/install/mac-os/) 
-(I used the command-line install) and create an environment from a environment.yml file.
-
-
-This whole tutorial is based on [the conda documentation](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
-
-Change directory into the root directory and run the following command:
+## Setup
+This project uses a virtual environment as python interpreter. To create a virtual environment with the required
+packages you need to change directory into the project directory and run to create a new environment named "env" :
 ```
-conda env create --prefix ./env -f environment.yml
+python -m venv env
 ```
-
-This command creates a conda environment at ./env in your current directory with all the required packages for the project.
-PS: To remove the awful looking path on the left when activating your environment run `conda config --set env_prompt '({name})'`
-when the environment is active. You need to restart your terminal to see this change. 
-
-####Adding new packages to conda environment
-1. Search for package using `conda search <package>` to check for availability
-2. Add package name to environment.yml under dependencies
-3. run the following command to update your conda environment with the new dependencies:
+activate the environment by running (Mac OS):
 ```
-conda env update --prefix ./env --file environment.yml  --prune
+source activate env/bin/activate
 ```
-
-If the conda environment is located outside the project, run the following command: 
+then run the following command to install all necessary packages
 ```
-conda env update master --file environment.yml  --prune
+pip install -r requirements.txt
 ```
-
-
-To remove packages just remove it from the packages.yml and run the same command. 
-This is a nice command to make a alias for.
-
 ## Testing
 To run all tests run the following command in the root directory of the project
 ```
