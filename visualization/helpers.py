@@ -662,6 +662,9 @@ def get_policy_label(policy):
     if hasattr(policy, "roll_out_policy") and hasattr(
         policy.roll_out_policy, "value_function"
     ):
-        return f"Rollout: {policy.roll_out_policy}\nw/{policy.roll_out_policy.value_function}"
+        return (
+            f"Rollout: {policy.roll_out_policy}\n"
+            f"w/{policy.roll_out_policy.value_function} -t{policy.roll_out_policy.value_function.shifts_trained}"
+        )
     else:
         return f"{policy}"

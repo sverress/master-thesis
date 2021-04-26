@@ -77,4 +77,4 @@ class ANNValueFunction(ValueFunction):
         self.model = keras.models.model_from_json(state["model"])
 
     def __repr__(self):
-        return f"ANNValueFunction t-{self.shifts_trained}"
+        return f"ANNValueFunction"

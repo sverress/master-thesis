@@ -69,4 +69,4 @@ class LinearValueFunction(ValueFunction):
         )
 
     def __repr__(self):
-        return f"LinearValueFunction t-{self.shifts_trained}"
+        return f"LinearValueFunction"
