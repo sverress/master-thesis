@@ -20,32 +20,35 @@ def train_value_function(
     print(
         f"-------------------- {world.policy.value_function} training --------------------"
     )
-    for shift in range(training_shifts_before_save * models_to_be_saved):
+    number_of_shifts = training_shifts_before_save * models_to_be_saved
+    for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)
         policy_world.policy.value_function.update_shifts_trained(shift)
 
         if shift % training_shifts_before_save == 0:
             policy_world.save_world([world.get_train_directory(), shift])
 
-        policy_world.run()
-        world.policy = policy_world.policy
-        progress_bar.next()
+        if shift != number_of_shifts:
+            # avoid running the world after the last model is saved
+            policy_world.run()
+            world.policy = policy_world.policy
+            progress_bar.next()
 
 
 if __name__ == "__main__":
-    SAMPLE_SIZE = 100
-    NUMBER_OF_CLUSTERS = 10
+    SAMPLE_SIZE = 2500
+    NUMBER_OF_CLUSTERS = 50
 
-    POLICY = decision.RolloutValueFunctionPolicy(
-        decision.EpsilonGreedyValueFunctionPolicy(
-            decision.value_functions.LinearValueFunction()
-        )
+    POLICY = decision.EpsilonGreedyValueFunctionPolicy(
+        decision.value_functions.LinearValueFunction()
     )
 
     world_to_analyse = classes.World(
         globals.SHIFT_DURATION,
         None,
-        clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
+        clustering.scripts.get_initial_state(
+            SAMPLE_SIZE, NUMBER_OF_CLUSTERS, number_of_vans=2, number_of_bikes=0
+        ),
         verbose=False,
         visualize=False,
     )

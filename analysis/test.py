@@ -15,7 +15,7 @@ class AnalysisTests(unittest.TestCase):
         self.rollout_value_func_policy = decision.EpsilonGreedyValueFunctionPolicy(
             decision.value_functions.LinearValueFunction()
         )
-        self.random_rollout_policy = decision.RandomRolloutPolicy()
+        self.random_rollout_policy = decision.RandomRolloutPolicy(number_of_rollouts=2)
         self.world = classes.World(
             2,
             None,
