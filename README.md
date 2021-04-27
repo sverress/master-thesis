@@ -57,5 +57,7 @@ Go to the master-thesis folder:
 cd /storage/users/<username>/master-thesis
 ``` 
 Run regular git commands to pull, and python commands to run the desired files.
+
+To scroll: "ctrl + A" (activate input) then "esc". Then you can scroll. Press "esc" again to escape scroll mode.
  
 
