@@ -45,7 +45,9 @@ if __name__ == "__main__":
     world_to_analyse = classes.World(
         globals.SHIFT_DURATION,
         None,
-        clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
+        clustering.scripts.get_initial_state(
+            SAMPLE_SIZE, NUMBER_OF_CLUSTERS, number_of_vans=2, number_of_bikes=0
+        ),
         verbose=False,
         visualize=False,
     )
