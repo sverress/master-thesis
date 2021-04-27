@@ -40,10 +40,8 @@ if __name__ == "__main__":
 
     # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
     POLICIES = [
-        decision.RolloutValueFunctionPolicy(
-            decision.EpsilonGreedyValueFunctionPolicy(
-                decision.value_functions.LinearValueFunction()
-            )
+        decision.EpsilonGreedyValueFunctionPolicy(
+            decision.value_functions.LinearValueFunction()
         ),
         decision.RandomRolloutPolicy(),
     ]

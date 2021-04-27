@@ -12,17 +12,17 @@ def train_value_function(
     models_to_be_saved=globals.MODELS_TO_BE_SAVED,
 ):
     progress_bar = IncrementalBar(
-        "Running World",
+        "Training value function",
         check_tty=False,
         max=(training_shifts_before_save * models_to_be_saved),
         suffix="%(percent)d%% - ETA %(eta)ds",
     )
     print(
-        f"-------------------- {world.policy.roll_out_policy.value_function} training --------------------"
+        f"-------------------- {world.policy.value_function} training --------------------"
     )
     for shift in range(training_shifts_before_save * models_to_be_saved):
         policy_world = copy.deepcopy(world)
-        policy_world.policy.roll_out_policy.value_function.update_shifts_trained(shift)
+        policy_world.policy.value_function.update_shifts_trained(shift)
 
         if shift % training_shifts_before_save == 0:
             policy_world.save_world([world.get_train_directory(), shift])

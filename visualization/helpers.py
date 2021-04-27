@@ -143,8 +143,8 @@ def plot_action(action, current_location, ax, offset=0):
 
 def plot_trips(trips, ax):
     """
-        Adds trips information to a subplot
-        """
+    Adds trips information to a subplot
+    """
     props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
 
     trips_string = ""
@@ -263,7 +263,11 @@ def create_standard_state_plot():
 
     oslo = plt.imread("images/kart_oslo.png")
     ax.imshow(
-        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+        oslo,
+        zorder=0,
+        extent=(0, 1, 0, 1),
+        aspect="auto",
+        alpha=0.8,
     )
 
     return fig, ax
@@ -319,7 +323,11 @@ def create_subplots_from_gripspec(fig, spec, titles):
         ax.axis("off")
         if i > 0:
             ax.imshow(
-                oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+                oslo,
+                zorder=0,
+                extent=(0, 1, 0, 1),
+                aspect="auto",
+                alpha=0.8,
             )
         subplots.append(ax)
 
@@ -466,7 +474,11 @@ def alt_draw_networkx_edge_labels(
             trans_angle = 0.0
         # use default box of white with white border
         if bbox is None:
-            bbox = dict(boxstyle="round", ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0),)
+            bbox = dict(
+                boxstyle="round",
+                ec=(1.0, 1.0, 1.0),
+                fc=(1.0, 1.0, 1.0),
+            )
         if str(label) != label:
             label = str(label)  # this will cause "1" and 1 to be labeled the same
 
@@ -505,7 +517,11 @@ def alt_draw_networkx_edge_labels(
 
 
 def setup_cluster_visualize(
-    state, current_location_id=None, next_location_id=None, fig=None, ax=None,
+    state,
+    current_location_id=None,
+    next_location_id=None,
+    fig=None,
+    ax=None,
 ):
     node_size = 1000
     font_size = 14
@@ -554,7 +570,8 @@ def make_scooter_visualize(state, ax, scooter_battery=False):
 
     # constructs the networkx graph from cluster location, second input is for color purpose
     graph, labels, node_border, node_color = make_graph(
-        [scooter.get_location() for scooter in all_scooters], all_cluster_ids,
+        [scooter.get_location() for scooter in all_scooters],
+        all_cluster_ids,
     )
 
     # add scooter id as label above each node in plot
@@ -665,6 +682,11 @@ def get_policy_label(policy):
         return (
             f"Rollout: {policy.roll_out_policy}\n"
             f"w/{policy.roll_out_policy.value_function} -t{policy.roll_out_policy.value_function.shifts_trained}"
+        )
+    elif hasattr(policy, "value_function"):
+        return (
+            f"Rollout: {policy}\n"
+            f"w/{policy.value_function} -t{policy.value_function.shifts_trained}"
         )
     else:
         return f"{policy}"

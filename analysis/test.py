@@ -12,10 +12,8 @@ import globals
 
 class AnalysisTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.rollout_value_func_policy = decision.RolloutValueFunctionPolicy(
-            decision.EpsilonGreedyValueFunctionPolicy(
-                decision.value_functions.LinearValueFunction()
-            )
+        self.rollout_value_func_policy = decision.EpsilonGreedyValueFunctionPolicy(
+            decision.value_functions.LinearValueFunction()
         )
         self.random_rollout_policy = decision.RandomRolloutPolicy()
         self.world = classes.World(

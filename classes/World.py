@@ -248,6 +248,6 @@ class World(SaveMixin):
 
     def get_train_directory(self):
         return (
-            f"trained_models/{self.policy.roll_out_policy.value_function}/"
+            f"trained_models/{self.policy.value_function}/"
             f"c{len(self.state.clusters)}_s{len(self.state.get_scooters())}/{self.created_at}"
         )
