@@ -75,3 +75,6 @@ class ANNValueFunction(ValueFunction):
     def __setstate__(self, state):
         self.__dict__.update(state)
         self.model = keras.models.model_from_json(state["model"])
+
+    def __repr__(self):
+        return f"ANNValueFunction"

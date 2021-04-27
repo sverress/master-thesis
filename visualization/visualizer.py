@@ -319,10 +319,9 @@ def visualize_scooter_simulation(
     plt.show()
 
 
-def visualize_analysis(instances, policies, smooth_curve=True):
+def visualize_analysis(instances, smooth_curve=True):
     """
     :param instances: world instances to analyse
-    :param policies: different policies used on the world instances
     :param smooth_curve: boolean if plot of the analysis is to be smoothed out
     :return: plot for the analysis
     """
@@ -359,17 +358,14 @@ def visualize_analysis(instances, policies, smooth_curve=True):
         ) = instance.metrics.get_all_metrics()
         x = instance.metrics.get_time_array()
 
-        ax1.plot(x, lost_demand, c=COLORS[i], label=policies[i])
+        label = get_policy_label(instance.policy)
+        ax1.plot(x, lost_demand, c=COLORS[i], label=label)
         if smooth_curve:
-            plot_smoothed_curve(
-                x, deviation_ideal_state, ax2, COLORS[i], policies[i].__str__()
-            )
-            plot_smoothed_curve(
-                x, deficient_battery, ax3, COLORS[i], policies[i].__str__()
-            )
+            plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], label)
+            plot_smoothed_curve(x, deficient_battery, ax3, COLORS[i], label)
         else:
-            ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=policies[i].__str__())
-            ax3.plot(x, deficient_battery, c=COLORS[i], label=policies[i].__str__())
+            ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=label)
+            ax3.plot(x, deficient_battery, c=COLORS[i], label=label)
 
     for subplot in subplots:
         subplot.legend()

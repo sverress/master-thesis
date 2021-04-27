@@ -203,6 +203,9 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
     def setup_from_state(self, state):
         self.value_function.setup(state)
 
+    def __repr__(self):
+        return "EpsilonGreedyPolicy"
+
 
 class RandomRolloutPolicy(RolloutPolicy):
     def get_best_action(self, world, vehicle):

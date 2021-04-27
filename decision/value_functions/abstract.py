@@ -41,6 +41,7 @@ class ValueFunction(abc.ABC):
 
         self.setup_complete = False
         self.location_indicator = None
+        self.shifts_trained = 0
 
     def __repr__(self):
         return f"{self.__class__.__name__}"
@@ -181,3 +182,6 @@ class ValueFunction(abc.ABC):
         )
 
         return location_indicator + state_features
+
+    def update_shifts_trained(self, shifts_trained: int):
+        self.shifts_trained = shifts_trained
