@@ -51,5 +51,6 @@ if __name__ == "__main__":
         SHIFT_DURATION,
         None,
         clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
+        visualize=False,
     )
     run_analysis(POLICIES, WORLD)
