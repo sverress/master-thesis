@@ -19,6 +19,7 @@ class BasicScenarioSimulationTests(unittest.TestCase):
             self.world,
             self.world.state.vehicles[1],
             policy=decision.RandomActionPolicy(),
+            number_of_simulations=5,
         )
 
 

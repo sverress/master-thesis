@@ -1,5 +1,4 @@
 import copy
-import math
 import unittest
 import random
 
@@ -216,7 +215,7 @@ class PolicyTests(unittest.TestCase):
         self.world = World(40, None, clustering.scripts.get_initial_state(100, 10))
 
     def test_random_rollout_policy(self):
-        self.world.policy = decision.RandomRolloutPolicy()
+        self.world.policy = decision.RandomRolloutPolicy(number_of_rollouts=2)
         vehicle_random_rollout_policy = self.world.state.vehicles[0]
         self.assertIsInstance(
             self.world.policy.get_best_action(
@@ -303,9 +302,11 @@ class EpsilonGreedyPolicyTest(unittest.TestCase):
             visualize=False,
         )
         roll_out_policy = decision.EpsilonGreedyValueFunctionPolicy(
-            decision.value_functions.LinearValueFunction()
+            decision.value_functions.LinearValueFunction(),
         )
-        policy = decision.RolloutValueFunctionPolicy(roll_out_policy)
+        policy = decision.RolloutValueFunctionPolicy(
+            roll_out_policy, number_of_rollouts=2
+        )
         world, *rest = analysis.evaluate_policies.run_analysis([policy], world)
         self.assertTrue(
             any(
