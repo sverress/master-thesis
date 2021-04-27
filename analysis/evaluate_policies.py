@@ -29,12 +29,12 @@ def run_analysis(policies, world: classes.World):
 
     # visualize policy analysis
     if world.visualize:
-        visualize_analysis(instances, policies)
+        visualize_analysis(instances)
     return instances
 
 
 if __name__ == "__main__":
-    SHIFT_DURATION = 60
+    SHIFT_DURATION = 80
     SAMPLE_SIZE = 100
     NUMBER_OF_CLUSTERS = 10
 
