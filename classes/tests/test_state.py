@@ -32,7 +32,7 @@ class StateTests(unittest.TestCase):
         random_location = random.choice(self.state_mid.locations)
         self.state_mid.vehicles[0].set_current_location(random_location)
         # Save, load and delete state object
-        filepath = f"{globals.STATE_CACHE_DIR}/{self.state_mid.get_filename()}"
+        filepath = f"{globals.STATE_CACHE_DIR}/{self.state_mid.get_filename()}.pickle"
         self.state_mid.save_state()
         file_state = classes.State.load(filepath)
         self.assertEqual(random_location.id, file_state.vehicles[0].current_location.id)
