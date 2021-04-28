@@ -32,7 +32,7 @@ class AnalysisTests(unittest.TestCase):
     @staticmethod
     def test_run_analysis_from_path():
         analysis.evaluate_policies.run_analysis_from_path(
-            "world_cache/trained_models/LinearValueFunction/c10_s100/test_policies_DO_NOT_DELETE"
+            "world_cache/trained_models/LinearValueFunction/c10_s100/TEST_EVALUATE_FROM_PATH_DO_NOT_DELETE"
         )
 
     def test_train_value_function(self):

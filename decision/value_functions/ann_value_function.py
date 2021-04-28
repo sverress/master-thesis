@@ -50,13 +50,12 @@ class ANNValueFunction(ValueFunction):
         next_state_value: float,
         reward: float,
     ):
-        td_error = (
-            reward + (self.discount_factor * next_state_value) - current_state_value
+        td_error = self.compute_and_record_td_error(
+            current_state_value, next_state_value, reward
         )
-        self.td_errors.insert(len(self.td_errors), td_error)
         self.model.fit(
             np.array([current_state_features]),
-            np.array([self.discount_factor * next_state_value + reward]),
+            np.array([td_error + current_state_value]),
             epochs=50,
             verbose=False,
         )

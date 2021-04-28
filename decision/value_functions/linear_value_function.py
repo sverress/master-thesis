@@ -23,7 +23,11 @@ class LinearValueFunction(ValueFunction):
         super(LinearValueFunction, self).setup(state)
 
     def estimate_value(
-        self, state, vehicle, time, state_features=None,
+        self,
+        state,
+        vehicle,
+        time,
+        state_features=None,
     ):
         if not state_features:
             state_features = self.get_state_features(state, vehicle, time)
@@ -39,11 +43,14 @@ class LinearValueFunction(ValueFunction):
         next_state_value: float,
         reward: float,
     ):
-        td_error = (
-            reward + (self.discount_factor * next_state_value) - current_state_value
+
+        self.weights += np.multiply(
+            self.step_size
+            * self.compute_and_record_td_error(
+                current_state_value, next_state_value, reward
+            ),
+            current_state_features,
         )
-        self.td_errors.insert(len(self.td_errors), td_error)
-        self.weights += np.multiply(self.step_size * td_error, current_state_features)
 
     @Decorators.check_setup
     def create_location_features_combination(self, state_features):
