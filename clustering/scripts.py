@@ -21,15 +21,14 @@ def get_initial_state(
     ideal_state_computation=False,
 ) -> State:
     # If this combination has been requested before we fetch a cached version
-    if cache and os.path.exists(
-        f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
-    ):
-        print(
-            f"\nUsing cached version of state from {STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle\n"
-        )
-        initial_state = State.load(
-            f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}.pickle"
-        )
+    filepath = (
+        f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}_"
+        f"v{number_of_vans}b{number_of_bikes}_"
+        f"d{initial_location_depot}i{ideal_state_computation}.pickle"
+    )
+    if cache and os.path.exists(filepath):
+        print(f"\nUsing cached version of state from {filepath}\n")
+        initial_state = State.load(filepath)
     else:
 
         print(
