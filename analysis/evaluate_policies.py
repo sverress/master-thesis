@@ -1,6 +1,6 @@
 import copy
 import os
-
+import math
 import classes
 import clustering.scripts
 import decision.value_functions
@@ -28,7 +28,9 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
     initial_state_world.shift_duration = 480
     policies = sorted(
         [world.policy for world in world_objects],
-        key=lambda policy: policy.value_function.shifts_trained,
+        key=lambda policy: policy.value_function.shifts_trained
+        if hasattr(policy, "value_function")
+        else math.inf,
     )
 
     return run_analysis(
@@ -36,7 +38,7 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
     )
 
 
-def run_analysis(policies, world: classes.World):
+def run_analysis(policies, world: classes.World, smooth_curve=True):
     instances = []
     for current_policy in policies:
         print(f"\n---------- {current_policy} ----------")
@@ -50,7 +52,7 @@ def run_analysis(policies, world: classes.World):
 
     # visualize policy analysis
     if world.visualize:
-        visualize_analysis(instances)
+        visualize_analysis(instances, smooth_curve)
     return instances
 
 

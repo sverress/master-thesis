@@ -42,8 +42,8 @@ class LinearValueFunction(ValueFunction):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
         )
-        self.td_error.insert(len(self.td_error), td_error)
-        self.weights -= np.multiply(self.step_size * td_error, current_state_features)
+        self.td_errors.insert(len(self.td_errors), td_error)
+        self.weights += np.multiply(self.step_size * td_error, current_state_features)
 
     @Decorators.check_setup
     def create_location_features_combination(self, state_features):

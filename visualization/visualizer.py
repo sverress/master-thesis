@@ -252,7 +252,7 @@ def visualize_scooter_simulation(
         font_size,
         all_current_scooters,
         all_current_scooters_id,
-    ) = make_scooter_visualize(current_state, ax2, scooter_battery=True)
+    ) = make_scooter_visualize(current_state, ax2, scooter_label=True)
 
     # have to copy the networkx graph since the plot isn't shown in the IDE yet
     next_graph = copy.deepcopy(graph)
