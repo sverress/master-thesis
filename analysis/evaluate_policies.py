@@ -9,16 +9,21 @@ import globals
 from visualization.visualizer import visualize_analysis
 
 
-def run_analysis_from_path(path: str, other_policies=None):
+def run_analysis_from_path(path: str, other_policies=None, visualize_route=False):
     world_objects = [
         classes.World.load(os.path.join(path, world_obj_path))
         for world_obj_path in os.listdir(path)
     ]
     initial_state_world, *rest = world_objects
+
+    # this is for analysis visualization
     initial_state_world.visualize = True
-    for event in initial_state_world.stack:
-        if isinstance(event, classes.VehicleArrival):
-            event.visualize = True
+
+    # route visualization
+    if visualize_route:
+        for event in initial_state_world.stack:
+            if isinstance(event, classes.VehicleArrival):
+                event.visualize = True
 
     initial_state_world.shift_duration = 480
     policies = sorted(
@@ -34,12 +39,8 @@ def run_analysis_from_path(path: str, other_policies=None):
 def run_analysis(policies, world: classes.World):
     instances = []
     for current_policy in policies:
-        if hasattr(current_policy, "value_function"):
-            print(
-                f"\n---------- {current_policy} - {current_policy.value_function.shifts_trained} ----------"
-            )
-        else:
-            print(f"\n---------- {current_policy} ----------")
+        print(f"\n---------- {current_policy} ----------")
+
         policy_world = copy.deepcopy(world)
         policy_world.policy = policy_world.set_policy(current_policy)
         # run the world and add the world object to a list containing all world instances
@@ -83,6 +84,6 @@ def example_setup():
 
 if __name__ == "__main__":
     run_analysis_from_path(
-        "world_cache/trained_models/LinearValueFunction/c50_s2500/Initial_training",
-        [decision.SwapAllPolicy()],
+        "world_cache/trained_models/LinearValueFunction/c10_s100/2021-04-28T16:48",
+        [decision.SwapAllPolicy(), decision.RandomActionPolicy()],
     )

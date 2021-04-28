@@ -66,5 +66,5 @@ class LinearValueFunction(ValueFunction):
             self.convert_state_to_features(state, vehicle, time)
         )
 
-    def __repr__(self):
-        return f"LinearValueFunction"
+    def __str__(self):
+        return f"LinearValueFunction - {self.shifts_trained}"

@@ -18,7 +18,7 @@ def train_value_function(
         suffix="%(percent)d%% - ETA %(eta)ds",
     )
     print(
-        f"-------------------- {world.policy.value_function} training --------------------"
+        f"-------------------- {world.policy.value_function.__str__()} training --------------------"
     )
     number_of_shifts = training_shifts_before_save * models_to_be_saved
     for shift in range(number_of_shifts + 1):
