@@ -60,5 +60,5 @@ def example_setup():
 
 if __name__ == "__main__":
     run_analysis_from_path(
-        "world_cache/trained_models/LinearValueFunction/c50_s2500/2021-04-27T18:09"
+        "world_cache/trained_models/LinearValueFunction/c50_s2500/Initial_training"
     )
