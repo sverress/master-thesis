@@ -112,20 +112,11 @@ def plot_action(action, current_location, ax, offset=0):
     """
     props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
 
-    action_string = "Swaps:\n"
+    action_string = f"Swaps:\n {len(action.battery_swaps)}\n"
 
-    for swap in action.battery_swaps:
-        action_string += f"{swap}\n"
+    action_string += f"\nPickups:\n {len(action.pick_ups)}\n"
 
-    action_string += "\nPickups:\n"
-
-    for pick_up in action.pick_ups:
-        action_string += f"{pick_up}\n"
-
-    action_string += "\nDelivery:\n"
-
-    for delivery in action.delivery_scooters:
-        action_string += f"{delivery}\n"
+    action_string += f"\nDeliveries:\n {len(action.delivery_scooters)}\n"
 
     action_string += f"\nCurrent : {current_location}\nNext : {action.next_location}"
 
@@ -263,11 +254,7 @@ def create_standard_state_plot():
 
     oslo = plt.imread("images/kart_oslo.png")
     ax.imshow(
-        oslo,
-        zorder=0,
-        extent=(0, 1, 0, 1),
-        aspect="auto",
-        alpha=0.8,
+        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
     )
 
     return fig, ax
@@ -323,11 +310,7 @@ def create_subplots_from_gripspec(fig, spec, titles):
         ax.axis("off")
         if i > 0:
             ax.imshow(
-                oslo,
-                zorder=0,
-                extent=(0, 1, 0, 1),
-                aspect="auto",
-                alpha=0.8,
+                oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
             )
         subplots.append(ax)
 
@@ -474,11 +457,7 @@ def alt_draw_networkx_edge_labels(
             trans_angle = 0.0
         # use default box of white with white border
         if bbox is None:
-            bbox = dict(
-                boxstyle="round",
-                ec=(1.0, 1.0, 1.0),
-                fc=(1.0, 1.0, 1.0),
-            )
+            bbox = dict(boxstyle="round", ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0),)
         if str(label) != label:
             label = str(label)  # this will cause "1" and 1 to be labeled the same
 
@@ -517,11 +496,7 @@ def alt_draw_networkx_edge_labels(
 
 
 def setup_cluster_visualize(
-    state,
-    current_location_id=None,
-    next_location_id=None,
-    fig=None,
-    ax=None,
+    state, current_location_id=None, next_location_id=None, fig=None, ax=None,
 ):
     node_size = 1000
     font_size = 14
@@ -548,7 +523,7 @@ def setup_cluster_visualize(
     return graph, fig, ax, graph, labels, node_border, node_color, node_size, font_size
 
 
-def make_scooter_visualize(state, ax, scooter_battery=False):
+def make_scooter_visualize(state, ax, scooter_label=False):
     node_size = 50
     font_size = 10
     # make a list of all scooters
@@ -570,12 +545,12 @@ def make_scooter_visualize(state, ax, scooter_battery=False):
 
     # constructs the networkx graph from cluster location, second input is for color purpose
     graph, labels, node_border, node_color = make_graph(
-        [scooter.get_location() for scooter in all_scooters],
-        all_cluster_ids,
+        [scooter.get_location() for scooter in all_scooters], all_cluster_ids,
     )
 
-    # add scooter id as label above each node in plot
-    add_scooter_id_and_battery(all_scooters, graph, ax, scooter_battery)
+    if scooter_label:
+        # add scooter id as label above each node in plot
+        add_scooter_id_and_battery(all_scooters, graph, ax)
 
     # display graph
     display_graph(

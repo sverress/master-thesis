@@ -15,11 +15,7 @@ import copy
 
 class State(SaveMixin):
     def __init__(
-        self,
-        clusters: [Cluster],
-        depots: [Depot],
-        vehicles=None,
-        distance_matrix=None,
+        self, clusters: [Cluster], depots: [Depot], vehicles=None, distance_matrix=None,
     ):
         self.clusters = clusters
         self.vehicles = vehicles
@@ -329,8 +325,7 @@ class State(SaveMixin):
         visualize_clustering(self.clusters)
 
     def visualize_flow(
-        self,
-        flows: [(int, int, int)],
+        self, flows: [(int, int, int)],
     ):
         visualize_cluster_flow(self, flows)
 
@@ -340,10 +335,17 @@ class State(SaveMixin):
         current_state: State,
         vehicle: Vehicle,
         action: Action,
+        scooter_battery: bool,
         policy: str,
     ):
         visualize_action(
-            self, vehicle_before_action, current_state, vehicle, action, policy
+            self,
+            vehicle_before_action,
+            current_state,
+            vehicle,
+            action,
+            scooter_battery,
+            policy,
         )
 
     def visualize_vehicle_routes(

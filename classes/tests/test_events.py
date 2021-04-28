@@ -156,7 +156,7 @@ class EventsTests(unittest.TestCase):
         )
 
     def test_lost_trip(self):
-        lost_trip = LostTrip(2)
+        lost_trip = LostTrip(2, 0)
         lost_trip.perform(self.world)
 
         # check if lost trip gives negative reward

@@ -30,7 +30,13 @@ class World(SaveMixin):
             :param world: world object to record state from
             """
             self.lost_demand.append(
-                sum([1 for reward in world.rewards if reward == LOST_TRIP_REWARD])
+                sum(
+                    [
+                        1
+                        for reward, location in world.rewards
+                        if reward == LOST_TRIP_REWARD
+                    ]
+                )
                 if len(world.rewards) > 0
                 else 0
             )
@@ -100,12 +106,7 @@ class World(SaveMixin):
             )
 
     def __init__(
-        self,
-        shift_duration: int,
-        policy,
-        initial_state,
-        verbose=False,
-        visualize=True,
+        self, shift_duration: int, policy, initial_state, verbose=False, visualize=True,
     ):
         self.created_at = datetime.datetime.now().isoformat(timespec="minutes")
         self.shift_duration = shift_duration
@@ -161,20 +162,25 @@ class World(SaveMixin):
         """
         return self.shift_duration - self.time
 
-    def add_reward(self, reward: float, discount=False) -> None:
+    def add_reward(self, reward: float, location_id: int, discount=False) -> None:
         """
         Adds the input reward to the rewards list of the world object
+        :param location_id: location where the reward was conducted
         :param discount: boolean if the reward is to be discounted
         :param reward: reward given
         """
-        self.rewards.append(reward * self.get_discount() if discount else reward)
+        self.rewards.append(
+            (reward * self.get_discount(), location_id)
+            if discount
+            else (reward, location_id)
+        )
 
     def get_total_reward(self) -> float:
         """
         Get total accumulated reward at current point of time
         :return:
         """
-        return sum(self.rewards)
+        return sum([reward for reward, location_id in self.rewards])
 
     def add_event(self, event: classes.Event) -> None:
         """

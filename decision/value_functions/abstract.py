@@ -42,6 +42,7 @@ class ValueFunction(abc.ABC):
         self.setup_complete = False
         self.location_indicator = None
         self.shifts_trained = 0
+        self.td_error = []
 
     def __repr__(self):
         return f"{self.__class__.__name__}"

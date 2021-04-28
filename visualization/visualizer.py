@@ -182,6 +182,7 @@ def visualize_action(
     current_state: State,
     current_vehicle: Vehicle,
     action: Action,
+    scooter_label=True,
     policy="",
 ):
     # creating the subplots for the visualization
@@ -202,10 +203,10 @@ def visualize_action(
         * ACTION_OFFSET,
     )
 
-    make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
+    make_scooter_visualize(state_before_action, ax2, scooter_label=scooter_label)
     add_location_center(state_before_action.locations, ax2)
 
-    make_scooter_visualize(current_state, ax3, scooter_battery=True)
+    make_scooter_visualize(current_state, ax3, scooter_label=scooter_label)
     add_location_center(state_before_action.locations, ax3)
 
     plt.tight_layout(pad=1.0)
