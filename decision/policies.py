@@ -12,9 +12,12 @@ import abc
 
 class Policy(abc.ABC):
     def __init__(
-        self, get_possible_actions_divide=globals.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS
+        self,
+        get_possible_actions_divide=globals.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS,
+        number_of_neighbors=globals.DEFAULT_NUMBER_OF_NEIGHBOURS,
     ):
         self.get_possible_actions_divide = get_possible_actions_divide
+        self.number_of_neighbors = number_of_neighbors
 
     @abc.abstractmethod
     def get_best_action(self, world, vehicle) -> classes.Action:
@@ -39,7 +42,9 @@ class Policy(abc.ABC):
 
     @staticmethod
     def print_action_stats(
-        world, vehicle: classes.Vehicle, actions_info: [(classes.Action, int, int)],
+        world,
+        vehicle: classes.Vehicle,
+        actions_info: [(classes.Action, int, int)],
     ) -> None:
         if world.verbose:
             print(f"\n{vehicle} (#rollouts {NUMBER_OF_ROLLOUTS}):")
@@ -75,6 +80,7 @@ class RolloutValueFunctionPolicy(RolloutPolicy):
             divide=self.get_possible_actions_divide,
             exclude=world.tabu_list,
             time=world.time,
+            number_of_neighbours=self.number_of_neighbors,
         )
         action_info = []
         # For every possible action
@@ -155,6 +161,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             divide=self.get_possible_actions_divide,
             exclude=world.tabu_list,
             time=world.time,
+            number_of_neighbours=self.number_of_neighbors,
         )
 
         # Epsilon greedy choose an action based on value function
@@ -179,9 +186,11 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 action_info.append((action, reward, next_state_value))
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
-            (best_action, best_reward, best_next_state_value,) = max(
-                action_info, key=lambda pair: pair[1] + pair[2]
-            )
+            (
+                best_action,
+                best_reward,
+                best_next_state_value,
+            ) = max(action_info, key=lambda pair: pair[1] + pair[2])
 
             state_features = self.value_function.get_state_features(
                 world.state, vehicle, world.time
@@ -191,7 +200,10 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             )
 
             self.value_function.update_weights(
-                state_features, state_value, best_next_state_value, best_reward,
+                state_features,
+                state_value,
+                best_next_state_value,
+                best_reward,
             )
 
             return best_action
@@ -214,6 +226,7 @@ class RandomRolloutPolicy(RolloutPolicy):
             divide=self.get_possible_actions_divide,
             exclude=world.tabu_list,
             time=world.time,
+            number_of_neighbours=self.number_of_neighbors,
         )
         actions_info = []
         # For every possible action
@@ -226,11 +239,14 @@ class RandomRolloutPolicy(RolloutPolicy):
             reward = world_copy.state.do_action(action, vehicle_copy, world_copy.time)
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            reward += world.get_discount() * scenario_simulation.scripts.estimate_reward(
-                world_copy,
-                vehicle_copy,
-                roll_out_policy,
-                number_of_simulations=self.number_of_rollouts,
+            reward += (
+                world.get_discount()
+                * scenario_simulation.scripts.estimate_reward(
+                    world_copy,
+                    vehicle_copy,
+                    roll_out_policy,
+                    number_of_simulations=self.number_of_rollouts,
+                )
             )
 
             # If the action is better than previous actions, make best_action
@@ -291,7 +307,13 @@ class RandomActionPolicy(Policy):
             exclude=world.tabu_list,
             time=world.time,
             divide=self.get_possible_actions_divide,
+            number_of_neighbours=self.number_of_neighbors,
         )
 
         # pick a random action
         return random.choice(possible_actions)
+
+
+class DoNothing(Policy):
+    def get_best_action(self, world, vehicle) -> classes.Action:
+        return classes.Action([], [], [], 0)
