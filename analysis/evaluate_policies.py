@@ -47,6 +47,8 @@ def run_analysis(policies, world: classes.World, smooth_curve=True):
         print(f"\n---------- {current_policy} ----------")
 
         policy_world = copy.deepcopy(world)
+        # Set the number of neighbors to half the number of clusters in the state
+        current_policy.number_of_neighbors = int(len(policy_world.state.clusters) / 2)
         policy_world.policy = policy_world.set_policy(current_policy)
         # run the world and add the world object to a list containing all world instances
         policy_world.run()
@@ -71,7 +73,6 @@ def example_setup():
     SAMPLE_SIZE = 100
     NUMBER_OF_CLUSTERS = 10
 
-    # different policies: RandomRolloutPolicy, SwapAllPolicy, TD0Policy
     POLICIES = [
         decision.EpsilonGreedyValueFunctionPolicy(
             decision.value_functions.LinearValueFunction()

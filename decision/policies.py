@@ -12,9 +12,12 @@ import abc
 
 class Policy(abc.ABC):
     def __init__(
-        self, get_possible_actions_divide=globals.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS
+        self,
+        get_possible_actions_divide=globals.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS,
+        number_of_neighbors=globals.DEFAULT_NUMBER_OF_NEIGHBOURS,
     ):
         self.get_possible_actions_divide = get_possible_actions_divide
+        self.number_of_neighbors = number_of_neighbors
 
     @abc.abstractmethod
     def get_best_action(self, world, vehicle) -> classes.Action:
@@ -77,6 +80,7 @@ class RolloutValueFunctionPolicy(RolloutPolicy):
             divide=self.get_possible_actions_divide,
             exclude=world.tabu_list,
             time=world.time,
+            number_of_neighbours=self.number_of_neighbors,
         )
         action_info = []
         # For every possible action
@@ -157,6 +161,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             divide=self.get_possible_actions_divide,
             exclude=world.tabu_list,
             time=world.time,
+            number_of_neighbours=self.number_of_neighbors,
         )
 
         # Epsilon greedy choose an action based on value function
@@ -221,6 +226,7 @@ class RandomRolloutPolicy(RolloutPolicy):
             divide=self.get_possible_actions_divide,
             exclude=world.tabu_list,
             time=world.time,
+            number_of_neighbours=self.number_of_neighbors,
         )
         actions_info = []
         # For every possible action
@@ -301,6 +307,7 @@ class RandomActionPolicy(Policy):
             exclude=world.tabu_list,
             time=world.time,
             divide=self.get_possible_actions_divide,
+            number_of_neighbours=self.number_of_neighbors,
         )
 
         # pick a random action
