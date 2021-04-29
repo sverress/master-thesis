@@ -105,5 +105,5 @@ def example_setup():
 
 if __name__ == "__main__":
     run_analysis_from_path(
-        "world_cache/trained_models/LinearValueFunction/c10_s100/2021-04-29T13:55"
+        "world_cache/trained_models/LinearValueFunction/c10_s100/TEST_EVALUATE_FROM_PATH_DO_NOT_DELETE"
     )
