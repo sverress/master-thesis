@@ -7,7 +7,13 @@ import copy
 
 
 class Cluster(Location):
-    def __init__(self, cluster_id: int, scooters: [Scooter], center_location=None):
+    def __init__(
+        self,
+        cluster_id: int,
+        scooters: [Scooter],
+        center_location=None,
+        move_probabilities=None,
+    ):
         self.scooters = scooters
         self.ideal_state = 10
         self.trip_intensity_per_iteration = 2
@@ -15,11 +21,14 @@ class Cluster(Location):
             *(center_location if center_location else self.__compute_center()),
             cluster_id,
         )
-        self.move_probabilities = None
+        self.move_probabilities = move_probabilities
 
     def __deepcopy__(self, *args):
         return Cluster(
-            self.id, copy.copy(self.scooters), center_location=self.get_location()
+            self.id,
+            copy.copy(self.scooters),
+            center_location=self.get_location(),
+            move_probabilities=self.move_probabilities,
         )
 
     class Decorators:
