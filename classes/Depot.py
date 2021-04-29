@@ -1,10 +1,5 @@
 from classes.Location import Location
-from globals import (
-    MAIN_DEPOT_CAPACITY,
-    SMALL_DEPOT_CAPACITY,
-    CHARGE_TIME_PER_BATTERY,
-    SWAP_TIME_PER_BATTERY,
-)
+from globals import *
 
 
 class Depot(Location):
@@ -27,7 +22,10 @@ class Depot(Location):
 
         self.charging.append((time, number_of_battery_to_change))
 
-        return round(number_of_battery_to_change * SWAP_TIME_PER_BATTERY)
+        return (
+            round(number_of_battery_to_change * SWAP_TIME_PER_BATTERY)
+            + CONSTANT_DEPOT_DURATION
+        )
 
     def get_available_battery_swaps(self, time):
         self.charge_batteries(time)

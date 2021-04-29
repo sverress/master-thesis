@@ -74,7 +74,7 @@ class VehicleArrival(Event):
         # perform the best action on the state and send vehicle to new location
         reward = world.state.do_action(action, vehicle, world.time)
 
-        world.add_reward(reward, discount=True)
+        world.add_reward(reward, arrival_cluster_id, discount=True)
 
         if self.visualize:
             # visualize action performed by vehicle
@@ -83,6 +83,7 @@ class VehicleArrival(Event):
                 world.state,
                 vehicle,
                 action,
+                False,
                 world.policy.__str__(),
             )
 

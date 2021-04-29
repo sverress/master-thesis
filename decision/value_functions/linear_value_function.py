@@ -23,7 +23,11 @@ class LinearValueFunction(ValueFunction):
         super(LinearValueFunction, self).setup(state)
 
     def estimate_value(
-        self, state, vehicle, time, state_features=None,
+        self,
+        state,
+        vehicle,
+        time,
+        state_features=None,
     ):
         if not state_features:
             state_features = self.get_state_features(state, vehicle, time)
@@ -39,10 +43,11 @@ class LinearValueFunction(ValueFunction):
         next_state_value: float,
         reward: float,
     ):
-        self.weights -= np.multiply(
+
+        self.weights += np.multiply(
             self.step_size
-            * (
-                reward + (self.discount_factor * next_state_value) - current_state_value
+            * self.compute_and_record_td_error(
+                current_state_value, next_state_value, reward
             ),
             current_state_features,
         )
@@ -68,5 +73,5 @@ class LinearValueFunction(ValueFunction):
             self.convert_state_to_features(state, vehicle, time)
         )
 
-    def __repr__(self):
-        return f"LinearValueFunction"
+    def __str__(self):
+        return f"LinearValueFunction - {self.shifts_trained}"

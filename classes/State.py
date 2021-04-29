@@ -30,6 +30,7 @@ class State(SaveMixin):
         else:
             self.distance_matrix = self.calculate_distance_matrix()
         self.simulation_scenarios = None
+        self.TRIP_INTENSITY_RATE = 0.1
 
     def __deepcopy__(self, *args):
         new_state = State(
@@ -340,10 +341,17 @@ class State(SaveMixin):
         current_state: State,
         vehicle: Vehicle,
         action: Action,
+        scooter_battery: bool,
         policy: str,
     ):
         visualize_action(
-            self, vehicle_before_action, current_state, vehicle, action, policy
+            self,
+            vehicle_before_action,
+            current_state,
+            vehicle,
+            action,
+            scooter_battery,
+            policy,
         )
 
     def visualize_vehicle_routes(
@@ -381,8 +389,32 @@ class State(SaveMixin):
     def save_state(self):
         super().save(STATE_CACHE_DIR)
 
+    @staticmethod
+    def save_path(
+        number_of_clusters,
+        sample_size,
+        ideal_state_computation,
+    ):
+        def convert_binary(binary):
+            return 1 if binary else 0
+
+        return (
+            f"c{number_of_clusters}s{sample_size}_"
+            f"i{convert_binary(ideal_state_computation)}"
+        )
+
     def get_filename(self):
-        return f"c{len(self.clusters)}s{len(self.get_scooters())}"
+        return State.save_path(
+            len(self.clusters),
+            len(self.get_scooters()),
+            all(
+                [
+                    cluster.ideal_state * self.TRIP_INTENSITY_RATE
+                    == cluster.trip_intensity_per_iteration
+                    for cluster in self.clusters
+                ]
+            ),
+        )
 
     def compute_and_set_ideal_state(self, sample_scooters):
         clustering.methods.compute_and_set_ideal_state(self, sample_scooters)
@@ -392,7 +424,9 @@ class State(SaveMixin):
     ):
         if ideal_state_computation:
             for cluster in self.clusters:
-                cluster.trip_intensity_per_iteration = cluster.ideal_state * 0.1
+                cluster.trip_intensity_per_iteration = (
+                    cluster.ideal_state * self.TRIP_INTENSITY_RATE
+                )
         else:
             clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
 
