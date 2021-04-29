@@ -25,6 +25,7 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
             if isinstance(event, classes.VehicleArrival):
                 event.visualize = True
 
+    # Always rollout for 8 hours
     initial_state_world.shift_duration = 480
     policies = sorted(
         [world.policy for world in world_objects],
@@ -40,6 +41,8 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
 
 def run_analysis(policies, world: classes.World, smooth_curve=True):
     instances = []
+    # Always add a policy that does nothing and a random action
+    policies += [decision.DoNothing(), decision.RandomActionPolicy()]
     for current_policy in policies:
         print(f"\n---------- {current_policy} ----------")
 

@@ -312,3 +312,8 @@ class RandomActionPolicy(Policy):
 
         # pick a random action
         return random.choice(possible_actions)
+
+
+class DoNothing(Policy):
+    def get_best_action(self, world, vehicle) -> classes.Action:
+        return classes.Action([], [], [], 0)
