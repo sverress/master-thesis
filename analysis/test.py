@@ -25,9 +25,8 @@ class AnalysisTests(unittest.TestCase):
         )
 
     def test_run_analysis(self):
-        analysis.evaluate_policies.run_analysis(
-            [self.random_rollout_policy, self.rollout_value_func_policy], self.world
-        )
+        # Runs random and do nothing policies
+        analysis.evaluate_policies.run_analysis([], self.world)
 
     @staticmethod
     def test_run_analysis_from_path():
