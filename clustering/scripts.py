@@ -22,9 +22,8 @@ def get_initial_state(
 ) -> State:
     # If this combination has been requested before we fetch a cached version
     filepath = (
-        f"{STATE_CACHE_DIR}/c{number_of_clusters}s{sample_size}_"
-        f"v{number_of_vans}b{number_of_bikes}_"
-        f"d{initial_location_depot}i{ideal_state_computation}.pickle"
+        f"{STATE_CACHE_DIR}/"
+        f"{State.save_path(number_of_clusters, sample_size, ideal_state_computation)}.pickle"
     )
     if cache and os.path.exists(filepath):
         print(f"\nUsing cached version of state from {filepath}\n")
