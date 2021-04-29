@@ -413,7 +413,7 @@ def visualize_td_error(td_errors_and_label: [([float], str)], smooth_curve=False
     )
 
     ax.legend()
-    ax.set_xlim(xmin=0, xmax=len(td_errors_and_label[-1][0]))
+    ax.set_xlim(xmin=0)
 
     plt.show()
 
