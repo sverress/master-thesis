@@ -3,15 +3,24 @@ import numpy as np
 from classes.Scooter import Scooter
 from classes.Location import Location
 from globals import CLUSTER_CENTER_DELTA, BATTERY_LIMIT
+import copy
 
 
 class Cluster(Location):
-    def __init__(self, cluster_id: int, scooters: [Scooter]):
+    def __init__(self, cluster_id: int, scooters: [Scooter], center_location=None):
         self.scooters = scooters
         self.ideal_state = 10
         self.trip_intensity_per_iteration = 2
-        super().__init__(*self.__compute_center(), cluster_id)
+        super().__init__(
+            *(center_location if center_location else self.__compute_center()),
+            cluster_id,
+        )
         self.move_probabilities = None
+
+    def __deepcopy__(self, *args):
+        return Cluster(
+            self.id, copy.copy(self.scooters), center_location=self.get_location()
+        )
 
     class Decorators:
         @classmethod
