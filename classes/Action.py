@@ -1,4 +1,4 @@
-from globals import MINUTES_IN_HOUR, VEHICLE_SPEED
+from globals import *
 
 
 class Action:
@@ -30,8 +30,11 @@ class Action:
         """
         operation_duration = (
             len(self.battery_swaps) + len(self.pick_ups) + len(self.delivery_scooters)
-        ) * 2
-        travel_duration = round((distance / VEHICLE_SPEED) * MINUTES_IN_HOUR)
+        ) * MINUTES_PER_ACTION
+        travel_duration = (
+            round((distance / VEHICLE_SPEED) * MINUTES_IN_HOUR)
+            + MINUTES_CONSTANT_PER_ACTION
+        )
         return operation_duration + travel_duration
 
     def __repr__(self):

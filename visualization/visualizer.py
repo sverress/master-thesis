@@ -131,7 +131,7 @@ def visualize_vehicle_routes(
             "Tabu list",
             f"Vehicle {current_vehicle_id} arriving at location {current_location_id} and heading to location {next_location_id}",
         ],
-        fig_title=policy,
+        fig_title=policy.__str__(),
     )
 
     plot_tabu_list(ax1, tabu_list)
@@ -182,11 +182,13 @@ def visualize_action(
     current_state: State,
     current_vehicle: Vehicle,
     action: Action,
+    scooter_label=True,
     policy="",
 ):
     # creating the subplots for the visualization
     fig, ax1, ax2, ax3 = create_three_subplot_fig(
-        titles=["Action", "State before action", "State after action"], fig_title=policy
+        titles=["Action", "State before action", "State after action"],
+        fig_title=policy.__str__(),
     )
 
     # plots the vehicle info and the action in the first plot
@@ -202,10 +204,10 @@ def visualize_action(
         * ACTION_OFFSET,
     )
 
-    make_scooter_visualize(state_before_action, ax2, scooter_battery=True)
+    make_scooter_visualize(state_before_action, ax2, scooter_label=scooter_label)
     add_location_center(state_before_action.locations, ax2)
 
-    make_scooter_visualize(current_state, ax3, scooter_battery=True)
+    make_scooter_visualize(current_state, ax3, scooter_label=scooter_label)
     add_location_center(state_before_action.locations, ax3)
 
     plt.tight_layout(pad=1.0)
@@ -250,7 +252,7 @@ def visualize_scooter_simulation(
         font_size,
         all_current_scooters,
         all_current_scooters_id,
-    ) = make_scooter_visualize(current_state, ax2, scooter_battery=True)
+    ) = make_scooter_visualize(current_state, ax2, scooter_label=True)
 
     # have to copy the networkx graph since the plot isn't shown in the IDE yet
     next_graph = copy.deepcopy(graph)
@@ -358,7 +360,7 @@ def visualize_analysis(instances, smooth_curve=True):
         ) = instance.metrics.get_all_metrics()
         x = instance.metrics.get_time_array()
 
-        label = get_policy_label(instance.policy)
+        label = instance.policy  # get_policy_label(instance.policy)
         ax1.plot(x, lost_demand, c=COLORS[i], label=label)
         if smooth_curve:
             plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], label)
