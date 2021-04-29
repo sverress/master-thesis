@@ -381,3 +381,40 @@ def visualize_analysis(instances, smooth_curve=True):
     plt.show()
 
     return fig
+
+
+def visualize_td_error(td_errors_and_label: [([float], str)], smooth_curve=False):
+    # generate plot and subplots
+    fig = plt.figure(figsize=(20, 9.7))
+
+    # creating subplots
+    spec = gridspec.GridSpec(
+        figure=fig, ncols=1, nrows=1, width_ratios=[1], wspace=0.2, hspace=0
+    )
+
+    ax = create_plot_with_axis_labels(
+        fig, spec[0], x_label="Update", y_label="TD-error", plot_title="",
+    )
+
+    for i, (td_errors, label) in enumerate(td_errors_and_label):
+        x = np.arange(len(td_errors))
+
+        if smooth_curve:
+            plot_smoothed_curve(
+                x, td_errors, ax, COLORS[i], label, z_order=len(td_errors) - i
+            )
+        else:
+            ax.plot(
+                x, td_errors, color=COLORS[i], label=label, zorder=len(td_errors) - i
+            )
+
+    fig.suptitle(
+        f"TD-error development", fontsize=16,
+    )
+
+    ax.legend()
+    ax.set_xlim(xmin=0, xmax=len(td_errors_and_label[-1][0]))
+
+    plt.show()
+
+    return fig

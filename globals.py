@@ -57,8 +57,8 @@ DEFAULT_NUMBER_OF_NEIGHBOURS = 3
 """
 TRAINING PARAMETERS
 """
-MODELS_TO_BE_SAVED = 3
-TRAINING_SHIFTS_BEFORE_SAVE = 1000
+MODELS_TO_BE_SAVED = 5
+TRAINING_SHIFTS_BEFORE_SAVE = 2
 SHIFT_DURATION = 240
 
 
@@ -82,20 +82,14 @@ VEHICLE_COLORS = ["blue", "green", "black", "purple"]
 ACTION_OFFSET = 0.018
 
 COLORS = [
-    "#B52CC2",
-    "#EF9A90",
-    "#43C04E",
-    "#CDCAE9",
-    "#C00283",
-    "#02BE50",
-    "#D69F94",
+    "#207188",
+    "#86aa6d",
+    "#db494c",
+    "#34393c",
+    "#eba432",
+    "#c2c1bc",
     "#A4847E",
-    "#CE058B",
-    "#39029A",
-    "#9EEB33",
     "#056672",
-    "#FC726E",
-    "#8C109C",
     "#D8FB27",
     "#BBE5D1",
     "#FEEB81",

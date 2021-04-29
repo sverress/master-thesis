@@ -36,8 +36,8 @@ def train_value_function(
 
 
 if __name__ == "__main__":
-    SAMPLE_SIZE = 2500
-    NUMBER_OF_CLUSTERS = 50
+    SAMPLE_SIZE = 100
+    NUMBER_OF_CLUSTERS = 10
 
     POLICY = decision.EpsilonGreedyValueFunctionPolicy(
         decision.value_functions.LinearValueFunction()

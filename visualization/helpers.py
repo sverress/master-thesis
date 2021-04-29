@@ -624,12 +624,12 @@ def plot_tabu_list(ax, tabu_list):
     )
 
 
-def plot_smoothed_curve(x, y, ax, color, label):
+def plot_smoothed_curve(x, y, ax, color, label, z_order=1):
     x, y = post_process_curve(x, y)
     x_smooth = np.linspace(np.min(x), np.max(x), 1000)
     spline = make_interp_spline(x, y, k=3)
     y_smooth = spline(x_smooth)
-    ax.plot(x_smooth, y_smooth, c=color, label=label)
+    ax.plot(x_smooth, y_smooth, c=color, label=label, zorder=z_order)
 
 
 def post_process_curve(x, y):
