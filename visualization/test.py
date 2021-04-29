@@ -49,6 +49,7 @@ class BasicVisualizerTests(unittest.TestCase):
             classes.World(
                 60, None, get_initial_state(sample_size=100, number_of_clusters=10)
             ),
+            smooth_curve=False,
         )
 
 

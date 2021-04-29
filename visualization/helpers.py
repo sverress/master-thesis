@@ -112,20 +112,11 @@ def plot_action(action, current_location, ax, offset=0):
     """
     props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
 
-    action_string = "Swaps:\n"
+    action_string = f"Swaps:\n {len(action.battery_swaps)}\n"
 
-    for swap in action.battery_swaps:
-        action_string += f"{swap}\n"
+    action_string += f"\nPickups:\n {len(action.pick_ups)}\n"
 
-    action_string += "\nPickups:\n"
-
-    for pick_up in action.pick_ups:
-        action_string += f"{pick_up}\n"
-
-    action_string += "\nDelivery:\n"
-
-    for delivery in action.delivery_scooters:
-        action_string += f"{delivery}\n"
+    action_string += f"\nDeliveries:\n {len(action.delivery_scooters)}\n"
 
     action_string += f"\nCurrent : {current_location}\nNext : {action.next_location}"
 
@@ -143,8 +134,8 @@ def plot_action(action, current_location, ax, offset=0):
 
 def plot_trips(trips, ax):
     """
-        Adds trips information to a subplot
-        """
+    Adds trips information to a subplot
+    """
     props = dict(boxstyle="round", facecolor="wheat", pad=0.5, alpha=0.5)
 
     trips_string = ""
@@ -532,7 +523,7 @@ def setup_cluster_visualize(
     return graph, fig, ax, graph, labels, node_border, node_color, node_size, font_size
 
 
-def make_scooter_visualize(state, ax, scooter_battery=False):
+def make_scooter_visualize(state, ax, scooter_label=False):
     node_size = 50
     font_size = 10
     # make a list of all scooters
@@ -557,8 +548,9 @@ def make_scooter_visualize(state, ax, scooter_battery=False):
         [scooter.get_location() for scooter in all_scooters], all_cluster_ids,
     )
 
-    # add scooter id as label above each node in plot
-    add_scooter_id_and_battery(all_scooters, graph, ax, scooter_battery)
+    if scooter_label:
+        # add scooter id as label above each node in plot
+        add_scooter_id_and_battery(all_scooters, graph, ax)
 
     # display graph
     display_graph(
@@ -665,6 +657,11 @@ def get_policy_label(policy):
         return (
             f"Rollout: {policy.roll_out_policy}\n"
             f"w/{policy.roll_out_policy.value_function} -t{policy.roll_out_policy.value_function.shifts_trained}"
+        )
+    elif hasattr(policy, "value_function"):
+        return (
+            f"Rollout: {policy}\n"
+            f"w/{policy.value_function} -t{policy.value_function.shifts_trained}"
         )
     else:
         return f"{policy}"

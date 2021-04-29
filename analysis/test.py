@@ -12,12 +12,10 @@ import globals
 
 class AnalysisTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.rollout_value_func_policy = decision.RolloutValueFunctionPolicy(
-            decision.EpsilonGreedyValueFunctionPolicy(
-                decision.value_functions.LinearValueFunction()
-            )
+        self.rollout_value_func_policy = decision.EpsilonGreedyValueFunctionPolicy(
+            decision.value_functions.LinearValueFunction()
         )
-        self.random_rollout_policy = decision.RandomRolloutPolicy()
+        self.random_rollout_policy = decision.RandomRolloutPolicy(number_of_rollouts=2)
         self.world = classes.World(
             2,
             None,
@@ -34,7 +32,7 @@ class AnalysisTests(unittest.TestCase):
     @staticmethod
     def test_run_analysis_from_path():
         analysis.evaluate_policies.run_analysis_from_path(
-            "world_cache/trained_models/LinearValueFunction/c10_s100/test_policies_DO_NOT_DELETE"
+            "world_cache/trained_models/LinearValueFunction/c10_s100/TEST_EVALUATE_FROM_PATH_DO_NOT_DELETE"
         )
 
     def test_train_value_function(self):

@@ -42,6 +42,19 @@ class ValueFunction(abc.ABC):
         self.setup_complete = False
         self.location_indicator = None
         self.shifts_trained = 0
+        self.td_errors = []
+
+    def compute_and_record_td_error(
+        self,
+        current_state_value: float,
+        next_state_value: float,
+        reward: float,
+    ):
+        td_error = (
+            reward + (self.discount_factor * next_state_value) - current_state_value
+        )
+        self.td_errors.insert(len(self.td_errors), td_error)
+        return td_error
 
     def __repr__(self):
         return f"{self.__class__.__name__}"

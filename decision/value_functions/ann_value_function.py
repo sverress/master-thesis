@@ -50,9 +50,12 @@ class ANNValueFunction(ValueFunction):
         next_state_value: float,
         reward: float,
     ):
+        td_error = self.compute_and_record_td_error(
+            current_state_value, next_state_value, reward
+        )
         self.model.fit(
             np.array([current_state_features]),
-            np.array([self.discount_factor * next_state_value + reward]),
+            np.array([td_error + current_state_value]),
             epochs=50,
             verbose=False,
         )
@@ -75,6 +78,3 @@ class ANNValueFunction(ValueFunction):
     def __setstate__(self, state):
         self.__dict__.update(state)
         self.model = keras.models.model_from_json(state["model"])
-
-    def __repr__(self):
-        return f"ANNValueFunction"

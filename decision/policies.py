@@ -34,6 +34,9 @@ class Policy(abc.ABC):
         """
         pass
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}"
+
     @staticmethod
     def print_action_stats(
         world, vehicle: classes.Vehicle, actions_info: [(classes.Action, int, int)],
@@ -47,7 +50,16 @@ class Policy(abc.ABC):
             print("\n----------------------------------------------------------------")
 
 
-class RolloutValueFunctionPolicy(Policy):
+class RolloutPolicy(Policy):
+    def get_best_action(self, world, vehicle) -> classes.Action:
+        pass
+
+    def __init__(self, number_of_rollouts=globals.NUMBER_OF_ROLLOUTS, **kwargs):
+        super().__init__(**kwargs)
+        self.number_of_rollouts = number_of_rollouts
+
+
+class RolloutValueFunctionPolicy(RolloutPolicy):
     """
     Rollout possible actions to update value function.
     """
@@ -76,7 +88,10 @@ class RolloutValueFunctionPolicy(Policy):
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
             # get_best_action in this rollout will update the value function provided by the rollout policy
             scenario_simulation.scripts.estimate_reward(
-                world_copy, vehicle_copy, self.roll_out_policy
+                world_copy,
+                vehicle_copy,
+                self.roll_out_policy,
+                number_of_simulations=self.number_of_rollouts,
             )
 
             stop = time.time()
@@ -184,11 +199,11 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
     def setup_from_state(self, state):
         self.value_function.setup(state)
 
-    def __repr__(self):
-        return "EpsilonGreedyPolicy"
+    def __str__(self):
+        return f"EpsilonGreedyPolicy w/ {self.value_function.__str__()}"
 
 
-class RandomRolloutPolicy(Policy):
+class RandomRolloutPolicy(RolloutPolicy):
     def get_best_action(self, world, vehicle):
         max_reward = -math.inf
         best_action = None
@@ -212,7 +227,10 @@ class RandomRolloutPolicy(Policy):
 
             # Estimate value of making this action, after performing it and calculating the time it takes to perform.
             reward += world.get_discount() * scenario_simulation.scripts.estimate_reward(
-                world_copy, vehicle_copy, roll_out_policy
+                world_copy,
+                vehicle_copy,
+                roll_out_policy,
+                number_of_simulations=self.number_of_rollouts,
             )
 
             # If the action is better than previous actions, make best_action
@@ -227,24 +245,21 @@ class RandomRolloutPolicy(Policy):
 
         return best_action
 
-    def __repr__(self):
-        return "RandomRolloutPolicy"
-
 
 class SwapAllPolicy(Policy):
     def get_best_action(self, world, vehicle):
         # Choose a random cluster
-        next_location: classes.Location = decision.neighbour_filtering.filtering_neighbours(
-            world.state,
-            vehicle,
-            number_of_neighbours=1,
-            exclude=world.tabu_list,
-            max_swaps=vehicle.get_max_number_of_swaps(),
-        )[
-            0
-        ] if vehicle.battery_inventory > vehicle.battery_inventory_capacity * 0.1 else world.state.depots[
-            0
-        ]
+        next_location: classes.Location = (
+            decision.neighbour_filtering.filtering_neighbours(
+                world.state,
+                vehicle,
+                number_of_neighbours=1,
+                exclude=world.tabu_list,
+                max_swaps=vehicle.get_max_number_of_swaps(),
+            )[0]
+            if vehicle.battery_inventory > vehicle.battery_inventory_capacity * 0.1
+            else world.state.depots[0]
+        )
 
         if vehicle.is_at_depot():
             swappable_scooters_ids = []
@@ -266,9 +281,6 @@ class SwapAllPolicy(Policy):
             delivery_scooters=[],
             next_location=next_location.id,
         )
-
-    def __repr__(self):
-        return "SwapAllPolicy"
 
 
 class RandomActionPolicy(Policy):
