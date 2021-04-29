@@ -44,7 +44,7 @@ class LinearValueFunction(ValueFunction):
         reward: float,
     ):
 
-        self.weights += np.multiply(
+        self.weights -= np.multiply(
             self.step_size
             * self.compute_and_record_td_error(
                 current_state_value, next_state_value, reward

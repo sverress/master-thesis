@@ -11,6 +11,8 @@ class Cluster(Location):
         self,
         cluster_id: int,
         scooters: [Scooter],
+        ideal_state=10,
+        trip_intensity_per_iteration=2,
         center_location=None,
         move_probabilities=None,
     ):
@@ -29,6 +31,8 @@ class Cluster(Location):
             copy.copy(self.scooters),
             center_location=self.get_location(),
             move_probabilities=self.move_probabilities,
+            trip_intensity_per_iteration=self.trip_intensity_per_iteration,
+            ideal_state=self.ideal_state,
         )
 
     class Decorators:
