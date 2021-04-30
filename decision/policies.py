@@ -127,8 +127,10 @@ class RolloutValueFunctionPolicy(RolloutPolicy):
         state_features = self.roll_out_policy.value_function.get_state_features(
             world.state, vehicle, world.time
         )
-        state_value = self.roll_out_policy.value_function.estimate_value(
-            world.state, vehicle, world.time, state_features=state_features
+        state_value = (
+            self.roll_out_policy.value_function.estimate_value_from_state_features(
+                state_features
+            )
         )
 
         self.roll_out_policy.value_function.update_weights(

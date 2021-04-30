@@ -41,7 +41,8 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of swaps less or equal to ideal state
         for action in actions:
             self.assertLessEqual(
-                len(action.battery_swaps), self.vehicle.current_location.ideal_state,
+                len(action.battery_swaps),
+                self.vehicle.current_location.ideal_state,
             )
 
         # Test number of actions
@@ -297,19 +298,15 @@ class EpsilonGreedyPolicyTest(unittest.TestCase):
             ),
             visualize=False,
         )
-        roll_out_policy = decision.EpsilonGreedyValueFunctionPolicy(
+        policy = decision.EpsilonGreedyValueFunctionPolicy(
             decision.value_functions.LinearValueFunction(),
-        )
-        policy = decision.RolloutValueFunctionPolicy(
-            roll_out_policy, number_of_rollouts=2
         )
         world, *rest = analysis.evaluate_policies.run_analysis([policy], world)
         self.assertTrue(
             any(
                 [
-                    world.policy.roll_out_policy.value_function.weight_init_value
-                    != weight
-                    for weight in world.policy.roll_out_policy.value_function.weights
+                    world.policy.value_function.weight_init_value != weight
+                    for weight in world.policy.value_function.weights
                 ]
             ),
             "The weights have not changed after a full run analysis",
@@ -328,7 +325,10 @@ class NeighbourFilteringTests(unittest.TestCase):
         vehicle = state.vehicles[0]
 
         best_neighbours_with_random = filtering_neighbours(
-            state, vehicle, number_of_neighbours=3, number_of_random_neighbours=1,
+            state,
+            vehicle,
+            number_of_neighbours=3,
+            number_of_random_neighbours=1,
         )
 
         # test if the number of neighbours is the same, even though one is random
