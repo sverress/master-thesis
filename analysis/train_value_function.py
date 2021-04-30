@@ -36,15 +36,15 @@ def train_value_function(
 
 
 if __name__ == "__main__":
-    SAMPLE_SIZE = 1000
-    NUMBER_OF_CLUSTERS = 20
+    SAMPLE_SIZE = 100
+    NUMBER_OF_CLUSTERS = 10
 
     POLICY = decision.EpsilonGreedyValueFunctionPolicy(
         decision.value_functions.LinearValueFunction()
     )
 
     world_to_analyse = classes.World(
-        240,
+        6,
         None,
         clustering.scripts.get_initial_state(
             SAMPLE_SIZE, NUMBER_OF_CLUSTERS, number_of_vans=2, number_of_bikes=0
