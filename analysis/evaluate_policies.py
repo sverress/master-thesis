@@ -76,7 +76,7 @@ def run_analysis(policies, world: classes.World, smooth_curve=True):
     # visualize policy analysis
     if world.visualize:
         visualize_analysis(instances, smooth_curve)
-        visualize_td_error(td_errors_and_label)
+        visualize_td_error(td_errors_and_label, smooth_curve)
     return instances
 
 
@@ -104,10 +104,10 @@ def example_setup():
         clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
         visualize=True,
     )
-    run_analysis(POLICIES, WORLD)
+    run_analysis(POLICIES, WORLD, smooth_curve=False)
 
 
 if __name__ == "__main__":
     run_analysis_from_path(
-        "world_cache/trained_models/LinearValueFunction/c10_s100/TEST_EVALUATE_FROM_PATH_DO_NOT_DELETE"
+        "world_cache/trained_models/LinearValueFunction/c10_s100/2021-04-30T10:19"
     )

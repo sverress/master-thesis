@@ -127,8 +127,10 @@ class RolloutValueFunctionPolicy(RolloutPolicy):
         state_features = self.roll_out_policy.value_function.get_state_features(
             world.state, vehicle, world.time
         )
-        state_value = self.roll_out_policy.value_function.estimate_value(
-            world.state, vehicle, world.time, state_features=state_features
+        state_value = (
+            self.roll_out_policy.value_function.estimate_value_from_state_features(
+                state_features
+            )
         )
 
         self.roll_out_policy.value_function.update_weights(
@@ -170,41 +172,47 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
+            # Generate the state features of the current state
+            state_features = self.value_function.get_state_features(
+                world.state, vehicle, world.time
+            )
             for action in actions:
+                # Copy state to avoid pointer issue
                 state_copy = copy.deepcopy(world.state)
+                # Get the relevant vehicle from the state copy
                 vehicle_copy = state_copy.get_vehicle_by_id(vehicle.id)
+                # Perform the action and record the reward
                 reward = state_copy.do_action(action, vehicle_copy, world.time)
+                # Get the distance from current cluster to the new destination cluster
                 action_distance = state_copy.get_distance(
                     vehicle.current_location.id, action.next_location
                 )
-                next_state_value = self.value_function.estimate_value(
+                # Generate the features for this new state after the action
+                next_state_features = self.value_function.get_state_features(
                     state_copy,
                     vehicle_copy,
                     world.time + action.get_action_time(action_distance),
+                )
+                # Calculate the expected future reward of being in this new state
+                next_state_value = (
+                    self.value_function.estimate_value_from_state_features(
+                        next_state_features
+                    )
+                )
+                # Update the weights of the value function based on the td error
+                self.value_function.update_weights(
+                    state_features,
+                    self.value_function.estimate_value_from_state_features(
+                        state_features
+                    ),
+                    next_state_value,
+                    reward,
                 )
 
                 action_info.append((action, reward, next_state_value))
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
-            (
-                best_action,
-                best_reward,
-                best_next_state_value,
-            ) = max(action_info, key=lambda pair: pair[1] + pair[2])
-
-            state_features = self.value_function.get_state_features(
-                world.state, vehicle, world.time
-            )
-            state_value = self.value_function.estimate_value(
-                world.state, vehicle, world.time, state_features=state_features
-            )
-
-            self.value_function.update_weights(
-                state_features,
-                state_value,
-                best_next_state_value,
-                best_reward,
-            )
+            best_action, *rest = max(action_info, key=lambda pair: pair[1] + pair[2])
 
             return best_action
 
