@@ -17,8 +17,8 @@ class Cluster(Location):
         move_probabilities=None,
     ):
         self.scooters = scooters
-        self.ideal_state = 10
-        self.trip_intensity_per_iteration = 2
+        self.ideal_state = ideal_state
+        self.trip_intensity_per_iteration = trip_intensity_per_iteration
         super().__init__(
             *(center_location if center_location else self.__compute_center()),
             cluster_id,
