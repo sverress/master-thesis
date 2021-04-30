@@ -337,7 +337,11 @@ def visualize_analysis(instances, smooth_curve=True):
 
     subplots_labels = [
         ("Time", "Number of lost trips", " Lost demand"),
-        ("Time", "Avg. number of scooters - absolute value", "Deviation ideal state"),
+        (
+            "Time",
+            "Avg. deficient number of scooters - absolute value",
+            "Negative deviation ideal state",
+        ),
         ("Time", "Total deficient battery in the world", "Deficient battery"),
     ]
     # figure

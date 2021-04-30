@@ -26,7 +26,7 @@ class Cluster(Location):
     def __deepcopy__(self, *args):
         return Cluster(
             self.id,
-            copy.copy(self.scooters),
+            copy.deepcopy(self.scooters),
             center_location=self.get_location(),
             move_probabilities=self.move_probabilities,
         )

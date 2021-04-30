@@ -20,7 +20,7 @@ class World(SaveMixin):
     class WorldMetric:
         def __init__(self):
             self.lost_demand = []
-            self.average_deviation_ideal_state = []
+            self.average_negative_deviation_ideal_state = []
             self.deficient_battery = []
             self.time = []
 
@@ -40,12 +40,12 @@ class World(SaveMixin):
                 if len(world.rewards) > 0
                 else 0
             )
-            self.average_deviation_ideal_state.append(
+            self.average_negative_deviation_ideal_state.append(
                 sum(
                     [
-                        abs(
-                            (sum([1 for _ in cluster.get_available_scooters()]))
-                            - cluster.ideal_state
+                        max(
+                            0,
+                            cluster.ideal_state - len(cluster.get_available_scooters()),
                         )
                         for cluster in world.state.clusters
                     ]
@@ -77,11 +77,11 @@ class World(SaveMixin):
             """
             return self.lost_demand
 
-        def get_deviation_ideal_state(self):
+        def get_average_negative_deviation_ideal_state(self):
             """
             Returns list of average deviation from ideal state during the time analysed
             """
-            return self.average_deviation_ideal_state
+            return self.average_negative_deviation_ideal_state
 
         def get_deficient_battery(self):
             """
@@ -101,7 +101,7 @@ class World(SaveMixin):
             """
             return (
                 self.lost_demand,
-                self.average_deviation_ideal_state,
+                self.average_negative_deviation_ideal_state,
                 self.deficient_battery,
             )
 

@@ -104,7 +104,7 @@ def example_setup():
         clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
         visualize=True,
     )
-    run_analysis(POLICIES, WORLD)
+    run_analysis(POLICIES, WORLD, smooth_curve=False)
 
 
 if __name__ == "__main__":
