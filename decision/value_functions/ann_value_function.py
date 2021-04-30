@@ -36,11 +36,13 @@ class ANNValueFunction(ValueFunction):
         state: classes.State,
         vehicle: classes.Vehicle,
         time: int,
-        state_features=None,
     ):
-        if not state_features:
-            state_features = self.get_state_features(state, vehicle, time)
 
+        return self.estimate_value_from_state_features(
+            self.get_state_features(state, vehicle, time)
+        )
+
+    def estimate_value_from_state_features(self, state_features: [float]):
         return float(self.model(np.array([state_features]))[0][0])
 
     def update_weights(

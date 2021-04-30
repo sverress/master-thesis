@@ -27,14 +27,13 @@ class LinearValueFunction(ValueFunction):
         state,
         vehicle,
         time,
-        state_features=None,
     ):
-        if not state_features:
-            state_features = self.get_state_features(state, vehicle, time)
+        return self.estimate_value_from_state_features(
+            self.get_state_features(state, vehicle, time)
+        )
 
-        current_state_value = float(np.dot(self.weights, state_features))
-
-        return current_state_value
+    def estimate_value_from_state_features(self, state_features: [float]):
+        return float(np.dot(self.weights, state_features))
 
     def update_weights(
         self,

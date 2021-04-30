@@ -73,8 +73,12 @@ class ValueFunction(abc.ABC):
         state: classes.State,
         vehicle: classes.Vehicle,
         time: int,
-        state_features=None,
     ):
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
+    def estimate_value_from_state_features(self, state_features: [float]):
         pass
 
     @abc.abstractmethod
