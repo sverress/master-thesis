@@ -203,6 +203,8 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     self.value_function.estimate_value_from_state_features(
                         state_features
                     ),
+                    next_state_value,
+                    reward,
                 )
 
                 action_info.append((action, reward, next_state_value))
