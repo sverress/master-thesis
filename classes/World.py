@@ -1,3 +1,4 @@
+import copy
 import datetime
 from typing import List
 
@@ -106,7 +107,12 @@ class World(SaveMixin):
             )
 
     def __init__(
-        self, shift_duration: int, policy, initial_state, verbose=False, visualize=True,
+        self,
+        shift_duration: int,
+        policy,
+        initial_state,
+        verbose=False,
+        visualize=True,
     ):
         self.created_at = datetime.datetime.now().isoformat(timespec="minutes")
         self.shift_duration = shift_duration
@@ -257,3 +263,19 @@ class World(SaveMixin):
             f"trained_models/{self.policy.value_function.__repr__()}/"
             f"c{len(self.state.clusters)}_s{len(self.state.get_scooters())}/{self.created_at}"
         )
+
+    def __deepcopy__(self, *args):
+        new_world = World(
+            self.shift_duration,
+            self.policy,
+            copy.deepcopy(self.state),
+            self.verbose,
+            self.visualize,
+        )
+        new_world.time = self.time
+        new_world.rewards = self.rewards.copy()
+        new_world.stack = copy.deepcopy(self.stack)
+        new_world.tabu_list = self.tabu_list.copy()
+        new_world.cluster_flow = self.cluster_flow.copy()
+        new_world.metrics = copy.deepcopy(self.metrics)
+        return new_world

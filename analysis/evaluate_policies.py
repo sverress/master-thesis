@@ -89,19 +89,19 @@ def print_lost_reward(rewards):
 
 def example_setup():
     SHIFT_DURATION = 80
-    SAMPLE_SIZE = 100
-    NUMBER_OF_CLUSTERS = 10
+    SAMPLE_SIZE = 1000
+    NUMBER_OF_CLUSTERS = 20
 
     POLICIES = [
-        decision.EpsilonGreedyValueFunctionPolicy(
-            decision.value_functions.LinearValueFunction()
-        ),
-        decision.SwapAllPolicy(),
+        decision.DoNothing(),
     ]
     WORLD = classes.World(
         SHIFT_DURATION,
         None,
-        clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
+        clustering.scripts.get_initial_state(
+            SAMPLE_SIZE,
+            NUMBER_OF_CLUSTERS,
+        ),
         visualize=True,
     )
     run_analysis(POLICIES, WORLD, smooth_curve=False)
@@ -109,5 +109,5 @@ def example_setup():
 
 if __name__ == "__main__":
     run_analysis_from_path(
-        "world_cache/trained_models/LinearValueFunction/c10_s100/2021-04-30T10:19"
+        "world_cache/trained_models/ANNValueFunction/c20_s2500/2021-05-01T13:01"
     )

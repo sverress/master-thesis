@@ -176,6 +176,9 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             state_features = self.value_function.get_state_features(
                 world.state, vehicle, world.time
             )
+            state_value = self.value_function.estimate_value_from_state_features(
+                state_features
+            )
             for action in actions:
                 # Copy state to avoid pointer issue
                 state_copy = copy.deepcopy(world.state)
@@ -199,17 +202,17 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                         next_state_features
                     )
                 )
-                # Update the weights of the value function based on the td error
-                self.value_function.update_weights(
-                    state_features,
-                    self.value_function.estimate_value_from_state_features(
-                        state_features
-                    ),
-                    next_state_value,
-                    reward,
-                )
 
                 action_info.append((action, reward, next_state_value))
+
+            # Update the weights of the value function based on the td error
+            self.value_function.batch_update_weights(
+                state_features,
+                [
+                    (state_value, next_state_value, reward)
+                    for action, reward, next_state_value in action_info
+                ],
+            )
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
             best_action, *rest = max(action_info, key=lambda pair: pair[1] + pair[2])

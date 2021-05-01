@@ -1,13 +1,13 @@
 import numpy as np
 import helpers
-from globals import DEFAULT_NUMBER_OF_NEIGHBOURS
+from globals import DEFAULT_NUMBER_OF_NEIGHBOURS, DEFAULT_NUMBER_OF_RANDOM_NEIGHBOURS
 
 
 def filtering_neighbours(
     state,
     vehicle,
     number_of_neighbours=DEFAULT_NUMBER_OF_NEIGHBOURS,
-    number_of_random_neighbours=0,
+    number_of_random_neighbours=DEFAULT_NUMBER_OF_RANDOM_NEIGHBOURS,
     time=None,
     exclude=None,
     max_swaps=0,

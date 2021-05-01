@@ -102,6 +102,7 @@ class State(SaveMixin):
         random_neighbours=0,
         exclude=None,
         time=None,
+        neighbor_filtering=False,
     ):
         """
         Enumerate all possible actions from the current state
@@ -112,17 +113,22 @@ class State(SaveMixin):
         :param vehicle: vehicle to perform this action
         :param number_of_neighbours: number of neighbours to evaluate
         :param divide: number to divide by to create range increment
+        :param neighbor_filtering: if it should use neighbor filtering
         :return: List of Action objects
         """
         actions = []
         # Return empty action if
         if vehicle.is_at_depot():
-            neighbours = decision.neighbour_filtering.filtering_neighbours(
-                self,
-                vehicle,
-                number_of_neighbours=number_of_neighbours,
-                number_of_random_neighbours=random_neighbours,
-                exclude=exclude,
+            neighbours = (
+                decision.neighbour_filtering.filtering_neighbours(
+                    self,
+                    vehicle,
+                    number_of_neighbours=number_of_neighbours,
+                    number_of_random_neighbours=random_neighbours,
+                    exclude=exclude,
+                )
+                if neighbor_filtering
+                else self.get_neighbours(vehicle.current_location, is_sorted=False)
             )
 
         else:
@@ -163,14 +169,18 @@ class State(SaveMixin):
                 ),
                 0,
             )
-            neighbours = decision.neighbour_filtering.filtering_neighbours(
-                self,
-                vehicle,
-                number_of_neighbours=number_of_neighbours,
-                number_of_random_neighbours=random_neighbours,
-                time=time,
-                exclude=exclude,
-                max_swaps=max(pick_ups, swaps),
+            neighbours = (
+                decision.neighbour_filtering.filtering_neighbours(
+                    self,
+                    vehicle,
+                    number_of_neighbours=number_of_neighbours,
+                    number_of_random_neighbours=random_neighbours,
+                    time=time,
+                    exclude=exclude,
+                    max_swaps=max(pick_ups, swaps),
+                )
+                if neighbor_filtering
+                else self.get_neighbours(vehicle.current_location)
             )
             combinations = []
             # Different combinations of battery swaps, pick-ups, drop-offs and clusters

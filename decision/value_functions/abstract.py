@@ -83,6 +83,15 @@ class ValueFunction(abc.ABC):
 
     @abc.abstractmethod
     @Decorators.check_setup
+    def batch_update_weights(
+        self,
+        state_features,
+        batch: [(float, float, float)],
+    ):
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
     def update_weights(
         self,
         current_state_features: [float],

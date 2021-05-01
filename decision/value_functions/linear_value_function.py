@@ -10,6 +10,8 @@ class LinearValueFunction(ValueFunction):
         self.weights = None
 
     def setup(self, state):
+        if self.setup_complete:
+            return
         (
             number_of_locations_indicators,
             number_of_state_features,
@@ -34,6 +36,18 @@ class LinearValueFunction(ValueFunction):
 
     def estimate_value_from_state_features(self, state_features: [float]):
         return float(np.dot(self.weights, state_features))
+
+    def batch_update_weights(
+        self, state_features, batch: [([float], float, float, float)]
+    ):
+        for (
+            current_state_value,
+            next_state_value,
+            reward,
+        ) in batch:
+            self.update_weights(
+                state_features, current_state_value, next_state_value, reward
+            )
 
     def update_weights(
         self,

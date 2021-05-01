@@ -141,7 +141,10 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
             )
         return probability_matrix
 
-    progress = Bar("| Computing MPM", max=len(os.listdir(TEST_DATA_DIRECTORY)),)
+    progress = Bar(
+        "| Computing MPM",
+        max=len(os.listdir(TEST_DATA_DIRECTORY)),
+    )
     # Fetch all snapshots from test data
     probability_matrices = []
     previous_snapshot = None
@@ -220,7 +223,8 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
 
 def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     progress = Bar(
-        "| Computing trip intensity", max=len(os.listdir(TEST_DATA_DIRECTORY)),
+        "| Computing trip intensity",
+        max=len(os.listdir(TEST_DATA_DIRECTORY)),
     )
     # Fetch all snapshots from test data
     trip_counter = np.zeros((len(state.clusters), len(os.listdir(TEST_DATA_DIRECTORY))))
