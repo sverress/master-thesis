@@ -40,7 +40,7 @@ if __name__ == "__main__":
     NUMBER_OF_CLUSTERS = 30
 
     POLICY = decision.EpsilonGreedyValueFunctionPolicy(
-        decision.value_functions.ANNValueFunction([1000, 10000, 1000])
+        decision.value_functions.ANNValueFunction([100, 100, 100, 100])
     )
 
     world_to_analyse = classes.World(
