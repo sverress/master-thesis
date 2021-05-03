@@ -291,7 +291,7 @@ class ValueFunctionTests(unittest.TestCase):
 class EpsilonGreedyPolicyTest(unittest.TestCase):
     def run_analysis_test(self, starts_at_depot):
         world = World(
-            20,
+            80,
             None,
             clustering.scripts.get_initial_state(
                 100, 10, initial_location_depot=starts_at_depot

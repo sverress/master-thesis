@@ -35,7 +35,12 @@ def visualize_clustering(clusters):
         )
         center_lat, center_lon = cluster.get_location()
         rs_scatter = ax.scatter(
-            center_lon, center_lat, c=cluster_color, edgecolor="None", alpha=0.8, s=200,
+            center_lon,
+            center_lat,
+            c=cluster_color,
+            edgecolor="None",
+            alpha=0.8,
+            s=200,
         )
         ax.annotate(
             cluster.id,
@@ -228,7 +233,8 @@ def visualize_scooters_on_trip(current_state: State, trips: [(int, int, Scooter)
 
 
 def visualize_scooter_simulation(
-    current_state: State, trips,
+    current_state: State,
+    trips,
 ):
     """
     Visualize scooter trips of one system simulation
@@ -348,7 +354,11 @@ def visualize_analysis(instances, smooth_curve=True):
     subplots = []
     for i, (x_label, y_label, plot_title) in enumerate(subplots_labels):
         ax = create_plot_with_axis_labels(
-            fig, spec[i], x_label=x_label, y_label=y_label, plot_title=plot_title,
+            fig,
+            spec[i],
+            x_label=x_label,
+            y_label=y_label,
+            plot_title=plot_title,
         )
         subplots.append(ax)
 
@@ -362,7 +372,7 @@ def visualize_analysis(instances, smooth_curve=True):
             deviation_ideal_state,
             deficient_battery,
         ) = instance.metrics.get_all_metrics()
-        x = instance.metrics.get_time_array()
+        x = instance.metrics.timeline
 
         label = instance.policy  # get_policy_label(instance.policy)
         ax1.plot(x, lost_demand, c=COLORS[i], label=label)
@@ -397,7 +407,11 @@ def visualize_td_error(td_errors_and_label: [([float], str)], smooth_curve=False
     )
 
     ax = create_plot_with_axis_labels(
-        fig, spec[0], x_label="Update", y_label="TD-error", plot_title="",
+        fig,
+        spec[0],
+        x_label="Update",
+        y_label="TD-error",
+        plot_title="",
     )
 
     for i, (td_errors, label) in enumerate(td_errors_and_label):
@@ -413,7 +427,8 @@ def visualize_td_error(td_errors_and_label: [([float], str)], smooth_curve=False
             )
 
     fig.suptitle(
-        f"TD-error development", fontsize=16,
+        f"TD-error development",
+        fontsize=16,
     )
 
     ax.legend()

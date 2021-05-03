@@ -319,6 +319,7 @@ class RandomActionPolicy(Policy):
             time=world.time,
             divide=self.get_possible_actions_divide,
             number_of_neighbours=self.number_of_neighbors,
+            neighbor_filtering=False,
         )
 
         # pick a random action

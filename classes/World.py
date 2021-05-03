@@ -15,6 +15,7 @@ from globals import (
     WORLD_CACHE_DIR,
 )
 from progress.bar import IncrementalBar
+import decision
 
 
 class World(SaveMixin):
@@ -23,7 +24,57 @@ class World(SaveMixin):
             self.lost_demand = []
             self.average_negative_deviation_ideal_state = []
             self.deficient_battery = []
-            self.time = []
+            self.timeline = []
+
+        @classmethod
+        def aggregate_metrics(cls, metrics):
+            def lists_average(lists):
+                return np.mean(np.stack(lists, axis=0), axis=1).tolist()
+
+            new_world_metric = cls()
+            if all([len(metric.timeline) == 0 for metric in metrics]):
+                return new_world_metric
+            number_of_metrics = len(metrics)
+
+            # Fields to take the average of
+            average_fields = [
+                "lost_demand",
+                "average_negative_deviation_ideal_state",
+                "deficient_battery",
+            ]
+            # Create dict with list for every field, start all values on zero
+            fields = {field: [[0] * number_of_metrics] for field in average_fields}
+            # Find the time for the latest event
+            max_time = np.max(np.concatenate([metric.timeline for metric in metrics]))
+            new_world_metric.timeline = list(range(max_time + 1))
+            # populate fields with average at every time step
+            for time in new_world_metric.timeline[1:]:
+                # If there is a new value in the timeline, update the timeline
+                if any([time in metric.timeline for metric in metrics]):
+                    for field in fields.keys():
+                        # Add new value if there is a new one, otherwise add previous value
+                        fields[field].append(
+                            [
+                                getattr(metric, field)[
+                                    metric.timeline.index(time)
+                                ]  # Takes the first recording in current time
+                                if time in metric.timeline
+                                else fields[field][time - 1][i]
+                                for i, metric in enumerate(metrics)
+                            ]
+                        )
+                # Otherwise, add previous values
+                else:
+                    for field in fields.keys():
+                        fields[field].append(fields[field][-1])
+            # Take the average of all the runs
+            new_world_metric.__dict__.update(
+                {
+                    field: lists_average(metric_list)
+                    for field, metric_list in fields.items()
+                }
+            )
+            return new_world_metric
 
         def add_analysis_metrics(self, world):
             """
@@ -70,31 +121,7 @@ class World(SaveMixin):
                     ]
                 )
             )
-            self.time.append(world.time)
-
-        def get_lost_demand(self):
-            """
-            Returns list of all lost demand
-            """
-            return self.lost_demand
-
-        def get_average_negative_deviation_ideal_state(self):
-            """
-            Returns list of average deviation from ideal state during the time analysed
-            """
-            return self.average_negative_deviation_ideal_state
-
-        def get_deficient_battery(self):
-            """
-            Returns list of total deficient battery in the system during the analysed time
-            """
-            return self.deficient_battery
-
-        def get_time_array(self):
-            """
-            Returns a list of all timestamps when when data used for analysis is recorded
-            """
-            return self.time
+            self.timeline.append(world.time)
 
         def get_all_metrics(self):
             """
@@ -235,6 +262,13 @@ class World(SaveMixin):
         return DISCOUNT_RATE ** (self.time / 60)
 
     def set_policy(self, policy):
+        # The the value function is the DoNothing Policy. Empty the vehicle arrival events in the stack
+        if isinstance(policy, decision.DoNothing):
+            self.stack = [
+                event
+                for event in self.stack
+                if not isinstance(event, classes.VehicleArrival)
+            ]
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):
             policy.value_function.setup(self.state)

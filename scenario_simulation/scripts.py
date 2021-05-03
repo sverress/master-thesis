@@ -3,7 +3,10 @@ from globals import ITERATION_LENGTH_MINUTES, LOST_TRIP_REWARD, NUMBER_OF_ROLLOU
 
 
 def estimate_reward(
-    world, vehicle, policy, number_of_simulations=NUMBER_OF_ROLLOUTS,
+    world,
+    vehicle,
+    policy,
+    number_of_simulations=NUMBER_OF_ROLLOUTS,
 ):
     """
     Does n times scenario simulations and returns the highest conducted reward from simulation
