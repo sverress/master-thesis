@@ -13,6 +13,7 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
     world_objects = [
         classes.World.load(os.path.join(path, world_obj_path))
         for world_obj_path in os.listdir(path)
+        if world_obj_path != ".DS_Store"
     ]
     initial_state_world, *rest = world_objects
 
@@ -107,6 +108,12 @@ def example_setup():
 
 
 if __name__ == "__main__":
-    run_analysis_from_path(
-        "/Users/sverrespetalen/Downloads/world_cache/trained_models/ANNValueFunction/c30_s2500/2021-05-02T16-51"
-    )
+    import sys
+
+    if len(sys.argv) > 1:
+        print(f"fetching world objects from {sys.argv[1]}")
+        run_analysis_from_path(sys.argv[1])
+    else:
+        run_analysis_from_path(
+            "world_cache/trained_models/LinearValueFunction/c20_s2500/2021-05-01T15:22"
+        )
