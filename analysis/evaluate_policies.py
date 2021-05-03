@@ -13,6 +13,7 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
     world_objects = [
         classes.World.load(os.path.join(path, world_obj_path))
         for world_obj_path in os.listdir(path)
+        if world_obj_path != ".DS_Store"
     ]
     initial_state_world, *rest = world_objects
 
@@ -110,6 +111,7 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) > 1:
+        print(f"fetching world objects from {sys.argv[1]}")
         run_analysis_from_path(sys.argv[1])
     else:
         run_analysis_from_path(
