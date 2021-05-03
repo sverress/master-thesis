@@ -42,14 +42,13 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
 def run_analysis(policies, world: classes.World, smooth_curve=True):
     instances = []
     # Always add a policy that does nothing and a random action
-    policies += [decision.DoNothing(), decision.RandomActionPolicy()]
+    policies += [decision.DoNothing(), decision.SwapAllPolicy()]
     td_errors_and_label = []
     for current_policy in policies:
         print(f"\n---------- {current_policy} ----------")
 
         policy_world = copy.deepcopy(world)
         # Set the number of neighbors to half the number of clusters in the state
-        current_policy.number_of_neighbors = int(len(policy_world.state.clusters) / 2)
         policy_world.policy = policy_world.set_policy(current_policy)
         # run the world and add the world object to a list containing all world instances
         policy_world.run()
@@ -109,5 +108,5 @@ def example_setup():
 
 if __name__ == "__main__":
     run_analysis_from_path(
-        "world_cache/trained_models/ANNValueFunction/c20_s2500/2021-05-01T13:01"
+        "/Users/sverrespetalen/Downloads/world_cache/trained_models/ANNValueFunction/c30_s2500/2021-05-02T16-51"
     )

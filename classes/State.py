@@ -9,7 +9,7 @@ from visualization.visualizer import *
 import decision.neighbour_filtering
 import numpy as np
 import math
-from globals import STATE_CACHE_DIR
+from globals import STATE_CACHE_DIR, NEIGHBOR_FILTERING
 import copy
 
 
@@ -102,7 +102,7 @@ class State(SaveMixin):
         random_neighbours=0,
         exclude=None,
         time=None,
-        neighbor_filtering=False,
+        neighbor_filtering=NEIGHBOR_FILTERING,
     ):
         """
         Enumerate all possible actions from the current state
