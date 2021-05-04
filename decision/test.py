@@ -291,7 +291,7 @@ class ValueFunctionTests(unittest.TestCase):
 class EpsilonGreedyPolicyTest(unittest.TestCase):
     def run_analysis_test(self, starts_at_depot):
         world = World(
-            20,
+            80,
             None,
             clustering.scripts.get_initial_state(
                 100, 10, initial_location_depot=starts_at_depot
@@ -334,23 +334,28 @@ class NeighbourFilteringTests(unittest.TestCase):
         # test if the number of neighbours is the same, even though one is random
         self.assertEqual(len(best_neighbours_with_random), 3)
 
-        sorted_neighbours = state.get_neighbours(
-            vehicle.current_location, is_sorted=True
-        )[:3]
+        # Get the three closest neighbors
+        three_closest_neighbors = state.get_neighbours(
+            vehicle.current_location, is_sorted=True, number_of_neighbours=3
+        )
+
+        # Set max deviation in all these clusters
         for cluster in state.clusters:
-            if cluster in sorted_neighbours:
+            if cluster in three_closest_neighbors:
                 cluster.ideal_state = 100
                 for scooter in cluster.scooters:
                     scooter.battery = 0
 
-        # add one scooter to vehicle inventory so filtering neighbours uses the right filtering method
+        # add one scooter to vehicle inventory so filtering neighbours uses the ideal state deviation filtering method
         vehicle.pick_up(Scooter(0, 0, 0.9, 0))
 
-        best_neighbours = filtering_neighbours(state, vehicle, number_of_neighbours=3)
+        best_neighbours = filtering_neighbours(
+            state, vehicle, number_of_neighbours=3, number_of_random_neighbours=0
+        )
 
         # check if clusters are closest and with the highest deviation -> best neighbours
         for neighbour in best_neighbours:
-            self.assertTrue(neighbour in sorted_neighbours)
+            self.assertTrue(neighbour in three_closest_neighbors)
 
 
 if __name__ == "__main__":

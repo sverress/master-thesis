@@ -68,6 +68,8 @@ class WorldTestCase(unittest.TestCase):
         filepath = f"{globals.WORLD_CACHE_DIR}/{self.world.get_filename()}.pickle"
         self.world.save_world()
         file_world = classes.World.load(filepath)
+        file_world.shift_duration = 2
+        file_world.run()
         os.remove(filepath)
         return file_world
 

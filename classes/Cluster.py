@@ -52,10 +52,6 @@ class Cluster(Location):
         return sum(map(lambda scooter: scooter.battery / 100, self.scooters))
 
     @Decorators.check_move_probabilities
-    def prob_stay(self):
-        return self.move_probabilities[self.id]
-
-    @Decorators.check_move_probabilities
     def get_leave_distribution(self):
         # Copy list
         distribution = self.move_probabilities.copy()
@@ -66,10 +62,6 @@ class Cluster(Location):
         distribution[self.id] = 0.0
         # Normalize leave distribution
         return distribution / np.sum(distribution)
-
-    @Decorators.check_move_probabilities
-    def prob_leave(self, cluster):
-        return self.move_probabilities[cluster.id]
 
     def set_move_probabilities(self, move_probabilities: np.ndarray):
         self.move_probabilities = move_probabilities

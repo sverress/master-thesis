@@ -1,5 +1,5 @@
 import copy
-import globals
+from globals import *
 import classes
 import clustering.scripts
 import decision.value_functions
@@ -8,8 +8,8 @@ from progress.bar import IncrementalBar
 
 def train_value_function(
     world,
-    training_shifts_before_save=globals.TRAINING_SHIFTS_BEFORE_SAVE,
-    models_to_be_saved=globals.MODELS_TO_BE_SAVED,
+    training_shifts_before_save=TRAINING_SHIFTS_BEFORE_SAVE,
+    models_to_be_saved=MODELS_TO_BE_SAVED,
 ):
     progress_bar = IncrementalBar(
         "Training value function",
@@ -36,18 +36,21 @@ def train_value_function(
 
 
 if __name__ == "__main__":
-    SAMPLE_SIZE = 100
-    NUMBER_OF_CLUSTERS = 10
+    SAMPLE_SIZE = 2500
+    NUMBER_OF_CLUSTERS = 30
 
     POLICY = decision.EpsilonGreedyValueFunctionPolicy(
-        decision.value_functions.LinearValueFunction()
+        decision.value_functions.ANNValueFunction([100, 100, 100, 100])
     )
 
     world_to_analyse = classes.World(
-        6,
+        SHIFT_DURATION,
         None,
         clustering.scripts.get_initial_state(
-            SAMPLE_SIZE, NUMBER_OF_CLUSTERS, number_of_vans=2, number_of_bikes=0
+            SAMPLE_SIZE,
+            NUMBER_OF_CLUSTERS,
+            number_of_vans=NUMBER_OF_VANS,
+            number_of_bikes=NUMBER_OF_BIKES,
         ),
         verbose=False,
         visualize=False,

@@ -1,3 +1,5 @@
+import tempfile
+
 from .abstract import *
 from tensorflow import keras
 import numpy as np
@@ -10,6 +12,8 @@ class ANNValueFunction(ValueFunction):
         self.model = keras.Sequential()
 
     def setup(self, state: classes.State):
+        if self.setup_complete:
+            return
         (
             number_of_locations_indicators,
             number_of_state_features,
@@ -45,6 +49,20 @@ class ANNValueFunction(ValueFunction):
     def estimate_value_from_state_features(self, state_features: [float]):
         return float(self.model(np.array([state_features]))[0][0])
 
+    def batch_update_weights(self, state_features, batch: [(float, float, float)]):
+        targets = [
+            self.compute_and_record_td_error(
+                current_state_value, next_state_value, reward
+            )
+            + current_state_value
+            for current_state_value, next_state_value, reward in batch
+        ]
+        self.model.fit(
+            np.array([state_features] * len(batch)),
+            np.array(targets),
+            verbose=False,
+        )
+
     def update_weights(
         self,
         current_state_features: [float],
@@ -58,7 +76,7 @@ class ANNValueFunction(ValueFunction):
         self.model.fit(
             np.array([current_state_features]),
             np.array([td_error + current_state_value]),
-            epochs=50,
+            epochs=10,
             verbose=False,
         )
 
@@ -68,15 +86,20 @@ class ANNValueFunction(ValueFunction):
         return self.convert_state_to_features(state, vehicle, time)
 
     def __getstate__(self):
-        """
-        Method used to pickle value function.
-        Not able to do it out of the box due to keras model.
-        :return:
-        """
         state = self.__dict__.copy()
-        state["model"] = self.model.to_json()
+        with tempfile.NamedTemporaryFile(suffix=".hdf5", delete=True) as fd:
+            keras.models.save_model(self.model, fd.name, overwrite=True)
+            model_str = fd.read()
+        state["model"] = model_str
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        self.model = keras.models.model_from_json(state["model"])
+        with tempfile.NamedTemporaryFile(suffix=".hdf5", delete=True) as fd:
+            fd.write(state["model"])
+            fd.flush()
+            model = keras.models.load_model(fd.name)
+        self.model = model
+
+    def __str__(self):
+        return f"ANNValueFunction - {self.shifts_trained}"

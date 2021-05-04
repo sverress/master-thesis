@@ -17,7 +17,7 @@ class AnalysisTests(unittest.TestCase):
         )
         self.random_rollout_policy = decision.RandomRolloutPolicy(number_of_rollouts=2)
         self.world = classes.World(
-            2,
+            80,
             None,
             clustering.scripts.get_initial_state(100, 10),
             visualize=False,
@@ -31,7 +31,9 @@ class AnalysisTests(unittest.TestCase):
     @staticmethod
     def test_run_analysis_from_path():
         analysis.evaluate_policies.run_analysis_from_path(
-            "world_cache/trained_models/LinearValueFunction/c10_s100/TEST_EVALUATE_FROM_PATH_DO_NOT_DELETE"
+            "world_cache/trained_models/LinearValueFunction/c30_s2500/TEST_SET",
+            runs_per_policy=1,
+            shift_duration=80,
         )
 
     def test_train_value_function(self):

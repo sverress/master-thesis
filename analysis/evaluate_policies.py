@@ -9,10 +9,17 @@ import globals
 from visualization.visualizer import visualize_analysis, visualize_td_error
 
 
-def run_analysis_from_path(path: str, other_policies=None, visualize_route=False):
+def run_analysis_from_path(
+    path: str,
+    other_policies=None,
+    visualize_route=False,
+    runs_per_policy=4,
+    shift_duration=480,
+):
     world_objects = [
         classes.World.load(os.path.join(path, world_obj_path))
         for world_obj_path in os.listdir(path)
+        if world_obj_path != ".DS_Store"
     ]
     initial_state_world, *rest = world_objects
 
@@ -26,7 +33,7 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
                 event.visualize = True
 
     # Always rollout for 8 hours
-    initial_state_world.shift_duration = 480
+    initial_state_world.shift_duration = shift_duration
     policies = sorted(
         [world.policy for world in world_objects],
         key=lambda policy: policy.value_function.shifts_trained
@@ -35,25 +42,42 @@ def run_analysis_from_path(path: str, other_policies=None, visualize_route=False
     )
 
     return run_analysis(
-        policies + other_policies if other_policies else policies, initial_state_world
+        policies + other_policies if other_policies else policies,
+        initial_state_world,
+        runs_per_policy=runs_per_policy,
     )
 
 
-def run_analysis(policies, world: classes.World, smooth_curve=True):
+def run_analysis(
+    policies,
+    world: classes.World,
+    smooth_curve=True,
+    runs_per_policy=4,
+    verbose=True,
+):
     instances = []
     # Always add a policy that does nothing and a random action
-    policies += [decision.DoNothing(), decision.RandomActionPolicy()]
+    policies += [
+        decision.DoNothing(),
+        decision.RandomActionPolicy(),
+        decision.SwapAllPolicy(),
+    ]
     td_errors_and_label = []
     for current_policy in policies:
-        print(f"\n---------- {current_policy} ----------")
-
+        if verbose:
+            print(f"\n---------- {current_policy} ----------")
         policy_world = copy.deepcopy(world)
         # Set the number of neighbors to half the number of clusters in the state
-        current_policy.number_of_neighbors = int(len(policy_world.state.clusters) / 2)
         policy_world.policy = policy_world.set_policy(current_policy)
-        # run the world and add the world object to a list containing all world instances
-        policy_world.run()
-        print_lost_reward(policy_world.rewards)
+        metrics = []
+        for _ in range(runs_per_policy):
+            run_policy_world = copy.deepcopy(policy_world)
+            # run the world and add the world object to a list containing all world instances
+            run_policy_world.run()
+            metrics.append(run_policy_world.metrics)
+            if verbose:
+                print_lost_reward(run_policy_world.rewards)
+        policy_world.metrics = classes.World.WorldMetric.aggregate_metrics(metrics)
         instances.append(policy_world)
 
         if hasattr(policy_world.policy, "roll_out_policy") and hasattr(
@@ -73,10 +97,8 @@ def run_analysis(policies, world: classes.World, smooth_curve=True):
                 )
             )
 
-    # visualize policy analysis
-    if world.visualize:
-        visualize_analysis(instances, smooth_curve)
-        visualize_td_error(td_errors_and_label, smooth_curve)
+    visualize_analysis(instances, smooth_curve)
+    visualize_td_error(td_errors_and_label, smooth_curve)
     return instances
 
 
@@ -88,26 +110,29 @@ def print_lost_reward(rewards):
 
 
 def example_setup():
-    SHIFT_DURATION = 80
-    SAMPLE_SIZE = 100
-    NUMBER_OF_CLUSTERS = 10
-
-    POLICIES = [
-        decision.EpsilonGreedyValueFunctionPolicy(
-            decision.value_functions.LinearValueFunction()
+    run_analysis(
+        [],
+        classes.World(
+            480,
+            None,
+            clustering.scripts.get_initial_state(
+                2500,
+                30,
+            ),
+            visualize=False,
+            verbose=False,
         ),
-        decision.SwapAllPolicy(),
-    ]
-    WORLD = classes.World(
-        SHIFT_DURATION,
-        None,
-        clustering.scripts.get_initial_state(SAMPLE_SIZE, NUMBER_OF_CLUSTERS),
-        visualize=True,
+        smooth_curve=False,
     )
-    run_analysis(POLICIES, WORLD, smooth_curve=False)
 
 
 if __name__ == "__main__":
-    run_analysis_from_path(
-        "world_cache/trained_models/LinearValueFunction/c10_s100/2021-04-30T10:19"
-    )
+    import sys
+
+    if len(sys.argv) > 1:
+        print(f"fetching world objects from {sys.argv[1]}")
+        run_analysis_from_path(sys.argv[1])
+    else:
+        run_analysis_from_path(
+            "world_cache/trained_models/LinearValueFunction/c30_s2500/TEST_SET"
+        )
