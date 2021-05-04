@@ -1,13 +1,7 @@
 from classes import Vehicle, State
 import clustering.methods as methods
 import os
-from globals import (
-    STATE_CACHE_DIR,
-    VAN_BATTERY_INVENTORY,
-    VAN_SCOOTER_INVENTORY,
-    BIKE_SCOOTER_INVENTORY,
-    BIKE_BATTERY_INVENTORY,
-)
+from globals import *
 
 
 def get_initial_state(
@@ -16,8 +10,8 @@ def get_initial_state(
     save=True,
     cache=True,
     initial_location_depot=True,
-    number_of_vans=1,
-    number_of_bikes=1,
+    number_of_vans=NUMBER_OF_VANS,
+    number_of_bikes=NUMBER_OF_BIKES,
     ideal_state_computation=False,
 ) -> State:
     # If this combination has been requested before we fetch a cached version
