@@ -10,7 +10,11 @@ from visualization.visualizer import visualize_analysis, visualize_td_error
 
 
 def run_analysis_from_path(
-    path: str, other_policies=None, visualize_route=False, runs_per_policy=4
+    path: str,
+    other_policies=None,
+    visualize_route=False,
+    runs_per_policy=4,
+    shift_duration=480,
 ):
     world_objects = [
         classes.World.load(os.path.join(path, world_obj_path))
@@ -29,7 +33,7 @@ def run_analysis_from_path(
                 event.visualize = True
 
     # Always rollout for 8 hours
-    initial_state_world.shift_duration = 80
+    initial_state_world.shift_duration = shift_duration
     policies = sorted(
         [world.policy for world in world_objects],
         key=lambda policy: policy.value_function.shifts_trained

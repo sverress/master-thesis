@@ -33,6 +33,7 @@ class AnalysisTests(unittest.TestCase):
         analysis.evaluate_policies.run_analysis_from_path(
             "world_cache/trained_models/LinearValueFunction/c30_s2500/TEST_SET",
             runs_per_policy=1,
+            shift_duration=80,
         )
 
     def test_train_value_function(self):
