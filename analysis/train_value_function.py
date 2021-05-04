@@ -10,6 +10,7 @@ def train_value_function(
     world,
     training_shifts_before_save=TRAINING_SHIFTS_BEFORE_SAVE,
     models_to_be_saved=MODELS_TO_BE_SAVED,
+    save_suffix="",
 ):
     progress_bar = IncrementalBar(
         "Training value function",
@@ -26,7 +27,7 @@ def train_value_function(
         policy_world.policy.value_function.update_shifts_trained(shift)
 
         if shift % training_shifts_before_save == 0:
-            policy_world.save_world([world.get_train_directory(), shift])
+            policy_world.save_world([world.get_train_directory(save_suffix), shift])
 
         if shift != number_of_shifts:
             # avoid running the world after the last model is saved

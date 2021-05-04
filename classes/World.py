@@ -292,10 +292,11 @@ class World(SaveMixin):
         else:
             super().save(WORLD_CACHE_DIR)
 
-    def get_train_directory(self):
+    def get_train_directory(self, suffix=None):
+        suffix = suffix if suffix else f"{self.created_at}"
         return (
             f"trained_models/{self.policy.value_function.__repr__()}/"
-            f"c{len(self.state.clusters)}_s{len(self.state.get_scooters())}/{self.created_at}"
+            f"c{len(self.state.clusters)}_s{len(self.state.get_scooters())}/{suffix}"
         )
 
     def __deepcopy__(self, *args):
