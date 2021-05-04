@@ -7,21 +7,20 @@ import clustering.scripts
 import errno
 import pandas as pd
 import os
-import numpy as np
 from openpyxl import load_workbook
 
 
 def metrics_to_xlsx(instances: [classes.World]):
 
     parameter_name = instances[0].metrics.testing_parameter_name
-    parameter_values_names = []
+    parameter_values = []
     metrics_data = []
     for instance in instances:
-        parameter_values_names.append(str(instance.metrics.testing_parameter_value))
-        metrics_data.append(instance.metrics.timeline)
+        parameter_values.append(str(instance.metrics.testing_parameter_value))
+        metrics_data.append(pd.DataFrame({"Timeline": instance.metrics.timeline}))
         instance_metrics = instance.metrics.get_all_metrics()
-        for metric in instance_metrics:
-            metrics_data.append(metric)
+        for i, metric in enumerate(instance_metrics):
+            metrics_data.append(pd.DataFrame({i: metric}))
 
     try:
         os.makedirs("computational_study")
@@ -40,6 +39,7 @@ def metrics_to_xlsx(instances: [classes.World]):
 
     sheets = [ws.title.split("-")[0] for ws in book.worksheets]
 
+    # Sheet name can parameter_name + world.created_at
     sheet_name = (
         f"{parameter_name.title()}-1"
         if parameter_name.title() not in sheets
@@ -49,20 +49,21 @@ def metrics_to_xlsx(instances: [classes.World]):
     columns = pd.MultiIndex.from_product(
         [
             [parameter_name],
-            parameter_values_names,
+            parameter_values,
             ["Timeline", "Lost demand", "Avg. neg dev", "Def. Battery"],
         ]
     )
 
     df = pd.DataFrame(
-        np.array(metrics_data).T, columns=columns
-    )  # convert dict to dataframe
+        pd.concat(metrics_data, axis=1, ignore_index=True).to_numpy(), columns=columns
+    )  # concatenate all metrics dataframes to one dataframe
 
     df.to_excel(
         writer, sheet_name=sheet_name, startcol=1, startrow=1
     )  # write dataframe to file
 
     writer.save()
+    writer.close()
 
 
 def example_write_to_excel():
