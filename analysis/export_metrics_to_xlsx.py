@@ -8,6 +8,7 @@ import errno
 import pandas as pd
 import os
 from openpyxl import load_workbook
+from personal import *
 
 
 def metrics_to_xlsx(instances: [classes.World]):
@@ -23,27 +24,28 @@ def metrics_to_xlsx(instances: [classes.World]):
             metrics_data.append(pd.DataFrame({i: metric}))
 
     try:
-        os.makedirs("computational_study")
+        os.makedirs(PATH_COMPUTATIONAL_STUDY)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
-    if not os.path.isfile("computational_study/policy_evaluation.xlsx"):
-        pd.DataFrame().to_excel("computational_study/policy_evaluation.xlsx")
-    book = load_workbook("computational_study/policy_evaluation.xlsx")
-    writer = pd.ExcelWriter(
-        "computational_study/policy_evaluation.xlsx", engine="openpyxl"
-    )
+    file_name = f"{PATH_COMPUTATIONAL_STUDY}/{parameter_name.title()}.xlsx"
+
+    if not os.path.isfile(file_name):
+        pd.DataFrame().to_excel(file_name)
+    book = load_workbook(file_name)
+    writer = pd.ExcelWriter(file_name, engine="openpyxl")
     writer.book = book
     writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
 
-    sheets = [ws.title.split("-")[0] for ws in book.worksheets]
+    sheets = [ws.title.split("_")[0] for ws in book.worksheets]
 
+    instance_created_at = instances[0].created_at.replace(":", ".")
     # Sheet name can parameter_name + world.created_at
     sheet_name = (
-        f"{parameter_name.title()}-1"
-        if parameter_name.title() not in sheets
-        else f"{parameter_name.title()}-{sheets.count(str(parameter_name).title())+1}"
+        f"{instance_created_at}_1"
+        if instance_created_at not in sheets
+        else f"{instance_created_at}_{sheets.count(instance_created_at)+1}"
     )
 
     columns = pd.MultiIndex.from_product(
@@ -63,7 +65,6 @@ def metrics_to_xlsx(instances: [classes.World]):
     )  # write dataframe to file
 
     writer.save()
-    writer.close()
 
 
 def example_write_to_excel():
