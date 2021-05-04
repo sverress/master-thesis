@@ -6,3 +6,4 @@ pandas
 matplotlib
 networkx
 tensorflow
+openpyxl

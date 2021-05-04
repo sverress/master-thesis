@@ -20,11 +20,13 @@ import decision
 
 class World(SaveMixin):
     class WorldMetric:
-        def __init__(self):
+        def __init__(self, test_parameter_name="", test_parameter_value=0.0):
             self.lost_demand = []
             self.average_negative_deviation_ideal_state = []
             self.deficient_battery = []
             self.timeline = []
+            self.testing_parameter_name = test_parameter_name
+            self.testing_parameter_value = test_parameter_value
 
         @classmethod
         def aggregate_metrics(cls, metrics):
@@ -138,6 +140,8 @@ class World(SaveMixin):
         shift_duration: int,
         policy,
         initial_state,
+        test_parameter_name="",
+        test_parameter_value=0.0,
         verbose=False,
         visualize=True,
     ):
@@ -163,7 +167,7 @@ class World(SaveMixin):
             if start != end
         }
         self.policy = self.set_policy(policy)
-        self.metrics = World.WorldMetric()
+        self.metrics = World.WorldMetric(test_parameter_name, test_parameter_value)
         self.verbose = verbose
         self.visualize = visualize
         if verbose:
