@@ -141,7 +141,7 @@ class World(SaveMixin):
         policy,
         initial_state,
         test_parameter_name="",
-        test_parameter_value=0.0,
+        test_parameter_value=None,
         verbose=False,
         visualize=True,
     ):

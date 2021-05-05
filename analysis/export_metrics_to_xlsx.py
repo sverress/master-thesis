@@ -12,17 +12,22 @@ from personal import *
 
 
 def metrics_to_xlsx(instances: [classes.World]):
-
+    """
+    Method to export metrics for a list of evaluated instances to Excel
+    :param instances: list of instances to be exported
+    """
+    # assuming that all instances is tested on the same parameter
     parameter_name = instances[0].metrics.testing_parameter_name
-    parameter_values = []
+    column_tuples = []
     metrics_data = []
-    for instance in instances:
-        parameter_values.append(str(instance.metrics.testing_parameter_value))
-        metrics_data.append(pd.DataFrame({"Timeline": instance.metrics.timeline}))
-        instance_metrics = instance.metrics.get_all_metrics()
-        for i, metric in enumerate(instance_metrics):
-            metrics_data.append(pd.DataFrame({i: metric}))
 
+    # loop through all instances and record their metrics
+    for instance in instances:
+        metrics_data, column_tuples = add_metric_column(
+            instance, column_tuples=column_tuples, metrics_data=metrics_data
+        )
+
+    # creating the directory to save the file if it doesn't exist
     try:
         os.makedirs(PATH_COMPUTATIONAL_STUDY)
     except OSError as e:
@@ -31,6 +36,7 @@ def metrics_to_xlsx(instances: [classes.World]):
 
     file_name = f"{PATH_COMPUTATIONAL_STUDY}/{parameter_name.title()}.xlsx"
 
+    # if the file isn't created -> create a new .xlsx file
     if not os.path.isfile(file_name):
         pd.DataFrame().to_excel(file_name)
     book = load_workbook(file_name)
@@ -40,31 +46,64 @@ def metrics_to_xlsx(instances: [classes.World]):
 
     sheets = [ws.title.split("_")[0] for ws in book.worksheets]
 
-    instance_created_at = instances[0].created_at.replace(":", ".")
-    # Sheet name can parameter_name + world.created_at
-    sheet_name = (
-        f"{instance_created_at}_1"
-        if instance_created_at not in sheets
-        else f"{instance_created_at}_{sheets.count(instance_created_at)+1}"
-    )
+    try:
+        # have to replace : since its illegal that a sheet name contains the character
+        instance_created_at = instances[0].created_at.replace(":", ".")
 
-    columns = pd.MultiIndex.from_product(
-        [
-            [parameter_name],
-            parameter_values,
-            ["Timeline", "Lost demand", "Avg. neg dev", "Def. Battery"],
-        ]
-    )
+        sheet_name = (
+            f"{instance_created_at}_1"
+            if instance_created_at not in sheets
+            else f"{instance_created_at}_{sheets.count(instance_created_at) + 1}"
+        )
 
-    df = pd.DataFrame(
-        pd.concat(metrics_data, axis=1, ignore_index=True).to_numpy(), columns=columns
-    )  # concatenate all metrics dataframes to one dataframe
+        columns = pd.MultiIndex.from_tuples(
+            column_tuples,
+            names=[
+                "Parameter",
+                "Parameter value",
+                "Policy",
+                "Shifts trained",
+                "Metrics",
+            ],
+        )
 
-    df.to_excel(
-        writer, sheet_name=sheet_name, startcol=1, startrow=1
-    )  # write dataframe to file
+        df = pd.DataFrame(
+            pd.concat(metrics_data, axis=1, ignore_index=True).to_numpy(),
+            columns=columns,
+        )  # concatenate all metrics dataframes to one dataframe
 
-    writer.save()
+        df.to_excel(
+            writer, sheet_name=sheet_name, startcol=1, startrow=1
+        )  # write dataframe to file
+
+        # TODO - add a sheet with globals hyper-parameters
+
+    finally:
+        writer.save()
+
+
+def add_metric_column(instance, metrics_data, column_tuples):
+    metric_variables = instance.metrics.__dict__
+    parameter_name = metric_variables["testing_parameter_name"]
+    del metric_variables["testing_parameter_name"]
+    parameter_value = metric_variables["testing_parameter_value"]
+    del metric_variables["testing_parameter_value"]
+
+    for i, metric in enumerate(metric_variables.keys()):
+        column_tuples.append(
+            (
+                parameter_name.title(),
+                str(parameter_value),
+                instance.policy.__str__(),
+                str(instance.policy.value_function.shifts_trained)
+                if hasattr(instance.policy, "value_function")
+                else "N.A",
+                metric.replace("_", " ").title(),
+            )
+        )
+        metrics_data.append(pd.DataFrame({i: metric_variables[metric]}))
+
+    return metrics_data, column_tuples
 
 
 def example_write_to_excel():
