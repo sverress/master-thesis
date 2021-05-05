@@ -6,23 +6,25 @@ from analysis.train_value_function import train_value_function
 import clustering.scripts
 
 
-def main_setup(shift_duration, suffix):
+def train_linear_value_function(learning_rate, suffix):
     world = classes.World(
-        shift_duration,
+        480,
         None,
         clustering.scripts.get_initial_state(2500, 30),
         verbose=False,
         visualize=False,
+        WEIGHT_UPDATE_STEP_SIZE=learning_rate,
+        LOCATION_REPETITION=1,
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-        value_function_class=decision.value_functions.ANNValueFunction,
+        value_function_class=decision.value_functions.LinearValueFunction,
     )
     train_value_function(world, save_suffix=f"{suffix}")
 
 
-def run_train_with_shift_duration(input_arg):
-    main_setup(input_arg, f"shift_{input_arg}")
+def run_train_with_learning_rate(input_arg):
+    train_linear_value_function(input_arg, f"lr_{input_arg}")
 
 
 def multiprocess_train(inputs, function):
@@ -31,4 +33,4 @@ def multiprocess_train(inputs, function):
 
 
 if __name__ == "__main__":
-    multiprocess_train([1, 2, 3], run_train_with_shift_duration)
+    multiprocess_train([0.00001, 0.0001, 0.001, 0.01], run_train_with_learning_rate)

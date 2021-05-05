@@ -292,11 +292,6 @@ class World(SaveMixin, HyperParameters):
                 )
             else:
                 if policy_class is None:
-                    warnings.warn(
-                        "OBS! You must either give a policy class or policy object."
-                        "None object for both will set world policy to None",
-                        UserWarning,
-                    )
                     return policy
                 policy = policy_class()
         # The the value function is the DoNothing Policy. Empty the vehicle arrival events in the stack
