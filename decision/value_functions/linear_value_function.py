@@ -6,7 +6,7 @@ from .abstract import *
 
 class LinearValueFunction(ValueFunction):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(location_repetition=1, **kwargs)
         self.weights = None
 
     def setup(self, state):
@@ -17,9 +17,22 @@ class LinearValueFunction(ValueFunction):
             number_of_state_features,
         ) = self.get_number_of_location_indicators_and_state_features(state)
         self.weights = [self.weight_init_value] * (
-            number_of_locations_indicators
+            1  # Bias
+            + number_of_locations_indicators
             + number_of_state_features
-            + (number_of_locations_indicators * number_of_state_features)
+            + len(
+                list(
+                    itertools.combinations(
+                        list(
+                            range(
+                                number_of_locations_indicators
+                                + number_of_state_features
+                            )
+                        ),
+                        2,
+                    )
+                )
+            )
         )
         self.location_indicator = [0] * number_of_locations_indicators
         super(LinearValueFunction, self).setup(state)
@@ -67,19 +80,15 @@ class LinearValueFunction(ValueFunction):
 
     @Decorators.check_setup
     def create_location_features_combination(self, state_features):
-        location_indicator = state_features[: len(self.location_indicator)]
-        state_features = state_features[len(self.location_indicator) :]
 
         locations_features_combination = list(
-            itertools.chain(
-                *[
-                    np.multiply(indicator, state_features).tolist()
-                    for indicator in location_indicator
-                ]
-            )
+            [
+                factor1 * factor2
+                for factor1, factor2 in itertools.combinations(state_features, 2)
+            ]
         )
 
-        return location_indicator + state_features + locations_features_combination
+        return [1] + state_features + locations_features_combination
 
     def get_state_features(self, state, vehicle, time):
         return self.create_location_features_combination(

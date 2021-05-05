@@ -40,7 +40,7 @@ if __name__ == "__main__":
     NUMBER_OF_CLUSTERS = 30
 
     POLICY = decision.EpsilonGreedyValueFunctionPolicy(
-        decision.value_functions.ANNValueFunction([100, 100, 100, 100])
+        decision.value_functions.LinearValueFunction()
     )
 
     world_to_analyse = classes.World(
@@ -56,4 +56,6 @@ if __name__ == "__main__":
         visualize=False,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(POLICY)
-    train_value_function(world_to_analyse)
+    train_value_function(
+        world_to_analyse, training_shifts_before_save=2, models_to_be_saved=1
+    )

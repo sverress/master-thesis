@@ -35,14 +35,13 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions(
-            self.vehicle, number_of_neighbours=6
+            self.vehicle, number_of_neighbours=6, neighbor_filtering=True
         )
 
         # Test number of swaps less or equal to ideal state
         for action in actions:
             self.assertLessEqual(
-                len(action.battery_swaps),
-                self.vehicle.current_location.ideal_state,
+                len(action.battery_swaps), self.vehicle.current_location.ideal_state,
             )
 
         # Test number of actions
@@ -85,7 +84,9 @@ class BasicDecisionTests(unittest.TestCase):
         start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
-        actions = self.initial_state.get_possible_actions(self.vehicle)
+        actions = self.initial_state.get_possible_actions(
+            self.vehicle, neighbor_filtering=True
+        )
 
         # Test number of actions
         self.assertEqual(len(actions), 14)
@@ -132,7 +133,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions(
-            self.vehicle, number_of_neighbours=6
+            self.vehicle, number_of_neighbours=6, neighbor_filtering=True
         )
 
         # Test number of actions
@@ -186,7 +187,9 @@ class BasicDecisionTests(unittest.TestCase):
         vehicle.current_location.scooters = vehicle.current_location.scooters[:1]
 
         # Get all possible actions
-        actions = initial_state.get_possible_actions(vehicle, number_of_neighbours=5)
+        actions = initial_state.get_possible_actions(
+            vehicle, number_of_neighbours=5, neighbor_filtering=True
+        )
 
         # Test number of actions possible
         self.assertEqual(5, len(actions))
@@ -325,10 +328,7 @@ class NeighbourFilteringTests(unittest.TestCase):
         vehicle = state.vehicles[0]
 
         best_neighbours_with_random = filtering_neighbours(
-            state,
-            vehicle,
-            number_of_neighbours=3,
-            number_of_random_neighbours=1,
+            state, vehicle, number_of_neighbours=3, number_of_random_neighbours=1,
         )
 
         # test if the number of neighbours is the same, even though one is random
