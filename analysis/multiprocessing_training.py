@@ -6,13 +6,15 @@ from analysis.train_value_function import train_value_function
 import clustering.scripts
 
 
-def main_setup(shift_duration, suffix):
+def learning_rates(learning_rate, suffix):
     world = classes.World(
-        shift_duration,
+        480,
         None,
         clustering.scripts.get_initial_state(2500, 30),
         verbose=False,
         visualize=False,
+        WEIGHT_UPDATE_STEP_SIZE=learning_rate,
+        ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
@@ -21,8 +23,8 @@ def main_setup(shift_duration, suffix):
     train_value_function(world, save_suffix=f"{suffix}")
 
 
-def run_train_with_shift_duration(input_arg):
-    main_setup(input_arg, f"shift_{input_arg}")
+def run_learning_rates(input_arg):
+    learning_rates(input_arg, f"learn_r_{input_arg}")
 
 
 def multiprocess_train(inputs, function):
@@ -31,4 +33,4 @@ def multiprocess_train(inputs, function):
 
 
 if __name__ == "__main__":
-    multiprocess_train([1, 2, 3], run_train_with_shift_duration)
+    multiprocess_train([0.001, 0.0001, 0.00001, 0.000001], run_learning_rates)
