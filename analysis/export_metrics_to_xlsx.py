@@ -18,7 +18,9 @@ def metrics_to_xlsx(instances: [classes.World]):
     """
     # assuming that all instances is tested on the same parameter
     parameter_name = instances[0].metrics.testing_parameter_name
+    # list to handle the column name structure
     column_tuples = []
+    # list for all metrics data
     metrics_data = []
 
     # loop through all instances and record their metrics
@@ -28,34 +30,37 @@ def metrics_to_xlsx(instances: [classes.World]):
         )
 
     # creating the directory to save the file if it doesn't exist
-    try:
+    if not os.path.exists(PATH_COMPUTATIONAL_STUDY):
         os.makedirs(PATH_COMPUTATIONAL_STUDY)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
 
     file_name = f"{PATH_COMPUTATIONAL_STUDY}/{parameter_name.title()}.xlsx"
 
     # if the file isn't created -> create a new .xlsx file
     if not os.path.isfile(file_name):
         pd.DataFrame().to_excel(file_name)
+    # load the current excel file
     book = load_workbook(file_name)
+    # creating a writer
     writer = pd.ExcelWriter(file_name, engine="openpyxl")
+    # adds the current book/file to the writer and adding the existing sheets (else the writer will overwrite)
     writer.book = book
     writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
 
+    # creating a list of existing sheets, so that if there are other sheets with a same name, a suffix is added
     sheets = [ws.title.split("_")[0] for ws in book.worksheets]
 
     try:
         # have to replace : since its illegal that a sheet name contains the character
         instance_created_at = instances[0].created_at.replace(":", ".")
 
+        # creating the sheet name, adding suffix if other sheets with the same name exist
         sheet_name = (
             f"{instance_created_at}_1"
             if instance_created_at not in sheets
             else f"{instance_created_at}_{sheets.count(instance_created_at) + 1}"
         )
 
+        # creating a multiindex object so that columns with the same name gets merged
         columns = pd.MultiIndex.from_tuples(
             column_tuples,
             names=[
@@ -83,13 +88,16 @@ def metrics_to_xlsx(instances: [classes.World]):
 
 
 def add_metric_column(instance, metrics_data, column_tuples):
+    # making a dict of all metric variables and their values
     metric_variables = instance.metrics.__dict__
+    # removing testing parameter name and value -> easier to have control over all metrics and add new one
     parameter_name = metric_variables["testing_parameter_name"]
     del metric_variables["testing_parameter_name"]
     parameter_value = metric_variables["testing_parameter_value"]
     del metric_variables["testing_parameter_value"]
 
     for i, metric in enumerate(metric_variables.keys()):
+        # making the column name hierarchy to ensure that right name is associated with right list of values
         column_tuples.append(
             (
                 parameter_name.title(),
@@ -101,6 +109,8 @@ def add_metric_column(instance, metrics_data, column_tuples):
                 metric.replace("_", " ").title(),
             )
         )
+        # adding a dataframe of the metric data
+        # (have to be dataframe to be able to merge all metrics to one matrix later)
         metrics_data.append(pd.DataFrame({i: metric_variables[metric]}))
 
     return metrics_data, column_tuples
