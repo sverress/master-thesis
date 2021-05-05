@@ -1,5 +1,5 @@
 import classes
-import globals
+from globals import HyperParameters, SMALL_DEPOT_CAPACITY
 import helpers
 import abc
 
@@ -22,10 +22,10 @@ class Decorators:
 class ValueFunction(abc.ABC):
     def __init__(
         self,
-        weight_update_step_size=globals.WEIGHT_UPDATE_STEP_SIZE,
-        weight_init_value=globals.WEIGHT_INITIALIZATION_VALUE,
-        discount_factor=globals.DISCOUNT_RATE,
-        vehicle_inventory_step_size=globals.VEHICLE_INVENTORY_STEP_SIZE,
+        weight_update_step_size=HyperParameters().WEIGHT_UPDATE_STEP_SIZE,
+        weight_init_value=HyperParameters().WEIGHT_INITIALIZATION_VALUE,
+        discount_factor=HyperParameters().DISCOUNT_RATE,
+        vehicle_inventory_step_size=HyperParameters().VEHICLE_INVENTORY_STEP_SIZE,
     ):
         # for every location - 3 bit for each location
         # for every cluster, 1 float for deviation, 1 float for battery deficient
@@ -194,7 +194,7 @@ class ValueFunction(abc.ABC):
         ]
 
         small_depot_degree_of_filling = [
-            depot.get_available_battery_swaps(time) / globals.SMALL_DEPOT_CAPACITY
+            depot.get_available_battery_swaps(time) / SMALL_DEPOT_CAPACITY
             for depot in state.depots[1:]
         ]
 

@@ -10,8 +10,8 @@ def get_initial_state(
     save=True,
     cache=True,
     initial_location_depot=True,
-    number_of_vans=NUMBER_OF_VANS,
-    number_of_bikes=NUMBER_OF_BIKES,
+    number_of_vans=4,
+    number_of_bikes=0,
     ideal_state_computation=False,
 ) -> State:
     # If this combination has been requested before we fetch a cached version

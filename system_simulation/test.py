@@ -1,19 +1,21 @@
 import unittest
+
+import classes
 from clustering.scripts import get_initial_state
 
 
 class BasicSystemSimulationTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.state = get_initial_state(500)
+        self.world = classes.World(1, None, get_initial_state(100))
 
     def test_equal_number_of_scooters(self):
         number_of_scooters_before = sum(
-            map(lambda cluster: len(cluster.scooters), self.state.clusters)
+            map(lambda cluster: len(cluster.scooters), self.world.state.clusters)
         )
 
-        self.state.system_simulate()
+        self.world.system_simulate()
         number_of_scooters_after = sum(
-            map(lambda cluster: len(cluster.scooters), self.state.clusters)
+            map(lambda cluster: len(cluster.scooters), self.world.state.clusters)
         )
         self.assertEqual(number_of_scooters_before, number_of_scooters_after)
 
@@ -21,15 +23,15 @@ class BasicSystemSimulationTests(unittest.TestCase):
         total_battery_of_scooters_before = sum(
             map(
                 lambda cluster: sum([scooter.battery for scooter in cluster.scooters]),
-                self.state.clusters,
+                self.world.state.clusters,
             )
         )
 
-        self.state.system_simulate()
+        self.world.system_simulate()
         total_battery_of_scooters_after = sum(
             map(
                 lambda cluster: sum([scooter.battery for scooter in cluster.scooters]),
-                self.state.clusters,
+                self.world.state.clusters,
             )
         )
         self.assertLessEqual(
@@ -39,22 +41,22 @@ class BasicSystemSimulationTests(unittest.TestCase):
     def test_flows_and_trips(self):
         initial_cluster_inventory = {}
 
-        for cluster in self.state.clusters:
+        for cluster in self.world.state.clusters:
             initial_cluster_inventory[cluster.id] = len(cluster.scooters)
 
-        flows, trips, _ = self.state.system_simulate()
+        flows, trips, _ = self.world.system_simulate()
 
-        out_flow = {cluster.id: 0 for cluster in self.state.clusters}
-        in_flow = {cluster.id: 0 for cluster in self.state.clusters}
+        out_flow = {cluster.id: 0 for cluster in self.world.state.clusters}
+        in_flow = {cluster.id: 0 for cluster in self.world.state.clusters}
 
-        trips_from = {cluster.id: 0 for cluster in self.state.clusters}
-        trips_to = {cluster.id: 0 for cluster in self.state.clusters}
+        trips_from = {cluster.id: 0 for cluster in self.world.state.clusters}
+        trips_to = {cluster.id: 0 for cluster in self.world.state.clusters}
 
         for start, end, scooter in trips:
             trips_from[start.id] += 1
             trips_to[end.id] += 1
 
-        for cluster in self.state.clusters:
+        for cluster in self.world.state.clusters:
             out_flow[cluster.id] = sum(
                 [flow for start, end, flow in flows if start == cluster.id]
             )
@@ -79,12 +81,12 @@ class BasicSystemSimulationTests(unittest.TestCase):
 
     def test_lost_demand(self):
         # set all scooter batteries to 0 and increase trip intensity to ensure lost demand
-        for cluster in self.state.clusters:
+        for cluster in self.world.state.clusters:
             cluster.trip_intensity_per_iteration = 5
             for scooter in cluster.scooters:
                 scooter.battery = 0
 
-        _, _, lost_demand = self.state.system_simulate()
+        _, _, lost_demand = self.world.system_simulate()
 
         # test that system simulate generate lost demand
         self.assertGreater(lost_demand, 0)

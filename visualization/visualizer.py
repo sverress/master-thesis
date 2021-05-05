@@ -1,6 +1,5 @@
 from classes import Action, Scooter, State, Vehicle
 from visualization.helpers import *
-from globals import *
 import matplotlib.pyplot as plt
 import copy
 from itertools import cycle
@@ -327,10 +326,9 @@ def visualize_scooter_simulation(
     plt.show()
 
 
-def visualize_analysis(instances, smooth_curve=True):
+def visualize_analysis(instances):
     """
     :param instances: world instances to analyse
-    :param smooth_curve: boolean if plot of the analysis is to be smoothed out
     :return: plot for the analysis
     """
     # generate plot and subplots
@@ -376,28 +374,19 @@ def visualize_analysis(instances, smooth_curve=True):
 
         label = instance.policy  # get_policy_label(instance.policy)
         ax1.plot(x, lost_demand, c=COLORS[i], label=label)
-        if smooth_curve:
-            plot_smoothed_curve(x, deviation_ideal_state, ax2, COLORS[i], label)
-            plot_smoothed_curve(x, deficient_battery, ax3, COLORS[i], label)
-        else:
-            ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=label)
-            ax3.plot(x, deficient_battery, c=COLORS[i], label=label)
+        ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=label)
+        ax3.plot(x, deficient_battery, c=COLORS[i], label=label)
 
     for subplot in subplots:
         subplot.legend()
         subplot.set_ylim(ymin=0)
-
-    fig.suptitle(
-        f"Rollouts {NUMBER_OF_ROLLOUTS} - Max number of neighbours {DEFAULT_NUMBER_OF_NEIGHBOURS}",
-        fontsize=16,
-    )
 
     plt.show()
 
     return fig
 
 
-def visualize_td_error(td_errors_and_label: [([float], str)], smooth_curve=False):
+def visualize_td_error(td_errors_and_label: [([float], str)]):
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
 
@@ -416,15 +405,7 @@ def visualize_td_error(td_errors_and_label: [([float], str)], smooth_curve=False
 
     for i, (td_errors, label) in enumerate(td_errors_and_label):
         x = np.arange(len(td_errors))
-
-        if smooth_curve:
-            plot_smoothed_curve(
-                x, td_errors, ax, COLORS[i], label, z_order=len(td_errors) - i
-            )
-        else:
-            ax.plot(
-                x, td_errors, color=COLORS[i], label=label, zorder=len(td_errors) - i
-            )
+        ax.plot(x, td_errors, color=COLORS[i], label=label, zorder=len(td_errors) - i)
 
     fig.suptitle(
         f"TD-error development",

@@ -1,5 +1,4 @@
 from classes import Event
-from globals import LOST_TRIP_REWARD
 
 
 class LostTrip(Event):
@@ -8,5 +7,7 @@ class LostTrip(Event):
         self.location_id = location_id
 
     def perform(self, world, **kwargs) -> None:
-        world.add_reward(LOST_TRIP_REWARD, self.location_id)
+        world.add_reward(world.LOST_TRIP_REWARD, self.location_id)
+        if world.verbose:
+            print(f"LT: {self.location_id} at {self.time}")
         super(LostTrip, self).perform(world, **kwargs)

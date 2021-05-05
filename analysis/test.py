@@ -13,26 +13,25 @@ import globals
 
 class AnalysisTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.rollout_value_func_policy = decision.EpsilonGreedyValueFunctionPolicy(
-            decision.value_functions.LinearValueFunction()
-        )
-        self.random_rollout_policy = decision.RandomRolloutPolicy(number_of_rollouts=2)
         self.world = classes.World(
             80,
             None,
             clustering.scripts.get_initial_state(100, 10),
             visualize=False,
             verbose=False,
+            DEFAULT_NUMBER_OF_NEIGHBOURS=5,
+            TRAINING_SHIFTS_BEFORE_SAVE=1,
+            MODELS_TO_BE_SAVED=2,
         )
 
     def test_run_analysis(self):
         # Runs random and do nothing policies
-        analysis.evaluate_policies.run_analysis([], self.world)
+        analysis.evaluate_policies.run_analysis([], baseline_policy_world=self.world)
 
     @staticmethod
     def test_run_analysis_from_path():
         analysis.evaluate_policies.run_analysis_from_path(
-            "world_cache/trained_models/LinearValueFunction/c30_s2500/TEST_SET",
+            "world_cache/test_models",
             runs_per_policy=1,
             shift_duration=80,
         )
@@ -57,41 +56,13 @@ class AnalysisTests(unittest.TestCase):
             )
 
     def test_train_value_function(self):
-        self.world.policy = self.world.set_policy(self.rollout_value_func_policy)
-        analysis.train_value_function.train_value_function(
-            self.world, training_shifts_before_save=1, models_to_be_saved=2
+        self.world.policy = self.world.set_policy(
+            policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+            value_function_class=decision.value_functions.LinearValueFunction,
         )
+        analysis.train_value_function.train_value_function(self.world)
         # Remove created files
         training_directory = os.path.join(
             globals.WORLD_CACHE_DIR, self.world.get_train_directory()
         )
         self.delete_dir(training_directory)
-
-    def test_train_multiprocessing(self):
-        shifts = [1, 2, 3]
-        analysis.multiprocessing_training.multiprocess_train(
-            shifts,
-            analysis.multiprocessing_training.run_train_with_shift_duration,
-        )
-        # Fake world for printing and file directoryies
-        world = classes.World(
-            globals.SHIFT_DURATION,
-            None,
-            clustering.scripts.get_initial_state(2500, 30),
-            verbose=False,
-            visualize=False,
-        )
-        world.policy = world.set_policy(
-            decision.EpsilonGreedyValueFunctionPolicy(
-                decision.value_functions.ANNValueFunction([10])
-            )
-        )
-        # Remove created files
-        for directory in [
-            os.path.join(
-                globals.WORLD_CACHE_DIR,
-                world.get_train_directory(f"shift_{shift}"),
-            )
-            for shift in shifts
-        ]:
-            self.delete_dir(directory)
