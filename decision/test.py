@@ -35,7 +35,8 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions(
-            self.vehicle, number_of_neighbours=6
+            self.vehicle,
+            number_of_neighbours=6,
         )
 
         # Test number of swaps less or equal to ideal state
@@ -188,7 +189,10 @@ class BasicDecisionTests(unittest.TestCase):
         vehicle.current_location.scooters = vehicle.current_location.scooters[:1]
 
         # Get all possible actions
-        actions = initial_state.get_possible_actions(vehicle, number_of_neighbours=5)
+        actions = initial_state.get_possible_actions(
+            vehicle,
+            number_of_neighbours=5,
+        )
 
         # Test number of actions possible
         self.assertEqual(5, len(actions))

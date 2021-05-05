@@ -280,15 +280,15 @@ class World(SaveMixin, HyperParameters):
                     else value_function_class()
                 )
                 policy = policy_class(
-                    self.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS,
-                    self.DEFAULT_NUMBER_OF_NEIGHBOURS,
+                    self.DIVIDE_GET_POSSIBLE_ACTIONS,
+                    self.NUMBER_OF_NEIGHBOURS,
                     self.EPSILON,
                     value_function,
                 )
             elif policy_class is decision.RandomActionPolicy:
                 policy = policy_class(
-                    self.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS,
-                    self.DEFAULT_NUMBER_OF_NEIGHBOURS,
+                    self.DIVIDE_GET_POSSIBLE_ACTIONS,
+                    self.NUMBER_OF_NEIGHBOURS,
                 )
             else:
                 if policy_class is None:

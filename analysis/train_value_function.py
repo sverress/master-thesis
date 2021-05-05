@@ -39,8 +39,8 @@ def train_value_function(
 
 
 if __name__ == "__main__":
-    SAMPLE_SIZE = 500
-    NUMBER_OF_CLUSTERS = 20
+    SAMPLE_SIZE = 2500
+    NUMBER_OF_CLUSTERS = 30
     standard_parameters = globals.HyperParameters()
     world_to_analyse = classes.World(
         5,
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         ),
         verbose=False,
         visualize=False,
-        DEFAULT_NUMBER_OF_NEIGHBOURS=4,
+        NUMBER_OF_NEIGHBOURS=4,
         MODELS_TO_BE_SAVED=3,
         TRAINING_SHIFTS_BEFORE_SAVE=1,
     )

@@ -19,7 +19,7 @@ class AnalysisTests(unittest.TestCase):
             clustering.scripts.get_initial_state(100, 10),
             visualize=False,
             verbose=False,
-            DEFAULT_NUMBER_OF_NEIGHBOURS=5,
+            NUMBER_OF_NEIGHBOURS=5,
             TRAINING_SHIFTS_BEFORE_SAVE=1,
             MODELS_TO_BE_SAVED=2,
         )

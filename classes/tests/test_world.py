@@ -79,10 +79,10 @@ class WorldTestCase(unittest.TestCase):
             policy_class=decision.EpsilonGreedyValueFunctionPolicy,
             value_function_class=decision.value_functions.LinearValueFunction,
         )
-        self.world.policy.value_function.weights[0] = 0.1
+        self.world.policy.value_function.weights[1] = 0.1
         file_world = self.save_world()
         # Save, load and delete world object
-        self.assertEqual(0.1, file_world.policy.value_function.weights[0])
+        self.assertEqual(0.1, file_world.policy.value_function.weights[1])
 
     def test_save_world_ann(self):
         # Change weights in value function
