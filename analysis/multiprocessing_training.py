@@ -48,7 +48,6 @@ def value_function_is_learning(value_function, suffix):
         verbose=False,
         visualize=False,
         LOCATION_REPETITION=3,
-        NUMBER_OF_NEIGHBOURS=15,
         MODELS_TO_BE_SAVED=5,
         TRAINING_SHIFTS_BEFORE_SAVE=50,
     )
@@ -66,6 +65,6 @@ def multiprocess_train(function, inputs):
 
 if __name__ == "__main__":
     multiprocess_train(
-        learning_rates,
+        learning_rates_ann,
         [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
     )
