@@ -6,8 +6,22 @@ import numpy as np
 
 
 class ANNValueFunction(ValueFunction):
-    def __init__(self, network_structure: [int], **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        weight_update_step_size,
+        weight_init_value,
+        discount_factor,
+        vehicle_inventory_step_size,
+        location_repetition,
+        network_structure: [int],
+    ):
+        super().__init__(
+            weight_update_step_size,
+            weight_init_value,
+            discount_factor,
+            vehicle_inventory_step_size,
+            location_repetition,
+        )
         self.network_structure = network_structure
         self.model = keras.Sequential()
 

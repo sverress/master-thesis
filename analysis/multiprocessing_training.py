@@ -6,7 +6,24 @@ from analysis.train_value_function import train_value_function
 import clustering.scripts
 
 
-def train_linear_value_function(learning_rate, suffix):
+def learning_rates_ann(learning_rate, suffix):
+    world = classes.World(
+        480,
+        None,
+        clustering.scripts.get_initial_state(2500, 30),
+        verbose=False,
+        visualize=False,
+        WEIGHT_UPDATE_STEP_SIZE=learning_rate,
+        ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
+    )
+    world.policy = world.set_policy(
+        policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+        value_function_class=decision.value_functions.ANNValueFunction,
+    )
+    train_value_function(world, save_suffix=f"{suffix}")
+
+
+def learning_rates_linear(learning_rate, suffix):
     world = classes.World(
         480,
         None,
@@ -21,10 +38,6 @@ def train_linear_value_function(learning_rate, suffix):
         value_function_class=decision.value_functions.LinearValueFunction,
     )
     train_value_function(world, save_suffix=f"{suffix}")
-
-
-def run_train_with_learning_rate(input_arg):
-    train_linear_value_function(input_arg, f"lr_{input_arg}")
 
 
 def value_function_is_learning(value_function, suffix):
@@ -46,20 +59,13 @@ def value_function_is_learning(value_function, suffix):
     train_value_function(world, save_suffix=f"{suffix}")
 
 
-def run_value_function_is_learning(input_arg):
-    value_function_is_learning(input_arg, f"func_{input_arg}")
-
-
-def multiprocess_train(inputs, function):
+def multiprocess_train(function, inputs):
     with Pool() as p:
-        p.map(function, inputs)
+        p.starmap(function, inputs)
 
 
 if __name__ == "__main__":
     multiprocess_train(
-        [
-            decision.value_functions.ANNValueFunction,
-            decision.value_functions.LinearValueFunction,
-        ],
-        run_value_function_is_learning,
+        learning_rates,
+        [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
     )
