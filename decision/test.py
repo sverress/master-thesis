@@ -6,6 +6,7 @@ import clustering.scripts
 import decision
 import decision.value_functions
 import analysis.evaluate_policies
+import globals
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.neighbour_filtering import filtering_neighbours
@@ -230,6 +231,16 @@ class PolicyTests(unittest.TestCase):
 
 
 class ValueFunctionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        hyper_params = globals.HyperParameters()
+        self.value_function_args = (
+            hyper_params.WEIGHT_UPDATE_STEP_SIZE,
+            hyper_params.WEIGHT_INITIALIZATION_VALUE,
+            hyper_params.DISCOUNT_RATE,
+            hyper_params.VEHICLE_INVENTORY_STEP_SIZE,
+            hyper_params.LOCATION_REPETITION,
+        )
+
     def world_value_function_check(self, value_function):
         world = World(
             100,
@@ -265,21 +276,14 @@ class ValueFunctionTests(unittest.TestCase):
 
     def test_linear_value_function(self):
         self.world_value_function_check(
-            decision.value_functions.LinearValueFunction(
-                weight_update_step_size=0.001,
-                discount_factor=0.8,
-                vehicle_inventory_step_size=0.5,
-                weight_init_value=random.random(),
-            )
+            decision.value_functions.LinearValueFunction(*self.value_function_args)
         )
 
     def test_ann_value_function(self):
         self.world_value_function_check(
             decision.value_functions.ANNValueFunction(
+                *self.value_function_args,
                 [100, 1000, 100],
-                weight_update_step_size=0.001,
-                discount_factor=0.8,
-                vehicle_inventory_step_size=0.5,
             )
         )
 

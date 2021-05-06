@@ -5,8 +5,21 @@ from .abstract import *
 
 
 class LinearValueFunction(ValueFunction):
-    def __init__(self, **kwargs):
-        super().__init__(location_repetition=1, **kwargs)
+    def __init__(
+        self,
+        weight_update_step_size,
+        weight_init_value,
+        discount_factor,
+        vehicle_inventory_step_size,
+        location_repetition,
+    ):
+        super().__init__(
+            weight_update_step_size,
+            weight_init_value,
+            discount_factor,
+            vehicle_inventory_step_size,
+            location_repetition,
+        )
         self.weights = None
 
     def setup(self, state):

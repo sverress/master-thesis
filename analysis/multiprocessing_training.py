@@ -23,14 +23,13 @@ def learning_rates(learning_rate, suffix):
     train_value_function(world, save_suffix=f"{suffix}")
 
 
-def run_learning_rates(input_arg):
-    learning_rates(input_arg, f"learn_r_{input_arg}")
-
-
-def multiprocess_train(inputs, function):
+def multiprocess_train(function, inputs):
     with Pool() as p:
-        p.map(function, inputs)
+        p.starmap(function, inputs)
 
 
 if __name__ == "__main__":
-    multiprocess_train([0.001, 0.0001, 0.00001, 0.000001], run_learning_rates)
+    multiprocess_train(
+        learning_rates,
+        [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
+    )
