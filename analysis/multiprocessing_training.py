@@ -29,7 +29,7 @@ def run_train_with_learning_rate(input_arg):
 
 def value_function_is_learning(value_function, suffix):
     world = classes.World(
-        380,
+        480,
         None,
         clustering.scripts.get_initial_state(2500, 30),
         verbose=False,
@@ -37,7 +37,7 @@ def value_function_is_learning(value_function, suffix):
         LOCATION_REPETITION=3,
         NUMBER_OF_NEIGHBOURS=15,
         MODELS_TO_BE_SAVED=5,
-        TRAINING_SHIFTS_BEFORE_SAVE=20,
+        TRAINING_SHIFTS_BEFORE_SAVE=50,
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
