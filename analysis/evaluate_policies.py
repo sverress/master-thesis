@@ -35,6 +35,9 @@ def run_analysis_from_path(
         # Always rollout for 8 hours
         world.shift_duration = shift_duration
 
+        # Turn off neighbor filtering
+        world.NUMBER_OF_NEIGHBOURS = 0
+
     return run_analysis(
         world_objects,
         runs_per_policy=runs_per_policy,
@@ -43,7 +46,6 @@ def run_analysis_from_path(
 
 def run_analysis(
     worlds,
-    smooth_curve=True,
     runs_per_policy=4,
     verbose=True,
     save=False,
@@ -92,7 +94,7 @@ def run_analysis(
     visualize_td_error(td_errors_and_label)
     if save:
         for world in instances:
-            world.save_world()
+            world.save_world(cache_directory="evaluated_models")
     return instances
 
 
