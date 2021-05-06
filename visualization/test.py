@@ -13,27 +13,28 @@ class BasicVisualizerTests(unittest.TestCase):
     @staticmethod
     def test_state_and_flow_between_clusters():
         # state and flow between clusters visualization
-        state = get_initial_state(sample_size=100, number_of_clusters=6)
+        world = classes.World(
+            5, None, get_initial_state(sample_size=100, number_of_clusters=6)
+        )
 
-        state.visualize()
+        flows, trips, _ = system_simulate(world)
 
-        flows, trips, _ = system_simulate(state)
-
-        visualize_cluster_flow(state, flows)
+        visualize_cluster_flow(world.state, flows)
 
     @staticmethod
     def test_scooter_trips():
         # scooter trips visualization
+        world = classes.World(
+            5, None, get_initial_state(sample_size=20, number_of_clusters=5)
+        )
 
-        current_state = get_initial_state(sample_size=20, number_of_clusters=5)
+        next_world = copy.deepcopy(world)
 
-        next_state = copy.deepcopy(current_state)
+        flows, scooter_trips, _ = next_world.system_simulate()
 
-        flows, scooter_trips, _ = next_state.system_simulate()
+        world.state.visualize_system_simulation(scooter_trips)
 
-        current_state.visualize_system_simulation(scooter_trips)
-
-        current_state.visualize_flow(flows)
+        world.state.visualize_flow(flows)
 
     @staticmethod
     def test_visualize_clusters():
@@ -42,13 +43,15 @@ class BasicVisualizerTests(unittest.TestCase):
 
     @staticmethod
     def test_analysis():
-        policy = decision.SwapAllPolicy()
         # test the analysis plot
         run_analysis(
-            [policy],
-            classes.World(
-                60, None, get_initial_state(sample_size=100, number_of_clusters=10)
-            ),
+            [
+                classes.World(
+                    60,
+                    decision.SwapAllPolicy(),
+                    get_initial_state(sample_size=100, number_of_clusters=10),
+                )
+            ],
             smooth_curve=False,
             runs_per_policy=1,
         )
