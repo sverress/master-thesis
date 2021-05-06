@@ -101,9 +101,9 @@ class Cluster(Location):
     def remove_scooter(self, scooter: Scooter):
         self.scooters.remove(scooter)
 
-    def get_available_scooters(self, battery_limit=BATTERY_LIMIT):
+    def get_available_scooters(self):
         return [
-            scooter for scooter in self.scooters if scooter.battery >= battery_limit
+            scooter for scooter in self.scooters if scooter.battery >= BATTERY_LIMIT
         ]
 
     def print_all_scooters(self, with_coordinates=False):

@@ -8,17 +8,20 @@ import classes
 from classes.SaveMixin import SaveMixin
 
 from globals import (
-    LOST_TRIP_REWARD,
-    ITERATION_LENGTH_MINUTES,
+    HyperParameters,
     WHITE,
-    DISCOUNT_RATE,
     WORLD_CACHE_DIR,
+    ITERATION_LENGTH_MINUTES,
 )
+
 from progress.bar import IncrementalBar
 import decision
+import decision.value_functions
+from system_simulation.scripts import system_simulate
+import warnings
 
 
-class World(SaveMixin):
+class World(SaveMixin, HyperParameters):
     class WorldMetric:
         def __init__(self, test_parameter_name="", test_parameter_value=0.0):
             self.lost_demand = []
@@ -88,7 +91,7 @@ class World(SaveMixin):
                     [
                         1
                         for reward, location in world.rewards
-                        if reward == LOST_TRIP_REWARD
+                        if reward == world.LOST_TRIP_REWARD
                     ]
                 )
                 if len(world.rewards) > 0
@@ -144,7 +147,9 @@ class World(SaveMixin):
         test_parameter_value=None,
         verbose=False,
         visualize=True,
+        **kwargs,
     ):
+        super().__init__(**kwargs)
         self.created_at = datetime.datetime.now().isoformat(timespec="minutes")
         self.shift_duration = shift_duration
         self.state = initial_state
@@ -263,9 +268,49 @@ class World(SaveMixin):
 
     def get_discount(self):
         # Divide by 60 as there is 60 minutes in an hour. We want this number in hours to avoid big numbers is the power
-        return DISCOUNT_RATE ** (self.time / 60)
+        return self.DISCOUNT_RATE ** (self.time / 60)
 
-    def set_policy(self, policy):
+    def set_policy(
+        self,
+        policy=None,
+        policy_class=None,
+        value_function_class=None,
+    ):
+        if policy is None:
+            if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
+                value_function = (
+                    value_function_class(
+                        self.WEIGHT_UPDATE_STEP_SIZE,
+                        self.WEIGHT_INITIALIZATION_VALUE,
+                        self.DISCOUNT_RATE,
+                        self.VEHICLE_INVENTORY_STEP_SIZE,
+                        self.LOCATION_REPETITION,
+                        self.ANN_NETWORK_STRUCTURE,
+                    )
+                    if value_function_class is decision.value_functions.ANNValueFunction
+                    else value_function_class(
+                        self.WEIGHT_UPDATE_STEP_SIZE,
+                        self.WEIGHT_INITIALIZATION_VALUE,
+                        self.DISCOUNT_RATE,
+                        self.VEHICLE_INVENTORY_STEP_SIZE,
+                        self.LOCATION_REPETITION,
+                    )
+                )
+                policy = policy_class(
+                    self.DIVIDE_GET_POSSIBLE_ACTIONS,
+                    self.NUMBER_OF_NEIGHBOURS,
+                    self.EPSILON,
+                    value_function,
+                )
+            elif policy_class is decision.RandomActionPolicy:
+                policy = policy_class(
+                    self.DIVIDE_GET_POSSIBLE_ACTIONS,
+                    self.NUMBER_OF_NEIGHBOURS,
+                )
+            else:
+                if policy_class is None:
+                    return policy
+                policy = policy_class()
         # The the value function is the DoNothing Policy. Empty the vehicle arrival events in the stack
         if isinstance(policy, decision.DoNothing):
             self.stack = [
@@ -276,10 +321,6 @@ class World(SaveMixin):
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):
             policy.value_function.setup(self.state)
-        if hasattr(policy, "roll_out_policy") and hasattr(
-            policy.roll_out_policy, "value_function"
-        ):
-            policy.roll_out_policy.value_function.setup(self.state)
         return policy
 
     def get_filename(self):
@@ -288,19 +329,21 @@ class World(SaveMixin):
             f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}"
         )
 
-    def save_world(self, trained_world=None):
-        if trained_world:
-            training_directory, shifts_trained = trained_world
-            directory = f"{WORLD_CACHE_DIR}/{training_directory}"
-            super().save(directory, f"-{shifts_trained}")
-        else:
-            super().save(WORLD_CACHE_DIR)
+    def save_world(self, cache_directory=None, suffix=""):
+        directory = WORLD_CACHE_DIR
+        if cache_directory:
+            directory = f"{WORLD_CACHE_DIR}/{cache_directory}"
+        super().save(directory, f"-{suffix}")
 
-    def get_train_directory(self):
+    def get_train_directory(self, suffix=None):
+        suffix = suffix if suffix else f"{self.created_at}"
         return (
             f"trained_models/{self.policy.value_function.__repr__()}/"
-            f"c{len(self.state.clusters)}_s{len(self.state.get_scooters())}/{self.created_at}"
+            f"c{len(self.state.clusters)}_s{len(self.state.get_scooters())}/{suffix}"
         )
+
+    def system_simulate(self):
+        return system_simulate(self)
 
     def __deepcopy__(self, *args):
         new_world = World(
@@ -316,4 +359,7 @@ class World(SaveMixin):
         new_world.tabu_list = self.tabu_list.copy()
         new_world.cluster_flow = self.cluster_flow.copy()
         new_world.metrics = copy.deepcopy(self.metrics)
+        # Set all hyper parameters
+        for parameter in HyperParameters().__dict__.keys():
+            setattr(new_world, parameter, getattr(self, parameter))
         return new_world

@@ -6,6 +6,7 @@ import clustering.scripts
 import decision
 import decision.value_functions
 import analysis.evaluate_policies
+import globals
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.neighbour_filtering import filtering_neighbours
@@ -35,7 +36,8 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions(
-            self.vehicle, number_of_neighbours=6
+            self.vehicle,
+            number_of_neighbours=6,
         )
 
         # Test number of swaps less or equal to ideal state
@@ -85,7 +87,9 @@ class BasicDecisionTests(unittest.TestCase):
         start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
-        actions = self.initial_state.get_possible_actions(self.vehicle)
+        actions = self.initial_state.get_possible_actions(
+            self.vehicle, number_of_neighbours=1
+        )
 
         # Test number of actions
         self.assertEqual(len(actions), 14)
@@ -186,7 +190,10 @@ class BasicDecisionTests(unittest.TestCase):
         vehicle.current_location.scooters = vehicle.current_location.scooters[:1]
 
         # Get all possible actions
-        actions = initial_state.get_possible_actions(vehicle, number_of_neighbours=5)
+        actions = initial_state.get_possible_actions(
+            vehicle,
+            number_of_neighbours=5,
+        )
 
         # Test number of actions possible
         self.assertEqual(5, len(actions))
@@ -214,16 +221,6 @@ class PolicyTests(unittest.TestCase):
     def setUp(self) -> None:
         self.world = World(40, None, clustering.scripts.get_initial_state(100, 10))
 
-    def test_random_rollout_policy(self):
-        self.world.policy = decision.RandomRolloutPolicy(number_of_rollouts=2)
-        vehicle_random_rollout_policy = self.world.state.vehicles[0]
-        self.assertIsInstance(
-            self.world.policy.get_best_action(
-                self.world, vehicle_random_rollout_policy
-            ),
-            Action,
-        )
-
     def test_swap_all_policy(self):
         self.world.policy = decision.SwapAllPolicy()
         vehicle_swap_all_policy = self.world.state.vehicles[0]
@@ -234,6 +231,16 @@ class PolicyTests(unittest.TestCase):
 
 
 class ValueFunctionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        hyper_params = globals.HyperParameters()
+        self.value_function_args = (
+            hyper_params.WEIGHT_UPDATE_STEP_SIZE,
+            hyper_params.WEIGHT_INITIALIZATION_VALUE,
+            hyper_params.DISCOUNT_RATE,
+            hyper_params.VEHICLE_INVENTORY_STEP_SIZE,
+            hyper_params.LOCATION_REPETITION,
+        )
+
     def world_value_function_check(self, value_function):
         world = World(
             100,
@@ -269,21 +276,14 @@ class ValueFunctionTests(unittest.TestCase):
 
     def test_linear_value_function(self):
         self.world_value_function_check(
-            decision.value_functions.LinearValueFunction(
-                weight_update_step_size=0.001,
-                discount_factor=0.8,
-                vehicle_inventory_step_size=0.5,
-                weight_init_value=random.random(),
-            )
+            decision.value_functions.LinearValueFunction(*self.value_function_args)
         )
 
     def test_ann_value_function(self):
         self.world_value_function_check(
             decision.value_functions.ANNValueFunction(
+                *self.value_function_args,
                 [100, 1000, 100],
-                weight_update_step_size=0.001,
-                discount_factor=0.8,
-                vehicle_inventory_step_size=0.5,
             )
         )
 
@@ -298,10 +298,11 @@ class EpsilonGreedyPolicyTest(unittest.TestCase):
             ),
             visualize=False,
         )
-        policy = decision.EpsilonGreedyValueFunctionPolicy(
-            decision.value_functions.LinearValueFunction(),
+        world.policy = world.set_policy(
+            policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+            value_function_class=decision.value_functions.LinearValueFunction,
         )
-        world, *rest = analysis.evaluate_policies.run_analysis([policy], world)
+        world, *rest = analysis.evaluate_policies.run_analysis([world])
         self.assertTrue(
             any(
                 [
@@ -327,8 +328,8 @@ class NeighbourFilteringTests(unittest.TestCase):
         best_neighbours_with_random = filtering_neighbours(
             state,
             vehicle,
-            number_of_neighbours=3,
-            number_of_random_neighbours=1,
+            3,
+            1,
         )
 
         # test if the number of neighbours is the same, even though one is random
@@ -349,9 +350,7 @@ class NeighbourFilteringTests(unittest.TestCase):
         # add one scooter to vehicle inventory so filtering neighbours uses the ideal state deviation filtering method
         vehicle.pick_up(Scooter(0, 0, 0.9, 0))
 
-        best_neighbours = filtering_neighbours(
-            state, vehicle, number_of_neighbours=3, number_of_random_neighbours=0
-        )
+        best_neighbours = filtering_neighbours(state, vehicle, 3, 0)
 
         # check if clusters are closest and with the highest deviation -> best neighbours
         for neighbour in best_neighbours:

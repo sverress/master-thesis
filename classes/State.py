@@ -4,12 +4,11 @@ from classes.Cluster import Cluster
 from classes.Depot import Depot
 import clustering.methods
 from classes.SaveMixin import SaveMixin
-from system_simulation.scripts import system_simulate
 from visualization.visualizer import *
 import decision.neighbour_filtering
 import numpy as np
 import math
-from globals import STATE_CACHE_DIR, NEIGHBOR_FILTERING
+from globals import STATE_CACHE_DIR
 import copy
 
 
@@ -97,12 +96,11 @@ class State(SaveMixin):
     def get_possible_actions(
         self,
         vehicle: Vehicle,
-        number_of_neighbours=DEFAULT_NUMBER_OF_NEIGHBOURS,
+        number_of_neighbours=None,
         divide=None,
         random_neighbours=0,
         exclude=None,
         time=None,
-        neighbor_filtering=NEIGHBOR_FILTERING,
     ):
         """
         Enumerate all possible actions from the current state
@@ -111,9 +109,8 @@ class State(SaveMixin):
         :param exclude: clusters to exclude from next cluster
         :param random_neighbours: number of random neighbours to add to possible next locations
         :param vehicle: vehicle to perform this action
-        :param number_of_neighbours: number of neighbours to evaluate
+        :param number_of_neighbours: number of neighbours to evaluate, if None: all neighbors are returned
         :param divide: number to divide by to create range increment
-        :param neighbor_filtering: if it should use neighbor filtering
         :return: List of Action objects
         """
         actions = []
@@ -123,11 +120,11 @@ class State(SaveMixin):
                 decision.neighbour_filtering.filtering_neighbours(
                     self,
                     vehicle,
-                    number_of_neighbours=number_of_neighbours,
-                    number_of_random_neighbours=random_neighbours,
+                    number_of_neighbours,
+                    random_neighbours,
                     exclude=exclude,
                 )
-                if neighbor_filtering
+                if number_of_neighbours
                 else self.get_neighbours(vehicle.current_location, is_sorted=False)
             )
 
@@ -173,13 +170,13 @@ class State(SaveMixin):
                 decision.neighbour_filtering.filtering_neighbours(
                     self,
                     vehicle,
-                    number_of_neighbours=number_of_neighbours,
-                    number_of_random_neighbours=random_neighbours,
+                    number_of_neighbours,
+                    random_neighbours,
                     time=time,
                     exclude=exclude,
                     max_swaps=max(pick_ups, swaps),
                 )
-                if neighbor_filtering
+                if number_of_neighbours
                 else self.get_neighbours(vehicle.current_location)
             )
             combinations = []
@@ -329,9 +326,6 @@ class State(SaveMixin):
             )
         else:
             raise ValueError(f"No locations with id={location_id} where found")
-
-    def system_simulate(self):
-        return system_simulate(self)
 
     def visualize(self):
         visualize_state(self)

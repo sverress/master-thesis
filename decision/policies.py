@@ -1,20 +1,15 @@
 import copy
-import math
 import decision.neighbour_filtering
 import classes
-import globals
-from globals import NUMBER_OF_ROLLOUTS
 import numpy.random as random
-import scenario_simulation.scripts
-import time
 import abc
 
 
 class Policy(abc.ABC):
     def __init__(
         self,
-        get_possible_actions_divide=globals.DEFAULT_DIVIDE_GET_POSSIBLE_ACTIONS,
-        number_of_neighbors=globals.DEFAULT_NUMBER_OF_NEIGHBOURS,
+        get_possible_actions_divide,
+        number_of_neighbors,
     ):
         self.get_possible_actions_divide = get_possible_actions_divide
         self.number_of_neighbors = number_of_neighbors
@@ -47,7 +42,7 @@ class Policy(abc.ABC):
         actions_info: [(classes.Action, int, int)],
     ) -> None:
         if world.verbose:
-            print(f"\n{vehicle} (#rollouts {NUMBER_OF_ROLLOUTS}):")
+            print(f"\n{vehicle}:")
             for action, reward, computational_time in actions_info:
                 print(
                     f"\n{action} Reward - {round(reward, 3)} | Comp. time - {round(computational_time, 2)}"
@@ -55,104 +50,19 @@ class Policy(abc.ABC):
             print("\n----------------------------------------------------------------")
 
 
-class RolloutPolicy(Policy):
-    def get_best_action(self, world, vehicle) -> classes.Action:
-        pass
-
-    def __init__(self, number_of_rollouts=globals.NUMBER_OF_ROLLOUTS, **kwargs):
-        super().__init__(**kwargs)
-        self.number_of_rollouts = number_of_rollouts
-
-
-class RolloutValueFunctionPolicy(RolloutPolicy):
-    """
-    Rollout possible actions to update value function.
-    """
-
-    def __init__(self, roll_out_policy=None, **kwargs):
-        super().__init__(**kwargs)
-        self.roll_out_policy = roll_out_policy
-
-    def get_best_action(self, world, vehicle):
-        # Find all possible actions
-        actions = world.state.get_possible_actions(
-            vehicle,
-            divide=self.get_possible_actions_divide,
-            exclude=world.tabu_list,
-            time=world.time,
-            number_of_neighbours=self.number_of_neighbors,
-        )
-        action_info = []
-        # For every possible action
-        for action in actions:
-            start = time.time()
-            # Get new state of performing action
-            world_copy = copy.deepcopy(world)
-            vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
-            reward = world_copy.state.do_action(action, vehicle_copy, world_copy.time)
-
-            # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            # get_best_action in this rollout will update the value function provided by the rollout policy
-            scenario_simulation.scripts.estimate_reward(
-                world_copy,
-                vehicle_copy,
-                self.roll_out_policy,
-                number_of_simulations=self.number_of_rollouts,
-            )
-
-            stop = time.time()
-
-            next_state_value = self.roll_out_policy.value_function.estimate_value(
-                world_copy.state, vehicle_copy, world_copy.time
-            )
-            action_info.append((action, reward, next_state_value, stop - start))
-
-        Policy.print_action_stats(
-            world,
-            vehicle,
-            [
-                (action, reward + next_state_value, elapsed_time)
-                for action, reward, next_state_value, elapsed_time in action_info
-            ],
-        )
-
-        # Find the action with the highest reward and future expected reward - reward + value function next state
-        (
-            best_action,
-            best_action_reward,
-            best_action_next_state_value,
-            best_time,
-        ) = max(action_info, key=lambda pair: pair[1] + pair[2])
-
-        state_features = self.roll_out_policy.value_function.get_state_features(
-            world.state, vehicle, world.time
-        )
-        state_value = (
-            self.roll_out_policy.value_function.estimate_value_from_state_features(
-                state_features
-            )
-        )
-
-        self.roll_out_policy.value_function.update_weights(
-            state_features,
-            state_value,
-            best_action_next_state_value,
-            best_action_reward,
-        )
-
-        return best_action
-
-    def __repr__(self):
-        return "ValueFunctionPolicy w/epsilon greedy rollout"
-
-
 class EpsilonGreedyValueFunctionPolicy(Policy):
     """
     Chooses an action based on a epsilon greedy policy. Will update weights after chosen action
     """
 
-    def __init__(self, value_function=None, epsilon=globals.EPSILON, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        get_possible_actions_divide,
+        number_of_neighbors,
+        epsilon,
+        value_function,
+    ):
+        super().__init__(get_possible_actions_divide, number_of_neighbors)
         self.value_function = value_function
         self.epsilon = epsilon
 
@@ -226,61 +136,19 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         return f"EpsilonGreedyPolicy w/ {self.value_function.__str__()}"
 
 
-class RandomRolloutPolicy(RolloutPolicy):
-    def get_best_action(self, world, vehicle):
-        max_reward = -math.inf
-        best_action = None
-
-        # Find all possible actions
-        actions = world.state.get_possible_actions(
-            vehicle,
-            divide=self.get_possible_actions_divide,
-            exclude=world.tabu_list,
-            time=world.time,
-            number_of_neighbours=self.number_of_neighbors,
-        )
-        actions_info = []
-        # For every possible action
-        roll_out_policy = RandomActionPolicy()
-        for action in actions:
-            start = time.time()
-            # Get new state of performing action
-            world_copy = copy.deepcopy(world)
-            vehicle_copy = world_copy.state.get_vehicle_by_id(vehicle.id)
-            reward = world_copy.state.do_action(action, vehicle_copy, world_copy.time)
-
-            # Estimate value of making this action, after performing it and calculating the time it takes to perform.
-            reward += (
-                world.get_discount()
-                * scenario_simulation.scripts.estimate_reward(
-                    world_copy,
-                    vehicle_copy,
-                    roll_out_policy,
-                    number_of_simulations=self.number_of_rollouts,
-                )
-            )
-
-            # If the action is better than previous actions, make best_action
-            # Add next cluster distance to update shift duration used later.
-            if reward >= max_reward:
-                max_reward = reward
-                best_action = action
-
-            actions_info.append((action, reward, time.time() - start))
-
-        Policy.print_action_stats(world, vehicle, actions_info)
-
-        return best_action
-
-
 class SwapAllPolicy(Policy):
+    def __init__(self):
+
+        super().__init__(1, 1)
+
     def get_best_action(self, world, vehicle):
         # Choose a random cluster
         next_location: classes.Location = (
             decision.neighbour_filtering.filtering_neighbours(
                 world.state,
                 vehicle,
-                number_of_neighbours=1,
+                self.number_of_neighbors,
+                0,
                 exclude=world.tabu_list,
                 max_swaps=vehicle.get_max_number_of_swaps(),
             )[0]
@@ -311,6 +179,9 @@ class SwapAllPolicy(Policy):
 
 
 class RandomActionPolicy(Policy):
+    def __init__(self, get_possible_actions_divide, number_of_neighbors):
+        super().__init__(get_possible_actions_divide, number_of_neighbors)
+
     def get_best_action(self, world, vehicle):
         # all possible actions in this state
         possible_actions = world.state.get_possible_actions(
@@ -319,7 +190,6 @@ class RandomActionPolicy(Policy):
             time=world.time,
             divide=self.get_possible_actions_divide,
             number_of_neighbours=self.number_of_neighbors,
-            neighbor_filtering=False,
         )
 
         # pick a random action
@@ -327,5 +197,8 @@ class RandomActionPolicy(Policy):
 
 
 class DoNothing(Policy):
+    def __init__(self):
+        super().__init__(0, 0)
+
     def get_best_action(self, world, vehicle) -> classes.Action:
         return classes.Action([], [], [], 0)

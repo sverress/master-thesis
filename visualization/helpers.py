@@ -1,11 +1,10 @@
 import itertools
-from scipy.interpolate import make_interp_spline, BSpline
+from scipy.interpolate import make_interp_spline
 from matplotlib import gridspec
 from globals import (
     BLACK,
     RED,
     BLUE,
-    GREEN,
     GEOSPATIAL_BOUND_NEW,
     COLORS,
     ACTION_OFFSET,
@@ -254,7 +253,11 @@ def create_standard_state_plot():
 
     oslo = plt.imread("images/kart_oslo.png")
     ax.imshow(
-        oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+        oslo,
+        zorder=0,
+        extent=(0, 1, 0, 1),
+        aspect="auto",
+        alpha=0.8,
     )
 
     return fig, ax
@@ -310,7 +313,11 @@ def create_subplots_from_gripspec(fig, spec, titles):
         ax.axis("off")
         if i > 0:
             ax.imshow(
-                oslo, zorder=0, extent=(0, 1, 0, 1), aspect="auto", alpha=0.8,
+                oslo,
+                zorder=0,
+                extent=(0, 1, 0, 1),
+                aspect="auto",
+                alpha=0.8,
             )
         subplots.append(ax)
 
@@ -457,7 +464,11 @@ def alt_draw_networkx_edge_labels(
             trans_angle = 0.0
         # use default box of white with white border
         if bbox is None:
-            bbox = dict(boxstyle="round", ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0),)
+            bbox = dict(
+                boxstyle="round",
+                ec=(1.0, 1.0, 1.0),
+                fc=(1.0, 1.0, 1.0),
+            )
         if str(label) != label:
             label = str(label)  # this will cause "1" and 1 to be labeled the same
 
@@ -496,7 +507,11 @@ def alt_draw_networkx_edge_labels(
 
 
 def setup_cluster_visualize(
-    state, current_location_id=None, next_location_id=None, fig=None, ax=None,
+    state,
+    current_location_id=None,
+    next_location_id=None,
+    fig=None,
+    ax=None,
 ):
     node_size = 1000
     font_size = 14
@@ -545,7 +560,8 @@ def make_scooter_visualize(state, ax, scooter_label=False):
 
     # constructs the networkx graph from cluster location, second input is for color purpose
     graph, labels, node_border, node_color = make_graph(
-        [scooter.get_location() for scooter in all_scooters], all_cluster_ids,
+        [scooter.get_location() for scooter in all_scooters],
+        all_cluster_ids,
     )
 
     if scooter_label:

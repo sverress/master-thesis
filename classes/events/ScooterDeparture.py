@@ -30,7 +30,8 @@ class ScooterDeparture(Event):
             )
 
             trip_distance = world.state.get_distance(
-                departure_cluster.id, arrival_cluster.id,
+                departure_cluster.id,
+                arrival_cluster.id,
             )
 
             # calculate arrival time

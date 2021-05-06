@@ -1,5 +1,4 @@
 from classes.events.Event import Event
-from globals import VAN_BATTERY_INVENTORY
 import copy
 
 
