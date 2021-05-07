@@ -326,9 +326,10 @@ def visualize_scooter_simulation(
     plt.show()
 
 
-def visualize_analysis(instances):
+def visualize_analysis(instances, title=None):
     """
     :param instances: world instances to analyse
+    :param title: plot title
     :return: plot for the analysis
     """
     # generate plot and subplots
@@ -372,7 +373,7 @@ def visualize_analysis(instances):
         ) = instance.metrics.get_all_metrics()
         x = instance.metrics.timeline
 
-        label = instance.policy  # get_policy_label(instance.policy)
+        label = instance.label  # get_policy_label(instance.policy)
         ax1.plot(x, lost_demand, c=COLORS[i], label=label)
         ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=label)
         ax3.plot(x, deficient_battery, c=COLORS[i], label=label)
@@ -380,6 +381,11 @@ def visualize_analysis(instances):
     for subplot in subplots:
         subplot.legend()
         subplot.set_ylim(ymin=0)
+    if title is not None:
+        fig.suptitle(
+            title,
+            fontsize=16,
+        )
 
     plt.show()
 
