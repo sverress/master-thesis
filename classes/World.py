@@ -27,6 +27,7 @@ class World(SaveMixin, HyperParameters):
             self.lost_demand = []
             self.average_negative_deviation_ideal_state = []
             self.deficient_battery = []
+            self.available_scooters = []
             self.timeline = []
             self.testing_parameter_name = test_parameter_name
             self.testing_parameter_value = test_parameter_value
@@ -123,6 +124,21 @@ class World(SaveMixin, HyperParameters):
                         )
                         for cluster in world.state.clusters
                         if len(cluster.scooters) < cluster.ideal_state
+                    ]
+                )
+            )
+            self.available_scooters.append(
+                sum(
+                    [
+                        len(cluster.get_available_scooters())
+                        for cluster in world.state.clusters
+                    ]
+                )
+                + sum(
+                    [
+                        1
+                        for event in world.stack
+                        if isinstance(event, classes.ScooterArrival)
                     ]
                 )
             )
@@ -271,10 +287,7 @@ class World(SaveMixin, HyperParameters):
         return self.DISCOUNT_RATE ** (self.time / 60)
 
     def set_policy(
-        self,
-        policy=None,
-        policy_class=None,
-        value_function_class=None,
+        self, policy=None, policy_class=None, value_function_class=None,
     ):
         if policy is None:
             if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
@@ -304,8 +317,7 @@ class World(SaveMixin, HyperParameters):
                 )
             elif policy_class is decision.RandomActionPolicy:
                 policy = policy_class(
-                    self.DIVIDE_GET_POSSIBLE_ACTIONS,
-                    self.NUMBER_OF_NEIGHBOURS,
+                    self.DIVIDE_GET_POSSIBLE_ACTIONS, self.NUMBER_OF_NEIGHBOURS,
                 )
             else:
                 if policy_class is None:
