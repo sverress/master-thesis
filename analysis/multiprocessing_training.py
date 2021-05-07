@@ -6,17 +6,18 @@ from analysis.train_value_function import train_value_function
 import clustering.scripts
 
 
-def learning_rates(learning_rate, suffix):
+def discount_rates(discount_rate, suffix):
     world = classes.World(
         480,
         None,
         clustering.scripts.get_initial_state(2500, 30),
         verbose=False,
         visualize=False,
-        test_parameter_name="learning_rate",
-        test_parameter_value=learning_rate,
-        WEIGHT_UPDATE_STEP_SIZE=learning_rate,
-        ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
+        test_parameter_name="discount_rate",
+        test_parameter_value=discount_rate,
+        DISCOUNT_RATE=discount_rate,
+        MODELS_TO_BE_SAVED=10,
+        TRAINING_SHIFTS_BEFORE_SAVE=100,
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
@@ -32,6 +33,9 @@ def multiprocess_train(function, inputs):
 
 if __name__ == "__main__":
     multiprocess_train(
-        learning_rates,
-        [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
+        discount_rates,
+        [
+            (value, f"lr_{value}")
+            for value in [0.8, 0.85, 0.9, 0.95, 0.97, 0.99, 0.999, 0.9999, 1]
+        ],
     )
