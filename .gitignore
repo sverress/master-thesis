@@ -144,3 +144,6 @@ computational_study/
 # State cache
 state_cache/
 /world_cache/trained_models/ANNValueFunction/
+
+#Personal directory to computational folder on ondrive
+personal.py

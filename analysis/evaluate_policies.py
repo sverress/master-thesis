@@ -4,6 +4,7 @@ import math
 import classes
 import decision.value_functions
 import decision
+import analysis.export_metrics_to_xlsx
 from visualization.visualizer import visualize_analysis, visualize_td_error
 
 
@@ -11,7 +12,8 @@ def run_analysis_from_path(
     path: str,
     visualize_route=False,
     runs_per_policy=4,
-    shift_duration=480,
+    shift_duration=960,
+    export_to_excel=False,
 ):
     # Sort the policies by the training duration
     world_objects = sorted(
@@ -36,18 +38,17 @@ def run_analysis_from_path(
         world.shift_duration = shift_duration
 
     return run_analysis(
-        world_objects,
-        runs_per_policy=runs_per_policy,
+        world_objects, runs_per_policy=runs_per_policy, export_to_excel=export_to_excel
     )
 
 
 def run_analysis(
     worlds,
-    smooth_curve=True,
     runs_per_policy=4,
     verbose=True,
     save=False,
     baseline_policy_world=None,
+    export_to_excel=False,
 ):
     instances = []
     if baseline_policy_world:
@@ -82,10 +83,7 @@ def run_analysis(
 
         if hasattr(world.policy, "value_function"):
             td_errors_and_label.append(
-                (
-                    world.policy.value_function.td_errors,
-                    world.policy.__str__(),
-                )
+                (world.policy.value_function.td_errors, world.policy.__str__(),)
             )
 
     visualize_analysis(instances)
@@ -93,6 +91,10 @@ def run_analysis(
     if save:
         for world in instances:
             world.save_world()
+
+    if export_to_excel:
+        analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)
+
     return instances
 
 
@@ -103,6 +105,4 @@ if __name__ == "__main__":
         print(f"fetching world objects from {sys.argv[1]}")
         run_analysis_from_path(sys.argv[1])
     else:
-        run_analysis_from_path(
-            "world_cache/trained_models/LinearValueFunction/c30_s2500/TEST_SET"
-        )
+        run_analysis_from_path("world_cache/test_models")
