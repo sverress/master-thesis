@@ -72,6 +72,6 @@ class AnalysisTests(unittest.TestCase):
         analysis.evaluate_policies.run_analysis_from_path(
             "world_cache/test_models", shift_duration=60, export_to_excel=True,
         )
-        file_name = f"{personal.PATH_COMPUTATIONAL_STUDY}/Test.xlsx"
+        file_name = f"computational_study/Test.xlsx"
         # removing the test file that was created during the test
         os.remove(file_name)

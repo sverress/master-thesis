@@ -35,7 +35,11 @@ def metrics_to_xlsx(instances: [classes.World]):
     if not os.path.exists(PATH_COMPUTATIONAL_STUDY):
         os.makedirs(PATH_COMPUTATIONAL_STUDY)
 
-    file_name = f"{PATH_COMPUTATIONAL_STUDY}/{parameter_name.title()}.xlsx"
+    file_name = (
+        f"{PATH_COMPUTATIONAL_STUDY}/{parameter_name.title()}.xlsx"
+        if parameter_name != "TEST"
+        else "computational_study/Test.xlsx"
+    )
 
     # if the file isn't created -> create a new .xlsx file
     if not os.path.isfile(file_name):
