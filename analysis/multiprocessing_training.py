@@ -25,6 +25,26 @@ def learning_rates(learning_rate, suffix):
     train_value_function(world, save_suffix=f"{suffix}")
 
 
+def ann_structure(structure, suffix):
+    world = classes.World(
+        480,
+        None,
+        clustering.scripts.get_initial_state(2500, 30),
+        verbose=False,
+        visualize=False,
+        test_parameter_name="structure",
+        test_parameter_value=structure,
+        ANN_NETWORK_STRUCTURE=structure,
+        TRAINING_SHIFTS_BEFORE_SAVE=10,
+        MODELS_TO_BE_SAVED=3,
+    )
+    world.policy = world.set_policy(
+        policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+        value_function_class=decision.value_functions.ANNValueFunction,
+    )
+    train_value_function(world, save_suffix=f"{suffix}")
+
+
 def multiprocess_train(function, inputs):
     with Pool() as p:
         p.starmap(function, inputs)
@@ -33,5 +53,20 @@ def multiprocess_train(function, inputs):
 if __name__ == "__main__":
     multiprocess_train(
         learning_rates,
-        [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
+        [
+            (value, f"structure_{value}")
+            for value in [
+                [30] * 10,
+                [30] * 5,
+                [100],
+                [100] * 3,
+                [100] * 6,
+                [1000],
+                [1000] * 3,
+                [100, 50, 10],
+                [100, 50, 10, 5, 2],
+                [1000, 500, 200, 100],
+                [1000, 500, 200, 100, 50, 20, 10],
+            ]
+        ],
     )
