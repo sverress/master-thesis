@@ -35,8 +35,8 @@ def ann_structure(structure, suffix):
         test_parameter_name="structure",
         test_parameter_value=structure,
         ANN_NETWORK_STRUCTURE=structure,
-        TRAINING_SHIFTS_BEFORE_SAVE=10,
-        MODELS_TO_BE_SAVED=3,
+        TRAINING_SHIFTS_BEFORE_SAVE=100,
+        MODELS_TO_BE_SAVED=10,
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
@@ -52,7 +52,7 @@ def multiprocess_train(function, inputs):
 
 if __name__ == "__main__":
     multiprocess_train(
-        learning_rates,
+        ann_structure,
         [
             (value, f"structure_{value}")
             for value in [
