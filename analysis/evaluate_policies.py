@@ -3,6 +3,7 @@ import os
 import math
 from multiprocessing import Pool
 import classes
+import clustering.scripts
 import decision.value_functions
 import decision
 from visualization.visualizer import visualize_analysis, visualize_td_error
@@ -112,7 +113,6 @@ def run_analysis(
             instances.append(world_result)
 
     visualize_analysis(instances, title=title)
-    visualize_td_error(td_errors_and_label)
     if save:
         for world_result in instances:
             world_result.save_world()
@@ -126,6 +126,11 @@ if __name__ == "__main__":
         print(f"fetching world objects from {sys.argv[2]}")
         run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1])
     else:
-        run_analysis_from_path(
-            "world_cache/trained_models/LinearValueFunction/c30_s2500/TEST_SET"
+        world = classes.World(
+            480,
+            decision.SwapAllPolicy(),
+            clustering.scripts.get_initial_state(2500, 30, number_of_vans=10),
+            visualize=True,
+            verbose=False,
         )
+        evaluate_world(world, "SHIFT_DURATION", True, 1)

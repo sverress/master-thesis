@@ -171,7 +171,7 @@ def visualize_vehicle_routes(
     display_graph(graph, node_color, node_border, node_size, labels, font_size, ax2)
 
     func = lambda m, c: plt.plot([], [], marker=m, color=c, ls="none")[0]
-    handles = [func("_", VEHICLE_COLORS[i]) for i in range(len(state.vehicles))]
+    handles = [func("_", COLORS[i]) for i in range(len(state.vehicles))]
     legends = [f"Vehicle {vehicle.id}" for vehicle in state.vehicles]
     ax2.legend(handles, legends, framealpha=1)
 
