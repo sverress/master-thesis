@@ -6,6 +6,7 @@ import classes
 import clustering.scripts
 import decision.value_functions
 import decision
+import analysis.export_metrics_to_xlsx
 from visualization.visualizer import visualize_analysis, visualize_td_error
 
 
@@ -16,6 +17,7 @@ def run_analysis_from_path(
     shift_duration=960,
     world_attribute="SHIFT_DURATION",
     number_of_extra_vehicles=0,
+    export_to_excel=False,
 ):
     # Sort the policies by the training duration
     world_objects = sorted(
@@ -48,6 +50,7 @@ def run_analysis_from_path(
         runs_per_policy=runs_per_policy,
         title=path.split("/")[-1],  # Use "last" folder as title in the plot
         world_attribute=world_attribute,
+        export_to_excel=export_to_excel,
     )
 
 
@@ -82,6 +85,7 @@ def run_analysis(
     baseline_policy_world=None,
     title=None,
     world_attribute="SHIFT_DURATION",
+    export_to_excel=False,
 ):
     instances = []
     if baseline_policy_world:
@@ -116,6 +120,10 @@ def run_analysis(
     if save:
         for world_result in instances:
             world_result.save_world()
+
+    if export_to_excel:
+        analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)
+
     return instances
 
 
@@ -126,11 +134,4 @@ if __name__ == "__main__":
         print(f"fetching world objects from {sys.argv[2]}")
         run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1])
     else:
-        world = classes.World(
-            480,
-            decision.SwapAllPolicy(),
-            clustering.scripts.get_initial_state(2500, 30, number_of_vans=10),
-            visualize=True,
-            verbose=False,
-        )
-        evaluate_world(world, "SHIFT_DURATION", True, 1)
+        run_analysis_from_path("world_cache/test_models")

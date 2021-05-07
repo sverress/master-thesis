@@ -13,6 +13,8 @@ def learning_rates(learning_rate, suffix):
         clustering.scripts.get_initial_state(2500, 30),
         verbose=False,
         visualize=False,
+        test_parameter_name="learning_rate",
+        test_parameter_value=learning_rate,
         WEIGHT_UPDATE_STEP_SIZE=learning_rate,
         ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
     )
