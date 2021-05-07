@@ -15,6 +15,8 @@ def lost_trip_rewards(lost_trip_reward, suffix):
         visualize=False,
         test_parameter_name="lost_trip_reward",
         test_parameter_value=lost_trip_reward,
+        MODELS_TO_BE_SAVED=10,
+        TRAINING_SHIFTS_BEFORE_SAVE=100,
         LOST_TRIP_REWARD=lost_trip_reward,
         ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
     )
