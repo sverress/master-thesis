@@ -6,16 +6,16 @@ from analysis.train_value_function import train_value_function
 import clustering.scripts
 
 
-def learning_rates(learning_rate, suffix):
+def lost_trip_rewards(lost_trip_reward, suffix):
     world = classes.World(
         480,
         None,
         clustering.scripts.get_initial_state(2500, 30),
         verbose=False,
         visualize=False,
-        test_parameter_name="learning_rate",
-        test_parameter_value=learning_rate,
-        WEIGHT_UPDATE_STEP_SIZE=learning_rate,
+        test_parameter_name="lost_trip_reward",
+        test_parameter_value=lost_trip_reward,
+        LOST_TRIP_REWARD=lost_trip_reward,
         ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
     )
     world.policy = world.set_policy(
@@ -32,6 +32,9 @@ def multiprocess_train(function, inputs):
 
 if __name__ == "__main__":
     multiprocess_train(
-        learning_rates,
-        [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
+        lost_trip_rewards,
+        [
+            (value, f"lr_{value}")
+            for value in [-0.01, -0.1, -1, -5, -10, -50, -100, -1000]
+        ],
     )
