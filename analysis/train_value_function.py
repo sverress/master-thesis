@@ -9,8 +9,7 @@ import globals
 
 
 def train_value_function(
-    world,
-    save_suffix="",
+    world, save_suffix="",
 ):
     progress_bar = IncrementalBar(
         "Training value function",
@@ -46,10 +45,7 @@ if __name__ == "__main__":
         5,
         None,
         clustering.scripts.get_initial_state(
-            SAMPLE_SIZE,
-            NUMBER_OF_CLUSTERS,
-            number_of_vans=1,
-            number_of_bikes=0,
+            SAMPLE_SIZE, NUMBER_OF_CLUSTERS, number_of_vans=1, number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,

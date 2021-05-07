@@ -1,10 +1,6 @@
-import copy
-
+import analysis.evaluate_policies
 import classes
-import decision
-import decision.value_functions
-import clustering.scripts
-import errno
+from globals import HyperParameters
 import pandas as pd
 import os
 from openpyxl import load_workbook
@@ -16,8 +12,14 @@ def metrics_to_xlsx(instances: [classes.World]):
     Method to export metrics for a list of evaluated instances to Excel
     :param instances: list of instances to be exported
     """
+
     # assuming that all instances is tested on the same parameter
-    parameter_name = instances[0].metrics.testing_parameter_name
+    base_instance = instances[0]
+    parameter_name = (
+        base_instance.metrics.testing_parameter_name
+        if base_instance.metrics.testing_parameter_name != ""
+        else "TEST"
+    )
     # list to handle the column name structure
     column_tuples = []
     # list for all metrics data
@@ -49,17 +51,17 @@ def metrics_to_xlsx(instances: [classes.World]):
     # creating a list of existing sheets, so that if there are other sheets with a same name, a suffix is added
     sheets = [ws.title.split("_")[0] for ws in book.worksheets]
 
+    # have to replace : since its illegal that a sheet name contains the character
+    instance_created_at = base_instance.created_at.replace(":", ".")
+
+    # creating the sheet name, adding suffix if other sheets with the same name exist
+    sheet_name = (
+        f"{instance_created_at}_1"
+        if instance_created_at not in sheets
+        else f"{instance_created_at}_{sheets.count(instance_created_at) + 1}"
+    )
+
     try:
-        # have to replace : since its illegal that a sheet name contains the character
-        instance_created_at = instances[0].created_at.replace(":", ".")
-
-        # creating the sheet name, adding suffix if other sheets with the same name exist
-        sheet_name = (
-            f"{instance_created_at}_1"
-            if instance_created_at not in sheets
-            else f"{instance_created_at}_{sheets.count(instance_created_at) + 1}"
-        )
-
         # creating a multiindex object so that columns with the same name gets merged
         columns = pd.MultiIndex.from_tuples(
             column_tuples,
@@ -81,10 +83,23 @@ def metrics_to_xlsx(instances: [classes.World]):
             writer, sheet_name=sheet_name, startcol=1, startrow=1
         )  # write dataframe to file
 
-        # TODO - add a sheet with globals hyper-parameters
+        # adding a sheets of all globals defined in HyperParameter
+        values = []
+        names = []
+        for hyper_parameter in HyperParameters().__dict__.keys():
+            value = getattr(base_instance, hyper_parameter)
+            names.append(hyper_parameter.replace("_", " ").capitalize())
+            values.append(value)
+
+        df_globals = pd.DataFrame(values, index=names, columns=["Globals"])
+
+        df_globals.to_excel(
+            writer, sheet_name=f"{sheet_name}_g", startcol=1, startrow=1
+        )
 
     finally:
         writer.save()
+        return sheet_name
 
 
 def add_metric_column(instance, metrics_data, column_tuples):
@@ -116,26 +131,15 @@ def add_metric_column(instance, metrics_data, column_tuples):
     return metrics_data, column_tuples
 
 
-def example_write_to_excel():
-    # TODO: rewrite so that a cached and trained world is used
-    POLICY = decision.EpsilonGreedyValueFunctionPolicy(
-        decision.value_functions.LinearValueFunction()
-    )
-    world = classes.World(
-        120,
-        POLICY,
-        clustering.scripts.get_initial_state(100, 10),
-        test_parameter_name="Learning rate",
-        test_parameter_value=0.9,
-        visualize=False,
-        verbose=False,
-    )
-    copy_world = copy.deepcopy(world)
-    copy_world.metrics.testing_parameter_value = 0.95
-    world.run()
-    copy_world.run()
-    metrics_to_xlsx([world, copy_world])
-
-
 if __name__ == "__main__":
-    example_write_to_excel()
+    import sys
+
+    if len(sys.argv) > 1:
+        print(f"fetching world objects from {sys.argv[1]}")
+        analysis.evaluate_policies.run_analysis_from_path(
+            sys.argv[1], export_to_excel=True
+        )
+    else:
+        analysis.evaluate_policies.run_analysis_from_path(
+            "world_cache/test_models", shift_duration=60, export_to_excel=True,
+        )
