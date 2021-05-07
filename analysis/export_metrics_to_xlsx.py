@@ -31,15 +31,15 @@ def metrics_to_xlsx(instances: [classes.World]):
             instance, column_tuples=column_tuples, metrics_data=metrics_data
         )
 
-    # creating the directory to save the file if it doesn't exist
-    if not os.path.exists(PATH_COMPUTATIONAL_STUDY):
-        os.makedirs(PATH_COMPUTATIONAL_STUDY)
-
-    file_name = (
-        f"{PATH_COMPUTATIONAL_STUDY}/{parameter_name.title()}.xlsx"
-        if parameter_name != "TEST"
-        else "computational_study/Test.xlsx"
+    dir_path = (
+        PATH_COMPUTATIONAL_STUDY if parameter_name != "TEST" else "computational_study"
     )
+
+    # creating the directory to save the file if it doesn't exist
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    file_name = f"{dir_path}/{parameter_name.title()}.xlsx"
 
     # if the file isn't created -> create a new .xlsx file
     if not os.path.isfile(file_name):
