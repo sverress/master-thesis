@@ -3,14 +3,13 @@ import copy
 import classes
 import clustering.scripts
 import decision.value_functions
+import scenario_simulation.scripts
 from progress.bar import IncrementalBar
 
 import globals
 
 
-def train_value_function(
-    world, save_suffix="",
-):
+def train_value_function(world, save_suffix="", scenario_training=True):
     progress_bar = IncrementalBar(
         "Training value function",
         check_tty=False,
@@ -30,9 +29,12 @@ def train_value_function(
                 cache_directory=world.get_train_directory(save_suffix), suffix=shift
             )
 
+        # avoid running the world after the last model is saved
         if shift != number_of_shifts:
-            # avoid running the world after the last model is saved
-            policy_world.run()
+            if scenario_training:
+                scenario_simulation.scripts.training_simulation(policy_world)
+            else:
+                policy_world.run()
             world.policy = policy_world.policy
             progress_bar.next()
 

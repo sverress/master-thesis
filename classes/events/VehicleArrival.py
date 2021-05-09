@@ -37,19 +37,8 @@ class VehicleArrival(Event):
 
         arrival_time = 0
 
-        # if current location is a depot -> refill battery inventory
-        if vehicle.is_at_depot():
-            batteries_to_swap = min(
-                vehicle.current_location.get_available_battery_swaps(world.time),
-                vehicle.flat_batteries(),
-            )
-            arrival_time += vehicle.current_location.swap_battery_inventory(
-                world.time, batteries_to_swap
-            )
-            vehicle.add_battery_inventory(batteries_to_swap)
-
         # find the best action from the current world state
-        action = world.policy.get_best_action(world, vehicle)
+        action, _ = world.policy.get_best_action(world, vehicle)
 
         # Add next vehicle location to tabu list
         world.tabu_list.append(action.next_location)
@@ -71,7 +60,7 @@ class VehicleArrival(Event):
         arrival_cluster_id = vehicle.current_location.id
 
         # perform the best action on the state and send vehicle to new location
-        reward = world.state.do_action(action, vehicle, world.time)
+        reward, refill_time = world.state.do_action(action, vehicle, world.time)
 
         world.add_reward(reward, arrival_cluster_id, discount=True)
 
@@ -90,8 +79,12 @@ class VehicleArrival(Event):
         super(VehicleArrival, self).perform(world, **kwargs)
 
         # Compute the arrival time for the Vehicle arrival event created by the action
-        arrival_time += self.time + action.get_action_time(
-            world.state.get_distance(arrival_cluster_id, action.next_location)
+        arrival_time += (
+            self.time
+            + action.get_action_time(
+                world.state.get_distance(arrival_cluster_id, action.next_location)
+            )
+            + refill_time
         )
 
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack

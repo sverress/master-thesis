@@ -14,11 +14,7 @@ import copy
 
 class State(SaveMixin):
     def __init__(
-        self,
-        clusters: [Cluster],
-        depots: [Depot],
-        vehicles=None,
-        distance_matrix=None,
+        self, clusters: [Cluster], depots: [Depot], vehicles=None, distance_matrix=None,
     ):
         self.clusters = clusters
         self.vehicles = vehicles
@@ -122,7 +118,7 @@ class State(SaveMixin):
                     vehicle,
                     number_of_neighbours,
                     random_neighbours,
-                    exclude=exclude,
+                    exclude=exclude + [depot.id for depot in self.depots],
                 )
                 if number_of_neighbours
                 else self.get_neighbours(vehicle.current_location, is_sorted=False)
@@ -229,17 +225,18 @@ class State(SaveMixin):
         :return: float - reward for doing the action on the state
         """
         reward = 0
-        if vehicle.is_at_depot():
+        refill_time = 0
+        if vehicle.is_at_depot() and len(vehicle.service_route) > 0:
             batteries_to_swap = min(
                 vehicle.flat_batteries(),
                 vehicle.current_location.get_available_battery_swaps(time),
             )
-            vehicle.battery_inventory = (
-                vehicle.battery_inventory
-                + vehicle.current_location.swap_battery_inventory(
-                    time, batteries_to_swap
-                )
+
+            refill_time += vehicle.current_location.swap_battery_inventory(
+                time, batteries_to_swap
             )
+            vehicle.add_battery_inventory(batteries_to_swap)
+
         else:
             # Perform all pickups
             for pick_up_scooter_id in action.pick_ups:
@@ -278,7 +275,7 @@ class State(SaveMixin):
         # Moving the state/vehicle from this to next cluster
         vehicle.set_current_location(self.get_location_by_id(action.next_location))
 
-        return reward
+        return reward, refill_time
 
     def __repr__(self):
         return (
@@ -334,8 +331,7 @@ class State(SaveMixin):
         visualize_clustering(self.clusters)
 
     def visualize_flow(
-        self,
-        flows: [(int, int, int)],
+        self, flows: [(int, int, int)],
     ):
         visualize_cluster_flow(self, flows)
 
@@ -395,9 +391,7 @@ class State(SaveMixin):
 
     @staticmethod
     def save_path(
-        number_of_clusters,
-        sample_size,
-        ideal_state_computation,
+        number_of_clusters, sample_size, ideal_state_computation,
     ):
         def convert_binary(binary):
             return 1 if binary else 0
