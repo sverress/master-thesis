@@ -240,27 +240,27 @@ class ValueFunctionTests(unittest.TestCase):
             hyper_params.VEHICLE_INVENTORY_STEP_SIZE,
             hyper_params.LOCATION_REPETITION,
         )
-
-    def world_value_function_check(self, value_function):
-        world = World(
+        self.world = World(
             100,
             initial_state=clustering.scripts.get_initial_state(
                 100, 10, initial_location_depot=False
             ),
             policy=None,
         )
+
+    def world_value_function_check(self, value_function):
         # No discount should give reward equal to TD-error
-        value_function.setup(world.state)
-        vehicle = world.state.vehicles[0]
-        action = decision.policies.SwapAllPolicy().get_best_action(world, vehicle)
-        state = copy.deepcopy(world.state)
+        value_function.setup(self.world.state)
+        vehicle = self.world.state.vehicles[0]
+        action = decision.policies.SwapAllPolicy().get_best_action(self.world, vehicle)
+        state = copy.deepcopy(self.world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward = world.state.do_action(action, vehicle, world.time)
+        reward = self.world.state.do_action(action, vehicle, self.world.time)
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(
-                world.state, vehicle, world.time
+                self.world.state, vehicle, self.world.time
             )
             value_function.update_weights(
                 current_state_value=state_value,
@@ -286,6 +286,24 @@ class ValueFunctionTests(unittest.TestCase):
                 [100, 1000, 100],
             )
         )
+
+    def test_next_state_from_action(self):
+        value_function = decision.value_functions.LinearValueFunction(
+            *self.value_function_args
+        )
+        value_function.setup(self.world.state)
+        # Record current state
+        vehicle = self.world.state.vehicles[0]
+        action = decision.policies.SwapAllPolicy().get_best_action(self.world, vehicle)
+        function_next_state_features = value_function.get_next_state_features(
+            self.world.state, vehicle, action, self.world.time
+        )
+        self.world.state.do_action(action, vehicle, self.world.time)
+        next_state_features = value_function.convert_state_to_features(
+            self.world.state, vehicle, self.world.time
+        )
+        self.assertEqual(len(function_next_state_features), len(next_state_features))
+        self.assertSequenceEqual(function_next_state_features, next_state_features)
 
 
 class EpsilonGreedyPolicyTest(unittest.TestCase):
