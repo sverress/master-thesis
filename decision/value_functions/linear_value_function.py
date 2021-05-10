@@ -51,7 +51,10 @@ class LinearValueFunction(ValueFunction):
         super(LinearValueFunction, self).setup(state)
 
     def estimate_value(
-        self, state, vehicle, time,
+        self,
+        state,
+        vehicle,
+        time,
     ):
         return self.estimate_value_from_state_features(
             self.get_state_features(state, vehicle, time)
@@ -94,9 +97,21 @@ class LinearValueFunction(ValueFunction):
 
         return [1] + state_features + locations_features_combination
 
-    def get_state_features(self, state, vehicle, time):
+    def get_state_features(self, state, vehicle, time, cache=None):
         return self.create_location_features_combination(
-            self.convert_state_to_features(state, vehicle, time)
+            self.convert_state_to_features(state, vehicle, time, cache=cache)
+        )
+
+    def get_next_state_features(
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        action: classes.Action,
+        time: int,
+        cache=None,  # current_states, available_scooters = cache
+    ):
+        return self.create_location_features_combination(
+            self.convert_next_state_features(state, vehicle, action, time, cache)
         )
 
     def __str__(self):

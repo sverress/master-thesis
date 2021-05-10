@@ -10,3 +10,7 @@ def normalize_list(parameter_list: [float], zero_divide_value=0.0):
         if max_value != min_value
         else [zero_divide_value] * len(parameter_list)
     )
+
+
+def zero_divide(numerator, denominator):
+    return 0 if denominator == 0 else (numerator / denominator)

@@ -1,5 +1,5 @@
 import classes
-from globals import HyperParameters, SMALL_DEPOT_CAPACITY
+from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
 import helpers
 import abc
 
@@ -97,7 +97,23 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def get_state_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
+        cache=None,  # current_states, available_scooters = cache
+    ):
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
+    def get_next_state_features(
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        action: classes.Action,
+        time: int,
+        cache=None,  # current_states, available_scooters = cache
     ):
         pass
 
@@ -117,82 +133,37 @@ class ValueFunction(abc.ABC):
 
     @Decorators.check_setup
     def convert_state_to_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int
+        self, state: classes.State, vehicle: classes.Vehicle, time: int, cache=None
     ):
-        location_indicator = (
-            [0] * self.location_repetition * vehicle.current_location.id
-            + [1] * self.location_repetition
-            + [0]
-            * self.location_repetition
-            * (len(state.locations) - 1 - vehicle.current_location.id)
+        location_indicator = self.get_location_indicator(
+            vehicle.current_location.id, len(state.locations)
         )
 
-        normalized_deviation_ideal_state_positive = helpers.normalize_list(
-            [
-                len(cluster.scooters) - cluster.ideal_state
-                if len(cluster.scooters) - cluster.ideal_state > 0
-                else 0
-                for cluster in state.clusters
-            ]
-        )
+        (
+            normalized_deviation_ideal_state_positive,
+            normalized_deviation_ideal_state_negative,
+            normalized_deficient_battery,
+        ) = ValueFunction.get_normalized_lists(state, cache)
 
-        normalized_deviation_ideal_state_negative = helpers.normalize_list(
-            [
-                cluster.ideal_state - len(cluster.scooters)
-                if len(cluster.scooters) - cluster.ideal_state < 0
-                else 0
-                for cluster in state.clusters
-            ]
-        )
-
-        normalized_deficient_battery = helpers.normalize_list(
-            [
-                len(cluster.scooters) - cluster.get_current_state()
-                for cluster in state.clusters
-            ]
-        )
-
-        scooter_inventory_percent = (
-            0
-            if vehicle.scooter_inventory_capacity == 0
-            else (
-                len(vehicle.scooter_inventory)
-                / (vehicle.scooter_inventory_capacity + 0.000001)
+        scooter_inventory_indication = self.get_inventory_indicator(
+            helpers.zero_divide(
+                len(vehicle.scooter_inventory), vehicle.scooter_inventory_capacity
             )
         )
-        battery_inventory_percent = (
-            0
-            if vehicle.battery_inventory_capacity == 0
-            else (vehicle.battery_inventory / vehicle.battery_inventory_capacity)
+
+        battery_inventory_indication = self.get_inventory_indicator(
+            helpers.zero_divide(
+                vehicle.battery_inventory, vehicle.battery_inventory_capacity
+            )
         )
 
-        scooter_inventory_indication = [
-            1
-            if self.vehicle_inventory_step_size * i
-            < scooter_inventory_percent
-            <= self.vehicle_inventory_step_size * (i + 1)
-            or scooter_inventory_percent == i
-            else 0
-            for i in range(round(1 / self.vehicle_inventory_step_size))
-        ]
+        small_depot_degree_of_filling = ValueFunction.get_small_depot_degree_of_filling(
+            time, state
+        )
 
-        battery_inventory_indication = [
-            1
-            if self.vehicle_inventory_step_size * i
-            < battery_inventory_percent
-            <= self.vehicle_inventory_step_size * (i + 1)
-            or battery_inventory_percent == i
-            else 0
-            for i in range(round(1 / self.vehicle_inventory_step_size))
-        ]
-
-        small_depot_degree_of_filling = [
-            depot.get_available_battery_swaps(time) / SMALL_DEPOT_CAPACITY
-            for depot in state.depots[1:]
-        ]
-
-        state_features = (
-            normalized_deviation_ideal_state_positive
+        return (
+            location_indicator
+            + normalized_deviation_ideal_state_positive
             + normalized_deviation_ideal_state_negative
             + normalized_deficient_battery
             + scooter_inventory_indication
@@ -200,7 +171,175 @@ class ValueFunction(abc.ABC):
             + small_depot_degree_of_filling
         )
 
-        return location_indicator + state_features
-
     def update_shifts_trained(self, shifts_trained: int):
         self.shifts_trained = shifts_trained
+
+    @Decorators.check_setup
+    def convert_next_state_features(self, state, vehicle, action, time, cache=None):
+        # Change location by swapping location indicator
+        location_indicators = self.get_location_indicator(
+            action.next_location, len(state.locations)
+        )
+        # Fetch all normalized scooter state representations
+        (
+            normalized_deviation_ideal_state_positive,
+            normalized_deviation_ideal_state_negative,
+            normalized_deficient_battery,
+        ) = ValueFunction.get_normalized_lists(
+            state, cache, current_location=vehicle.current_location.id, action=action,
+        )
+        # Inventory indicators adjusting for action effects
+        scooter_inventory_indication = self.get_inventory_indicator(
+            helpers.zero_divide(
+                len(vehicle.scooter_inventory)
+                + len(action.pick_ups)
+                - len(action.delivery_scooters),
+                vehicle.scooter_inventory_capacity,
+            )
+        )
+
+        battery_inventory_indication = self.get_inventory_indicator(
+            helpers.zero_divide(
+                vehicle.battery_inventory
+                - len(action.battery_swaps)
+                - len(action.pick_ups),
+                vehicle.battery_inventory_capacity,
+            )
+        )
+        # Depot state
+        small_depot_degree_of_filling = ValueFunction.get_small_depot_degree_of_filling(
+            time, state
+        )
+        return (
+            location_indicators
+            + normalized_deviation_ideal_state_positive
+            + normalized_deviation_ideal_state_negative
+            + normalized_deficient_battery
+            + scooter_inventory_indication
+            + battery_inventory_indication
+            + small_depot_degree_of_filling
+        )
+
+    @staticmethod
+    def get_small_depot_degree_of_filling(time, state):
+        return [
+            depot.get_available_battery_swaps(time) / SMALL_DEPOT_CAPACITY
+            for depot in state.depots[1:]
+        ]
+
+    def get_location_indicator(self, location_id, number_of_locations):
+        return (
+            [0] * self.location_repetition * location_id
+            + [1] * self.location_repetition
+            + [0] * self.location_repetition * (number_of_locations - 1 - location_id)
+        )
+
+    @staticmethod
+    def get_normalized_lists(state, cache=None, current_location=None, action=None):
+        if current_location is not None and action is not None:
+
+            def filter_scooter_ids(ids, isAvailable=True):
+                if isAvailable:
+                    available_filter = (
+                        lambda scooter_id: state.clusters[current_location]
+                        .get_scooter_from_id(scooter_id)
+                        .battery
+                        > BATTERY_LIMIT
+                    )
+                else:
+                    available_filter = (
+                        lambda scooter_id: state.clusters[current_location]
+                        .get_scooter_from_id(scooter_id)
+                        .battery
+                        < BATTERY_LIMIT
+                    )
+                return [
+                    scooter_id for scooter_id in ids if available_filter(scooter_id)
+                ]
+
+            scooters_added_in_current_cluster = (
+                len(
+                    filter_scooter_ids(action.battery_swaps, isAvailable=False)
+                )  # Add swapped scooters that where unavailable
+                + len(action.delivery_scooters)  # Add delivered scooters
+                - len(
+                    filter_scooter_ids(action.pick_ups, isAvailable=True)
+                )  # subtract removed available scooters
+            )
+            battery_percentage_added = sum(
+                [
+                    (
+                        100
+                        - state.clusters[current_location]
+                        .get_scooter_from_id(scooter_id)
+                        .battery
+                    )
+                    / 100
+                    for scooter_id in action.battery_swaps
+                ]
+            ) + sum(
+                [
+                    (
+                        100
+                        - state.clusters[current_location]
+                        .get_scooter_from_id(scooter_id)
+                        .battery
+                    )
+                    / 100
+                    for scooter_id in action.pick_ups
+                ]
+            )
+        else:
+            scooters_added_in_current_cluster = 0
+            battery_percentage_added = 0
+        current_states, available_scooters = (
+            cache
+            if cache is not None
+            else (
+                [cluster.get_current_state() for cluster in state.clusters],
+                [cluster.get_available_scooters() for cluster in state.clusters],
+            )
+        )  # Use cache if you have it
+        deviations = [
+            len(available_scooters[i])
+            - cluster.ideal_state
+            + (
+                scooters_added_in_current_cluster
+                if cluster.id == current_location
+                else 0
+            )  # Add available scooters from action
+            for i, cluster in enumerate(state.clusters)
+        ]
+
+        def ideal_state_deviation(is_positive):
+            if is_positive:
+                return [max(deviation, 0) for deviation in deviations]
+            else:
+                return [abs(min(deviation, 0)) for deviation in deviations]
+
+        return (
+            helpers.normalize_list(ideal_state_deviation(is_positive=True)),
+            helpers.normalize_list(ideal_state_deviation(is_positive=False)),
+            helpers.normalize_list(
+                [
+                    len(cluster.scooters)
+                    - current_states[i]
+                    - (
+                        battery_percentage_added
+                        if cluster.id == current_location
+                        else 0
+                    )
+                    for i, cluster in enumerate(state.clusters)
+                ]
+            ),
+        )
+
+    def get_inventory_indicator(self, percent):
+        return [
+            1
+            if self.vehicle_inventory_step_size * i
+            < percent
+            <= self.vehicle_inventory_step_size * (i + 1)
+            else 0
+            for i in range(round(1 / self.vehicle_inventory_step_size))
+        ]

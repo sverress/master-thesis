@@ -91,17 +91,27 @@ if __name__ == "__main__":
     import clustering.scripts
 
     world_to_analyse = classes.World(
-        240,
+        960,
         None,
         clustering.scripts.get_initial_state(
-            2500, 30, number_of_vans=3, number_of_bikes=0,
+            2500,
+            30,
+            number_of_vans=3,
+            number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-        value_function_class=decision.value_functions.LinearValueFunction,
+        value_function_class=decision.value_functions.ANNValueFunction,
     )
 
+    from pyinstrument import Profiler
+
+    profiler = Profiler()
+    profiler.start()
     training_simulation(world_to_analyse)
+    profiler.stop()
+
+    print(profiler.output_text(unicode=True, color=True))

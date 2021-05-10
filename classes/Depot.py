@@ -10,7 +10,8 @@ class Depot(Location):
         self.charging = []
 
     def swap_battery_inventory(self, time, number_of_battery_to_change) -> int:
-        self.charge_batteries(time)
+        self.capacity += self.get_delta_capacity(time)
+        self.time = time
 
         if number_of_battery_to_change > self.capacity:
             raise ValueError(
@@ -28,19 +29,16 @@ class Depot(Location):
         )
 
     def get_available_battery_swaps(self, time):
-        self.charge_batteries(time)
-        return self.capacity
+        return self.capacity + self.get_delta_capacity(time, pop=False)
 
-    def charge_batteries(self, time):
+    def get_delta_capacity(self, time, pop=True):
         delta_capacity = 0
         for i, (charging_start_time, number_of_batteries) in enumerate(self.charging):
             if time > charging_start_time + CHARGE_TIME_PER_BATTERY:
                 delta_capacity += number_of_batteries
-                self.charging.pop(i)
-
-        self.capacity += delta_capacity
-
-        self.time = time
+                if pop:
+                    self.charging.pop(i)
+        return delta_capacity
 
     def __str__(self):
         return f"Depot {self.id}"

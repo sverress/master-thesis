@@ -1,6 +1,3 @@
-import copy
-from typing import Union
-
 import decision.neighbour_filtering
 import classes
 import numpy.random as random
@@ -9,7 +6,9 @@ import abc
 
 class Policy(abc.ABC):
     def __init__(
-        self, get_possible_actions_divide, number_of_neighbors,
+        self,
+        get_possible_actions_divide,
+        number_of_neighbors,
     ):
         self.get_possible_actions_divide = get_possible_actions_divide
         self.number_of_neighbors = number_of_neighbors
@@ -37,7 +36,9 @@ class Policy(abc.ABC):
 
     @staticmethod
     def print_action_stats(
-        world, vehicle: classes.Vehicle, actions_info: [(classes.Action, int, int)],
+        world,
+        vehicle: classes.Vehicle,
+        actions_info: [(classes.Action, int, int)],
     ) -> None:
         if world.verbose:
             print(f"\n{vehicle}:")
@@ -54,7 +55,11 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
     """
 
     def __init__(
-        self, get_possible_actions_divide, number_of_neighbors, epsilon, value_function,
+        self,
+        get_possible_actions_divide,
+        number_of_neighbors,
+        epsilon,
+        value_function,
     ):
         super().__init__(get_possible_actions_divide, number_of_neighbors)
         self.value_function = value_function
@@ -69,43 +74,47 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             time=world.time,
             number_of_neighbours=self.number_of_neighbors,
         )
-
+        state = world.state
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
             return random.choice(actions), None
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
+            # Cache current states in state
+            cache = [cluster.get_current_state() for cluster in state.clusters], [
+                cluster.get_available_scooters() for cluster in state.clusters
+            ]
             # Generate the state features of the current state
             state_features = self.value_function.get_state_features(
-                world.state, vehicle, world.time
+                world.state, vehicle, world.time, cache
             )
             state_value = self.value_function.estimate_value_from_state_features(
                 state_features
             )
             for action in actions:
-                # Copy state to avoid pointer issue
-                state_copy = copy.deepcopy(world.state)
-                # Get the relevant vehicle from the state copy
-                vehicle_copy = state_copy.get_vehicle_by_id(vehicle.id)
-                # Perform the action and record the reward
-                reward, _ = state_copy.do_action(action, vehicle_copy, world.time)
                 # Get the distance from current cluster to the new destination cluster
-                action_distance = state_copy.get_distance(
+                action_distance = state.get_distance(
                     vehicle.current_location.id, action.next_location
                 )
                 # Generate the features for this new state after the action
-                next_state_features = self.value_function.get_state_features(
-                    state_copy,
-                    vehicle_copy,
+                next_state_features = self.value_function.get_next_state_features(
+                    state,
+                    vehicle,
+                    action,
                     world.time + action.get_action_time(action_distance),
+                    cache,
                 )
                 # Calculate the expected future reward of being in this new state
-                next_state_value = self.value_function.estimate_value_from_state_features(
-                    next_state_features
+                next_state_value = (
+                    self.value_function.estimate_value_from_state_features(
+                        next_state_features
+                    )
                 )
 
-                action_info.append((action, next_state_value, reward))
+                action_info.append(
+                    (action, action.get_reward(vehicle), next_state_value)
+                )
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
             best_action, *rest = max(action_info, key=lambda pair: pair[1] + pair[2])

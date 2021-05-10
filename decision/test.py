@@ -2,6 +2,8 @@ import copy
 import unittest
 import random
 
+import analysis.evaluate_policies
+import classes
 import clustering.scripts
 import decision
 import decision.value_functions
@@ -35,13 +37,15 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions(
-            self.vehicle, number_of_neighbours=6,
+            self.vehicle,
+            number_of_neighbours=6,
         )
 
         # Test number of swaps less or equal to ideal state
         for action in actions:
             self.assertLessEqual(
-                len(action.battery_swaps), self.vehicle.current_location.ideal_state,
+                len(action.battery_swaps),
+                self.vehicle.current_location.ideal_state,
             )
 
         # Test number of actions
@@ -51,7 +55,9 @@ class BasicDecisionTests(unittest.TestCase):
         reward = (
             len(actions[-1].battery_swaps)
             * 0.2
-            * self.vehicle.current_location.prob_of_scooter_usage()
+            * self.vehicle.current_location.prob_of_scooter_usage(
+                len(self.vehicle.current_location.get_available_scooters())
+            )
         )
 
         # Test reward
@@ -143,7 +149,9 @@ class BasicDecisionTests(unittest.TestCase):
         reward = (
             len(actions[-1].battery_swaps)
             * 0.2
-            * self.vehicle.current_location.prob_of_scooter_usage()
+            * self.vehicle.current_location.prob_of_scooter_usage(
+                len(self.vehicle.current_location.get_available_scooters())
+            )
             + len(actions[-1].delivery_scooters) * 1.0
         )
 
@@ -187,7 +195,10 @@ class BasicDecisionTests(unittest.TestCase):
         vehicle.current_location.scooters = vehicle.current_location.scooters[:1]
 
         # Get all possible actions
-        actions = initial_state.get_possible_actions(vehicle, number_of_neighbours=5,)
+        actions = initial_state.get_possible_actions(
+            vehicle,
+            number_of_neighbours=5,
+        )
 
         # Test number of actions possible
         self.assertEqual(5, len(actions))
@@ -237,27 +248,29 @@ class ValueFunctionTests(unittest.TestCase):
             hyper_params.VEHICLE_INVENTORY_STEP_SIZE,
             hyper_params.LOCATION_REPETITION,
         )
-
-    def world_value_function_check(self, value_function):
-        world = World(
+        self.world = World(
             100,
             initial_state=clustering.scripts.get_initial_state(
-                100, 10, initial_location_depot=False
+                1000, 20, initial_location_depot=False
             ),
             policy=None,
         )
+
+    def world_value_function_check(self, value_function):
         # No discount should give reward equal to TD-error
-        value_function.setup(world.state)
-        vehicle = world.state.vehicles[0]
-        action, _ = decision.policies.SwapAllPolicy().get_best_action(world, vehicle)
-        state = copy.deepcopy(world.state)
+        value_function.setup(self.world.state)
+        vehicle = self.world.state.vehicles[0]
+        action, _ = decision.policies.SwapAllPolicy().get_best_action(
+            self.world, vehicle
+        )
+        state = copy.deepcopy(self.world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward, _ = world.state.do_action(action, vehicle, world.time)
+        reward, _ = self.world.state.do_action(action, vehicle, self.world.time)
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(
-                world.state, vehicle, world.time
+                self.world.state, vehicle, self.world.time
             )
             value_function.update_weights(
                 current_state_value=state_value,
@@ -279,9 +292,62 @@ class ValueFunctionTests(unittest.TestCase):
     def test_ann_value_function(self):
         self.world_value_function_check(
             decision.value_functions.ANNValueFunction(
-                *self.value_function_args, [100, 1000, 100],
+                *self.value_function_args,
+                [100, 1000, 100],
             )
         )
+
+    def test_next_state_from_action(self):
+        value_function = decision.value_functions.LinearValueFunction(
+            *self.value_function_args
+        )
+        value_function.setup(self.world.state)
+        # Record current state
+        vehicle = self.world.state.vehicles[0]
+        # Scooters is current cluster
+        scooters = self.world.state.clusters[
+            vehicle.current_location.id
+        ].get_swappable_scooters()
+        deliver_scooter = random.choice(
+            [
+                scooter
+                for scooter in random.choice(
+                    [
+                        cluster
+                        for cluster in self.world.state.clusters
+                        if cluster.id != vehicle.current_location.id
+                    ]
+                ).scooters
+            ]
+        )
+        vehicle.pick_up(deliver_scooter)
+        # Action that does a bit of everything
+        action = classes.Action(
+            [scooter.id for scooter in scooters[:3]],
+            [scooter.id for scooter in scooters[3:10]],
+            [deliver_scooter.id],
+            random.choice(
+                [
+                    cluster.id
+                    for cluster in self.world.state.clusters
+                    if cluster.id != vehicle.current_location.id
+                ]
+            ),
+        )
+        function_next_state_features = value_function.convert_next_state_features(
+            self.world.state, vehicle, action, self.world.time
+        )
+        self.world.state.do_action(action, vehicle, self.world.time)
+        next_state_features = value_function.convert_state_to_features(
+            self.world.state, vehicle, self.world.time
+        )
+        self.assertEqual(len(function_next_state_features), len(next_state_features))
+        for i, value in enumerate(function_next_state_features):
+            self.assertAlmostEqual(
+                function_next_state_features[i],
+                next_state_features[i],
+                msg=f"not equal at {i}",
+            )
 
 
 class NeighbourFilteringTests(unittest.TestCase):
@@ -289,7 +355,12 @@ class NeighbourFilteringTests(unittest.TestCase):
         state = get_initial_state(100, 10)
         vehicle = state.vehicles[0]
 
-        best_neighbours_with_random = filtering_neighbours(state, vehicle, 3, 1,)
+        best_neighbours_with_random = filtering_neighbours(
+            state,
+            vehicle,
+            3,
+            1,
+        )
 
         # test if the number of neighbours is the same, even though one is random
         self.assertEqual(len(best_neighbours_with_random), 3)
