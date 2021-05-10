@@ -51,7 +51,7 @@ class World(SaveMixin, HyperParameters):
             fields = {field: [[0] * number_of_metrics] for field in average_fields}
             # Find the time for the latest event
             max_time = np.max(np.concatenate([metric.timeline for metric in metrics]))
-            new_world_metric.timeline = list(range(max_time + 1))
+            new_world_metric.timeline = list(range(int(max_time) + 1))
             # populate fields with average at every time step
             for time in new_world_metric.timeline[1:]:
                 # If there is a new value in the timeline, update the timeline
@@ -271,10 +271,7 @@ class World(SaveMixin, HyperParameters):
         return self.DISCOUNT_RATE ** (self.time / 60)
 
     def set_policy(
-        self,
-        policy=None,
-        policy_class=None,
-        value_function_class=None,
+        self, policy=None, policy_class=None, value_function_class=None,
     ):
         if policy is None:
             if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
@@ -304,8 +301,7 @@ class World(SaveMixin, HyperParameters):
                 )
             elif policy_class is decision.RandomActionPolicy:
                 policy = policy_class(
-                    self.DIVIDE_GET_POSSIBLE_ACTIONS,
-                    self.NUMBER_OF_NEIGHBOURS,
+                    self.DIVIDE_GET_POSSIBLE_ACTIONS, self.NUMBER_OF_NEIGHBOURS,
                 )
             else:
                 if policy_class is None:

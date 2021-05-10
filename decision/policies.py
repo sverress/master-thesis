@@ -13,7 +13,7 @@ class Policy(abc.ABC):
         self.number_of_neighbors = number_of_neighbors
 
     @abc.abstractmethod
-    def get_best_action(self, world, vehicle) -> classes.Action:
+    def get_best_action(self, world, vehicle) -> (classes.Action, None):
         """
         Returns the best action for the input vehicle in the world context
         :param world: world object that contains the whole world state
@@ -70,7 +70,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
 
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
-            return random.choice(actions)
+            return random.choice(actions), None
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
@@ -152,11 +152,14 @@ class SwapAllPolicy(Policy):
             number_of_scooters_to_swap = vehicle.get_max_number_of_swaps()
 
         # Return an action with no re-balancing, only scooter swapping
-        return classes.Action(
-            battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
-            pick_ups=[],
-            delivery_scooters=[],
-            next_location=next_location.id,
+        return (
+            classes.Action(
+                battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
+                pick_ups=[],
+                delivery_scooters=[],
+                next_location=next_location.id,
+            ),
+            None,
         )
 
 
@@ -175,12 +178,12 @@ class RandomActionPolicy(Policy):
         )
 
         # pick a random action
-        return random.choice(possible_actions)
+        return random.choice(possible_actions), None
 
 
 class DoNothing(Policy):
     def __init__(self):
         super().__init__(0, 0)
 
-    def get_best_action(self, world, vehicle) -> classes.Action:
-        return classes.Action([], [], [], 0)
+    def get_best_action(self, world, vehicle) -> (classes.Action, None):
+        return classes.Action([], [], [], 0), None

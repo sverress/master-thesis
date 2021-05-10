@@ -110,6 +110,7 @@ class State(SaveMixin):
         :return: List of Action objects
         """
         actions = []
+        exclude = exclude if exclude else []
         # Return empty action if
         if vehicle.is_at_depot():
             neighbours = (
@@ -121,7 +122,13 @@ class State(SaveMixin):
                     exclude=exclude + [depot.id for depot in self.depots],
                 )
                 if number_of_neighbours
-                else self.get_neighbours(vehicle.current_location, is_sorted=False)
+                else [
+                    neighbour
+                    for neighbour in self.get_neighbours(
+                        vehicle.current_location, is_sorted=False
+                    )
+                    if neighbour.id not in exclude
+                ]
             )
 
         else:
@@ -173,7 +180,13 @@ class State(SaveMixin):
                     max_swaps=max(pick_ups, swaps),
                 )
                 if number_of_neighbours
-                else self.get_neighbours(vehicle.current_location)
+                else [
+                    neighbour
+                    for neighbour in self.get_neighbours(
+                        vehicle.current_location, is_sorted=False
+                    )
+                    if neighbour.id not in exclude
+                ]
             )
             combinations = []
             # Different combinations of battery swaps, pick-ups, drop-offs and clusters
@@ -226,7 +239,7 @@ class State(SaveMixin):
         """
         reward = 0
         refill_time = 0
-        if vehicle.is_at_depot() and len(vehicle.service_route) > 0:
+        if vehicle.is_at_depot() and len(vehicle.service_route) > 1:
             batteries_to_swap = min(
                 vehicle.flat_batteries(),
                 vehicle.current_location.get_available_battery_swaps(time),
