@@ -46,10 +46,7 @@ class ValueFunction(abc.ABC):
         self.td_errors = []
 
     def compute_and_record_td_error(
-        self,
-        current_state_value: float,
-        next_state_value: float,
-        reward: float,
+        self, current_state_value: float, next_state_value: float, reward: float,
     ):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
@@ -70,10 +67,7 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
-        self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
-        time: int,
+        self, state: classes.State, vehicle: classes.Vehicle, time: int,
     ):
         pass
 
@@ -85,9 +79,7 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def batch_update_weights(
-        self,
-        state_features,
-        batch: [(float, float, float)],
+        self, state_features, batch: [(float, float, float)],
     ):
         pass
 
@@ -183,14 +175,18 @@ class ValueFunction(abc.ABC):
         # Inventory indicators adjusting for action effects
         scooter_inventory_indication = self.get_inventory_indicator(
             helpers.zero_divide(
-                len(vehicle.scooter_inventory) + len(action.pick_ups),
+                len(vehicle.scooter_inventory)
+                + len(action.pick_ups)
+                - len(action.delivery_scooters),
                 vehicle.scooter_inventory_capacity,
             )
         )
 
         battery_inventory_indication = self.get_inventory_indicator(
             helpers.zero_divide(
-                vehicle.battery_inventory - len(action.battery_swaps),
+                vehicle.battery_inventory
+                - len(action.battery_swaps)
+                - len(action.pick_ups),
                 vehicle.battery_inventory_capacity,
             )
         )
@@ -248,7 +244,7 @@ class ValueFunction(abc.ABC):
             scooters_added_in_current_cluster = (
                 len(
                     filter_scooter_ids(action.battery_swaps, isAvailable=False)
-                )  # Add swapped scooters not available
+                )  # Add swapped scooters that where unavailable
                 + len(action.delivery_scooters)  # Add delivered scooters
                 - len(
                     filter_scooter_ids(action.pick_ups, isAvailable=True)
@@ -267,9 +263,12 @@ class ValueFunction(abc.ABC):
                 ]
             ) + sum(
                 [
-                    state.clusters[current_location]
-                    .get_scooter_from_id(scooter_id)
-                    .battery
+                    (
+                        100
+                        - state.clusters[current_location]
+                        .get_scooter_from_id(scooter_id)
+                        .battery
+                    )
                     / 100
                     for scooter_id in action.pick_ups
                 ]
