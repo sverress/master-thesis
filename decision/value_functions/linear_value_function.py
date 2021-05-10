@@ -108,5 +108,16 @@ class LinearValueFunction(ValueFunction):
             self.convert_state_to_features(state, vehicle, time)
         )
 
+    def get_next_state_features(
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        action: classes.Action,
+        time: int,
+    ):
+        return self.create_location_features_combination(
+            self.convert_next_state_features(state, vehicle, action, time)
+        )
+
     def __str__(self):
         return f"LinearValueFunction - {self.shifts_trained}"

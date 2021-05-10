@@ -228,6 +228,7 @@ class State(SaveMixin):
         :param action: Action - action to be performed on the state
         :return: float - reward for doing the action on the state
         """
+        reward = action.get_reward(vehicle)
         if vehicle.is_at_depot():
             batteries_to_swap = min(
                 vehicle.flat_batteries(),
@@ -269,7 +270,7 @@ class State(SaveMixin):
         # Moving the state/vehicle from this to next cluster
         vehicle.set_current_location(self.get_location_by_id(action.next_location))
 
-        return action.get_reward(vehicle)
+        return reward
 
     def __repr__(self):
         return (

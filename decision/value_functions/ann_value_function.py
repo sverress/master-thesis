@@ -94,6 +94,15 @@ class ANNValueFunction(ValueFunction):
             verbose=False,
         )
 
+    def get_next_state_features(
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        action: classes.Action,
+        time: int,
+    ):
+        return self.convert_next_state_features(state, vehicle, action, time)
+
     def get_state_features(
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):

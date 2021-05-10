@@ -46,7 +46,10 @@ class ValueFunction(abc.ABC):
         self.td_errors = []
 
     def compute_and_record_td_error(
-        self, current_state_value: float, next_state_value: float, reward: float,
+        self,
+        current_state_value: float,
+        next_state_value: float,
+        reward: float,
     ):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
@@ -67,7 +70,10 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
     ):
         pass
 
@@ -79,7 +85,9 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def batch_update_weights(
-        self, state_features, batch: [(float, float, float)],
+        self,
+        state_features,
+        batch: [(float, float, float)],
     ):
         pass
 
@@ -98,6 +106,17 @@ class ValueFunction(abc.ABC):
     @Decorators.check_setup
     def get_state_features(
         self, state: classes.State, vehicle: classes.Vehicle, time: int
+    ):
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
+    def get_next_state_features(
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        action: classes.Action,
+        time: int,
     ):
         pass
 
@@ -159,7 +178,7 @@ class ValueFunction(abc.ABC):
         self.shifts_trained = shifts_trained
 
     @Decorators.check_setup
-    def get_next_state_features(self, state, vehicle, action, time):
+    def convert_next_state_features(self, state, vehicle, action, time):
         # Change location by swapping location indicator
         location_indicators = self.get_location_indicator(
             action.next_location, len(state.locations)

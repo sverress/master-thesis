@@ -37,13 +37,15 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions(
-            self.vehicle, number_of_neighbours=6,
+            self.vehicle,
+            number_of_neighbours=6,
         )
 
         # Test number of swaps less or equal to ideal state
         for action in actions:
             self.assertLessEqual(
-                len(action.battery_swaps), self.vehicle.current_location.ideal_state,
+                len(action.battery_swaps),
+                self.vehicle.current_location.ideal_state,
             )
 
         # Test number of actions
@@ -189,7 +191,10 @@ class BasicDecisionTests(unittest.TestCase):
         vehicle.current_location.scooters = vehicle.current_location.scooters[:1]
 
         # Get all possible actions
-        actions = initial_state.get_possible_actions(vehicle, number_of_neighbours=5,)
+        actions = initial_state.get_possible_actions(
+            vehicle,
+            number_of_neighbours=5,
+        )
 
         # Test number of actions possible
         self.assertEqual(5, len(actions))
@@ -278,7 +283,8 @@ class ValueFunctionTests(unittest.TestCase):
     def test_ann_value_function(self):
         self.world_value_function_check(
             decision.value_functions.ANNValueFunction(
-                *self.value_function_args, [100, 1000, 100],
+                *self.value_function_args,
+                [100, 1000, 100],
             )
         )
 
@@ -319,7 +325,7 @@ class ValueFunctionTests(unittest.TestCase):
                 ]
             ),
         )
-        function_next_state_features = value_function.get_next_state_features(
+        function_next_state_features = value_function.convert_next_state_features(
             self.world.state, vehicle, action, self.world.time
         )
         self.world.state.do_action(action, vehicle, self.world.time)
@@ -372,7 +378,12 @@ class NeighbourFilteringTests(unittest.TestCase):
         state = get_initial_state(100, 10)
         vehicle = state.vehicles[0]
 
-        best_neighbours_with_random = filtering_neighbours(state, vehicle, 3, 1,)
+        best_neighbours_with_random = filtering_neighbours(
+            state,
+            vehicle,
+            3,
+            1,
+        )
 
         # test if the number of neighbours is the same, even though one is random
         self.assertEqual(len(best_neighbours_with_random), 3)
