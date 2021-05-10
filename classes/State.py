@@ -114,7 +114,6 @@ class State(SaveMixin):
         :return: List of Action objects
         """
         actions = []
-        exclude = exclude if exclude else []
         # Return empty action if
         if vehicle.is_at_depot():
             neighbours = (

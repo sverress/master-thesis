@@ -271,7 +271,10 @@ class World(SaveMixin, HyperParameters):
         return self.DISCOUNT_RATE ** (self.time / 60)
 
     def set_policy(
-        self, policy=None, policy_class=None, value_function_class=None,
+        self,
+        policy=None,
+        policy_class=None,
+        value_function_class=None,
     ):
         if policy is None:
             if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
@@ -301,7 +304,8 @@ class World(SaveMixin, HyperParameters):
                 )
             elif policy_class is decision.RandomActionPolicy:
                 policy = policy_class(
-                    self.DIVIDE_GET_POSSIBLE_ACTIONS, self.NUMBER_OF_NEIGHBOURS,
+                    self.DIVIDE_GET_POSSIBLE_ACTIONS,
+                    self.NUMBER_OF_NEIGHBOURS,
                 )
             else:
                 if policy_class is None:
@@ -346,8 +350,8 @@ class World(SaveMixin, HyperParameters):
             self.shift_duration,
             self.policy,
             copy.deepcopy(self.state),
-            self.verbose,
-            self.visualize,
+            verbose=self.verbose,
+            visualize=self.visualize,
         )
         new_world.time = self.time
         new_world.rewards = self.rewards.copy()

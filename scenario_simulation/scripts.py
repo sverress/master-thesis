@@ -6,7 +6,7 @@ def training_simulation(world):
     """
     Does scenario simulations until shift end
     :param world: snapshot copy of world
-    :return: int - maximum reward from simulations
+    :return: world object after shift
     """
     simulation_counter = 1
     next_is_vehicle_action = True
@@ -27,7 +27,7 @@ def training_simulation(world):
                 if cluster_id != current_vehicle.current_location.id
             ]
 
-            # getting the best action and performing it
+            # getting the best action
             action, action_info = world.policy.get_best_action(world, current_vehicle)
 
             # random action -> action_info = None. Not include random action in training
@@ -39,6 +39,7 @@ def training_simulation(world):
                     current_vehicle.current_location.id, action.next_location
                 )
             )
+            # Performing the best action
             _, refill_time = world.state.do_action(action, current_vehicle, world.time)
 
             action_time += refill_time
@@ -61,14 +62,18 @@ def training_simulation(world):
                 action_infos = [
                     (
                         state_value,
-                        reward + (lost_demand * world.LOST_TRIP_REWARD),
+                        reward
+                        + (
+                            lost_demand * world.LOST_TRIP_REWARD
+                        ),  # Add lost trip reward from system simulation
                         next_state_value,
                         state_features,
                     )
                     for state_value, next_state_value, reward, state_features in action_infos
                 ]
-
+                # Update value function
                 world.policy.value_function.batch_update_weights(action_infos)
+                # Clear case base TODO: Add action info to a case base, and let case stay in the case base for longer
                 action_infos = []
 
             simulation_counter += 1
@@ -90,7 +95,10 @@ if __name__ == "__main__":
         240,
         None,
         clustering.scripts.get_initial_state(
-            2500, 30, number_of_vans=3, number_of_bikes=0,
+            2500,
+            30,
+            number_of_vans=3,
+            number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,
