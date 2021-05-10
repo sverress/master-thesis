@@ -9,17 +9,13 @@ import abc
 
 class Policy(abc.ABC):
     def __init__(
-        self,
-        get_possible_actions_divide,
-        number_of_neighbors,
+        self, get_possible_actions_divide, number_of_neighbors,
     ):
         self.get_possible_actions_divide = get_possible_actions_divide
         self.number_of_neighbors = number_of_neighbors
 
     @abc.abstractmethod
-    def get_best_action(
-        self, world, vehicle
-    ) -> (classes.Action, Union[None, (float, float, float, [float])]):
+    def get_best_action(self, world, vehicle):
         """
         Returns the best action for the input vehicle in the world context
         :param world: world object that contains the whole world state
@@ -41,9 +37,7 @@ class Policy(abc.ABC):
 
     @staticmethod
     def print_action_stats(
-        world,
-        vehicle: classes.Vehicle,
-        actions_info: [(classes.Action, int, int)],
+        world, vehicle: classes.Vehicle, actions_info: [(classes.Action, int, int)],
     ) -> None:
         if world.verbose:
             print(f"\n{vehicle}:")
@@ -60,11 +54,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
     """
 
     def __init__(
-        self,
-        get_possible_actions_divide,
-        number_of_neighbors,
-        epsilon,
-        value_function,
+        self, get_possible_actions_divide, number_of_neighbors, epsilon, value_function,
     ):
         super().__init__(get_possible_actions_divide, number_of_neighbors)
         self.value_function = value_function
@@ -111,10 +101,8 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     world.time + action.get_action_time(action_distance),
                 )
                 # Calculate the expected future reward of being in this new state
-                next_state_value = (
-                    self.value_function.estimate_value_from_state_features(
-                        next_state_features
-                    )
+                next_state_value = self.value_function.estimate_value_from_state_features(
+                    next_state_features
                 )
 
                 action_info.append((action, next_state_value, reward))
