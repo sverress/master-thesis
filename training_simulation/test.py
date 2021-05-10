@@ -2,7 +2,7 @@ import unittest
 import decision.value_functions
 import clustering.scripts
 from classes import World
-from scenario_simulation.scripts import training_simulation
+from training_simulation.scripts import training_simulation
 
 
 class EpsilonGreedyPolicyTrainingTest(unittest.TestCase):

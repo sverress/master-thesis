@@ -1,5 +1,4 @@
 from globals import ITERATION_LENGTH_MINUTES
-from pyinstrument import Profiler
 
 
 def training_simulation(world):
@@ -95,10 +94,7 @@ if __name__ == "__main__":
         240,
         None,
         clustering.scripts.get_initial_state(
-            2500,
-            30,
-            number_of_vans=3,
-            number_of_bikes=0,
+            2500, 30, number_of_vans=3, number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,
@@ -107,11 +103,5 @@ if __name__ == "__main__":
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
         value_function_class=decision.value_functions.LinearValueFunction,
     )
-    profiler = Profiler()
-    profiler.start()
 
     training_simulation(world_to_analyse)
-
-    profiler.stop()
-
-    print(profiler.output_text(unicode=True, color=True))
