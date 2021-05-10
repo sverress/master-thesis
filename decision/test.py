@@ -2,6 +2,7 @@ import copy
 import unittest
 import random
 
+import classes
 import clustering.scripts
 import decision
 import decision.value_functions
@@ -294,7 +295,36 @@ class ValueFunctionTests(unittest.TestCase):
         value_function.setup(self.world.state)
         # Record current state
         vehicle = self.world.state.vehicles[0]
-        action = decision.policies.SwapAllPolicy().get_best_action(self.world, vehicle)
+        # Scooters is current cluster
+        scooters = self.world.state.clusters[
+            vehicle.current_location.id
+        ].get_swappable_scooters()
+        deliver_scooter = random.choice(
+            [
+                scooter
+                for scooter in random.choice(
+                    [
+                        cluster
+                        for cluster in self.world.state.clusters
+                        if cluster.id != vehicle.current_location.id
+                    ]
+                ).scooters
+            ]
+        )
+        vehicle.pick_up(deliver_scooter)
+        # Action that does a bit of everything
+        action = classes.Action(
+            [scooter.id for scooter in scooters[:3]],
+            [scooter.id for scooter in scooters[3:5]],
+            [deliver_scooter.id],
+            random.choice(
+                [
+                    cluster.id
+                    for cluster in self.world.state.clusters
+                    if cluster.id != vehicle.current_location.id
+                ]
+            ),
+        )
         function_next_state_features = value_function.get_next_state_features(
             self.world.state, vehicle, action, self.world.time
         )
@@ -303,7 +333,12 @@ class ValueFunctionTests(unittest.TestCase):
             self.world.state, vehicle, self.world.time
         )
         self.assertEqual(len(function_next_state_features), len(next_state_features))
-        self.assertSequenceEqual(function_next_state_features, next_state_features)
+        for i, value in enumerate(function_next_state_features):
+            self.assertAlmostEqual(
+                function_next_state_features[i],
+                next_state_features[i],
+                msg=f"not equal at {i}",
+            )
 
 
 class EpsilonGreedyPolicyTest(unittest.TestCase):

@@ -254,8 +254,29 @@ class ValueFunction(abc.ABC):
                     filter_scooter_ids(action.pick_ups, isAvailable=True)
                 )  # subtract removed available scooters
             )
+            battery_percentage_added = sum(
+                [
+                    (
+                        100
+                        - state.clusters[current_location]
+                        .get_scooter_from_id(scooter_id)
+                        .battery
+                    )
+                    / 100
+                    for scooter_id in action.battery_swaps
+                ]
+            ) - sum(
+                [
+                    state.clusters[current_location]
+                    .get_scooter_from_id(scooter_id)
+                    .battery
+                    / 100
+                    for scooter_id in action.pick_ups
+                ]
+            )
         else:
             scooters_added_in_current_cluster = 0
+            battery_percentage_added = 0
 
         def ideal_state_deviation(is_positive):
             deviations = [
@@ -278,7 +299,13 @@ class ValueFunction(abc.ABC):
             helpers.normalize_list(ideal_state_deviation(is_positive=False)),
             helpers.normalize_list(
                 [
-                    len(cluster.scooters) - cluster.get_current_state()
+                    len(cluster.scooters)
+                    - cluster.get_current_state()
+                    - (
+                        battery_percentage_added
+                        if cluster.id == current_location
+                        else 0
+                    )
                     for cluster in state.clusters
                 ]
             ),
