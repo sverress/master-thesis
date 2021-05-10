@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 import bisect
 import classes
+import globals
 from classes.SaveMixin import SaveMixin
 
 from globals import (
@@ -18,7 +19,6 @@ from progress.bar import IncrementalBar
 import decision
 import decision.value_functions
 from system_simulation.scripts import system_simulate
-import warnings
 
 
 class World(SaveMixin, HyperParameters):
@@ -175,6 +175,7 @@ class World(SaveMixin, HyperParameters):
         self.metrics = World.WorldMetric(test_parameter_name, test_parameter_value)
         self.verbose = verbose
         self.visualize = visualize
+        self.label = self.__class__.__name__
         if verbose:
             self.progress_bar = IncrementalBar(
                 "Running World",
@@ -363,3 +364,20 @@ class World(SaveMixin, HyperParameters):
         for parameter in HyperParameters().__dict__.keys():
             setattr(new_world, parameter, getattr(self, parameter))
         return new_world
+
+    def add_van(self):
+        # Create a new vehicle object
+        vehicle = classes.Vehicle(
+            len(self.state.vehicles) + 1,
+            self.state.get_location_by_id(0),
+            globals.VAN_BATTERY_INVENTORY,
+            globals.VAN_SCOOTER_INVENTORY,
+        )
+        # Add vehicle to state
+        self.state.vehicles.append(vehicle)
+        # Add a vehicle arrival event for this vehicle in the stack
+        self.stack.append(
+            classes.VehicleArrival(20, vehicle.id, visualize=self.visualize)
+        )
+        # Add the current location to the service route
+        vehicle.service_route.append(vehicle.current_location)

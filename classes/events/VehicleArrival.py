@@ -40,9 +40,6 @@ class VehicleArrival(Event):
         # find the best action from the current world state
         action, _ = world.policy.get_best_action(world, vehicle)
 
-        # Add next vehicle location to tabu list
-        world.tabu_list.append(action.next_location)
-
         if self.visualize:
             # visualize vehicle route
             world.state.visualize_vehicle_routes(
@@ -61,6 +58,10 @@ class VehicleArrival(Event):
 
         # perform the best action on the state and send vehicle to new location
         reward, refill_time = world.state.do_action(action, vehicle, world.time)
+
+        # Add next vehicle location to tabu list
+        if not vehicle.is_at_depot():
+            world.tabu_list.append(action.next_location)
 
         world.add_reward(reward, arrival_cluster_id, discount=True)
 
