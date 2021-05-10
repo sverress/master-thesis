@@ -8,7 +8,7 @@ from visualization.visualizer import *
 import decision.neighbour_filtering
 import numpy as np
 import math
-from globals import STATE_CACHE_DIR
+from globals import STATE_CACHE_DIR, BATTERY_LIMIT
 import copy
 
 
@@ -228,7 +228,6 @@ class State(SaveMixin):
         :param action: Action - action to be performed on the state
         :return: float - reward for doing the action on the state
         """
-        reward = 0
         if vehicle.is_at_depot():
             batteries_to_swap = min(
                 vehicle.flat_batteries(),
@@ -256,19 +255,11 @@ class State(SaveMixin):
                 battery_swap_scooter = vehicle.current_location.get_scooter_from_id(
                     battery_swap_scooter_id
                 )
-                # Calculate reward of doing the battery swap
-                reward += (
-                    (100.0 - battery_swap_scooter.battery) / 100.0
-                ) * vehicle.current_location.prob_of_scooter_usage()
-
                 # Decreasing vehicle battery inventory
                 vehicle.change_battery(battery_swap_scooter)
 
             # Dropping of scooters
             for delivery_scooter_id in action.delivery_scooters:
-                # Rewarding 1 for delivery
-                reward += 1.0
-
                 # Removing scooter from vehicle inventory
                 delivery_scooter = vehicle.drop_off(delivery_scooter_id)
 
@@ -278,7 +269,7 @@ class State(SaveMixin):
         # Moving the state/vehicle from this to next cluster
         vehicle.set_current_location(self.get_location_by_id(action.next_location))
 
-        return reward
+        return action.get_reward(vehicle)
 
     def __repr__(self):
         return (

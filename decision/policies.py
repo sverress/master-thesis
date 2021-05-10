@@ -1,4 +1,3 @@
-import copy
 import decision.neighbour_filtering
 import classes
 import numpy.random as random
@@ -75,7 +74,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             time=world.time,
             number_of_neighbours=self.number_of_neighbors,
         )
-
+        state = world.state
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
             return random.choice(actions)
@@ -90,20 +89,15 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 state_features
             )
             for action in actions:
-                # Copy state to avoid pointer issue
-                state_copy = copy.deepcopy(world.state)
-                # Get the relevant vehicle from the state copy
-                vehicle_copy = state_copy.get_vehicle_by_id(vehicle.id)
-                # Perform the action and record the reward
-                reward = state_copy.do_action(action, vehicle_copy, world.time)
                 # Get the distance from current cluster to the new destination cluster
-                action_distance = state_copy.get_distance(
+                action_distance = state.get_distance(
                     vehicle.current_location.id, action.next_location
                 )
                 # Generate the features for this new state after the action
-                next_state_features = self.value_function.get_state_features(
-                    state_copy,
-                    vehicle_copy,
+                next_state_features = self.value_function.get_next_state_features(
+                    state,
+                    vehicle,
+                    action,
                     world.time + action.get_action_time(action_distance),
                 )
                 # Calculate the expected future reward of being in this new state
@@ -113,16 +107,9 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     )
                 )
 
-                action_info.append((action, reward, next_state_value))
-
-            # Update the weights of the value function based on the td error
-            self.value_function.batch_update_weights(
-                state_features,
-                [
-                    (state_value, next_state_value, reward)
-                    for action, reward, next_state_value in action_info
-                ],
-            )
+                action_info.append(
+                    (action, action.get_reward(vehicle), next_state_value)
+                )
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
             best_action, *rest = max(action_info, key=lambda pair: pair[1] + pair[2])
