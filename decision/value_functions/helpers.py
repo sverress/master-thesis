@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from tensorflow import keras
 
 
 def convert_string_list_to_tuple_list(string_list):
@@ -10,7 +11,7 @@ def string_to_np_array(string):
     return np.array([int(string_num) for string_num in string])
 
 
-class SplitGD:
+class SplitGD(keras.Sequential):
     """
     !!CODE TAKEN FROM it3105 WEBSITE!!
     https://www.idi.ntnu.no/emner/it3105/materials/code/splitgd.py
@@ -23,42 +24,43 @@ class SplitGD:
     SplitGD.fit.  To use this class, just subclass it and write your own code for the "modify_gradients" method.
     """
 
-    def __init__(self, keras_model):
-        self.model = keras_model
-
-    def modify_gradients(self, gradients, delta):
-        return gradients
+    def __init__(self, lambd, gamma):
+        """
+        Wrapper method with updated fit method for eligibility traces
+        :param keras_model: keras model object
+        :param lambd:
+        :param gamma:
+        """
+        super().__init__()
+        self.eligibilities = []
+        self.lambd = lambd
+        self.gamma = gamma
+        for tensor in self.trainable_weights:
+            self.eligibilities.append(np.array(np.zeros(tensor.shape)))
 
     # This returns a tensor of losses, OR the value of the averaged tensor.  Note: use .numpy() to get the
     # value of a tensor.
     def gen_loss(self, features, targets, avg=False):
         import tensorflow as tf
 
-        predictions = self.model(
+        predictions = self(
             tf.convert_to_tensor(features, dtype="float32")
         )  # Feed-forward pass to produce outputs/predictions
         loss = tf.reduce_sum((targets - predictions) ** 2)
         return tf.reduce_mean(loss).numpy() if avg else loss
 
-    def fit(self, features, targets, delta, epochs=1, mbs=1, vfrac=0.1, verbose=True):
+    def fit(self, features, targets, delta, epochs=1, mbs=1, vfrac=0.1, **kwargs):
         import tensorflow as tf
 
-        params = self.model.trainable_weights
-        train_ins, train_targs, val_ins, val_targs = split_training_data(
-            features, targets, vfrac=vfrac
-        )
+        params = self.trainable_weights
+
         for _ in range(epochs):
             for _ in range(math.floor(epochs / mbs)):
                 with tf.GradientTape() as tape:  # Read up on tf.GradientTape !!
-                    feaset, tarset = gen_random_minibatch(
-                        train_ins, train_targs, mbs=mbs
-                    )
-                    loss = self.gen_loss(feaset, tarset)
+                    loss = self.gen_loss(features, targets)
                     gradients = tape.gradient(loss, params)
                     gradients = self.modify_gradients(gradients, delta)
-                    self.model.optimizer.apply_gradients(zip(gradients, params))
-            if verbose:
-                self.end_of_epoch_display(train_ins, train_targs, val_ins, val_targs)
+                    self.optimizer.apply_gradients(zip(gradients, params))
 
     # Use the 'metric' to run a quick test on any set of features and targets.  A typical metric is some form of
     # 'accuracy', such as 'categorical_accuracy'.  Read up on Keras.metrics !!
@@ -70,12 +72,12 @@ class SplitGD:
     def gen_evaluation(self, features, targets, avg=False, index=0):
         import tensorflow as tf
 
-        predictions = self.model(features)
-        evaluation = self.model.metrics[index](targets, predictions)
+        predictions = self(features)
+        evaluation = self.metrics[index](targets, predictions)
         #  Note that this returns both a tensor (or value) and the NAME of the metric
         return (
             tf.reduce_mean(evaluation).numpy() if avg else evaluation,
-            self.model.metrics_names[index + 1],
+            self.metrics_names[index + 1],
         )
 
     def status_display(self, features, targets, mode="Train"):
@@ -88,6 +90,21 @@ class SplitGD:
         self.status_display(train_ins, train_targs, mode="Train")
         if len(val_ins) > 0:
             self.status_display(val_ins, val_targs, mode="Validation")
+
+    def modify_gradients(self, gradients, delta):
+        """
+        Updates eligibility trace based on the gradients, and further updates the gradients
+        based on the new eligibilities and td-error
+        :param gradients: loss function gradients for each weight: list of tensors
+        :param delta: TD-error: float
+        :return: the updated gradients: list of tensors
+        """
+        import tensorflow as tf
+
+        for index, tensor in enumerate(self.eligibilities):
+            tensor = tensor * self.lambd * self.gamma - gradients[index]
+            gradients[index] = tf.math.scalar_mul(delta, tensor)
+        return gradients
 
 
 # A few useful auxiliary functions
@@ -115,35 +132,3 @@ def split_training_data(inputs, targets, vfrac=0.1, mix=True):
         #  return tcases[:,0], tcases[:,1], vcases[:,0], vcases[:,1]  # Can't get this to work properly
     else:
         return inputs, targets, [], []
-
-
-class KerasModelWrapper(SplitGD):
-    def __init__(self, keras_model, lambd, gamma):
-        """
-        Wrapper method with updated fit method for eligibility traces
-        :param keras_model: keras model object
-        :param lambd:
-        :param gamma:
-        """
-        super().__init__(keras_model)
-        self.eligibilities = []
-        self.lambd = lambd
-        self.gamma = gamma
-        for tensor in self.model.trainable_weights:
-            self.eligibilities.append(np.array(np.zeros(tensor.shape)))
-
-    def modify_gradients(self, gradients, delta):
-        """
-        Updates eligibility trace based on the gradients, and further updates the gradients
-        based on the new eligibilities and td-error
-        :param gradients: loss function gradients for each weight: list of tensors
-        :param delta: TD-error: float
-        :return: the updated gradients: list of tensors
-        """
-        import tensorflow as tf
-
-        for index, tensor in enumerate(self.eligibilities):
-            if index % 2 == 0:
-                tensor = tensor * self.lambd * self.gamma - gradients[index]
-                gradients[index] = tf.math.scalar_mul(delta, tensor)
-        return gradients

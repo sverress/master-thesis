@@ -57,6 +57,7 @@ if __name__ == "__main__":
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-        value_function_class=decision.value_functions.LinearValueFunction,
+        value_function_class=decision.value_functions.ANNValueFunction,
     )
+
     train_value_function(world_to_analyse)

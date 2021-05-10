@@ -58,21 +58,23 @@ def training_simulation(world):
 
             # if some actions has been made since last simulation, update value function
             if len(action_infos) > 0:
-                action_infos = [
-                    (
-                        state_value,
-                        reward
-                        + (
-                            lost_demand * world.LOST_TRIP_REWARD
-                        ),  # Add lost trip reward from system simulation
-                        next_state_value,
-                        state_features,
-                    )
-                    for state_value, next_state_value, reward, state_features in action_infos
-                ]
+                world.policy.value_function.add_training_cases(
+                    [
+                        (
+                            state_value,
+                            reward
+                            + (
+                                lost_demand * world.LOST_TRIP_REWARD
+                            ),  # Add lost trip reward from system simulation
+                            next_state_value,
+                            state_features,
+                        )
+                        for state_value, next_state_value, reward, state_features in action_infos
+                    ]
+                )
                 # Update value function
-                world.policy.value_function.batch_update_weights(action_infos)
-                # Clear case base TODO: Add action info to a case base, and let case stay in the case base for longer
+                world.policy.value_function.batch_update_weights()
+                # Clear case base
                 action_infos = []
 
             simulation_counter += 1

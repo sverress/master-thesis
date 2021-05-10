@@ -3,6 +3,7 @@ import tempfile
 from .abstract import *
 from tensorflow import keras
 import numpy as np
+from decision.value_functions.helpers import SplitGD
 
 
 class ANNValueFunction(ValueFunction):
@@ -23,7 +24,7 @@ class ANNValueFunction(ValueFunction):
             location_repetition,
         )
         self.network_structure = network_structure
-        self.model = keras.Sequential()
+        self.model = SplitGD(lambd=0.9, gamma=0.8)
 
     def setup(self, state: classes.State):
         if self.setup_complete:
@@ -60,15 +61,17 @@ class ANNValueFunction(ValueFunction):
     def estimate_value_from_state_features(self, state_features: [float]):
         return float(self.model(np.array([state_features]))[0][0])
 
-    def batch_update_weights(self, batch: [(float, float, float, [float])]):
+    def batch_update_weights(self):
         targets = [
             self.compute_and_record_td_error(
                 current_state_value, next_state_value, reward
             )
             + current_state_value
-            for current_state_value, next_state_value, reward, _ in batch
+            for current_state_value, next_state_value, reward, _ in self.training_case_base
         ]
-        state_features = [state_feature for _, _, _, state_feature in batch]
+        state_features = [
+            state_feature for _, _, _, state_feature in self.training_case_base
+        ]
         self.model.fit(
             np.array(state_features), np.array(targets), verbose=False,
         )
@@ -86,6 +89,7 @@ class ANNValueFunction(ValueFunction):
         self.model.fit(
             np.array([current_state_features]),
             np.array([td_error + current_state_value]),
+            td_error,
             epochs=10,
             verbose=False,
         )

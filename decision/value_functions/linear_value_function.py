@@ -21,6 +21,7 @@ class LinearValueFunction(ValueFunction):
             location_repetition,
         )
         self.weights = None
+        self.eligibilities = None
 
     def setup(self, state):
         if self.setup_complete:
@@ -47,6 +48,7 @@ class LinearValueFunction(ValueFunction):
                 )
             )
         )
+        self.eligibilities = [0] * len(self.weights)
         self.location_indicator = [0] * number_of_locations_indicators
         super(LinearValueFunction, self).setup(state)
 
@@ -60,8 +62,13 @@ class LinearValueFunction(ValueFunction):
     def estimate_value_from_state_features(self, state_features: [float]):
         return float(np.dot(self.weights, state_features))
 
-    def batch_update_weights(self, batch: [(float, float, float, [float])]):
-        for (current_state_value, next_state_value, reward, state_features) in batch:
+    def batch_update_weights(self):
+        for (
+            current_state_value,
+            next_state_value,
+            reward,
+            state_features,
+        ) in self.training_case_base:
             self.update_weights(
                 state_features, current_state_value, next_state_value, reward
             )

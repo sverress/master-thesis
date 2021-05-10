@@ -44,6 +44,7 @@ class ValueFunction(abc.ABC):
         self.location_indicator = None
         self.shifts_trained = 0
         self.td_errors = []
+        self.training_case_base = []
 
     def compute_and_record_td_error(
         self, current_state_value: float, next_state_value: float, reward: float,
@@ -78,9 +79,7 @@ class ValueFunction(abc.ABC):
 
     @abc.abstractmethod
     @Decorators.check_setup
-    def batch_update_weights(
-        self, batch: [(float, float, float, [float])],
-    ):
+    def batch_update_weights(self,):
         pass
 
     @abc.abstractmethod
@@ -201,6 +200,9 @@ class ValueFunction(abc.ABC):
         )
 
         return location_indicator + state_features
+
+    def add_training_cases(self, training_cases):
+        self.training_case_base += training_cases
 
     def update_shifts_trained(self, shifts_trained: int):
         self.shifts_trained = shifts_trained
