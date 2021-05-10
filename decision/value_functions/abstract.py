@@ -46,7 +46,10 @@ class ValueFunction(abc.ABC):
         self.td_errors = []
 
     def compute_and_record_td_error(
-        self, current_state_value: float, next_state_value: float, reward: float,
+        self,
+        current_state_value: float,
+        next_state_value: float,
+        reward: float,
     ):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
@@ -67,7 +70,10 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
     ):
         pass
 
@@ -79,7 +85,8 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def batch_update_weights(
-        self, batch: [(float, float, float, [float])],
+        self,
+        batch: [(float, float, float, [float])],
     ):
         pass
 
@@ -97,7 +104,11 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def get_state_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
+        cache=None,  # current_states, available_scooters = cache
     ):
         pass
 
@@ -109,6 +120,7 @@ class ValueFunction(abc.ABC):
         vehicle: classes.Vehicle,
         action: classes.Action,
         time: int,
+        cache=None,  # current_states, available_scooters = cache
     ):
         pass
 
@@ -128,7 +140,7 @@ class ValueFunction(abc.ABC):
 
     @Decorators.check_setup
     def convert_state_to_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int
+        self, state: classes.State, vehicle: classes.Vehicle, time: int, cache=None
     ):
         location_indicator = self.get_location_indicator(
             vehicle.current_location.id, len(state.locations)
@@ -138,7 +150,7 @@ class ValueFunction(abc.ABC):
             normalized_deviation_ideal_state_positive,
             normalized_deviation_ideal_state_negative,
             normalized_deficient_battery,
-        ) = ValueFunction.get_normalized_lists(state)
+        ) = ValueFunction.get_normalized_lists(state, cache)
 
         scooter_inventory_indication = self.get_inventory_indicator(
             helpers.zero_divide(
@@ -170,7 +182,7 @@ class ValueFunction(abc.ABC):
         self.shifts_trained = shifts_trained
 
     @Decorators.check_setup
-    def convert_next_state_features(self, state, vehicle, action, time):
+    def convert_next_state_features(self, state, vehicle, action, time, cache=None):
         # Change location by swapping location indicator
         location_indicators = self.get_location_indicator(
             action.next_location, len(state.locations)
@@ -181,7 +193,10 @@ class ValueFunction(abc.ABC):
             normalized_deviation_ideal_state_negative,
             normalized_deficient_battery,
         ) = ValueFunction.get_normalized_lists(
-            state, current_location=vehicle.current_location.id, action=action
+            state,
+            cache,
+            current_location=vehicle.current_location.id,
+            action=action,
         )
         # Inventory indicators adjusting for action effects
         scooter_inventory_indication = self.get_inventory_indicator(
@@ -230,7 +245,7 @@ class ValueFunction(abc.ABC):
         )
 
     @staticmethod
-    def get_normalized_lists(state, current_location=None, action=None):
+    def get_normalized_lists(state, cache=None, current_location=None, action=None):
         if current_location is not None and action is not None:
 
             def filter_scooter_ids(ids, isAvailable=True):
@@ -287,18 +302,26 @@ class ValueFunction(abc.ABC):
         else:
             scooters_added_in_current_cluster = 0
             battery_percentage_added = 0
+        current_states, available_scooters = (
+            cache
+            if cache is not None
+            else (
+                [cluster.get_current_state() for cluster in state.clusters],
+                [cluster.get_available_scooters() for cluster in state.clusters],
+            )
+        )  # Use cache if you have it
+        deviations = [
+            len(available_scooters[i])
+            - cluster.ideal_state
+            + (
+                scooters_added_in_current_cluster
+                if cluster.id == current_location
+                else 0
+            )  # Add available scooters from action
+            for i, cluster in enumerate(state.clusters)
+        ]
 
         def ideal_state_deviation(is_positive):
-            deviations = [
-                len(cluster.get_available_scooters())
-                - cluster.ideal_state
-                + (
-                    scooters_added_in_current_cluster
-                    if cluster.id == current_location
-                    else 0
-                )  # Add available scooters from action
-                for cluster in state.clusters
-            ]
             if is_positive:
                 return [max(deviation, 0) for deviation in deviations]
             else:
@@ -310,13 +333,13 @@ class ValueFunction(abc.ABC):
             helpers.normalize_list(
                 [
                     len(cluster.scooters)
-                    - cluster.get_current_state()
+                    - current_states[i]
                     - (
                         battery_percentage_added
                         if cluster.id == current_location
                         else 0
                     )
-                    for cluster in state.clusters
+                    for i, cluster in enumerate(state.clusters)
                 ]
             ),
         )

@@ -2,6 +2,7 @@ import copy
 import unittest
 import random
 
+import analysis.evaluate_policies
 import classes
 import clustering.scripts
 import decision
@@ -343,38 +344,6 @@ class ValueFunctionTests(unittest.TestCase):
                 next_state_features[i],
                 msg=f"not equal at {i}",
             )
-
-
-class EpsilonGreedyPolicyTest(unittest.TestCase):
-    def run_analysis_test(self, starts_at_depot):
-        world = World(
-            80,
-            None,
-            clustering.scripts.get_initial_state(
-                100, 10, initial_location_depot=starts_at_depot
-            ),
-            visualize=False,
-        )
-        world.policy = world.set_policy(
-            policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-            value_function_class=decision.value_functions.LinearValueFunction,
-        )
-        world, *rest = analysis.evaluate_policies.run_analysis([world])
-        self.assertTrue(
-            any(
-                [
-                    world.policy.value_function.weight_init_value != weight
-                    for weight in world.policy.value_function.weights
-                ]
-            ),
-            "The weights have not changed after a full run analysis",
-        )
-
-    def test_start_in_depot(self):
-        self.run_analysis_test(True)
-
-    def test_start_in_cluster(self):
-        self.run_analysis_test(False)
 
 
 class NeighbourFilteringTests(unittest.TestCase):

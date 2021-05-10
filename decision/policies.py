@@ -81,9 +81,13 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
+            # Cache current states in state
+            cache = [cluster.get_current_state() for cluster in state.clusters], [
+                cluster.get_available_scooters() for cluster in state.clusters
+            ]
             # Generate the state features of the current state
             state_features = self.value_function.get_state_features(
-                world.state, vehicle, world.time
+                world.state, vehicle, world.time, cache
             )
             state_value = self.value_function.estimate_value_from_state_features(
                 state_features
@@ -99,6 +103,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     vehicle,
                     action,
                     world.time + action.get_action_time(action_distance),
+                    cache,
                 )
                 # Calculate the expected future reward of being in this new state
                 next_state_value = (
