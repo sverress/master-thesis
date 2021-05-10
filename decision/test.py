@@ -6,7 +6,6 @@ import classes
 import clustering.scripts
 import decision
 import decision.value_functions
-import analysis.evaluate_policies
 import globals
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
@@ -60,7 +59,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle, 0), reward
+            self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], reward
         )
 
         # Test number of scooters
@@ -97,7 +96,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test no reward for pickup
         self.assertEqual(
-            round(self.initial_state.do_action(actions[-1], self.vehicle, 0), 1), 0
+            round(self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], 1), 0
         )
 
         # Test number of scooters
@@ -153,7 +152,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle, 0), reward
+            self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], reward
         )
 
         # Test number of scooters
@@ -201,7 +200,8 @@ class BasicDecisionTests(unittest.TestCase):
 
     def test_number_of_actions(self):
         bigger_state = get_initial_state(sample_size=1000, initial_location_depot=False)
-        bigger_state.current_location = random.choice(
+        vehicle = bigger_state.vehicles[0]
+        vehicle.current_location = random.choice(
             [
                 cluster
                 for cluster in bigger_state.clusters
@@ -209,12 +209,12 @@ class BasicDecisionTests(unittest.TestCase):
             ]
         )
         self.assertLess(
-            len(bigger_state.get_possible_actions(self.vehicle, divide=2)),
-            len(bigger_state.get_possible_actions(self.vehicle)),
+            len(bigger_state.get_possible_actions(vehicle, divide=2)),
+            len(bigger_state.get_possible_actions(vehicle)),
         )
         self.assertLess(
-            len(bigger_state.get_possible_actions(self.vehicle, divide=2)),
-            len(bigger_state.get_possible_actions(self.vehicle, divide=4)),
+            len(bigger_state.get_possible_actions(vehicle, divide=2)),
+            len(bigger_state.get_possible_actions(vehicle, divide=4)),
         )
 
 
@@ -225,7 +225,9 @@ class PolicyTests(unittest.TestCase):
     def test_swap_all_policy(self):
         self.world.policy = decision.SwapAllPolicy()
         vehicle_swap_all_policy = self.world.state.vehicles[0]
-        action = self.world.policy.get_best_action(self.world, vehicle_swap_all_policy)
+        action, _ = self.world.policy.get_best_action(
+            self.world, vehicle_swap_all_policy
+        )
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
@@ -253,11 +255,13 @@ class ValueFunctionTests(unittest.TestCase):
         # No discount should give reward equal to TD-error
         value_function.setup(self.world.state)
         vehicle = self.world.state.vehicles[0]
-        action = decision.policies.SwapAllPolicy().get_best_action(self.world, vehicle)
+        action, _ = decision.policies.SwapAllPolicy().get_best_action(
+            self.world, vehicle
+        )
         state = copy.deepcopy(self.world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward = self.world.state.do_action(action, vehicle, self.world.time)
+        reward, _ = self.world.state.do_action(action, vehicle, self.world.time)
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(

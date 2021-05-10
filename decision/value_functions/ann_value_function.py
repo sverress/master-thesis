@@ -50,10 +50,7 @@ class ANNValueFunction(ValueFunction):
         super(ANNValueFunction, self).setup(state)
 
     def estimate_value(
-        self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
-        time: int,
+        self, state: classes.State, vehicle: classes.Vehicle, time: int,
     ):
 
         return self.estimate_value_from_state_features(
@@ -63,18 +60,17 @@ class ANNValueFunction(ValueFunction):
     def estimate_value_from_state_features(self, state_features: [float]):
         return float(self.model(np.array([state_features]))[0][0])
 
-    def batch_update_weights(self, state_features, batch: [(float, float, float)]):
+    def batch_update_weights(self, batch: [(float, float, float, [float])]):
         targets = [
             self.compute_and_record_td_error(
                 current_state_value, next_state_value, reward
             )
             + current_state_value
-            for current_state_value, next_state_value, reward in batch
+            for current_state_value, next_state_value, reward, _ in batch
         ]
+        state_features = [state_feature for _, _, _, state_feature in batch]
         self.model.fit(
-            np.array([state_features] * len(batch)),
-            np.array(targets),
-            verbose=False,
+            np.array(state_features), np.array(targets), verbose=False,
         )
 
     def update_weights(
