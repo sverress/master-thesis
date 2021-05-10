@@ -265,7 +265,7 @@ class ValueFunction(abc.ABC):
                     / 100
                     for scooter_id in action.battery_swaps
                 ]
-            ) - sum(
+            ) + sum(
                 [
                     state.clusters[current_location]
                     .get_scooter_from_id(scooter_id)

@@ -315,7 +315,7 @@ class ValueFunctionTests(unittest.TestCase):
         # Action that does a bit of everything
         action = classes.Action(
             [scooter.id for scooter in scooters[:3]],
-            [scooter.id for scooter in scooters[3:5]],
+            [scooter.id for scooter in scooters[3:10]],
             [deliver_scooter.id],
             random.choice(
                 [
