@@ -1,4 +1,6 @@
 import copy
+from typing import Union
+
 import decision.neighbour_filtering
 import classes
 import numpy.random as random
@@ -7,15 +9,13 @@ import abc
 
 class Policy(abc.ABC):
     def __init__(
-        self,
-        get_possible_actions_divide,
-        number_of_neighbors,
+        self, get_possible_actions_divide, number_of_neighbors,
     ):
         self.get_possible_actions_divide = get_possible_actions_divide
         self.number_of_neighbors = number_of_neighbors
 
     @abc.abstractmethod
-    def get_best_action(self, world, vehicle) -> classes.Action:
+    def get_best_action(self, world, vehicle):
         """
         Returns the best action for the input vehicle in the world context
         :param world: world object that contains the whole world state
@@ -37,9 +37,7 @@ class Policy(abc.ABC):
 
     @staticmethod
     def print_action_stats(
-        world,
-        vehicle: classes.Vehicle,
-        actions_info: [(classes.Action, int, int)],
+        world, vehicle: classes.Vehicle, actions_info: [(classes.Action, int, int)],
     ) -> None:
         if world.verbose:
             print(f"\n{vehicle}:")
@@ -56,11 +54,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
     """
 
     def __init__(
-        self,
-        get_possible_actions_divide,
-        number_of_neighbors,
-        epsilon,
-        value_function,
+        self, get_possible_actions_divide, number_of_neighbors, epsilon, value_function,
     ):
         super().__init__(get_possible_actions_divide, number_of_neighbors)
         self.value_function = value_function
@@ -78,7 +72,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
 
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
-            return random.choice(actions)
+            return random.choice(actions), None
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
@@ -95,7 +89,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 # Get the relevant vehicle from the state copy
                 vehicle_copy = state_copy.get_vehicle_by_id(vehicle.id)
                 # Perform the action and record the reward
-                reward = state_copy.do_action(action, vehicle_copy, world.time)
+                reward, _ = state_copy.do_action(action, vehicle_copy, world.time)
                 # Get the distance from current cluster to the new destination cluster
                 action_distance = state_copy.get_distance(
                     vehicle.current_location.id, action.next_location
@@ -107,27 +101,17 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     world.time + action.get_action_time(action_distance),
                 )
                 # Calculate the expected future reward of being in this new state
-                next_state_value = (
-                    self.value_function.estimate_value_from_state_features(
-                        next_state_features
-                    )
+                next_state_value = self.value_function.estimate_value_from_state_features(
+                    next_state_features
                 )
 
-                action_info.append((action, reward, next_state_value))
-
-            # Update the weights of the value function based on the td error
-            self.value_function.batch_update_weights(
-                state_features,
-                [
-                    (state_value, next_state_value, reward)
-                    for action, reward, next_state_value in action_info
-                ],
-            )
+                action_info.append((action, next_state_value, reward))
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
             best_action, *rest = max(action_info, key=lambda pair: pair[1] + pair[2])
 
-            return best_action
+            # Best action, (reward, next state estimated value, state features)
+            return best_action, (state_value, *rest, state_features)
 
     def setup_from_state(self, state):
         self.value_function.setup(state)
@@ -170,11 +154,14 @@ class SwapAllPolicy(Policy):
             number_of_scooters_to_swap = vehicle.get_max_number_of_swaps()
 
         # Return an action with no re-balancing, only scooter swapping
-        return classes.Action(
-            battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
-            pick_ups=[],
-            delivery_scooters=[],
-            next_location=next_location.id,
+        return (
+            classes.Action(
+                battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
+                pick_ups=[],
+                delivery_scooters=[],
+                next_location=next_location.id,
+            ),
+            None,
         )
 
 
@@ -193,12 +180,12 @@ class RandomActionPolicy(Policy):
         )
 
         # pick a random action
-        return random.choice(possible_actions)
+        return random.choice(possible_actions), None
 
 
 class DoNothing(Policy):
     def __init__(self):
         super().__init__(0, 0)
 
-    def get_best_action(self, world, vehicle) -> classes.Action:
-        return classes.Action([], [], [], 0)
+    def get_best_action(self, world, vehicle):
+        return classes.Action([], [], [], 0), None

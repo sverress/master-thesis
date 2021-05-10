@@ -5,7 +5,6 @@ import random
 import clustering.scripts
 import decision
 import decision.value_functions
-import analysis.evaluate_policies
 import globals
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
@@ -36,15 +35,13 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Get all possible actions
         actions = self.initial_state.get_possible_actions(
-            self.vehicle,
-            number_of_neighbours=6,
+            self.vehicle, number_of_neighbours=6,
         )
 
         # Test number of swaps less or equal to ideal state
         for action in actions:
             self.assertLessEqual(
-                len(action.battery_swaps),
-                self.vehicle.current_location.ideal_state,
+                len(action.battery_swaps), self.vehicle.current_location.ideal_state,
             )
 
         # Test number of actions
@@ -59,7 +56,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle, 0), reward
+            self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], reward
         )
 
         # Test number of scooters
@@ -96,7 +93,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test no reward for pickup
         self.assertEqual(
-            round(self.initial_state.do_action(actions[-1], self.vehicle, 0), 1), 0
+            round(self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], 1), 0
         )
 
         # Test number of scooters
@@ -152,7 +149,7 @@ class BasicDecisionTests(unittest.TestCase):
 
         # Test reward
         self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle, 0), reward
+            self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], reward
         )
 
         # Test number of scooters
@@ -190,17 +187,15 @@ class BasicDecisionTests(unittest.TestCase):
         vehicle.current_location.scooters = vehicle.current_location.scooters[:1]
 
         # Get all possible actions
-        actions = initial_state.get_possible_actions(
-            vehicle,
-            number_of_neighbours=5,
-        )
+        actions = initial_state.get_possible_actions(vehicle, number_of_neighbours=5,)
 
         # Test number of actions possible
         self.assertEqual(5, len(actions))
 
     def test_number_of_actions(self):
         bigger_state = get_initial_state(sample_size=1000, initial_location_depot=False)
-        bigger_state.current_location = random.choice(
+        vehicle = bigger_state.vehicles[0]
+        vehicle.current_location = random.choice(
             [
                 cluster
                 for cluster in bigger_state.clusters
@@ -208,12 +203,12 @@ class BasicDecisionTests(unittest.TestCase):
             ]
         )
         self.assertLess(
-            len(bigger_state.get_possible_actions(self.vehicle, divide=2)),
-            len(bigger_state.get_possible_actions(self.vehicle)),
+            len(bigger_state.get_possible_actions(vehicle, divide=2)),
+            len(bigger_state.get_possible_actions(vehicle)),
         )
         self.assertLess(
-            len(bigger_state.get_possible_actions(self.vehicle, divide=2)),
-            len(bigger_state.get_possible_actions(self.vehicle, divide=4)),
+            len(bigger_state.get_possible_actions(vehicle, divide=2)),
+            len(bigger_state.get_possible_actions(vehicle, divide=4)),
         )
 
 
@@ -224,7 +219,9 @@ class PolicyTests(unittest.TestCase):
     def test_swap_all_policy(self):
         self.world.policy = decision.SwapAllPolicy()
         vehicle_swap_all_policy = self.world.state.vehicles[0]
-        action = self.world.policy.get_best_action(self.world, vehicle_swap_all_policy)
+        action, _ = self.world.policy.get_best_action(
+            self.world, vehicle_swap_all_policy
+        )
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
@@ -252,11 +249,11 @@ class ValueFunctionTests(unittest.TestCase):
         # No discount should give reward equal to TD-error
         value_function.setup(world.state)
         vehicle = world.state.vehicles[0]
-        action = decision.policies.SwapAllPolicy().get_best_action(world, vehicle)
+        action, _ = decision.policies.SwapAllPolicy().get_best_action(world, vehicle)
         state = copy.deepcopy(world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward = world.state.do_action(action, vehicle, world.time)
+        reward, _ = world.state.do_action(action, vehicle, world.time)
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(
@@ -282,42 +279,9 @@ class ValueFunctionTests(unittest.TestCase):
     def test_ann_value_function(self):
         self.world_value_function_check(
             decision.value_functions.ANNValueFunction(
-                *self.value_function_args,
-                [100, 1000, 100],
+                *self.value_function_args, [100, 1000, 100],
             )
         )
-
-
-class EpsilonGreedyPolicyTest(unittest.TestCase):
-    def run_analysis_test(self, starts_at_depot):
-        world = World(
-            80,
-            None,
-            clustering.scripts.get_initial_state(
-                100, 10, initial_location_depot=starts_at_depot
-            ),
-            visualize=False,
-        )
-        world.policy = world.set_policy(
-            policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-            value_function_class=decision.value_functions.LinearValueFunction,
-        )
-        world, *rest = analysis.evaluate_policies.run_analysis([world])
-        self.assertTrue(
-            any(
-                [
-                    world.policy.value_function.weight_init_value != weight
-                    for weight in world.policy.value_function.weights
-                ]
-            ),
-            "The weights have not changed after a full run analysis",
-        )
-
-    def test_start_in_depot(self):
-        self.run_analysis_test(True)
-
-    def test_start_in_cluster(self):
-        self.run_analysis_test(False)
 
 
 class NeighbourFilteringTests(unittest.TestCase):
@@ -325,12 +289,7 @@ class NeighbourFilteringTests(unittest.TestCase):
         state = get_initial_state(100, 10)
         vehicle = state.vehicles[0]
 
-        best_neighbours_with_random = filtering_neighbours(
-            state,
-            vehicle,
-            3,
-            1,
-        )
+        best_neighbours_with_random = filtering_neighbours(state, vehicle, 3, 1,)
 
         # test if the number of neighbours is the same, even though one is random
         self.assertEqual(len(best_neighbours_with_random), 3)

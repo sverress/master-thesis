@@ -122,10 +122,12 @@ class State(SaveMixin):
                     vehicle,
                     number_of_neighbours,
                     random_neighbours,
-                    exclude=exclude,
+                    exclude=exclude + [depot.id for depot in self.depots],
                 )
                 if number_of_neighbours
-                else self.get_neighbours(vehicle.current_location, is_sorted=False)
+                else self.get_neighbours(
+                    vehicle.current_location, is_sorted=False, exclude=exclude
+                )
             )
 
         else:
@@ -177,7 +179,9 @@ class State(SaveMixin):
                     max_swaps=max(pick_ups, swaps),
                 )
                 if number_of_neighbours
-                else self.get_neighbours(vehicle.current_location)
+                else self.get_neighbours(
+                    vehicle.current_location, is_sorted=False, exclude=exclude
+                )
             )
             combinations = []
             # Different combinations of battery swaps, pick-ups, drop-offs and clusters
@@ -229,17 +233,18 @@ class State(SaveMixin):
         :return: float - reward for doing the action on the state
         """
         reward = 0
-        if vehicle.is_at_depot():
+        refill_time = 0
+        if vehicle.is_at_depot() and len(vehicle.service_route) > 1:
             batteries_to_swap = min(
                 vehicle.flat_batteries(),
                 vehicle.current_location.get_available_battery_swaps(time),
             )
-            vehicle.battery_inventory = (
-                vehicle.battery_inventory
-                + vehicle.current_location.swap_battery_inventory(
-                    time, batteries_to_swap
-                )
+
+            refill_time += vehicle.current_location.swap_battery_inventory(
+                time, batteries_to_swap
             )
+            vehicle.add_battery_inventory(batteries_to_swap)
+
         else:
             # Perform all pickups
             for pick_up_scooter_id in action.pick_ups:
@@ -278,7 +283,7 @@ class State(SaveMixin):
         # Moving the state/vehicle from this to next cluster
         vehicle.set_current_location(self.get_location_by_id(action.next_location))
 
-        return reward
+        return reward, refill_time
 
     def __repr__(self):
         return (
@@ -287,19 +292,25 @@ class State(SaveMixin):
         )
 
     def get_neighbours(
-        self, location: Location, number_of_neighbours=None, is_sorted=True
+        self,
+        location: Location,
+        number_of_neighbours=None,
+        is_sorted=True,
+        exclude=None,
     ):
         """
         Get sorted list of clusters closest to input cluster
         :param is_sorted: Boolean if the neighbours list should be sorted in a ascending order based on distance
         :param location: location to find neighbours for
         :param number_of_neighbours: number of neighbours to return
+        :param exclude: neighbor ids to exclude
         :return:
         """
         neighbours = [
             state_location
             for state_location in self.locations
             if state_location.id != location.id
+            and state_location.id not in (exclude if exclude else [])
         ]
         if is_sorted:
             neighbours = sorted(

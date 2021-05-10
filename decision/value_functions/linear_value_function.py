@@ -51,10 +51,7 @@ class LinearValueFunction(ValueFunction):
         super(LinearValueFunction, self).setup(state)
 
     def estimate_value(
-        self,
-        state,
-        vehicle,
-        time,
+        self, state, vehicle, time,
     ):
         return self.estimate_value_from_state_features(
             self.get_state_features(state, vehicle, time)
@@ -63,14 +60,8 @@ class LinearValueFunction(ValueFunction):
     def estimate_value_from_state_features(self, state_features: [float]):
         return float(np.dot(self.weights, state_features))
 
-    def batch_update_weights(
-        self, state_features, batch: [([float], float, float, float)]
-    ):
-        for (
-            current_state_value,
-            next_state_value,
-            reward,
-        ) in batch:
+    def batch_update_weights(self, batch: [(float, float, float, [float])]):
+        for (current_state_value, next_state_value, reward, state_features) in batch:
             self.update_weights(
                 state_features, current_state_value, next_state_value, reward
             )
