@@ -55,7 +55,9 @@ class BasicDecisionTests(unittest.TestCase):
         reward = (
             len(actions[-1].battery_swaps)
             * 0.2
-            * self.vehicle.current_location.prob_of_scooter_usage()
+            * self.vehicle.current_location.prob_of_scooter_usage(
+                len(self.vehicle.current_location.get_available_scooters())
+            )
         )
 
         # Test reward
@@ -147,7 +149,9 @@ class BasicDecisionTests(unittest.TestCase):
         reward = (
             len(actions[-1].battery_swaps)
             * 0.2
-            * self.vehicle.current_location.prob_of_scooter_usage()
+            * self.vehicle.current_location.prob_of_scooter_usage(
+                len(self.vehicle.current_location.get_available_scooters())
+            )
             + len(actions[-1].delivery_scooters) * 1.0
         )
 
