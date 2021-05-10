@@ -14,7 +14,11 @@ import copy
 
 class State(SaveMixin):
     def __init__(
-        self, clusters: [Cluster], depots: [Depot], vehicles=None, distance_matrix=None,
+        self,
+        clusters: [Cluster],
+        depots: [Depot],
+        vehicles=None,
+        distance_matrix=None,
     ):
         self.clusters = clusters
         self.vehicles = vehicles
@@ -122,13 +126,9 @@ class State(SaveMixin):
                     exclude=exclude + [depot.id for depot in self.depots],
                 )
                 if number_of_neighbours
-                else [
-                    neighbour
-                    for neighbour in self.get_neighbours(
-                        vehicle.current_location, is_sorted=False
-                    )
-                    if neighbour.id not in exclude
-                ]
+                else self.get_neighbours(
+                    vehicle.current_location, is_sorted=False, exclude=exclude
+                )
             )
 
         else:
@@ -180,13 +180,9 @@ class State(SaveMixin):
                     max_swaps=max(pick_ups, swaps),
                 )
                 if number_of_neighbours
-                else [
-                    neighbour
-                    for neighbour in self.get_neighbours(
-                        vehicle.current_location, is_sorted=False
-                    )
-                    if neighbour.id not in exclude
-                ]
+                else self.get_neighbours(
+                    vehicle.current_location, is_sorted=False, exclude=exclude
+                )
             )
             combinations = []
             # Different combinations of battery swaps, pick-ups, drop-offs and clusters
@@ -297,19 +293,25 @@ class State(SaveMixin):
         )
 
     def get_neighbours(
-        self, location: Location, number_of_neighbours=None, is_sorted=True
+        self,
+        location: Location,
+        number_of_neighbours=None,
+        is_sorted=True,
+        exclude=None,
     ):
         """
         Get sorted list of clusters closest to input cluster
         :param is_sorted: Boolean if the neighbours list should be sorted in a ascending order based on distance
         :param location: location to find neighbours for
         :param number_of_neighbours: number of neighbours to return
+        :param exclude: neighbor ids to exclude
         :return:
         """
         neighbours = [
             state_location
             for state_location in self.locations
             if state_location.id != location.id
+            and state_location.id not in (exclude if exclude else [])
         ]
         if is_sorted:
             neighbours = sorted(
@@ -344,7 +346,8 @@ class State(SaveMixin):
         visualize_clustering(self.clusters)
 
     def visualize_flow(
-        self, flows: [(int, int, int)],
+        self,
+        flows: [(int, int, int)],
     ):
         visualize_cluster_flow(self, flows)
 
@@ -404,7 +407,9 @@ class State(SaveMixin):
 
     @staticmethod
     def save_path(
-        number_of_clusters, sample_size, ideal_state_computation,
+        number_of_clusters,
+        sample_size,
+        ideal_state_computation,
     ):
         def convert_binary(binary):
             return 1 if binary else 0
