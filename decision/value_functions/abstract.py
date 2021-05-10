@@ -46,10 +46,7 @@ class ValueFunction(abc.ABC):
         self.td_errors = []
 
     def compute_and_record_td_error(
-        self,
-        current_state_value: float,
-        next_state_value: float,
-        reward: float,
+        self, current_state_value: float, next_state_value: float, reward: float,
     ):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
@@ -70,10 +67,7 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
-        self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
-        time: int,
+        self, state: classes.State, vehicle: classes.Vehicle, time: int,
     ):
         pass
 
@@ -85,8 +79,7 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def batch_update_weights(
-        self,
-        batch: [(float, float, float, [float])],
+        self, batch: [(float, float, float, [float])],
     ):
         pass
 
@@ -193,10 +186,7 @@ class ValueFunction(abc.ABC):
             normalized_deviation_ideal_state_negative,
             normalized_deficient_battery,
         ) = ValueFunction.get_normalized_lists(
-            state,
-            cache,
-            current_location=vehicle.current_location.id,
-            action=action,
+            state, cache, current_location=vehicle.current_location.id, action=action,
         )
         # Inventory indicators adjusting for action effects
         scooter_inventory_indication = self.get_inventory_indicator(
@@ -350,7 +340,6 @@ class ValueFunction(abc.ABC):
             if self.vehicle_inventory_step_size * i
             < percent
             <= self.vehicle_inventory_step_size * (i + 1)
-            or percent == i
             else 0
             for i in range(round(1 / self.vehicle_inventory_step_size))
         ]
