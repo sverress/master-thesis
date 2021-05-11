@@ -35,6 +35,9 @@ def train_value_function(world, save_suffix="", scenario_training=True):
                 training_simulation.scripts.training_simulation(policy_world)
             else:
                 policy_world.run()
+
+            if hasattr(policy_world.policy, "value_function"):
+                policy_world.policy.value_function.reset_eligibilities()
             world.policy = policy_world.policy
             progress_bar.next()
 

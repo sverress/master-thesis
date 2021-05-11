@@ -27,6 +27,7 @@ class ValueFunction(abc.ABC):
         discount_factor,
         vehicle_inventory_step_size,
         location_repetition,
+        trace_decay,
     ):
         # for every location - 3 bit for each location
         # for every cluster, 1 float for deviation, 1 float for battery deficient
@@ -39,6 +40,7 @@ class ValueFunction(abc.ABC):
         self.step_size = weight_update_step_size
         self.discount_factor = discount_factor
         self.weight_init_value = weight_init_value
+        self.trace_decay = trace_decay
 
         self.setup_complete = False
         self.location_indicator = None
@@ -91,6 +93,11 @@ class ValueFunction(abc.ABC):
         next_state_value: float,
         reward: float,
     ):
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
+    def reset_eligibilities(self):
         pass
 
     @abc.abstractmethod
@@ -203,6 +210,8 @@ class ValueFunction(abc.ABC):
 
     def add_training_cases(self, training_cases):
         self.training_case_base += training_cases
+        if len(self.training_case_base) > 500:
+            self.training_case_base = self.training_case_base[:-500]
 
     def update_shifts_trained(self, shifts_trained: int):
         self.shifts_trained = shifts_trained

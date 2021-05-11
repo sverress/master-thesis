@@ -1,7 +1,6 @@
 import tempfile
 
 from .abstract import *
-from tensorflow import keras
 import numpy as np
 from decision.value_functions.helpers import SplitGD
 
@@ -14,6 +13,7 @@ class ANNValueFunction(ValueFunction):
         discount_factor,
         vehicle_inventory_step_size,
         location_repetition,
+        trace_decay,
         network_structure: [int],
     ):
         super().__init__(
@@ -22,11 +22,14 @@ class ANNValueFunction(ValueFunction):
             discount_factor,
             vehicle_inventory_step_size,
             location_repetition,
+            trace_decay,
         )
         self.network_structure = network_structure
-        self.model = SplitGD(lambd=0.9, gamma=0.8)
+        self.model = SplitGD(trace_decay=trace_decay, discount_factor=discount_factor)
 
     def setup(self, state: classes.State):
+        from tensorflow import keras
+
         if self.setup_complete:
             return
         (
@@ -42,7 +45,12 @@ class ANNValueFunction(ValueFunction):
             )
         )
         for layer in nodes_in_rest_of_layers:
-            self.model.add(keras.layers.Dense(layer, activation="relu"))
+            self.model.add(keras.layers.Dropout(0.5))
+            self.model.add(
+                keras.layers.Dense(
+                    layer, activation="relu", kernel_regularizer=keras.regularizers.L2()
+                )
+            )
         # The last layer needs to have a single value function output
         self.model.add(keras.layers.Dense(1))
         self.model.compile(
@@ -62,18 +70,25 @@ class ANNValueFunction(ValueFunction):
         return float(self.model(np.array([state_features]))[0][0])
 
     def batch_update_weights(self):
-        targets = [
-            self.compute_and_record_td_error(
+        td_errors = []
+        targets = []
+        state_features = []
+
+        for (
+            current_state_value,
+            next_state_value,
+            reward,
+            state_feature,
+        ) in self.training_case_base:
+            td_error = self.compute_and_record_td_error(
                 current_state_value, next_state_value, reward
             )
-            + current_state_value
-            for current_state_value, next_state_value, reward, _ in self.training_case_base
-        ]
-        state_features = [
-            state_feature for _, _, _, state_feature in self.training_case_base
-        ]
+            td_errors.append(td_error)
+            targets.append(td_error + current_state_value)
+            state_features.append(state_feature)
+
         self.model.fit(
-            np.array(state_features), np.array(targets), verbose=False,
+            np.array(state_features), np.array(targets), td_errors, verbose=False,
         )
 
     def update_weights(
@@ -94,12 +109,17 @@ class ANNValueFunction(ValueFunction):
             verbose=False,
         )
 
+    def reset_eligibilities(self):
+        self.model.reset_eligibilities()
+
     def get_state_features(
         self, state: classes.State, vehicle: classes.Vehicle, time: int
     ):
         return self.convert_state_to_features(state, vehicle, time)
 
     def __getstate__(self):
+        from tensorflow import keras
+
         state = self.__dict__.copy()
         with tempfile.NamedTemporaryFile(suffix=".hdf5", delete=True) as fd:
             keras.models.save_model(self.model, fd.name, overwrite=True)
@@ -108,6 +128,8 @@ class ANNValueFunction(ValueFunction):
         return state
 
     def __setstate__(self, state):
+        from tensorflow import keras
+
         self.__dict__.update(state)
         with tempfile.NamedTemporaryFile(suffix=".hdf5", delete=True) as fd:
             fd.write(state["model"])

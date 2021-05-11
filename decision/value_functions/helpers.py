@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from tensorflow import keras
+import tensorflow.keras
 
 
 def convert_string_list_to_tuple_list(string_list):
@@ -11,7 +11,7 @@ def string_to_np_array(string):
     return np.array([int(string_num) for string_num in string])
 
 
-class SplitGD(keras.Sequential):
+class SplitGD(tensorflow.keras.Sequential):
     """
     !!CODE TAKEN FROM it3105 WEBSITE!!
     https://www.idi.ntnu.no/emner/it3105/materials/code/splitgd.py
@@ -24,19 +24,27 @@ class SplitGD(keras.Sequential):
     SplitGD.fit.  To use this class, just subclass it and write your own code for the "modify_gradients" method.
     """
 
-    def __init__(self, lambd, gamma):
+    def __init__(self, trace_decay, discount_factor):
         """
         Wrapper method with updated fit method for eligibility traces
-        :param keras_model: keras model object
-        :param lambd:
+        :param trace_decay:
         :param gamma:
         """
         super().__init__()
         self.eligibilities = []
-        self.lambd = lambd
-        self.gamma = gamma
-        for tensor in self.trainable_weights:
-            self.eligibilities.append(np.array(np.zeros(tensor.shape)))
+        self.trace_decay = trace_decay
+        self.discount_factor = discount_factor
+        self.reset_eligibilities()
+
+    def reset_eligibilities(self):
+        import tensorflow as tf
+
+        self.eligibilities = [
+            tf.convert_to_tensor(
+                np.zeros(self.trainable_weights[i].numpy().shape), dtype=tf.float32,
+            )
+            for i in range(len(self.trainable_weights))
+        ]
 
     # This returns a tensor of losses, OR the value of the averaged tensor.  Note: use .numpy() to get the
     # value of a tensor.
@@ -49,17 +57,17 @@ class SplitGD(keras.Sequential):
         loss = tf.reduce_sum((targets - predictions) ** 2)
         return tf.reduce_mean(loss).numpy() if avg else loss
 
-    def fit(self, features, targets, delta, epochs=1, mbs=1, vfrac=0.1, **kwargs):
+    def fit(self, features, targets, td_error, epochs=1, mbs=1, vfrac=0.1, **kwargs):
         import tensorflow as tf
 
         params = self.trainable_weights
 
         for _ in range(epochs):
             for _ in range(math.floor(epochs / mbs)):
-                with tf.GradientTape() as tape:  # Read up on tf.GradientTape !!
+                with tf.GradientTape() as tape:
                     loss = self.gen_loss(features, targets)
                     gradients = tape.gradient(loss, params)
-                    gradients = self.modify_gradients(gradients, delta)
+                    gradients = self.modify_gradients(gradients, td_error)
                     self.optimizer.apply_gradients(zip(gradients, params))
 
     # Use the 'metric' to run a quick test on any set of features and targets.  A typical metric is some form of
@@ -91,19 +99,25 @@ class SplitGD(keras.Sequential):
         if len(val_ins) > 0:
             self.status_display(val_ins, val_targs, mode="Validation")
 
-    def modify_gradients(self, gradients, delta):
+    def modify_gradients(self, gradients, td_error):
+        """ Calculates the td_error in the weight and eligibility updates according to ei ← ei + ∂V(st)/∂wi
+        and wi ← wi +αδei.
+        :param gradients: tape.gradients of loss and weights
+        :param td_error: δ ← r +γV(s')−V(s) calculated in critic
+        :return: the amount of td_error in the weights of the NN
         """
-        Updates eligibility trace based on the gradients, and further updates the gradients
-        based on the new eligibilities and td-error
-        :param gradients: loss function gradients for each weight: list of tensors
-        :param delta: TD-error: float
-        :return: the updated gradients: list of tensors
-        """
+
         import tensorflow as tf
 
-        for index, tensor in enumerate(self.eligibilities):
-            tensor = tensor * self.lambd * self.gamma - gradients[index]
-            gradients[index] = tf.math.scalar_mul(delta, tensor)
+        td_error = tf.Variable(td_error, dtype=tf.float32)
+        # Taking every 2 array since every other array is biases
+        for i in range(0, len(self.eligebilities), 2):
+            self.eligebilities[i] = tf.math.add(
+                self.eligebilities[i] * self.trace_decay * self.discount_factor,
+                gradients[i],
+            )
+            gradients[i] = tf.math.multiply(self.eligebilities[i], td_error)
+
         return gradients
 
 
