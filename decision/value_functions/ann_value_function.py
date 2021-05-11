@@ -1,10 +1,6 @@
-import tempfile
-
 from .abstract import *
-from tensorflow import keras
-import tensorflow as tf
 import numpy as np
-from decision.value_functions.helpers import SplitGD
+from decision.value_functions.ANN import ANN
 
 
 class ANNValueFunction(ValueFunction):
@@ -27,41 +23,28 @@ class ANNValueFunction(ValueFunction):
             trace_decay,
         )
         self.network_structure = network_structure
-        self.model = SplitGD(trace_decay=trace_decay, discount_factor=discount_factor)
+        self.model = None
 
     def setup(self, state: classes.State):
-        from tensorflow import keras
-
         if self.setup_complete:
             return
         (
             number_of_locations_indicators,
             number_of_state_features,
         ) = self.get_number_of_location_indicators_and_state_features(state)
-        # First layer needs input size as argument
-        nodes_in_first_layer, *nodes_in_rest_of_layers = self.network_structure
-        self.model.add(
-            keras.layers.Dense(
-                nodes_in_first_layer,
-                input_dim=(number_of_locations_indicators + number_of_state_features),
-            )
-        )
-        for layer in nodes_in_rest_of_layers:
-            self.model.add(keras.layers.Dropout(0.5))
-            self.model.add(
-                keras.layers.Dense(
-                    layer, activation="relu", kernel_regularizer=keras.regularizers.L2()
-                )
-            )
-        # The last layer needs to have a single value function output
-        self.model.add(keras.layers.Dense(1))
-        self.model.compile(
-            loss="mean_squared_error", optimizer="adam", metrics=["accuracy"]
+        self.model = ANN(
+            self.network_structure,
+            number_of_locations_indicators + number_of_state_features,
+            self.trace_decay,
+            self.discount_factor,
         )
         super(ANNValueFunction, self).setup(state)
 
     def estimate_value(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
     ):
 
         return self.estimate_value_from_state_features(
@@ -69,7 +52,7 @@ class ANNValueFunction(ValueFunction):
         )
 
     def estimate_value_from_state_features(self, state_features: [float]):
-        return float(self.model(tf.convert_to_tensor([state_features]))[0][0])
+        return self.model.predict(state_features)
 
     def batch_update_weights(self):
         td_errors = []
@@ -89,9 +72,7 @@ class ANNValueFunction(ValueFunction):
             targets.append(td_error + current_state_value)
             state_features.append(state_feature)
 
-        self.model.fit(
-            np.array(state_features), np.array(targets), td_errors, verbose=False,
-        )
+        self.model.fit(np.array(state_features), np.array(targets), td_errors)
 
     def update_weights(
         self,
@@ -108,7 +89,6 @@ class ANNValueFunction(ValueFunction):
             np.array([td_error + current_state_value]),
             td_error,
             epochs=10,
-            verbose=False,
         )
 
     def reset_eligibilities(self):
@@ -130,24 +110,13 @@ class ANNValueFunction(ValueFunction):
         return self.convert_state_to_features(state, vehicle, time, cache=cache)
 
     def __getstate__(self):
-        from tensorflow import keras
-
         state = self.__dict__.copy()
-        with tempfile.NamedTemporaryFile(suffix=".hdf5", delete=True) as fd:
-            keras.models.save_model(self.model, fd.name, overwrite=True)
-            model_str = fd.read()
-        state["model"] = model_str
+        state["model"] = self.model.convert_model_to_string()
         return state
 
     def __setstate__(self, state):
-        from tensorflow import keras
-
         self.__dict__.update(state)
-        with tempfile.NamedTemporaryFile(suffix=".hdf5", delete=True) as fd:
-            fd.write(state["model"])
-            fd.flush()
-            model = keras.models.load_model(fd.name)
-        self.model = model
+        self.model = ANN.load_model_from_string(state["model"])
 
     def __str__(self):
         return f"ANNValueFunction - {self.shifts_trained}"
