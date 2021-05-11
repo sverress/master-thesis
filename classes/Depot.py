@@ -29,15 +29,23 @@ class Depot(Location):
         )
 
     def get_available_battery_swaps(self, time):
-        return self.capacity + self.get_delta_capacity(time, pop=False)
+        return self.capacity + self.get_delta_capacity(time, update_charging=False)
 
-    def get_delta_capacity(self, time, pop=True):
+    def get_delta_capacity(self, time, update_charging=True):
         delta_capacity = 0
+        time_filter = (
+            lambda filter_time, filter_charging_start_time: filter_time
+            > filter_charging_start_time + CHARGE_TIME_PER_BATTERY
+        )
         for i, (charging_start_time, number_of_batteries) in enumerate(self.charging):
-            if time > charging_start_time + CHARGE_TIME_PER_BATTERY:
+            if time_filter(time, charging_start_time):
                 delta_capacity += number_of_batteries
-                if pop:
-                    self.charging.pop(i)
+        if update_charging:
+            self.charging = [
+                (charging_start_time, number_of_batteries)
+                for charging_start_time, number_of_batteries in self.charging
+                if not time_filter(time, charging_start_time)
+            ]
         return delta_capacity
 
     def __str__(self):
