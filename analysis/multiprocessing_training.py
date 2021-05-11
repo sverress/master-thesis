@@ -8,7 +8,7 @@ import clustering.scripts
 
 def learning_rates(learning_rate, suffix):
     world = classes.World(
-        480,
+        960,
         None,
         clustering.scripts.get_initial_state(2500, 30),
         verbose=False,

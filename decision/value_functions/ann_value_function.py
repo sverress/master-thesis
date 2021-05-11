@@ -1,6 +1,8 @@
 import tempfile
 
 from .abstract import *
+from tensorflow import keras
+import tensorflow as tf
 import numpy as np
 from decision.value_functions.helpers import SplitGD
 
@@ -67,7 +69,7 @@ class ANNValueFunction(ValueFunction):
         )
 
     def estimate_value_from_state_features(self, state_features: [float]):
-        return float(self.model(np.array([state_features]))[0][0])
+        return float(self.model(tf.convert_to_tensor([state_features]))[0][0])
 
     def batch_update_weights(self):
         td_errors = []
@@ -112,10 +114,20 @@ class ANNValueFunction(ValueFunction):
     def reset_eligibilities(self):
         self.model.reset_eligibilities()
 
-    def get_state_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int
+    def get_next_state_features(
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        action: classes.Action,
+        time: int,
+        cache=None,  # current_states, available_scooters = cache
     ):
-        return self.convert_state_to_features(state, vehicle, time)
+        return self.convert_next_state_features(state, vehicle, action, time, cache)
+
+    def get_state_features(
+        self, state: classes.State, vehicle: classes.Vehicle, time: int, cache=None
+    ):
+        return self.convert_state_to_features(state, vehicle, time, cache=cache)
 
     def __getstate__(self):
         from tensorflow import keras
