@@ -61,7 +61,8 @@ def evaluate_world(world, world_attribute, verbose, runs_per_policy):
     if verbose:
         print(f"\n---------- {world.label} ----------")
     metrics = []
-    for _ in range(runs_per_policy):
+    for i in range(runs_per_policy):
+        print(world.label, i)
         run_world = copy.deepcopy(world)
         # run the world and add the world object to a list containing all world instances
         run_world.run()
@@ -106,6 +107,8 @@ def run_analysis(
         worlds.append(baseline_policy_world)
 
     td_errors_and_label = []
+
+    print(worlds)
 
     with Pool() as p:
         results = p.starmap(
