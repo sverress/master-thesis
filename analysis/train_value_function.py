@@ -23,7 +23,9 @@ def train_value_function(world, save_suffix="", scenario_training=True):
     for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)
         policy_world.policy.value_function.update_shifts_trained(shift)
-
+        policy_world.EPSILON = (
+            world.INITIAL_EPSILON - world.FINAL_EPSILON
+        ) / number_of_shifts
         if shift % world.TRAINING_SHIFTS_BEFORE_SAVE == 0:
             policy_world.save_world(
                 cache_directory=world.get_train_directory(save_suffix), suffix=shift
@@ -47,7 +49,10 @@ if __name__ == "__main__":
         5,
         None,
         clustering.scripts.get_initial_state(
-            SAMPLE_SIZE, NUMBER_OF_CLUSTERS, number_of_vans=1, number_of_bikes=0,
+            SAMPLE_SIZE,
+            NUMBER_OF_CLUSTERS,
+            number_of_vans=1,
+            number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,
