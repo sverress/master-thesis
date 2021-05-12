@@ -1,7 +1,10 @@
+import numpy as np
+
 import classes
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
 import helpers
 import abc
+import sklearn
 
 
 class Decorators:
@@ -49,7 +52,10 @@ class ValueFunction(abc.ABC):
         self.training_case_base = []
 
     def compute_and_record_td_error(
-        self, current_state_value: float, next_state_value: float, reward: float,
+        self,
+        current_state_value: float,
+        next_state_value: float,
+        reward: float,
     ):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
@@ -70,7 +76,10 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
     ):
         pass
 
@@ -134,7 +143,12 @@ class ValueFunction(abc.ABC):
         )
 
     def create_features(
-        self, state, vehicle, time, action=None, cache=None,
+        self,
+        state,
+        vehicle,
+        time,
+        action=None,
+        cache=None,
     ):
         # Create a flag for if it is a get next state features call
         is_next_action = action is not None
@@ -208,16 +222,32 @@ class ValueFunction(abc.ABC):
 
     @Decorators.check_setup
     def convert_state_to_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int, cache=None,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
+        cache=None,
     ):
-        return self.create_features(state, vehicle, time, action=None, cache=cache,)
+        return self.create_features(
+            state,
+            vehicle,
+            time,
+            action=None,
+            cache=cache,
+        )
 
     def update_shifts_trained(self, shifts_trained: int):
         self.shifts_trained = shifts_trained
 
     @Decorators.check_setup
     def convert_next_state_features(self, state, vehicle, action, time, cache=None):
-        return self.create_features(state, vehicle, time, action=action, cache=cache,)
+        return self.create_features(
+            state,
+            vehicle,
+            time,
+            action=action,
+            cache=cache,
+        )
 
     @staticmethod
     def get_small_depot_degree_of_filling(time, state):
@@ -323,10 +353,19 @@ class ValueFunction(abc.ABC):
             else:
                 return [abs(min(deviation, 0)) for deviation in deviations]
 
+        normalizer = sklearn.preprocessing.StandardScaler()
+
+        def normalize_list(input_list):
+            return (
+                normalizer.fit_transform(np.array(input_list).reshape((-1, 1)))
+                .reshape((1, -1))
+                .tolist()[0]
+            )
+
         return (
-            helpers.normalize_list(ideal_state_deviation(is_positive=True)),
-            helpers.normalize_list(ideal_state_deviation(is_positive=False)),
-            helpers.normalize_list(
+            normalize_list(ideal_state_deviation(is_positive=True)),
+            normalize_list(ideal_state_deviation(is_positive=False)),
+            normalize_list(
                 [
                     len(cluster.scooters)
                     - current_states[i]
