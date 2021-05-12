@@ -11,7 +11,9 @@ class ClusteringTests(unittest.TestCase):
         self.state_big = get_initial_state(2000, initial_location_depot=False)
 
     def test_sample_size(self):
-        self.assertEqual(len(get_initial_state(500).get_scooters()), 500)
+        self.assertEqual(
+            len(get_initial_state(200, cache=False, save=False).get_scooters()), 200
+        )
 
     def test_ideal_state_sum_to_number_of_scooters(self):
         self.assertAlmostEqual(

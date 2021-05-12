@@ -1,6 +1,5 @@
 import os
 import unittest
-import personal
 import analysis.evaluate_policies
 import analysis.train_value_function
 import analysis.multiprocessing_training
@@ -23,16 +22,6 @@ class AnalysisTests(unittest.TestCase):
             NUMBER_OF_NEIGHBOURS=5,
             TRAINING_SHIFTS_BEFORE_SAVE=1,
             MODELS_TO_BE_SAVED=2,
-        )
-
-    def test_run_analysis(self):
-        # Runs random and do nothing policies
-        analysis.evaluate_policies.run_analysis([], baseline_policy_world=self.world)
-
-    @staticmethod
-    def test_run_analysis_from_path():
-        analysis.evaluate_policies.run_analysis_from_path(
-            "world_cache/test_models", runs_per_policy=1, shift_duration=80,
         )
 
     def delete_dir(self, training_directory):
@@ -70,7 +59,10 @@ class AnalysisTests(unittest.TestCase):
     def test_export_to_excel():
         # running test instances and exporting them to excel
         analysis.evaluate_policies.run_analysis_from_path(
-            "world_cache/test_models", shift_duration=60, export_to_excel=True,
+            "world_cache/test_models",
+            shift_duration=10,
+            export_to_excel=True,
+            runs_per_policy=1,
         )
         file_name = f"computational_study/Test.xlsx"
         # removing the test file that was created during the test
