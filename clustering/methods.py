@@ -141,10 +141,7 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
             )
         return probability_matrix
 
-    progress = Bar(
-        "| Computing MPM",
-        max=len(os.listdir(TEST_DATA_DIRECTORY)),
-    )
+    progress = Bar("| Computing MPM", max=len(os.listdir(TEST_DATA_DIRECTORY)),)
     # Fetch all snapshots from test data
     probability_matrices = []
     previous_snapshot = None
@@ -216,15 +213,22 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
     normalized_cluster_ideal_states = normalize_to_integers(
         cluster_ideal_states, sum_to=len(sample_scooters)
     )
+
     for cluster in state.clusters:
         cluster.ideal_state = normalized_cluster_ideal_states[cluster.id]
+
+    # setting number of scooters to ideal state
+    set_number_of_scooters_to_ideal_state(state)
+
+    # adjusting ideal state by average cluster in- and outflow
+    simulate_state_outcomes(state)
+
     progressbar.finish()
 
 
 def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     progress = Bar(
-        "| Computing trip intensity",
-        max=len(os.listdir(TEST_DATA_DIRECTORY)),
+        "| Computing trip intensity", max=len(os.listdir(TEST_DATA_DIRECTORY)),
     )
     # Fetch all snapshots from test data
     trip_counter = np.zeros((len(state.clusters), len(os.listdir(TEST_DATA_DIRECTORY))))
@@ -292,7 +296,9 @@ def generate_scenarios(state: State, number_of_scenarios=10000):
     for i in range(number_of_scenarios):
         one_scenario = []
         for cluster in state.clusters:
-            number_of_trips = round(np.random.poisson(cluster.ideal_state * 0.1))
+            number_of_trips = round(
+                np.random.poisson(cluster.trip_intensity_per_iteration)
+            )
             end_cluster_indices = np.random.choice(
                 cluster_indices,
                 p=cluster.get_leave_distribution(),

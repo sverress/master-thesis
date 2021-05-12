@@ -14,11 +14,7 @@ import copy
 
 class State(SaveMixin):
     def __init__(
-        self,
-        clusters: [Cluster],
-        depots: [Depot],
-        vehicles=None,
-        distance_matrix=None,
+        self, clusters: [Cluster], depots: [Depot], vehicles=None, distance_matrix=None,
     ):
         self.clusters = clusters
         self.vehicles = vehicles
@@ -337,8 +333,7 @@ class State(SaveMixin):
         visualize_clustering(self.clusters)
 
     def visualize_flow(
-        self,
-        flows: [(int, int, int)],
+        self, flows: [(int, int, int)],
     ):
         visualize_cluster_flow(self, flows)
 
@@ -398,9 +393,7 @@ class State(SaveMixin):
 
     @staticmethod
     def save_path(
-        number_of_clusters,
-        sample_size,
-        ideal_state_computation,
+        number_of_clusters, sample_size, ideal_state_computation,
     ):
         def convert_binary(binary):
             return 1 if binary else 0
@@ -426,16 +419,8 @@ class State(SaveMixin):
     def compute_and_set_ideal_state(self, sample_scooters):
         clustering.methods.compute_and_set_ideal_state(self, sample_scooters)
 
-    def compute_and_set_trip_intensity(
-        self, sample_scooters, ideal_state_computation=False
-    ):
-        if ideal_state_computation:
-            for cluster in self.clusters:
-                cluster.trip_intensity_per_iteration = (
-                    cluster.ideal_state * self.TRIP_INTENSITY_RATE
-                )
-        else:
-            clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
+    def compute_and_set_trip_intensity(self, sample_scooters):
+        clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
 
     def sample(self, sample_size: int):
         # Filter out scooters not in sample

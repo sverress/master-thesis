@@ -17,7 +17,7 @@ class BasicVisualizerTests(unittest.TestCase):
             5, None, get_initial_state(sample_size=100, number_of_clusters=6)
         )
 
-        flows, trips, _ = system_simulate(world)
+        flows, trips, _ = system_simulate(world.state)
 
         visualize_cluster_flow(world.state, flows)
 
