@@ -64,6 +64,6 @@ class AnalysisTests(unittest.TestCase):
             export_to_excel=True,
             runs_per_policy=1,
         )
-        file_name = f"computational_study/test.xlsx"
+        file_name = f"computational_study/Test.xlsx"
         # removing the test file that was created during the test
         os.remove(file_name)
