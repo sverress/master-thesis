@@ -317,6 +317,40 @@ class World(SaveMixin, HyperParameters):
                 for event in self.stack
                 if not isinstance(event, classes.VehicleArrival)
             ]
+            # Set all clusters to ideal state
+            excess_scooters = []
+            for cluster in self.state.clusters:
+                # Swap all scooters under 50% battery
+                for scooter in cluster.scooters:
+                    if scooter.battery < 50:
+                        scooter.swap_battery()
+                # Find scooters possible to pick up
+                positive_deviation = (
+                    len(cluster.get_available_scooters()) - cluster.ideal_state
+                )
+                if positive_deviation > 0:
+                    # Add scooters possible to pick up
+                    excess_scooters += [
+                        (scooter, cluster)
+                        for scooter in cluster.scooters[:positive_deviation]
+                    ]
+
+            # Add excess scooters to clusters in need of scooters
+            for cluster in self.state.clusters:
+                # Find out how many scooters to add to cluster
+                number_of_scooters_to_add = cluster.ideal_state - len(
+                    cluster.get_available_scooters()
+                )
+                # Add scooters to the cluster only if the number of available scooter is lower than ideal state
+                if number_of_scooters_to_add > 0:
+                    for _ in range(number_of_scooters_to_add):
+                        # fetch and remove a scooter from the excess scooters
+                        scooter, origin_cluster = excess_scooters.pop()
+                        # Remove scooter from old cluster
+                        origin_cluster.remove_scooter(scooter)
+                        # Add scooter to new cluster
+                        cluster.add_scooter(scooter)
+
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):
             policy.value_function.setup(self.state)

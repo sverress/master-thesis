@@ -237,6 +237,18 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
 
+    def test_do_nothing(self):
+        # Check that do nothing sets all clusters in ideal state
+        self.world.policy = self.world.set_policy(
+            policy_class=decision.DoNothing,
+        )
+        for cluster in self.world.state.clusters:
+            self.assertEqual(
+                cluster.ideal_state,
+                len(cluster.get_available_scooters()),
+                "Do action should set all clusters in ideal state at the beginning of the shift",
+            )
+
 
 class ValueFunctionTests(unittest.TestCase):
     def setUp(self) -> None:
