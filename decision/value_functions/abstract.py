@@ -49,7 +49,6 @@ class ValueFunction(abc.ABC):
         self.location_indicator = None
         self.shifts_trained = 0
         self.td_errors = []
-        self.training_case_base = []
 
     def compute_and_record_td_error(
         self,
