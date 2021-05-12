@@ -56,6 +56,7 @@ class AnalysisTests(unittest.TestCase):
         self.delete_dir(training_directory)
 
     @staticmethod
+    @unittest.skipIf(os.getenv("CI"), "on ci")
     def test_export_to_excel():
         # running test instances and exporting them to excel
         analysis.evaluate_policies.run_analysis_from_path(
