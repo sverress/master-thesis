@@ -20,6 +20,8 @@ class HyperParameters:
         NUMBER_OF_BIKES=0,
         ANN_NETWORK_STRUCTURE=None,
         LOCATION_REPETITION=3,
+        INITIAL_EPSILON=1,
+        FINAL_EPSILON=0.0001,
     ):
         self.DISCOUNT_RATE = DISCOUNT_RATE  # From sutton 0.9-0.99
         self.EPSILON = EPSILON  # Probability of taking a random action
@@ -55,6 +57,9 @@ class HyperParameters:
         )
 
         self.LOCATION_REPETITION = LOCATION_REPETITION
+
+        self.INITIAL_EPSILON = INITIAL_EPSILON
+        self.FINAL_EPSILON = FINAL_EPSILON
 
 
 """
