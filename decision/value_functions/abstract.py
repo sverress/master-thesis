@@ -30,6 +30,7 @@ class ValueFunction(abc.ABC):
         discount_factor,
         vehicle_inventory_step_size,
         location_repetition,
+        trace_decay,
     ):
         # for every location - 3 bit for each location
         # for every cluster, 1 float for deviation, 1 float for battery deficient
@@ -42,6 +43,7 @@ class ValueFunction(abc.ABC):
         self.step_size = weight_update_step_size
         self.discount_factor = discount_factor
         self.weight_init_value = weight_init_value
+        self.trace_decay = trace_decay
 
         self.setup_complete = False
         self.location_indicator = None
@@ -49,7 +51,10 @@ class ValueFunction(abc.ABC):
         self.td_errors = []
 
     def compute_and_record_td_error(
-        self, current_state_value: float, next_state_value: float, reward: float,
+        self,
+        current_state_value: float,
+        next_state_value: float,
+        reward: float,
     ):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
@@ -70,20 +75,16 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
     ):
         pass
 
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value_from_state_features(self, state_features: [float]):
-        pass
-
-    @abc.abstractmethod
-    @Decorators.check_setup
-    def batch_update_weights(
-        self, batch: [(float, float, float, [float])],
-    ):
         pass
 
     @abc.abstractmethod
@@ -95,6 +96,11 @@ class ValueFunction(abc.ABC):
         next_state_value: float,
         reward: float,
     ):
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
+    def reset_eligibilities(self):
         pass
 
     @abc.abstractmethod
@@ -136,7 +142,12 @@ class ValueFunction(abc.ABC):
         )
 
     def create_features(
-        self, state, vehicle, time, action=None, cache=None,
+        self,
+        state,
+        vehicle,
+        time,
+        action=None,
+        cache=None,
     ):
         # Create a flag for if it is a get next state features call
         is_next_action = action is not None
@@ -210,16 +221,32 @@ class ValueFunction(abc.ABC):
 
     @Decorators.check_setup
     def convert_state_to_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int, cache=None,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
+        cache=None,
     ):
-        return self.create_features(state, vehicle, time, action=None, cache=cache,)
+        return self.create_features(
+            state,
+            vehicle,
+            time,
+            action=None,
+            cache=cache,
+        )
 
     def update_shifts_trained(self, shifts_trained: int):
         self.shifts_trained = shifts_trained
 
     @Decorators.check_setup
     def convert_next_state_features(self, state, vehicle, action, time, cache=None):
-        return self.create_features(state, vehicle, time, action=action, cache=cache,)
+        return self.create_features(
+            state,
+            vehicle,
+            time,
+            action=action,
+            cache=cache,
+        )
 
     @staticmethod
     def get_small_depot_degree_of_filling(time, state):

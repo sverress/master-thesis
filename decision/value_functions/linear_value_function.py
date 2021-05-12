@@ -12,6 +12,7 @@ class LinearValueFunction(ValueFunction):
         discount_factor,
         vehicle_inventory_step_size,
         location_repetition,
+        trace_decay,
     ):
         super().__init__(
             weight_update_step_size,
@@ -19,8 +20,10 @@ class LinearValueFunction(ValueFunction):
             discount_factor,
             vehicle_inventory_step_size,
             location_repetition,
+            trace_decay,
         )
-        self.weights = None
+        self.weights = []
+        self.eligibilities = None
 
     def setup(self, state):
         if self.setup_complete:
@@ -47,6 +50,7 @@ class LinearValueFunction(ValueFunction):
                 )
             )
         )
+        self.reset_eligibilities()
         self.location_indicator = [0] * number_of_locations_indicators
         super(LinearValueFunction, self).setup(state)
 
@@ -63,12 +67,6 @@ class LinearValueFunction(ValueFunction):
     def estimate_value_from_state_features(self, state_features: [float]):
         return float(np.dot(self.weights, state_features))
 
-    def batch_update_weights(self, batch: [(float, float, float, [float])]):
-        for (current_state_value, next_state_value, reward, state_features) in batch:
-            self.update_weights(
-                state_features, current_state_value, next_state_value, reward
-            )
-
     def update_weights(
         self,
         current_state_features: [float],
@@ -77,13 +75,21 @@ class LinearValueFunction(ValueFunction):
         reward: float,
     ):
 
+        self.eligibilities = (
+            self.discount_factor * self.trace_decay * self.eligibilities
+            + current_state_features
+        )
+
         self.weights += np.multiply(
             self.step_size
             * self.compute_and_record_td_error(
                 current_state_value, next_state_value, reward
             ),
-            current_state_features,
+            self.eligibilities,
         )
+
+    def reset_eligibilities(self):
+        self.eligibilities = np.zeros(len(self.weights))
 
     @Decorators.check_setup
     def create_location_features_combination(self, state_features):
