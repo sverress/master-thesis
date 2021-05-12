@@ -16,11 +16,10 @@ def learning_rates(learning_rate, suffix):
         test_parameter_name="learning_rate",
         test_parameter_value=learning_rate,
         WEIGHT_UPDATE_STEP_SIZE=learning_rate,
-        ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-        value_function_class=decision.value_functions.ANNValueFunction,
+        value_function_class=decision.value_functions.LinearValueFunction,
     )
     train_value_function(world, save_suffix=f"{suffix}")
 
@@ -33,5 +32,5 @@ def multiprocess_train(function, inputs):
 if __name__ == "__main__":
     multiprocess_train(
         learning_rates,
-        [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
+        [(value, f"lr_{value}") for value in [0.01, 0.001, 0.0001, 0.00001, 0.000001]],
     )
