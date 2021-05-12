@@ -1,7 +1,10 @@
+import numpy as np
+
 import classes
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
 import helpers
 import abc
+import sklearn
 
 
 class Decorators:
@@ -46,7 +49,10 @@ class ValueFunction(abc.ABC):
         self.td_errors = []
 
     def compute_and_record_td_error(
-        self, current_state_value: float, next_state_value: float, reward: float,
+        self,
+        current_state_value: float,
+        next_state_value: float,
+        reward: float,
     ):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
@@ -67,7 +73,10 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
     ):
         pass
 
@@ -79,7 +88,8 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def batch_update_weights(
-        self, batch: [(float, float, float, [float])],
+        self,
+        batch: [(float, float, float, [float])],
     ):
         pass
 
@@ -186,7 +196,10 @@ class ValueFunction(abc.ABC):
             normalized_deviation_ideal_state_negative,
             normalized_deficient_battery,
         ) = ValueFunction.get_normalized_lists(
-            state, cache, current_location=vehicle.current_location.id, action=action,
+            state,
+            cache,
+            current_location=vehicle.current_location.id,
+            action=action,
         )
         # Inventory indicators adjusting for action effects
         scooter_inventory_indication = self.get_inventory_indicator(
@@ -317,10 +330,19 @@ class ValueFunction(abc.ABC):
             else:
                 return [abs(min(deviation, 0)) for deviation in deviations]
 
+        normalizer = sklearn.preprocessing.StandardScaler()
+
+        def normalize_list(input_list):
+            return (
+                normalizer.fit_transform(np.array(input_list).reshape((-1, 1)))
+                .reshape((1, -1))
+                .tolist()[0]
+            )
+
         return (
-            helpers.normalize_list(ideal_state_deviation(is_positive=True)),
-            helpers.normalize_list(ideal_state_deviation(is_positive=False)),
-            helpers.normalize_list(
+            normalize_list(ideal_state_deviation(is_positive=True)),
+            normalize_list(ideal_state_deviation(is_positive=False)),
+            normalize_list(
                 [
                     len(cluster.scooters)
                     - current_states[i]
