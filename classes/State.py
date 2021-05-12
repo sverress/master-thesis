@@ -228,7 +228,6 @@ class State(SaveMixin):
         :param action: Action - action to be performed on the state
         :return: float - reward for doing the action on the state
         """
-        reward = action.get_reward(vehicle)
         refill_time = 0
         if vehicle.is_at_depot() and len(vehicle.service_route) > 1:
             batteries_to_swap = min(
@@ -271,7 +270,7 @@ class State(SaveMixin):
         # Moving the state/vehicle from this to next cluster
         vehicle.set_current_location(self.get_location_by_id(action.next_location))
 
-        return reward, refill_time
+        return refill_time
 
     def __repr__(self):
         return (
@@ -453,3 +452,22 @@ class State(SaveMixin):
             raise ValueError(
                 f"There are no vehicle in the state with an id of {vehicle_id}"
             )
+
+    def get_expected_lost_trip_reward(self, lost_trip_reward, exclude=-1):
+        # If number of available scooters is less than trip intensity add reward
+        return float(
+            sum(
+                [
+                    max(
+                        (
+                            len(cluster.get_available_scooters())
+                            - cluster.trip_intensity_per_iteration
+                        ),
+                        0,
+                    )
+                    * lost_trip_reward
+                    for cluster in self.clusters
+                    if cluster.id != exclude
+                ]
+            )
+        )

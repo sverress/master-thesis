@@ -5,6 +5,8 @@ class HyperParameters:
         EPSILON=0.1,
         DIVIDE_GET_POSSIBLE_ACTIONS=3,
         WEIGHT_UPDATE_STEP_SIZE=0.00001,
+        ANN_LEARNING_RATE=0.001,
+        TRACE_DECAY=0.9,
         VEHICLE_INVENTORY_STEP_SIZE=0.25,
         WEIGHT_INITIALIZATION_VALUE=0.10,
         NUMBER_OF_ROLLOUTS=100,
@@ -18,6 +20,8 @@ class HyperParameters:
         NUMBER_OF_BIKES=0,
         ANN_NETWORK_STRUCTURE=None,
         LOCATION_REPETITION=3,
+        INITIAL_EPSILON=1,
+        FINAL_EPSILON=0.0001,
     ):
         self.DISCOUNT_RATE = DISCOUNT_RATE  # From sutton 0.9-0.99
         self.EPSILON = EPSILON  # Probability of taking a random action
@@ -25,8 +29,10 @@ class HyperParameters:
 
         # VALUE FUNCTION PARAMETERS
         self.WEIGHT_UPDATE_STEP_SIZE = WEIGHT_UPDATE_STEP_SIZE
+        self.ANN_LEARNING_RATE = ANN_LEARNING_RATE
         self.VEHICLE_INVENTORY_STEP_SIZE = VEHICLE_INVENTORY_STEP_SIZE
         self.WEIGHT_INITIALIZATION_VALUE = WEIGHT_INITIALIZATION_VALUE
+        self.TRACE_DECAY = TRACE_DECAY
 
         # Default simulation constants
         self.NUMBER_OF_ROLLOUTS = NUMBER_OF_ROLLOUTS
@@ -51,6 +57,9 @@ class HyperParameters:
         )
 
         self.LOCATION_REPETITION = LOCATION_REPETITION
+
+        self.INITIAL_EPSILON = INITIAL_EPSILON
+        self.FINAL_EPSILON = FINAL_EPSILON
 
 
 """
@@ -99,6 +108,7 @@ WORLD_CACHE_DIR = "world_cache"
 
 # Test data directory
 TEST_DATA_DIRECTORY = "test_data"
+EXCEL_EXPORT_DIR = "computational_study"
 
 """
 VISUALIZATION

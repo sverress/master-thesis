@@ -34,8 +34,6 @@ class BasicVisualizerTests(unittest.TestCase):
 
         world.state.visualize_system_simulation(scooter_trips)
 
-        world.state.visualize_flow(flows)
-
     @staticmethod
     def test_visualize_clusters():
         current_state = get_initial_state(sample_size=1000, number_of_clusters=20)
@@ -47,7 +45,7 @@ class BasicVisualizerTests(unittest.TestCase):
         run_analysis(
             [
                 classes.World(
-                    60,
+                    21,
                     decision.SwapAllPolicy(),
                     get_initial_state(sample_size=100, number_of_clusters=10),
                 )

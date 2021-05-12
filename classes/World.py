@@ -279,11 +279,12 @@ class World(SaveMixin, HyperParameters):
             if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
                 value_function = (
                     value_function_class(
-                        self.WEIGHT_UPDATE_STEP_SIZE,
+                        self.ANN_LEARNING_RATE,
                         self.WEIGHT_INITIALIZATION_VALUE,
                         self.DISCOUNT_RATE,
                         self.VEHICLE_INVENTORY_STEP_SIZE,
                         self.LOCATION_REPETITION,
+                        self.TRACE_DECAY,
                         self.ANN_NETWORK_STRUCTURE,
                     )
                     if value_function_class is decision.value_functions.ANNValueFunction
@@ -293,6 +294,7 @@ class World(SaveMixin, HyperParameters):
                         self.DISCOUNT_RATE,
                         self.VEHICLE_INVENTORY_STEP_SIZE,
                         self.LOCATION_REPETITION,
+                        self.TRACE_DECAY,
                     )
                 )
                 policy = policy_class(

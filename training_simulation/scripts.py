@@ -11,7 +11,6 @@ def training_simulation(world):
     next_is_vehicle_action = True
     # list of vehicle times for next arrival
     vehicle_times = [0] * len(world.state.vehicles)
-    action_infos = []
     while world.time < world.shift_duration:
         if next_is_vehicle_action:
             # choosing the vehicle with the earliest arrival time (index-method is choosing the first if multiple equal)
@@ -27,21 +26,16 @@ def training_simulation(world):
             ]
 
             # getting the best action
-            action, action_info = world.policy.get_best_action(world, current_vehicle)
-
-            # random action -> action_info = None. Not include random action in training
-            if action_info:
-                action_infos.append(action_info)
+            action = world.policy.get_best_action(world, current_vehicle)
 
             action_time = action.get_action_time(
                 world.state.get_distance(
                     current_vehicle.current_location.id, action.next_location
                 )
             )
-            # Performing the best action
-            _, refill_time = world.state.do_action(action, current_vehicle, world.time)
 
-            action_time += refill_time
+            # Performing the best action
+            action_time += world.state.do_action(action, current_vehicle, world.time)
 
             # Add next vehicle location to tabu list if its not a depot
             if not current_vehicle.is_at_depot():
@@ -55,7 +49,6 @@ def training_simulation(world):
         else:
             # performing a scooter trips simulation
             world.system_simulate()
-
             simulation_counter += 1
         # deciding if the next thing to do is a vehicle arrival or a system simulation
         next_is_vehicle_action = (

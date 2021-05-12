@@ -29,8 +29,8 @@ def scooter_sample_filter(dataframe: pd.DataFrame, sample_size=None):
 def merge_scooter_snapshots(state, first_snapshot_data, second_snapshot_data):
     # Join tables on scooter id
     merged_tables = pd.merge(
-        right=first_snapshot_data,
-        left=second_snapshot_data,
+        left=first_snapshot_data,
+        right=second_snapshot_data,
         left_on="id",
         right_on="id",
         how="inner",
