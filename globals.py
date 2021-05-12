@@ -108,6 +108,7 @@ WORLD_CACHE_DIR = "world_cache"
 
 # Test data directory
 TEST_DATA_DIRECTORY = "test_data"
+EXCEL_EXPORT_DIR = "computational_study"
 
 """
 VISUALIZATION

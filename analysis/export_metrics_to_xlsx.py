@@ -1,10 +1,9 @@
 import analysis.evaluate_policies
 import classes
-from globals import HyperParameters
+from globals import HyperParameters, EXCEL_EXPORT_DIR
 import pandas as pd
 import os
 from openpyxl import load_workbook
-from personal import *
 
 
 def metrics_to_xlsx(instances: [classes.World]):
@@ -31,15 +30,11 @@ def metrics_to_xlsx(instances: [classes.World]):
             instance, column_tuples=column_tuples, metrics_data=metrics_data
         )
 
-    dir_path = (
-        PATH_COMPUTATIONAL_STUDY if parameter_name != "TEST" else "computational_study"
-    )
-
     # creating the directory to save the file if it doesn't exist
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
+    if not os.path.exists(EXCEL_EXPORT_DIR):
+        os.makedirs(EXCEL_EXPORT_DIR)
 
-    file_name = f"{dir_path}/{parameter_name.title()}.xlsx"
+    file_name = f"{EXCEL_EXPORT_DIR}/{parameter_name.title()}.xlsx"
 
     # if the file isn't created -> create a new .xlsx file
     if not os.path.isfile(file_name):
@@ -145,5 +140,7 @@ if __name__ == "__main__":
         )
     else:
         analysis.evaluate_policies.run_analysis_from_path(
-            "world_cache/test_models", shift_duration=60, export_to_excel=True,
+            "world_cache/test_models",
+            shift_duration=60,
+            export_to_excel=True,
         )
