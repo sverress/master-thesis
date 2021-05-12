@@ -50,24 +50,26 @@ class Action:
         vehicle_location = vehicle.current_location
         if not vehicle.is_at_depot():
             available_scooters = len(vehicle_location.get_available_scooters())
-        for scooter_id in self.battery_swaps:
-            battery_swap_scooter = vehicle.current_location.get_scooter_from_id(
-                scooter_id
-            )
-            battery_reward += (
-                (100.0 - battery_swap_scooter.battery) / 100.0
-            ) * vehicle_location.prob_of_scooter_usage(available_scooters)
-            if battery_swap_scooter.battery < BATTERY_LIMIT:
-                # If the swapped scooter was unavailable, make sure probability of scooter usage decrease.
-                available_scooters += 1
-        if not vehicle.is_at_depot():
+            for scooter_id in self.battery_swaps:
+                battery_swap_scooter = vehicle.current_location.get_scooter_from_id(
+                    scooter_id
+                )
+                battery_reward += (
+                    (100.0 - battery_swap_scooter.battery) / 100.0
+                ) * vehicle_location.prob_of_scooter_usage(available_scooters)
+                if battery_swap_scooter.battery < BATTERY_LIMIT:
+                    # If the swapped scooter was unavailable, make sure probability of scooter usage decrease.
+                    available_scooters += 1
             # Calculate estimated lost trip reward
             estimated_lost_trip_reward = lost_trip_reward * max(
-                vehicle_location.trip_intensity_per_iteration
-                - len(vehicle_location.get_available_scooters()),
+                vehicle_location.trip_intensity_per_iteration - available_scooters,
                 0,
             )
+            # Get 1 in reward for every delivery and battery reward according to probability of usage
+            return (
+                len(self.delivery_scooters)
+                + battery_reward
+                + estimated_lost_trip_reward
+            )
         else:
-            estimated_lost_trip_reward = 0
-        # Get 1 in reward for every delivery and battery reward according to probability of usage
-        return len(self.delivery_scooters) + battery_reward + estimated_lost_trip_reward
+            return 0
