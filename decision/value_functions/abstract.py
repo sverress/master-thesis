@@ -135,8 +135,7 @@ class ValueFunction(abc.ABC):
                 + len(state.locations)
                 - len(state.clusters)
                 - 1
-                + len(state.locations)
-                * (len(state.vehicles) - 1)  # Add location features for other vehicles
+                + len(state.locations)  # Add location features for other vehicles
             ),
         )
 
@@ -194,16 +193,18 @@ class ValueFunction(abc.ABC):
         small_depot_degree_of_filling = ValueFunction.get_small_depot_degree_of_filling(
             time, state
         )
-        # Add one hot encoding for the location of the other vehicles
+        # Encode location of other vehicles
         other_vehicles_locations = [
-            indicator
-            for other_vehicle in state.vehicles
-            if other_vehicle.id != vehicle.id
-            for indicator in self.get_location_indicator(
-                other_vehicle.current_location.id,
-                len(state.locations),
-                location_repetition=1,
+            int(
+                any(
+                    [
+                        other_vehicle.current_location.id == location.id
+                        for other_vehicle in state.vehicles
+                        if other_vehicle.id != vehicle.id
+                    ]
+                )
             )
+            for location in state.locations
         ]
         return (
             location_indicators
