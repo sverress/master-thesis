@@ -87,7 +87,7 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
         cluster_labels = [cluster.id for cluster in initial_state.clusters]
         number_of_clusters = len(cluster_labels)
 
-        # Initialize probability_matrix with number of scooters in each cluster222
+        # Initialize probability_matrix with number of scooters in each cluster
         number_of_scooters = np.array(
             [[cluster.number_of_scooters() for cluster in initial_state.clusters]]
             * number_of_clusters,
@@ -240,18 +240,19 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
                 moved_scooters,
                 filtered_moved_scooters,
                 disappeared_scooters,
-            ) = merge_scooter_snapshots(state, current_snapshot, previous_snapshot)
+            ) = merge_scooter_snapshots(state, previous_snapshot, current_snapshot)
             for cluster in state.clusters:
-                filtered_moved_scooters_in_cluster = filtered_moved_scooters[
+                scooters_leaving_the_cluster = filtered_moved_scooters[
                     filtered_moved_scooters["cluster_before"] == cluster.id
                 ]
-                non_filtered_moved_scooters_in_cluster = moved_scooters[
+                # These are all the scooters that move, both within and to new clusters
+                scooters_moving_in_the_cluster = moved_scooters[
                     moved_scooters["cluster_before"] == cluster.id
                 ]
                 # Number of scooters leaving the cluster
                 # + number of disappeared scooters likely to leave ( # of disappeared * ratio of leaving)
                 trip_counter[cluster.id][index] = len(
-                    filtered_moved_scooters_in_cluster
+                    scooters_leaving_the_cluster
                 ) + round(
                     len(
                         disappeared_scooters[
@@ -260,10 +261,10 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
                     )
                     * (
                         (
-                            len(filtered_moved_scooters_in_cluster)
-                            / len(non_filtered_moved_scooters_in_cluster)
+                            len(scooters_leaving_the_cluster)
+                            / len(scooters_moving_in_the_cluster)
                         )
-                        if len(non_filtered_moved_scooters_in_cluster)
+                        if len(scooters_moving_in_the_cluster)
                         else 1
                     )
                 )
