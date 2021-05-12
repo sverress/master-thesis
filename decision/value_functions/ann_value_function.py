@@ -6,7 +6,7 @@ from decision.value_functions.ANN import ANN
 class ANNValueFunction(ValueFunction):
     def __init__(
         self,
-        weight_update_step_size,
+        learning_rate,
         weight_init_value,
         discount_factor,
         vehicle_inventory_step_size,
@@ -15,7 +15,7 @@ class ANNValueFunction(ValueFunction):
         network_structure: [int],
     ):
         super().__init__(
-            weight_update_step_size,
+            learning_rate,
             weight_init_value,
             discount_factor,
             vehicle_inventory_step_size,
@@ -37,6 +37,7 @@ class ANNValueFunction(ValueFunction):
             number_of_locations_indicators + number_of_state_features,
             self.trace_decay,
             self.discount_factor,
+            self.step_size,
         )
         super(ANNValueFunction, self).setup(state)
 
@@ -53,26 +54,6 @@ class ANNValueFunction(ValueFunction):
 
     def estimate_value_from_state_features(self, state_features: [float]):
         return self.model.predict(state_features)
-
-    def batch_update_weights(self):
-        td_errors = []
-        targets = []
-        state_features = []
-
-        for (
-            current_state_value,
-            next_state_value,
-            reward,
-            state_feature,
-        ) in self.training_case_base:
-            td_error = self.compute_and_record_td_error(
-                current_state_value, next_state_value, reward
-            )
-            td_errors.append(td_error)
-            targets.append(td_error + current_state_value)
-            state_features.append(state_feature)
-
-        self.model.fit(np.array(state_features), np.array(targets), td_errors)
 
     def update_weights(
         self,
@@ -108,15 +89,6 @@ class ANNValueFunction(ValueFunction):
         self, state: classes.State, vehicle: classes.Vehicle, time: int, cache=None
     ):
         return self.convert_state_to_features(state, vehicle, time, cache=cache)
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state["model"] = self.model.convert_model_to_string()
-        return state
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        self.model = ANN.load_model_from_string(state["model"])
 
     def __str__(self):
         return f"ANNValueFunction - {self.shifts_trained}"

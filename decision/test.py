@@ -2,7 +2,6 @@ import copy
 import unittest
 import random
 
-import analysis.evaluate_policies
 import classes
 import clustering.scripts
 import decision
@@ -51,19 +50,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of actions
         self.assertEqual(len(actions), 5)
 
-        # Calculate the expected reward
-        reward = (
-            len(actions[-1].battery_swaps)
-            * 0.2
-            * self.vehicle.current_location.prob_of_scooter_usage(
-                len(self.vehicle.current_location.get_available_scooters())
-            )
-        )
-
-        # Test reward
-        self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], reward
-        )
+        self.initial_state.do_action(actions[-1], self.vehicle, 0)
 
         # Test number of scooters
         self.assertEqual(len(current_cluster.scooters), start_number_of_scooters)
@@ -84,7 +71,6 @@ class BasicDecisionTests(unittest.TestCase):
         start_number_of_scooters = len(self.vehicle.current_location.scooters)
         current_cluster = self.vehicle.current_location
 
-        # Set all battery to 20% to calculate expected reward
         for scooter in self.vehicle.current_location.scooters:
             scooter.battery = 20.0
         start_battery_percentage = current_cluster.get_current_state() * 100
@@ -98,9 +84,7 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(len(actions), 14)
 
         # Test no reward for pickup
-        self.assertEqual(
-            round(self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], 1), 0
-        )
+        self.initial_state.do_action(actions[-1], self.vehicle, 0)
 
         # Test number of scooters
         self.assertEqual(
@@ -132,7 +116,6 @@ class BasicDecisionTests(unittest.TestCase):
         start_number_of_scooters = len(self.vehicle.current_location.scooters)
         current_cluster = self.vehicle.current_location
 
-        # Set all battery to 80% to calculate expected reward
         for scooter in self.vehicle.current_location.scooters:
             scooter.battery = 80.0
         start_battery_percentage = current_cluster.get_current_state() * 100
@@ -145,20 +128,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of actions
         self.assertEqual(len(actions), 17)
 
-        # Calculate the expected reward
-        reward = (
-            len(actions[-1].battery_swaps)
-            * 0.2
-            * self.vehicle.current_location.prob_of_scooter_usage(
-                len(self.vehicle.current_location.get_available_scooters())
-            )
-            + len(actions[-1].delivery_scooters) * 1.0
-        )
-
-        # Test reward
-        self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], reward
-        )
+        self.initial_state.do_action(actions[-1], self.vehicle, 0)
 
         # Test number of scooters
         self.assertEqual(
@@ -230,9 +200,7 @@ class PolicyTests(unittest.TestCase):
     def test_swap_all_policy(self):
         self.world.policy = decision.SwapAllPolicy()
         vehicle_swap_all_policy = self.world.state.vehicles[0]
-        action, _ = self.world.policy.get_best_action(
-            self.world, vehicle_swap_all_policy
-        )
+        action = self.world.policy.get_best_action(self.world, vehicle_swap_all_policy)
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
@@ -259,6 +227,7 @@ class ValueFunctionTests(unittest.TestCase):
             hyper_params.DISCOUNT_RATE,
             hyper_params.VEHICLE_INVENTORY_STEP_SIZE,
             hyper_params.LOCATION_REPETITION,
+            hyper_params.TRACE_DECAY,
         )
         self.world = World(
             100,
@@ -272,13 +241,12 @@ class ValueFunctionTests(unittest.TestCase):
         # No discount should give reward equal to TD-error
         value_function.setup(self.world.state)
         vehicle = self.world.state.vehicles[0]
-        action, _ = decision.policies.SwapAllPolicy().get_best_action(
-            self.world, vehicle
-        )
+        action = decision.policies.SwapAllPolicy().get_best_action(self.world, vehicle)
         state = copy.deepcopy(self.world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward, _ = self.world.state.do_action(action, vehicle, self.world.time)
+        reward = action.get_reward(vehicle, self.world.LOST_TRIP_REWARD)
+        self.world.state.do_action(action, vehicle, self.world.time)
         for i in range(100):
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(

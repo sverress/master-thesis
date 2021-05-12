@@ -23,7 +23,7 @@ class LinearValueFunction(ValueFunction):
             trace_decay,
         )
         self.weights = []
-        self.eligibilities = []
+        self.eligibilities = None
 
     def setup(self, state):
         if self.setup_complete:
@@ -67,17 +67,6 @@ class LinearValueFunction(ValueFunction):
     def estimate_value_from_state_features(self, state_features: [float]):
         return float(np.dot(self.weights, state_features))
 
-    def batch_update_weights(self):
-        for (
-            current_state_value,
-            next_state_value,
-            reward,
-            state_features,
-        ) in self.training_case_base:
-            self.update_weights(
-                state_features, current_state_value, next_state_value, reward
-            )
-
     def update_weights(
         self,
         current_state_features: [float],
@@ -100,7 +89,7 @@ class LinearValueFunction(ValueFunction):
         )
 
     def reset_eligibilities(self):
-        self.eligibilities = [0] * len(self.weights)
+        self.eligibilities = np.zeros(len(self.weights))
 
     @Decorators.check_setup
     def create_location_features_combination(self, state_features):

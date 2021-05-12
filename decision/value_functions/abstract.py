@@ -49,7 +49,10 @@ class ValueFunction(abc.ABC):
         self.training_case_base = []
 
     def compute_and_record_td_error(
-        self, current_state_value: float, next_state_value: float, reward: float,
+        self,
+        current_state_value: float,
+        next_state_value: float,
+        reward: float,
     ):
         td_error = (
             reward + (self.discount_factor * next_state_value) - current_state_value
@@ -70,18 +73,16 @@ class ValueFunction(abc.ABC):
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int,
+        self,
+        state: classes.State,
+        vehicle: classes.Vehicle,
+        time: int,
     ):
         pass
 
     @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value_from_state_features(self, state_features: [float]):
-        pass
-
-    @abc.abstractmethod
-    @Decorators.check_setup
-    def batch_update_weights(self,):
         pass
 
     @abc.abstractmethod
@@ -177,13 +178,6 @@ class ValueFunction(abc.ABC):
             + small_depot_degree_of_filling
         )
 
-        return location_indicator + state_features
-
-    def add_training_cases(self, training_cases):
-        self.training_case_base += training_cases
-        if len(self.training_case_base) > 500:
-            self.training_case_base = self.training_case_base[:-500]
-
     def update_shifts_trained(self, shifts_trained: int):
         self.shifts_trained = shifts_trained
 
@@ -199,7 +193,10 @@ class ValueFunction(abc.ABC):
             normalized_deviation_ideal_state_negative,
             normalized_deficient_battery,
         ) = ValueFunction.get_normalized_lists(
-            state, cache, current_location=vehicle.current_location.id, action=action,
+            state,
+            cache,
+            current_location=vehicle.current_location.id,
+            action=action,
         )
         # Inventory indicators adjusting for action effects
         scooter_inventory_indication = self.get_inventory_indicator(

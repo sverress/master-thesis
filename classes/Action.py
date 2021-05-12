@@ -43,7 +43,7 @@ class Action:
             f" {len(self.delivery_scooters)} deliveries), next: {self.next_location} >"
         )
 
-    def get_reward(self, vehicle):
+    def get_reward(self, vehicle, lost_trip_reward):
         battery_reward = 0
         # Record number of scooters that become available during the action
         available_scooters = 0
@@ -60,5 +60,14 @@ class Action:
             if battery_swap_scooter.battery < BATTERY_LIMIT:
                 # If the swapped scooter was unavailable, make sure probability of scooter usage decrease.
                 available_scooters += 1
+        if not vehicle.is_at_depot():
+            # Calculate estimated lost trip reward
+            estimated_lost_trip_reward = lost_trip_reward * max(
+                vehicle_location.trip_intensity_per_iteration
+                - len(vehicle_location.get_available_scooters()),
+                0,
+            )
+        else:
+            estimated_lost_trip_reward = 0
         # Get 1 in reward for every delivery and battery reward according to probability of usage
-        return len(self.delivery_scooters) + battery_reward
+        return len(self.delivery_scooters) + battery_reward + estimated_lost_trip_reward

@@ -8,12 +8,16 @@ import tensorflow as tf
 
 class ANN:
     def __init__(
-        self, network_structure, input_dimension, trace_decay, discount_factor
+        self,
+        network_structure,
+        input_dimension,
+        trace_decay,
+        discount_factor,
+        learning_rate,
     ):
         self.eligibilities = []
         self.trace_decay = trace_decay
         self.discount_factor = discount_factor
-        self.reset_eligibilities()
 
         self.model = keras.models.Sequential()
         # First layer needs input size as argument
@@ -33,9 +37,12 @@ class ANN:
             )
         # The last layer needs to have a single value function output
         self.model.add(keras.layers.Dense(1))
+        optimizer = keras.optimizers.Adam(lr=learning_rate)
         self.model.compile(
-            loss="mean_squared_error", optimizer="adam", metrics=["accuracy"]
+            loss="mean_squared_error", optimizer=optimizer, metrics=["accuracy"]
         )
+
+        self.reset_eligibilities()
 
     def predict(self, state_features):
         return float(self.model(tf.convert_to_tensor([state_features]))[0][0])
@@ -58,37 +65,55 @@ class ANN:
         loss = tf.reduce_sum((targets - predictions) ** 2)
         return tf.reduce_mean(loss).numpy() if avg else loss
 
-    def fit(self, features, targets, td_errors, epochs=1, mbs=1):
-        raise NotImplemented("not able to handle multiple td_errors")
+    def fit(self, feature, target, td_error, epochs=1):
         params = self.model.trainable_weights
-        for _ in range(epochs):
-            for _ in range(math.floor(epochs / mbs)):
-                with tf.GradientTape() as tape:
-                    loss = self.gen_loss(features, targets)
-                    gradients = tape.gradient(loss, params)
-                    gradients = self.modify_gradients(gradients, td_errors)
-                    self.model.optimizer.apply_gradients(zip(gradients, params))
+        for epoch_id in range(epochs):
+            with tf.GradientTape() as tape:
+                loss = self.gen_loss(feature, target)
+                gradients = tape.gradient(loss, params)
+                gradients = self.modify_gradients(gradients, td_error, epoch_id)
+                self.model.optimizer.apply_gradients(zip(gradients, params))
 
-    def modify_gradients(self, gradients, td_errors):
+    def modify_gradients(self, gradients, td_error, epoch_id):
         # Taking every 2 array since every other array is biases
         for i in range(0, len(self.eligibilities), 2):
-            self.eligibilities[i] = tf.math.add(
-                self.eligibilities[i] * self.trace_decay * self.discount_factor,
-                gradients[i],
-            )
+            if epoch_id == 0:
+                self.eligibilities[i] = tf.math.add(
+                    self.eligibilities[i] * self.trace_decay * self.discount_factor,
+                    gradients[i],
+                )
             gradients[i] = tf.math.multiply(
-                self.eligibilities[i], tf.convert_to_tensor(td_errors)
+                self.eligibilities[i], tf.convert_to_tensor(td_error, dtype="float32")
             )
         return gradients
 
-    def convert_model_to_string(self):
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Adding bytes from file to model attribute
         with tempfile.NamedTemporaryFile(suffix=".hdf5", delete=True) as fd:
             keras.models.save_model(self.model, fd.name, overwrite=True)
-            return fd.read()
+            state["model"] = fd.read()
+        eligibilities = []
+        for eligibility_array in state["eligibilities"]:
+            numpy_array = eligibility_array.numpy()
+            # Adding bytes from file to as eligibility tensor list
+            with tempfile.NamedTemporaryFile(suffix=".npy", delete=True) as fd:
+                np.save(fd.name, numpy_array)
+                eligibilities.append(fd.read())
+        state["eligibilities"] = eligibilities
+        return state
 
-    @staticmethod
-    def load_model_from_string(model_string):
+    def __setstate__(self, state):
+        self.__dict__.update(state)
         with tempfile.NamedTemporaryFile(suffix=".hdf5", delete=True) as fd:
-            fd.write(model_string)
+            fd.write(state["model"])
             fd.flush()
-            return keras.models.load_model(fd.name)
+            self.model = keras.models.load_model(fd.name)
+        eligibilities = []
+        for eligibility_string in state["eligibilities"]:
+            with tempfile.NamedTemporaryFile(suffix=".npy", delete=True) as fd:
+                fd.write(eligibility_string)
+                fd.flush()
+                numpy_array = np.load(fd.name)
+                eligibilities.append(tf.convert_to_tensor(numpy_array, dtype="float32"))
+        self.eligibilities = eligibilities
