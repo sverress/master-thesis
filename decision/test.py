@@ -221,6 +221,7 @@ class PolicyTests(unittest.TestCase):
             )
 
 
+# helper function to update the value function (call two times in ann test)
 def update_value_function(value_function, state_features, next_state_features, reward):
     state_value = value_function.estimate_value_from_state_features(state_features)
     next_state_value = value_function.estimate_value_from_state_features(
@@ -285,15 +286,17 @@ class ValueFunctionTests(unittest.TestCase):
         value_function.setup(self.world.state)
         self.world.LOST_TRIP_REWARD = -1
 
-        # Creating a list of states with associated 0 or negative reward
+        # Creating a list of states with associated negative reward
         simulation_state = copy.deepcopy(self.world.state)
         vehicle = simulation_state.vehicles[0]
         system_simulated_states = []
         i = 0
+        # simulating to provoke lost demand
         while True:
             _, _, lost_demand = system_simulation.scripts.system_simulate(
                 simulation_state
             )
+            # recording state and lost reward if there was lost demand after simulation
             if len(lost_demand) > 0:
                 system_simulated_states.append(
                     (
@@ -312,21 +315,26 @@ class ValueFunctionTests(unittest.TestCase):
             else:
                 break
 
+        # simulating doing actions that yields positive reward
+        # (swap battery in clusters with available scooters less than ideal state)
         unsimulated_world = copy.deepcopy(self.world)
         accumulated_action_time = 0
         unsimulated_states = []
+        # recording clusters with available scooters less than ideal state
         deficient_cluster = [
             cluster
             for cluster in unsimulated_world.state.clusters
             if len(cluster.get_available_scooters()) < cluster.ideal_state
         ]
-
         counter = 0
         vehicle = unsimulated_world.state.vehicles[0]
+        # safety break if internal break doesn't apply
         while counter < len(deficient_cluster):
+            # swapping batteries on the n-th cluster in deficient cluster list
             cluster = deficient_cluster[counter]
             vehicle.battery_inventory = vehicle.battery_inventory_capacity
             vehicle.current_location = cluster
+            # creating an action to swap all batteries and recording the state and reward
             action = classes.Action(
                 [scooter.id for scooter in cluster.get_swappable_scooters()][
                     : vehicle.battery_inventory
@@ -347,6 +355,8 @@ class ValueFunctionTests(unittest.TestCase):
                     reward,
                 )
             )
+            # calculating action distance and action time so it can be used when getting state features
+            # (unnecessary, but have to use a time when creating state features)
             action_distance = unsimulated_world.state.get_distance(
                 vehicle.current_location.id, action.next_location
             )
@@ -356,9 +366,11 @@ class ValueFunctionTests(unittest.TestCase):
 
             counter += 1
 
+            # breaking at 10 cases, to have the same amount as negative reward simulations
             if len(unsimulated_states) >= 10:
                 break
 
+        # training two times on the positive and negative rewarded states
         for _ in range(2):
             value_function.reset_eligibilities()
             for i in range(len(system_simulated_states) - 1):
@@ -377,6 +389,7 @@ class ValueFunctionTests(unittest.TestCase):
                     value_function, state_features, next_state_features, reward
                 )
 
+        # check if the ann predicts higher value for the positively rewarded state then the negative one
         self.assertGreater(
             value_function.estimate_value_from_state_features(unsimulated_states[0][0]),
             value_function.estimate_value_from_state_features(
