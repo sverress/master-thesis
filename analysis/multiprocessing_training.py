@@ -6,16 +6,16 @@ from analysis.train_value_function import train_value_function
 import clustering.scripts
 
 
-def lost_trip_rewards(lost_trip_reward, suffix):
+def discount_rates(discount_rate, suffix):
     world = classes.World(
         960,
         None,
         clustering.scripts.get_initial_state(2500, 30),
         verbose=False,
         visualize=False,
-        test_parameter_name="lost_trip_reward",
-        test_parameter_value=lost_trip_reward,
-        LOST_TRIP_REWARD=lost_trip_reward,
+        test_parameter_name="discount_rate",
+        test_parameter_value=discount_rate,
+        DISCOUNT_RATE=discount_rate,
         ANN_NETWORK_STRUCTURE=[1000] * 4,
     )
     world.policy = world.set_policy(
@@ -32,6 +32,9 @@ def multiprocess_train(function, inputs):
 
 if __name__ == "__main__":
     multiprocess_train(
-        lost_trip_rewards,
-        [(value, f"lt_{value}") for value in [-0.01, -0.1, -1, -3, -5, -7, -10, -50]],
+        discount_rates,
+        [
+            (value, f"dr_{value}")
+            for value in [0.50, 0.80, 0.85, 0.9, 0.95, 0.97, 0.99, 0.999]
+        ],
     )
