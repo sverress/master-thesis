@@ -47,13 +47,8 @@ def get_initial_state(
         # Sample size filtering. Create list of scooter ids to include
         sample_scooters = methods.scooter_sample_filter(entur_dataframe, sample_size)
 
-        # Find the ideal state for each cluster
-        initial_state.compute_and_set_ideal_state(sample_scooters)
-
         # Trip intensity analysis
-        initial_state.compute_and_set_trip_intensity(
-            sample_scooters, ideal_state_computation
-        )
+        initial_state.compute_and_set_trip_intensity(sample_scooters)
 
         # Get probability of movement from scooters in a cluster
         probability_matrix = methods.scooter_movement_analysis(initial_state)
@@ -64,6 +59,9 @@ def get_initial_state(
 
         # Generate scenarios
         initial_state.simulation_scenarios = methods.generate_scenarios(initial_state)
+
+        # Find the ideal state for each cluster
+        initial_state.compute_and_set_ideal_state(sample_scooters)
 
         if save:
             # Cache the state for later

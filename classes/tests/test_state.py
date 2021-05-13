@@ -1,4 +1,3 @@
-import os
 import random
 import unittest
 
@@ -36,7 +35,6 @@ class StateTests(unittest.TestCase):
         self.state_mid.save_state()
         file_state = classes.State.load(filepath)
         self.assertEqual(random_location.id, file_state.vehicles[0].current_location.id)
-        os.remove(filepath)
 
 
 if __name__ == "__main__":

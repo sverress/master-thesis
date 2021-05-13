@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 import bisect
 import classes
+import clustering.helpers
 import globals
 from classes.SaveMixin import SaveMixin
 
@@ -281,11 +282,12 @@ class World(SaveMixin, HyperParameters):
             if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
                 value_function = (
                     value_function_class(
-                        self.WEIGHT_UPDATE_STEP_SIZE,
+                        self.ANN_LEARNING_RATE,
                         self.WEIGHT_INITIALIZATION_VALUE,
                         self.DISCOUNT_RATE,
                         self.VEHICLE_INVENTORY_STEP_SIZE,
                         self.LOCATION_REPETITION,
+                        self.TRACE_DECAY,
                         self.ANN_NETWORK_STRUCTURE,
                     )
                     if value_function_class is decision.value_functions.ANNValueFunction
@@ -295,6 +297,7 @@ class World(SaveMixin, HyperParameters):
                         self.DISCOUNT_RATE,
                         self.VEHICLE_INVENTORY_STEP_SIZE,
                         self.LOCATION_REPETITION,
+                        self.TRACE_DECAY,
                     )
                 )
                 policy = policy_class(
@@ -319,6 +322,8 @@ class World(SaveMixin, HyperParameters):
                 for event in self.stack
                 if not isinstance(event, classes.VehicleArrival)
             ]
+            self.state = clustering.helpers.idealize_state(self.state)
+
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):
             policy.value_function.setup(self.state)
@@ -344,7 +349,7 @@ class World(SaveMixin, HyperParameters):
         )
 
     def system_simulate(self):
-        return system_simulate(self)
+        return system_simulate(self.state)
 
     def __deepcopy__(self, *args):
         new_world = World(

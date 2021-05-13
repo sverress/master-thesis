@@ -2,12 +2,14 @@ import copy
 import unittest
 import random
 
-import analysis.evaluate_policies
+import numpy as np
+
 import classes
 import clustering.scripts
 import decision
 import decision.value_functions
 import globals
+import system_simulation.scripts
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.neighbour_filtering import filtering_neighbours
@@ -51,19 +53,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of actions
         self.assertEqual(len(actions), 5)
 
-        # Calculate the expected reward
-        reward = (
-            len(actions[-1].battery_swaps)
-            * 0.2
-            * self.vehicle.current_location.prob_of_scooter_usage(
-                len(self.vehicle.current_location.get_available_scooters())
-            )
-        )
-
-        # Test reward
-        self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], reward
-        )
+        self.initial_state.do_action(actions[-1], self.vehicle, 0)
 
         # Test number of scooters
         self.assertEqual(len(current_cluster.scooters), start_number_of_scooters)
@@ -84,7 +74,6 @@ class BasicDecisionTests(unittest.TestCase):
         start_number_of_scooters = len(self.vehicle.current_location.scooters)
         current_cluster = self.vehicle.current_location
 
-        # Set all battery to 20% to calculate expected reward
         for scooter in self.vehicle.current_location.scooters:
             scooter.battery = 20.0
         start_battery_percentage = current_cluster.get_current_state() * 100
@@ -98,9 +87,7 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertEqual(len(actions), 14)
 
         # Test no reward for pickup
-        self.assertEqual(
-            round(self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], 1), 0
-        )
+        self.initial_state.do_action(actions[-1], self.vehicle, 0)
 
         # Test number of scooters
         self.assertEqual(
@@ -132,7 +119,6 @@ class BasicDecisionTests(unittest.TestCase):
         start_number_of_scooters = len(self.vehicle.current_location.scooters)
         current_cluster = self.vehicle.current_location
 
-        # Set all battery to 80% to calculate expected reward
         for scooter in self.vehicle.current_location.scooters:
             scooter.battery = 80.0
         start_battery_percentage = current_cluster.get_current_state() * 100
@@ -145,20 +131,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Test number of actions
         self.assertEqual(len(actions), 17)
 
-        # Calculate the expected reward
-        reward = (
-            len(actions[-1].battery_swaps)
-            * 0.2
-            * self.vehicle.current_location.prob_of_scooter_usage(
-                len(self.vehicle.current_location.get_available_scooters())
-            )
-            + len(actions[-1].delivery_scooters) * 1.0
-        )
-
-        # Test reward
-        self.assertEqual(
-            self.initial_state.do_action(actions[-1], self.vehicle, 0)[0], reward
-        )
+        self.initial_state.do_action(actions[-1], self.vehicle, 0)
 
         # Test number of scooters
         self.assertEqual(
@@ -230,12 +203,36 @@ class PolicyTests(unittest.TestCase):
     def test_swap_all_policy(self):
         self.world.policy = decision.SwapAllPolicy()
         vehicle_swap_all_policy = self.world.state.vehicles[0]
-        action, _ = self.world.policy.get_best_action(
-            self.world, vehicle_swap_all_policy
-        )
+        action = self.world.policy.get_best_action(self.world, vehicle_swap_all_policy)
         self.assertIsInstance(action, Action)
         self.assertEqual(len(action.pick_ups), 0)
         self.assertEqual(len(action.delivery_scooters), 0)
+
+    def test_do_nothing(self):
+        # Check that do nothing sets all clusters in ideal state
+        self.world.policy = self.world.set_policy(
+            policy_class=decision.DoNothing,
+        )
+        for cluster in self.world.state.clusters:
+            self.assertEqual(
+                cluster.ideal_state,
+                len(cluster.get_available_scooters()),
+                "Do action should set all clusters in ideal state at the beginning of the shift",
+            )
+
+
+# helper function to update the value function (call two times in ann test)
+def update_value_function(value_function, state_features, next_state_features, reward):
+    state_value = value_function.estimate_value_from_state_features(state_features)
+    next_state_value = value_function.estimate_value_from_state_features(
+        next_state_features
+    )
+    value_function.update_weights(
+        current_state_value=state_value,
+        current_state_features=state_features,
+        next_state_value=next_state_value,
+        reward=reward,
+    )
 
 
 class ValueFunctionTests(unittest.TestCase):
@@ -247,11 +244,12 @@ class ValueFunctionTests(unittest.TestCase):
             hyper_params.DISCOUNT_RATE,
             hyper_params.VEHICLE_INVENTORY_STEP_SIZE,
             hyper_params.LOCATION_REPETITION,
+            hyper_params.TRACE_DECAY,
         )
         self.world = World(
             100,
             initial_state=clustering.scripts.get_initial_state(
-                1000, 20, initial_location_depot=False
+                1000, 30, initial_location_depot=False
             ),
             policy=None,
         )
@@ -260,14 +258,14 @@ class ValueFunctionTests(unittest.TestCase):
         # No discount should give reward equal to TD-error
         value_function.setup(self.world.state)
         vehicle = self.world.state.vehicles[0]
-        action, _ = decision.policies.SwapAllPolicy().get_best_action(
-            self.world, vehicle
-        )
+        action = decision.policies.SwapAllPolicy().get_best_action(self.world, vehicle)
         state = copy.deepcopy(self.world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward, _ = self.world.state.do_action(action, vehicle, self.world.time)
+        reward = action.get_reward(vehicle, self.world.LOST_TRIP_REWARD)
+        self.world.state.do_action(action, vehicle, self.world.time)
         for i in range(100):
+            value_function.reset_eligibilities()
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(
                 self.world.state, vehicle, self.world.time
@@ -284,16 +282,124 @@ class ValueFunctionTests(unittest.TestCase):
             abs(sum(value_function.td_errors[:3]) / 3),
         )
 
+    def ann_learning(self, value_function):
+        value_function.setup(self.world.state)
+        self.world.LOST_TRIP_REWARD = -1
+
+        # Creating a list of states with associated negative reward
+        simulation_state = copy.deepcopy(self.world.state)
+        vehicle = simulation_state.vehicles[0]
+        system_simulated_states = []
+        i = 0
+        # simulating to provoke lost demand
+        while len(system_simulated_states) < 10:
+            _, _, lost_demand = system_simulation.scripts.system_simulate(
+                simulation_state
+            )
+            # recording state and lost reward if there was lost demand after simulation
+            if len(lost_demand) > 0:
+                system_simulated_states.append(
+                    (
+                        value_function.get_state_features(
+                            simulation_state,
+                            vehicle,
+                            i * globals.ITERATION_LENGTH_MINUTES,
+                        ),
+                        sum([lost_demand for lost_demand, _ in lost_demand])
+                        * self.world.LOST_TRIP_REWARD,
+                    )
+                )
+
+            i += 1
+
+        # simulating doing actions that yields positive reward
+        # (swap battery in clusters with available scooters less than ideal state)
+        unsimulated_world = copy.deepcopy(self.world)
+        accumulated_action_time = 0
+        unsimulated_states = []
+        # recording clusters with available scooters less than ideal state
+        deficient_cluster = [
+            cluster
+            for cluster in unsimulated_world.state.clusters
+            if len(cluster.get_available_scooters()) < cluster.ideal_state
+        ]
+        counter = 0
+        vehicle = unsimulated_world.state.vehicles[0]
+        # safety break if internal break doesn't apply
+        while counter < len(deficient_cluster) and len(unsimulated_states) < 10:
+            # swapping batteries on the n-th cluster in deficient cluster list
+            cluster = deficient_cluster[counter]
+            vehicle.battery_inventory = vehicle.battery_inventory_capacity
+            vehicle.current_location = cluster
+            # creating an action to swap all batteries and recording the state and reward
+            action = classes.Action(
+                [scooter.id for scooter in cluster.get_swappable_scooters()][
+                    : vehicle.battery_inventory
+                ],
+                [],
+                [],
+                deficient_cluster[counter + 1].id,
+            )
+            reward = action.get_reward(
+                vehicle,
+                0,
+            )
+            unsimulated_states.append(
+                (
+                    value_function.get_state_features(
+                        unsimulated_world.state, vehicle, accumulated_action_time
+                    ),
+                    reward,
+                )
+            )
+            # calculating action distance and action time so it can be used when getting state features
+            # (unnecessary, but have to use a time when creating state features)
+            action_distance = unsimulated_world.state.get_distance(
+                vehicle.current_location.id, action.next_location
+            )
+            accumulated_action_time += unsimulated_world.state.do_action(
+                action, vehicle, accumulated_action_time
+            ) + action.get_action_time(action_distance)
+
+            counter += 1
+
+        # training two times on the positive and negative rewarded states
+        for _ in range(2):
+            value_function.reset_eligibilities()
+            for i in range(len(system_simulated_states) - 1):
+                state_features, reward = system_simulated_states[i]
+                next_state_features = system_simulated_states[i + 1][0]
+                update_value_function(
+                    value_function, state_features, next_state_features, reward
+                )
+
+            value_function.reset_eligibilities()
+
+            for i in range(len(unsimulated_states) - 1):
+                state_features, reward = unsimulated_states[i]
+                next_state_features = unsimulated_states[i + 1][0]
+                update_value_function(
+                    value_function, state_features, next_state_features, reward
+                )
+
+        # check if the ann predicts higher value for the positively rewarded state then the negative one
+        self.assertGreater(
+            value_function.estimate_value_from_state_features(unsimulated_states[0][0]),
+            value_function.estimate_value_from_state_features(
+                system_simulated_states[0][0]
+            ),
+        )
+
     def test_linear_value_function(self):
         self.world_value_function_check(
             decision.value_functions.LinearValueFunction(*self.value_function_args)
         )
 
     def test_ann_value_function(self):
-        self.world_value_function_check(
+        self.ann_learning(
             decision.value_functions.ANNValueFunction(
                 *self.value_function_args,
-                [100, 1000, 100],
+                [1000, 1000, 1000, 1000, 500, 100],
             )
         )
 

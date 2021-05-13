@@ -3,17 +3,16 @@ import os
 import math
 from multiprocessing import Pool
 import classes
-import clustering.scripts
 import decision.value_functions
 import decision
 import analysis.export_metrics_to_xlsx
-from visualization.visualizer import visualize_analysis, visualize_td_error
+from visualization.visualizer import visualize_analysis
 
 
 def run_analysis_from_path(
     path: str,
     visualize_route=False,
-    runs_per_policy=4,
+    runs_per_policy=10,
     shift_duration=960,
     world_attribute="SHIFT_DURATION",
     number_of_extra_vehicles=0,
