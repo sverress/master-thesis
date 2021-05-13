@@ -283,6 +283,7 @@ class ValueFunctionTests(unittest.TestCase):
 
     def ann_learning(self, value_function):
         value_function.setup(self.world.state)
+        self.world.LOST_TRIP_REWARD = -1
 
         # Creating a list of states with associated 0 or negative reward
         simulation_state = copy.deepcopy(self.world.state)
@@ -358,7 +359,7 @@ class ValueFunctionTests(unittest.TestCase):
             if len(unsimulated_states) >= 10:
                 break
 
-        for _ in range(10):
+        for _ in range(2):
             value_function.reset_eligibilities()
             for i in range(len(system_simulated_states) - 1):
                 state_features, reward = system_simulated_states[i]
