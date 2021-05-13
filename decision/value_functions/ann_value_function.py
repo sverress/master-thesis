@@ -66,8 +66,8 @@ class ANNValueFunction(ValueFunction):
             current_state_value, next_state_value, reward
         )
         self.model.fit(
-            np.array([current_state_features]),
-            np.array([td_error + current_state_value]),
+            [current_state_features],
+            [td_error + current_state_value],
             td_error,
             epochs=10,
         )
