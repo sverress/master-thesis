@@ -74,7 +74,7 @@ def get_moved_scooters(merged_tables):
     ].copy()
 
 
-def set_number_of_scooters_in_cluster_to_ideal_state(state):
+def idealize_state(state):
     state_rebalanced_ideal_state = copy.deepcopy(state)
 
     # Set all clusters to ideal state
@@ -142,10 +142,9 @@ def simulate_state_outcomes(state_rebalanced_ideal_state, state):
     delta_ideal_state_and_outcomes = {}
     for cluster in state_rebalanced_ideal_state.clusters:
         simulating_outcome = simulating_outcomes[cluster.id]
-        simulating_min = min(simulating_outcome)
         # setting the new ideal state to trip intensity if min of all outcomes is larger than ideal state
         # -> in all scenarios there is a positive inflow to the cluster
-        if simulating_min > cluster.ideal_state:
+        if min(simulating_outcome) > cluster.ideal_state:
             new_ideal_states[cluster.id] = math.ceil(
                 cluster.trip_intensity_per_iteration
             )

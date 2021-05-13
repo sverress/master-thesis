@@ -322,11 +322,7 @@ class World(SaveMixin, HyperParameters):
                 for event in self.stack
                 if not isinstance(event, classes.VehicleArrival)
             ]
-            self.state = (
-                clustering.helpers.set_number_of_scooters_in_cluster_to_ideal_state(
-                    self.state
-                )
-            )
+            self.state = clustering.helpers.idealize_state(self.state)
 
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):

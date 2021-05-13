@@ -223,9 +223,7 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
         cluster.ideal_state = normalized_cluster_ideal_states[cluster.id]
 
     # setting number of scooters to ideal state
-    state_rebalanced_ideal_state = set_number_of_scooters_in_cluster_to_ideal_state(
-        state
-    )
+    state_rebalanced_ideal_state = idealize_state(state)
 
     # adjusting ideal state by average cluster in- and outflow
     simulate_state_outcomes(state_rebalanced_ideal_state, state)

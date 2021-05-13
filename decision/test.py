@@ -292,7 +292,7 @@ class ValueFunctionTests(unittest.TestCase):
         system_simulated_states = []
         i = 0
         # simulating to provoke lost demand
-        while True:
+        while len(system_simulated_states) < 10:
             _, _, lost_demand = system_simulation.scripts.system_simulate(
                 simulation_state
             )
@@ -310,10 +310,7 @@ class ValueFunctionTests(unittest.TestCase):
                     )
                 )
 
-            if len(system_simulated_states) < 10:
-                i += 1
-            else:
-                break
+            i += 1
 
         # simulating doing actions that yields positive reward
         # (swap battery in clusters with available scooters less than ideal state)
@@ -329,7 +326,7 @@ class ValueFunctionTests(unittest.TestCase):
         counter = 0
         vehicle = unsimulated_world.state.vehicles[0]
         # safety break if internal break doesn't apply
-        while counter < len(deficient_cluster):
+        while counter < len(deficient_cluster) and len(unsimulated_states) < 10:
             # swapping batteries on the n-th cluster in deficient cluster list
             cluster = deficient_cluster[counter]
             vehicle.battery_inventory = vehicle.battery_inventory_capacity
@@ -365,10 +362,6 @@ class ValueFunctionTests(unittest.TestCase):
             ) + action.get_action_time(action_distance)
 
             counter += 1
-
-            # breaking at 10 cases, to have the same amount as negative reward simulations
-            if len(unsimulated_states) >= 10:
-                break
 
         # training two times on the positive and negative rewarded states
         for _ in range(2):
