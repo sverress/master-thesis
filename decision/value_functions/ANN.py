@@ -45,7 +45,10 @@ class ANN:
         self.reset_eligibilities()
 
     def predict(self, state_features):
-        return float(self.model(tf.convert_to_tensor([state_features]))[0][0])
+        return float(self._predict(tf.convert_to_tensor([state_features])))
+
+    def _predict(self, features):
+        return self.model(features)[0][0]
 
     def reset_eligibilities(self):
         self.eligibilities = [
@@ -58,18 +61,18 @@ class ANN:
 
     # This returns a tensor of losses, OR the value of the averaged tensor.  Note: use .numpy() to get the
     # value of a tensor.
-    def gen_loss(self, features, targets, avg=False):
-        predictions = self.model(
-            tf.convert_to_tensor(features, dtype="float32")
-        )  # Feed-forward pass to produce outputs/predictions
-        loss = tf.reduce_sum((targets - predictions) ** 2)
-        return tf.reduce_mean(loss).numpy() if avg else loss
+    def gen_loss(self, features, target):
+        return (target - self._predict(features)) ** 2
 
-    def fit(self, feature, target, td_error, epochs=1):
+    def fit(self, features, target, td_error, epochs=1):
         params = self.model.trainable_weights
+        features, td_error, target = [
+            tf.convert_to_tensor(input_value, dtype="float32")
+            for input_value in [features, td_error, target]
+        ]
         for epoch_id in range(epochs):
             with tf.GradientTape() as tape:
-                loss = self.gen_loss(feature, target)
+                loss = self.gen_loss(features, target)
                 gradients = tape.gradient(loss, params)
                 gradients = self.modify_gradients(gradients, td_error, epoch_id)
                 self.model.optimizer.apply_gradients(zip(gradients, params))
@@ -82,9 +85,7 @@ class ANN:
                     self.eligibilities[i] * self.trace_decay * self.discount_factor,
                     gradients[i],
                 )
-            gradients[i] = tf.math.multiply(
-                self.eligibilities[i], tf.convert_to_tensor(td_error, dtype="float32")
-            )
+            gradients[i] = tf.math.multiply(self.eligibilities[i], td_error)
         return gradients
 
     def __getstate__(self):

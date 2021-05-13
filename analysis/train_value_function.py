@@ -53,19 +53,19 @@ if __name__ == "__main__":
     NUMBER_OF_CLUSTERS = 30
     standard_parameters = globals.HyperParameters()
     world_to_analyse = classes.World(
-        5,
+        80,
         None,
         clustering.scripts.get_initial_state(
             SAMPLE_SIZE,
             NUMBER_OF_CLUSTERS,
-            number_of_vans=1,
+            number_of_vans=4,
             number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,
         NUMBER_OF_NEIGHBOURS=4,
         MODELS_TO_BE_SAVED=3,
-        TRAINING_SHIFTS_BEFORE_SAVE=1,
+        TRAINING_SHIFTS_BEFORE_SAVE=10,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
