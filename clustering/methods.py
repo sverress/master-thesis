@@ -1,3 +1,5 @@
+import copy
+
 from sklearn.cluster import KMeans
 import os
 
@@ -216,8 +218,16 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
     normalized_cluster_ideal_states = normalize_to_integers(
         cluster_ideal_states, sum_to=len(sample_scooters)
     )
+
     for cluster in state.clusters:
         cluster.ideal_state = normalized_cluster_ideal_states[cluster.id]
+
+    # setting number of scooters to ideal state
+    state_rebalanced_ideal_state = idealize_state(state)
+
+    # adjusting ideal state by average cluster in- and outflow
+    simulate_state_outcomes(state_rebalanced_ideal_state, state)
+
     progressbar.finish()
 
 
@@ -293,7 +303,9 @@ def generate_scenarios(state: State, number_of_scenarios=10000):
     for i in range(number_of_scenarios):
         one_scenario = []
         for cluster in state.clusters:
-            number_of_trips = round(np.random.poisson(cluster.ideal_state * 0.1))
+            number_of_trips = round(
+                np.random.poisson(cluster.trip_intensity_per_iteration)
+            )
             end_cluster_indices = np.random.choice(
                 cluster_indices,
                 p=cluster.get_leave_distribution(),
