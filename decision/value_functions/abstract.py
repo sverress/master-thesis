@@ -1,7 +1,10 @@
+import numpy as np
+
 import classes
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
 import helpers
 import abc
+import sklearn
 
 
 class Decorators:
@@ -27,6 +30,7 @@ class ValueFunction(abc.ABC):
         discount_factor,
         vehicle_inventory_step_size,
         location_repetition,
+        trace_decay,
     ):
         # for every location - 3 bit for each location
         # for every cluster, 1 float for deviation, 1 float for battery deficient
@@ -39,6 +43,7 @@ class ValueFunction(abc.ABC):
         self.step_size = weight_update_step_size
         self.discount_factor = discount_factor
         self.weight_init_value = weight_init_value
+        self.trace_decay = trace_decay
 
         self.setup_complete = False
         self.location_indicator = None
@@ -84,14 +89,6 @@ class ValueFunction(abc.ABC):
 
     @abc.abstractmethod
     @Decorators.check_setup
-    def batch_update_weights(
-        self,
-        batch: [(float, float, float, [float])],
-    ):
-        pass
-
-    @abc.abstractmethod
-    @Decorators.check_setup
     def update_weights(
         self,
         current_state_features: [float],
@@ -99,6 +96,11 @@ class ValueFunction(abc.ABC):
         next_state_value: float,
         reward: float,
     ):
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
+    def reset_eligibilities(self):
         pass
 
     @abc.abstractmethod
@@ -350,10 +352,19 @@ class ValueFunction(abc.ABC):
             else:
                 return [abs(min(deviation, 0)) for deviation in deviations]
 
+        normalizer = sklearn.preprocessing.StandardScaler()
+
+        def normalize_list(input_list):
+            return (
+                normalizer.fit_transform(np.array(input_list).reshape((-1, 1)))
+                .reshape((1, -1))
+                .tolist()[0]
+            )
+
         return (
-            helpers.normalize_list(ideal_state_deviation(is_positive=True)),
-            helpers.normalize_list(ideal_state_deviation(is_positive=False)),
-            helpers.normalize_list(
+            normalize_list(ideal_state_deviation(is_positive=True)),
+            normalize_list(ideal_state_deviation(is_positive=False)),
+            normalize_list(
                 [
                     len(cluster.scooters)
                     - current_states[i]

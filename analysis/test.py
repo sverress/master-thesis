@@ -24,18 +24,6 @@ class AnalysisTests(unittest.TestCase):
             MODELS_TO_BE_SAVED=2,
         )
 
-    def test_run_analysis(self):
-        # Runs random and do nothing policies
-        analysis.evaluate_policies.run_analysis([], baseline_policy_world=self.world)
-
-    @staticmethod
-    def test_run_analysis_from_path():
-        analysis.evaluate_policies.run_analysis_from_path(
-            "world_cache/test_models",
-            runs_per_policy=1,
-            shift_duration=80,
-        )
-
     def delete_dir(self, training_directory):
         for world_file_path in os.listdir(training_directory):
             file_path = os.path.join(training_directory, world_file_path)
@@ -68,12 +56,14 @@ class AnalysisTests(unittest.TestCase):
         self.delete_dir(training_directory)
 
     @staticmethod
+    @unittest.skipIf(os.getenv("CI"), "on ci")
     def test_export_to_excel():
         # running test instances and exporting them to excel
         analysis.evaluate_policies.run_analysis_from_path(
             "world_cache/test_models",
-            shift_duration=60,
+            shift_duration=10,
             export_to_excel=True,
+            runs_per_policy=1,
         )
         file_name = f"computational_study/Test.xlsx"
         # removing the test file that was created during the test

@@ -77,7 +77,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         state = world.state
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
-            return random.choice(actions), None
+            return random.choice(actions)
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
@@ -91,6 +91,9 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             )
             state_value = self.value_function.estimate_value_from_state_features(
                 state_features
+            )
+            expected_lost_trip_reward = state.get_expected_lost_trip_reward(
+                world.LOST_TRIP_REWARD, exclude=vehicle.current_location.id
             )
             for action in actions:
                 # Get the distance from current cluster to the new destination cluster
@@ -113,14 +116,26 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 )
 
                 action_info.append(
-                    (action, action.get_reward(vehicle), next_state_value)
+                    (
+                        action,
+                        action.get_reward(vehicle, world.LOST_TRIP_REWARD),
+                        next_state_value,
+                    )
                 )
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
-            best_action, *rest = max(action_info, key=lambda pair: pair[1] + pair[2])
+            best_action, reward, next_state_value = max(
+                action_info, key=lambda pair: pair[1] + pair[2]
+            )
 
-            # Best action, (reward, next state estimated value, state features)
-            return best_action, (state_value, *rest, state_features)
+            self.value_function.update_weights(
+                state_features,
+                state_value,
+                reward + expected_lost_trip_reward,
+                next_state_value,
+            )
+
+            return best_action
 
     def setup_from_state(self, state):
         self.value_function.setup(state)
@@ -163,14 +178,11 @@ class SwapAllPolicy(Policy):
             number_of_scooters_to_swap = vehicle.get_max_number_of_swaps()
 
         # Return an action with no re-balancing, only scooter swapping
-        return (
-            classes.Action(
-                battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
-                pick_ups=[],
-                delivery_scooters=[],
-                next_location=next_location.id,
-            ),
-            None,
+        return classes.Action(
+            battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
+            pick_ups=[],
+            delivery_scooters=[],
+            next_location=next_location.id,
         )
 
 
@@ -189,7 +201,7 @@ class RandomActionPolicy(Policy):
         )
 
         # pick a random action
-        return random.choice(possible_actions), None
+        return random.choice(possible_actions)
 
 
 class DoNothing(Policy):
@@ -197,4 +209,4 @@ class DoNothing(Policy):
         super().__init__(0, 0)
 
     def get_best_action(self, world, vehicle):
-        return classes.Action([], [], [], 0), None
+        return classes.Action([], [], [], 0)

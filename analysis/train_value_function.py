@@ -41,6 +41,9 @@ def train_value_function(
                 training_simulation.scripts.training_simulation(policy_world)
             else:
                 policy_world.run()
+
+            if hasattr(policy_world.policy, "value_function"):
+                policy_world.policy.value_function.reset_eligibilities()
             world.policy = policy_world.policy
             progress_bar.next()
 
@@ -66,6 +69,7 @@ if __name__ == "__main__":
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-        value_function_class=decision.value_functions.LinearValueFunction,
+        value_function_class=decision.value_functions.ANNValueFunction,
     )
+
     train_value_function(world_to_analyse)
