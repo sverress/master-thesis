@@ -74,10 +74,12 @@ def get_moved_scooters(merged_tables):
     ].copy()
 
 
-def set_number_of_scooters_to_ideal_state(state):
+def set_number_of_scooters_in_cluster_to_ideal_state(state):
+    state_rebalanced_ideal_state = copy.deepcopy(state)
+
     # Set all clusters to ideal state
     excess_scooters = []
-    for cluster in state.clusters:
+    for cluster in state_rebalanced_ideal_state.clusters:
         # Swap all scooters under 50% battery
         for scooter in cluster.scooters:
             if scooter.battery < 50:
@@ -91,7 +93,7 @@ def set_number_of_scooters_to_ideal_state(state):
             ]
 
     # Add excess scooters to clusters in need of scooters
-    for cluster in state.clusters:
+    for cluster in state_rebalanced_ideal_state.clusters:
         # Find out how many scooters to add to cluster
         number_of_scooters_to_add = cluster.ideal_state - len(
             cluster.get_available_scooters()
@@ -99,22 +101,27 @@ def set_number_of_scooters_to_ideal_state(state):
         # Add scooters to the cluster only if the number of available scooter is lower than ideal state
         if number_of_scooters_to_add > 0:
             for _ in range(number_of_scooters_to_add):
-                # fetch and remove a scooter from the excess scooters
-                # TODO - can get a empty list error if the excess_scooters list is empty
-                scooter, origin_cluster = excess_scooters.pop()
-                # Remove scooter from old cluster
-                origin_cluster.remove_scooter(scooter)
-                # Add scooter to new cluster
-                cluster.add_scooter(scooter)
+                if len(excess_scooters) > 0:
+                    # fetch and remove a scooter from the excess scooters
+                    scooter, origin_cluster = excess_scooters.pop()
+                    # Remove scooter from old cluster
+                    origin_cluster.remove_scooter(scooter)
+                    # Add scooter to new cluster
+                    cluster.add_scooter(scooter)
+
+    return state_rebalanced_ideal_state
 
 
-def simulate_state_outcomes(state):
+def simulate_state_outcomes(state_rebalanced_ideal_state, state):
     # dict to record the outcomes of available scooters in a cluster after simulation
-    simulating_outcomes = {cluster_id: [] for cluster_id in range(len(state.clusters))}
+    simulating_outcomes = {
+        cluster_id: []
+        for cluster_id in range(len(state_rebalanced_ideal_state.clusters))
+    }
 
     # simulating 100 times
     for i in range(100):
-        simulating_state = copy.deepcopy(state)
+        simulating_state = copy.deepcopy(state_rebalanced_ideal_state)
         # simulates until the end of the day
         for j in range(
             round(
@@ -132,8 +139,8 @@ def simulate_state_outcomes(state):
 
     new_ideal_states = {}
 
-    scooter_deficiency = {}
-    for cluster in state.clusters:
+    delta_ideal_state_and_outcomes = {}
+    for cluster in state_rebalanced_ideal_state.clusters:
         simulating_outcome = simulating_outcomes[cluster.id]
         simulating_min = min(simulating_outcome)
         # setting the new ideal state to trip intensity if min of all outcomes is larger than ideal state
@@ -142,30 +149,38 @@ def simulate_state_outcomes(state):
             new_ideal_states[cluster.id] = math.ceil(
                 cluster.trip_intensity_per_iteration
             )
-        # calculating the total outflow of the cluster if there is an outcome where
-        # the number of available scooter declined
+        # calculating the difference from outcomes and ideal state
         else:
-            scooter_deficiency[cluster.id] = [
-                max(0, cluster.ideal_state - outcome)
+            delta_ideal_state_and_outcomes[cluster.id] = [
+                cluster.ideal_state - outcome
                 for outcome in simulating_outcomes[cluster.id]
             ]
 
     # initial parameter for the percentile and delta of the percentile
-    percentile = 0.99
+    percentile = 1.0
     delta = 0.01
 
     # loop until he sum of new ideal states is less or equal to the number of scooters in the state
     while True:
-        # setting the new ideal state of the clusters with a positive outflow to the previous ideal state +
-        # % percentile of the total decline
-        for cluster_id in scooter_deficiency.keys():
-            new_ideal_states[cluster_id] = state.clusters[
+        # setting the new ideal state of the clusters where not all outcomes are greater than ideal state to:
+        # ideal state + %-percentile of the difference between ideal state - outcomes
+        for cluster_id in delta_ideal_state_and_outcomes.keys():
+            new_ideal_states[cluster_id] = state_rebalanced_ideal_state.clusters[
                 cluster_id
-            ].ideal_state + np.quantile(scooter_deficiency[cluster_id], percentile)
+            ].ideal_state + round(
+                np.quantile(delta_ideal_state_and_outcomes[cluster_id], percentile)
+            )
 
-        if sum(list(new_ideal_states.values())) <= len(state.get_scooters()):
+        sum_ideal_state = sum(list(new_ideal_states.values()))
+
+        # breaking
+        if sum_ideal_state <= len(state.get_scooters()):
             for cluster_id in new_ideal_states.keys():
                 state.clusters[cluster_id].ideal_state = new_ideal_states[cluster_id]
             break
+        elif percentile <= 0:
+            raise ValueError(
+                "0%-percentile of ideal state-outcomes are greater than the number of scooters"
+            )
         else:
             percentile -= delta

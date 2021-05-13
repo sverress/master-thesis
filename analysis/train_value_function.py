@@ -63,7 +63,6 @@ if __name__ == "__main__":
         ),
         verbose=False,
         visualize=False,
-        NUMBER_OF_NEIGHBOURS=4,
         MODELS_TO_BE_SAVED=3,
         TRAINING_SHIFTS_BEFORE_SAVE=1,
     )

@@ -70,9 +70,9 @@ class ANN:
         for epoch_id in range(epochs):
             with tf.GradientTape() as tape:
                 loss = self.gen_loss(feature, target)
-                gradients = tape.gradient(loss, params)
-                gradients = self.modify_gradients(gradients, td_error, epoch_id)
-                self.model.optimizer.apply_gradients(zip(gradients, params))
+            gradients = tape.gradient(loss, params)
+            gradients = self.modify_gradients(gradients, td_error, epoch_id)
+            self.model.optimizer.apply_gradients(zip(gradients, params))
 
     def modify_gradients(self, gradients, td_error, epoch_id):
         # Taking every 2 array since every other array is biases
@@ -82,8 +82,9 @@ class ANN:
                     self.eligibilities[i] * self.trace_decay * self.discount_factor,
                     gradients[i],
                 )
-            gradients[i] = tf.math.multiply(
-                self.eligibilities[i], tf.convert_to_tensor(td_error, dtype="float32")
+            gradients[i] = -tf.math.multiply(
+                self.eligibilities[i],
+                tf.convert_to_tensor(td_error, dtype="float32"),
             )
         return gradients
 

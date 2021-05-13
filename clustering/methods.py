@@ -1,3 +1,5 @@
+import copy
+
 from sklearn.cluster import KMeans
 import os
 
@@ -141,7 +143,10 @@ def scooter_movement_analysis(state: State) -> np.ndarray:
             )
         return probability_matrix
 
-    progress = Bar("| Computing MPM", max=len(os.listdir(TEST_DATA_DIRECTORY)),)
+    progress = Bar(
+        "| Computing MPM",
+        max=len(os.listdir(TEST_DATA_DIRECTORY)),
+    )
     # Fetch all snapshots from test data
     probability_matrices = []
     previous_snapshot = None
@@ -218,17 +223,20 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
         cluster.ideal_state = normalized_cluster_ideal_states[cluster.id]
 
     # setting number of scooters to ideal state
-    set_number_of_scooters_to_ideal_state(state)
+    state_rebalanced_ideal_state = set_number_of_scooters_in_cluster_to_ideal_state(
+        state
+    )
 
     # adjusting ideal state by average cluster in- and outflow
-    simulate_state_outcomes(state)
+    simulate_state_outcomes(state_rebalanced_ideal_state, state)
 
     progressbar.finish()
 
 
 def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     progress = Bar(
-        "| Computing trip intensity", max=len(os.listdir(TEST_DATA_DIRECTORY)),
+        "| Computing trip intensity",
+        max=len(os.listdir(TEST_DATA_DIRECTORY)),
     )
     # Fetch all snapshots from test data
     trip_counter = np.zeros((len(state.clusters), len(os.listdir(TEST_DATA_DIRECTORY))))

@@ -14,7 +14,11 @@ import copy
 
 class State(SaveMixin):
     def __init__(
-        self, clusters: [Cluster], depots: [Depot], vehicles=None, distance_matrix=None,
+        self,
+        clusters: [Cluster],
+        depots: [Depot],
+        vehicles=None,
+        distance_matrix=None,
     ):
         self.clusters = clusters
         self.vehicles = vehicles
@@ -332,7 +336,8 @@ class State(SaveMixin):
         visualize_clustering(self.clusters)
 
     def visualize_flow(
-        self, flows: [(int, int, int)],
+        self,
+        flows: [(int, int, int)],
     ):
         visualize_cluster_flow(self, flows)
 
@@ -392,7 +397,9 @@ class State(SaveMixin):
 
     @staticmethod
     def save_path(
-        number_of_clusters, sample_size, ideal_state_computation,
+        number_of_clusters,
+        sample_size,
+        ideal_state_computation,
     ):
         def convert_binary(binary):
             return 1 if binary else 0
@@ -460,8 +467,8 @@ class State(SaveMixin):
                 [
                     max(
                         (
-                            len(cluster.get_available_scooters())
-                            - cluster.trip_intensity_per_iteration
+                            cluster.trip_intensity_per_iteration
+                            - len(cluster.get_available_scooters())
                         ),
                         0,
                     )

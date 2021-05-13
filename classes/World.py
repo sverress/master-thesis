@@ -273,7 +273,10 @@ class World(SaveMixin, HyperParameters):
         return self.DISCOUNT_RATE ** (self.time / 60)
 
     def set_policy(
-        self, policy=None, policy_class=None, value_function_class=None,
+        self,
+        policy=None,
+        policy_class=None,
+        value_function_class=None,
     ):
         if policy is None:
             if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
@@ -305,7 +308,8 @@ class World(SaveMixin, HyperParameters):
                 )
             elif policy_class is decision.RandomActionPolicy:
                 policy = policy_class(
-                    self.DIVIDE_GET_POSSIBLE_ACTIONS, self.NUMBER_OF_NEIGHBOURS,
+                    self.DIVIDE_GET_POSSIBLE_ACTIONS,
+                    self.NUMBER_OF_NEIGHBOURS,
                 )
             else:
                 if policy_class is None:
@@ -318,7 +322,11 @@ class World(SaveMixin, HyperParameters):
                 for event in self.stack
                 if not isinstance(event, classes.VehicleArrival)
             ]
-            clustering.helpers.set_number_of_scooters_to_ideal_state(self.state)
+            self.state = (
+                clustering.helpers.set_number_of_scooters_in_cluster_to_ideal_state(
+                    self.state
+                )
+            )
 
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):

@@ -2,11 +2,14 @@ import copy
 import unittest
 import random
 
+import numpy as np
+
 import classes
 import clustering.scripts
 import decision
 import decision.value_functions
 import globals
+import system_simulation.scripts
 from classes import World, Action, Scooter
 from clustering.scripts import get_initial_state
 from decision.neighbour_filtering import filtering_neighbours
@@ -218,6 +221,19 @@ class PolicyTests(unittest.TestCase):
             )
 
 
+def update_value_function(value_function, state_features, next_state_features, reward):
+    state_value = value_function.estimate_value_from_state_features(state_features)
+    next_state_value = value_function.estimate_value_from_state_features(
+        next_state_features
+    )
+    value_function.update_weights(
+        current_state_value=state_value,
+        current_state_features=state_features,
+        next_state_value=next_state_value,
+        reward=reward,
+    )
+
+
 class ValueFunctionTests(unittest.TestCase):
     def setUp(self) -> None:
         hyper_params = globals.HyperParameters()
@@ -232,7 +248,7 @@ class ValueFunctionTests(unittest.TestCase):
         self.world = World(
             100,
             initial_state=clustering.scripts.get_initial_state(
-                1000, 20, initial_location_depot=False
+                1000, 30, initial_location_depot=False
             ),
             policy=None,
         )
@@ -248,6 +264,7 @@ class ValueFunctionTests(unittest.TestCase):
         reward = action.get_reward(vehicle, self.world.LOST_TRIP_REWARD)
         self.world.state.do_action(action, vehicle, self.world.time)
         for i in range(100):
+            value_function.reset_eligibilities()
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(
                 self.world.state, vehicle, self.world.time
@@ -264,16 +281,118 @@ class ValueFunctionTests(unittest.TestCase):
             abs(sum(value_function.td_errors[:3]) / 3),
         )
 
+    def ann_learning(self, value_function):
+        value_function.setup(self.world.state)
+
+        # Creating a list of states with associated 0 or negative reward
+        simulation_state = copy.deepcopy(self.world.state)
+        vehicle = simulation_state.vehicles[0]
+        system_simulated_states = []
+        i = 0
+        while True:
+            _, _, lost_demand = system_simulation.scripts.system_simulate(
+                simulation_state
+            )
+            if len(lost_demand) > 0:
+                system_simulated_states.append(
+                    (
+                        value_function.get_state_features(
+                            simulation_state,
+                            vehicle,
+                            i * globals.ITERATION_LENGTH_MINUTES,
+                        ),
+                        sum([lost_demand for lost_demand, _ in lost_demand])
+                        * self.world.LOST_TRIP_REWARD,
+                    )
+                )
+
+            if len(system_simulated_states) < 10:
+                i += 1
+            else:
+                break
+
+        unsimulated_world = copy.deepcopy(self.world)
+        accumulated_action_time = 0
+        unsimulated_states = []
+        deficient_cluster = [
+            cluster
+            for cluster in unsimulated_world.state.clusters
+            if len(cluster.get_available_scooters()) < cluster.ideal_state
+        ]
+
+        counter = 0
+        vehicle = unsimulated_world.state.vehicles[0]
+        while counter < len(deficient_cluster):
+            cluster = deficient_cluster[counter]
+            vehicle.battery_inventory = vehicle.battery_inventory_capacity
+            vehicle.current_location = cluster
+            action = classes.Action(
+                [scooter.id for scooter in cluster.get_swappable_scooters()][
+                    : vehicle.battery_inventory
+                ],
+                [],
+                [],
+                deficient_cluster[counter + 1].id,
+            )
+            reward = action.get_reward(
+                vehicle,
+                0,
+            )
+            unsimulated_states.append(
+                (
+                    value_function.get_state_features(
+                        unsimulated_world.state, vehicle, accumulated_action_time
+                    ),
+                    reward,
+                )
+            )
+            action_distance = unsimulated_world.state.get_distance(
+                vehicle.current_location.id, action.next_location
+            )
+            accumulated_action_time += unsimulated_world.state.do_action(
+                action, vehicle, accumulated_action_time
+            ) + action.get_action_time(action_distance)
+
+            counter += 1
+
+            if len(unsimulated_states) >= 10:
+                break
+
+        for _ in range(10):
+            value_function.reset_eligibilities()
+            for i in range(len(system_simulated_states) - 1):
+                state_features, reward = system_simulated_states[i]
+                next_state_features = system_simulated_states[i + 1][0]
+                update_value_function(
+                    value_function, state_features, next_state_features, reward
+                )
+
+            value_function.reset_eligibilities()
+
+            for i in range(len(unsimulated_states) - 1):
+                state_features, reward = unsimulated_states[i]
+                next_state_features = unsimulated_states[i + 1][0]
+                update_value_function(
+                    value_function, state_features, next_state_features, reward
+                )
+
+        self.assertGreater(
+            value_function.estimate_value_from_state_features(unsimulated_states[0][0]),
+            value_function.estimate_value_from_state_features(
+                system_simulated_states[0][0]
+            ),
+        )
+
     def test_linear_value_function(self):
         self.world_value_function_check(
             decision.value_functions.LinearValueFunction(*self.value_function_args)
         )
 
     def test_ann_value_function(self):
-        self.world_value_function_check(
+        self.ann_learning(
             decision.value_functions.ANNValueFunction(
                 *self.value_function_args,
-                [100, 1000, 100],
+                [1000, 1000, 1000, 1000, 500, 100],
             )
         )
 
