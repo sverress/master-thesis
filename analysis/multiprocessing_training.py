@@ -16,7 +16,7 @@ def lost_trip_rewards(lost_trip_reward, suffix):
         test_parameter_name="lost_trip_reward",
         test_parameter_value=lost_trip_reward,
         LOST_TRIP_REWARD=lost_trip_reward,
-        ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
+        ANN_NETWORK_STRUCTURE=[1000] * 4,
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
@@ -33,8 +33,5 @@ def multiprocess_train(function, inputs):
 if __name__ == "__main__":
     multiprocess_train(
         lost_trip_rewards,
-        [
-            (value, f"lr_{value}")
-            for value in [-0.001, -0.01, -0.1, -1, -5, -10, -50, -100, -1000]
-        ],
+        [(value, f"lt_{value}") for value in [-0.01, -0.1, -1, -3, -5, -7, -10, -50]],
     )
