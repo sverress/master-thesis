@@ -157,11 +157,7 @@ class ValueFunction(abc.ABC):
             len(state.locations),
         )
         # Fetch all normalized scooter state representations
-        (
-            normalized_deviation_ideal_state_positive,
-            normalized_deviation_ideal_state_negative,
-            normalized_deficient_battery,
-        ) = ValueFunction.get_normalized_lists(
+        normalized_lists = ValueFunction.get_normalized_lists(
             state,
             cache,
             current_location=vehicle.current_location.id if is_next_action else None,
@@ -210,9 +206,7 @@ class ValueFunction(abc.ABC):
         ]
         return (
             location_indicators
-            + normalized_deviation_ideal_state_positive
-            + normalized_deviation_ideal_state_negative
-            + normalized_deficient_battery
+            + normalized_lists
             + scooter_inventory_indication
             + battery_inventory_indication
             + small_depot_degree_of_filling
@@ -354,28 +348,24 @@ class ValueFunction(abc.ABC):
 
         normalizer = sklearn.preprocessing.StandardScaler()
 
-        def normalize_list(input_list):
+        def normalize_lists(*input_lists):
+            lists = np.array(input_lists)
             return (
-                normalizer.fit_transform(np.array(input_list).reshape((-1, 1)))
-                .reshape((1, -1))
-                .tolist()[0]
+                normalizer.fit_transform(lists.transpose())
+                .transpose()
+                .flatten()
+                .tolist()
             )
 
-        return (
-            normalize_list(ideal_state_deviation(is_positive=True)),
-            normalize_list(ideal_state_deviation(is_positive=False)),
-            normalize_list(
-                [
-                    len(cluster.scooters)
-                    - current_states[i]
-                    - (
-                        battery_percentage_added
-                        if cluster.id == current_location
-                        else 0
-                    )
-                    for i, cluster in enumerate(state.clusters)
-                ]
-            ),
+        return normalize_lists(
+            ideal_state_deviation(is_positive=True),
+            ideal_state_deviation(is_positive=False),
+            [
+                len(cluster.scooters)
+                - current_states[i]
+                - (battery_percentage_added if cluster.id == current_location else 0)
+                for i, cluster in enumerate(state.clusters)
+            ],
         )
 
     def get_inventory_indicator(self, percent):
