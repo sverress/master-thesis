@@ -26,7 +26,7 @@ def train_value_function(
     for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)
         policy_world.policy.value_function.update_shifts_trained(shift)
-        if epsilon_decay:
+        if epsilon_decay and shift > 0:
             policy_world.policy.epsilon -= (
                 world.INITIAL_EPSILON - world.FINAL_EPSILON
             ) / number_of_shifts
