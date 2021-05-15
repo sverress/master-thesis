@@ -189,6 +189,7 @@ class World(SaveMixin, HyperParameters):
         self.verbose = verbose
         self.visualize = visualize
         self.label = self.__class__.__name__
+        self.disable_training = False
         if verbose:
             self.progress_bar = IncrementalBar(
                 "Running World",

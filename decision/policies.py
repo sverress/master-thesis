@@ -152,7 +152,8 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 next_state_features,
             )
         )
-        self.value_function.train(world.REPLAY_BUFFER_SIZE)
+        if not world.disable_training:
+            self.value_function.train(world.REPLAY_BUFFER_SIZE)
         return best_action
 
     def setup_from_state(self, state):
