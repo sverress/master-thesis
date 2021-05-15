@@ -1,10 +1,8 @@
-import numpy as np
-
 import classes
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
 import helpers
 import abc
-import sklearn
+from scipy import stats
 
 
 class Decorators:
@@ -37,7 +35,7 @@ class ValueFunction(abc.ABC):
         # for vehicle - n bits for scooter inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # + n bits for battery inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # for every small depot - 1 float for degree of filling
-        self.number_of_features_per_cluster = 3
+        self.number_of_features_per_cluster = 2
         self.location_repetition = location_repetition
         self.vehicle_inventory_step_size = vehicle_inventory_step_size
         self.step_size = weight_update_step_size
@@ -157,7 +155,7 @@ class ValueFunction(abc.ABC):
             len(state.locations),
         )
         # Fetch all normalized scooter state representations
-        normalized_lists = ValueFunction.get_normalized_lists(
+        deviations, battery_deficiency = ValueFunction.get_normalized_lists(
             state,
             cache,
             current_location=vehicle.current_location.id if is_next_action else None,
@@ -206,7 +204,8 @@ class ValueFunction(abc.ABC):
         ]
         return (
             location_indicators
-            + normalized_lists
+            + deviations
+            + battery_deficiency
             + scooter_inventory_indication
             + battery_inventory_indication
             + small_depot_degree_of_filling
@@ -243,7 +242,7 @@ class ValueFunction(abc.ABC):
         )
 
     @staticmethod
-    def get_small_depot_degree_of_filling(time, state):
+    def get_small_depot_degree_of_filling(time, state) -> [int]:
         return [
             depot.get_available_battery_swaps(time) / SMALL_DEPOT_CAPACITY
             for depot in state.depots[1:]
@@ -251,20 +250,22 @@ class ValueFunction(abc.ABC):
 
     def get_location_indicator(
         self, location_id, number_of_locations, location_repetition=None
-    ):
+    ) -> [int]:
         location_repetition = (
             location_repetition
             if location_repetition is not None
             else self.location_repetition
         )
         return (
-            [0] * location_repetition * location_id
-            + [1] * location_repetition
-            + [0] * location_repetition * (number_of_locations - 1 - location_id)
+            [0.0] * location_repetition * location_id
+            + [1.0] * location_repetition
+            + [0.0] * location_repetition * (number_of_locations - 1 - location_id)
         )
 
     @staticmethod
-    def get_normalized_lists(state, cache=None, current_location=None, action=None):
+    def get_normalized_lists(
+        state, cache=None, current_location=None, action=None
+    ) -> ([int], [int]):
         if current_location is not None and action is not None:
 
             def filter_scooter_ids(ids, isAvailable=True):
@@ -321,6 +322,7 @@ class ValueFunction(abc.ABC):
         else:
             scooters_added_in_current_cluster = 0
             battery_percentage_added = 0
+
         current_states, available_scooters = (
             cache
             if cache is not None
@@ -329,51 +331,38 @@ class ValueFunction(abc.ABC):
                 [cluster.get_available_scooters() for cluster in state.clusters],
             )
         )  # Use cache if you have it
-        deviations = [
-            len(available_scooters[i])
-            - cluster.ideal_state
-            + (
-                scooters_added_in_current_cluster
-                if cluster.id == current_location
-                else 0
-            )  # Add available scooters from action
-            for i, cluster in enumerate(state.clusters)
-        ]
 
-        def ideal_state_deviation(is_positive):
-            if is_positive:
-                return [max(deviation, 0) for deviation in deviations]
-            else:
-                return [abs(min(deviation, 0)) for deviation in deviations]
-
-        normalizer = sklearn.preprocessing.StandardScaler()
-
-        def normalize_lists(*input_lists):
-            lists = np.array(input_lists)
-            return (
-                normalizer.fit_transform(lists.transpose())
-                .transpose()
-                .flatten()
-                .tolist()
+        deviation, battery_deficiency = [], []
+        for i, cluster in enumerate(state.clusters):
+            deviation.append(
+                len(available_scooters[i])
+                - cluster.ideal_state
+                + (
+                    scooters_added_in_current_cluster
+                    if cluster.id == current_location
+                    else 0
+                )  # Add available scooters from action
             )
-
-        return normalize_lists(
-            ideal_state_deviation(is_positive=True),
-            ideal_state_deviation(is_positive=False),
-            [
+            battery_deficiency.append(
                 len(cluster.scooters)
                 - current_states[i]
                 - (battery_percentage_added if cluster.id == current_location else 0)
-                for i, cluster in enumerate(state.clusters)
-            ],
-        )
+            )
 
-    def get_inventory_indicator(self, percent):
         return [
-            1
-            if self.vehicle_inventory_step_size * i
-            < percent
-            <= self.vehicle_inventory_step_size * (i + 1)
-            else 0
-            for i in range(round(1 / self.vehicle_inventory_step_size))
+            stats.zscore(list_to_normalize).tolist()
+            for list_to_normalize in [deviation, battery_deficiency]
         ]
+
+    def get_inventory_indicator(self, percent) -> [int]:
+        length_of_list = round(1 / self.vehicle_inventory_step_size)
+        filter_list = [
+            int(
+                percent
+                <= i * self.vehicle_inventory_step_size
+                + self.vehicle_inventory_step_size
+            )
+            for i in range(length_of_list)
+        ]
+        index = filter_list.index(1)
+        return [0] * index + [1] + [0] * (length_of_list - index - 1)

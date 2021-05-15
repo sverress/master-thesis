@@ -18,7 +18,7 @@ class ClusteringTests(unittest.TestCase):
         )
 
     def test_ideal_state_sum_to_number_of_scooters(self):
-        self.assertAlmostEqual(
+        self.assertGreaterEqual(
             len(self.state_mid.get_scooters()),
             sum(cluster.ideal_state for cluster in self.state_mid.clusters),
             -1,
@@ -87,21 +87,14 @@ class ClusteringTests(unittest.TestCase):
                 )
 
     def test_ideal_states(self):
-        # test that all ideal states are greater than 0 and they sum to less than or equal to the number of e-scooters
+        # test that all ideal states are greater than or equal 0
         for state in self.all_states:
-            ideal_states = []
             for cluster in state.clusters:
-                ideal_states.append(cluster.ideal_state)
-                self.assertGreater(
+                self.assertGreaterEqual(
                     cluster.ideal_state,
                     0,
                     f"A cluster is initialized with an ideal state less than or equal to 0",
                 )
-            self.assertLessEqual(
-                sum(ideal_states),
-                len(state.get_scooters()),
-                "Sum of ideal states is greater than the number of scooters in the state",
-            )
 
 
 if __name__ == "__main__":

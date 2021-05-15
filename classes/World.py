@@ -29,6 +29,7 @@ class World(SaveMixin, HyperParameters):
             self.average_negative_deviation_ideal_state = []
             self.deficient_battery = []
             self.timeline = []
+            self.total_available_scooters = []
             self.testing_parameter_name = test_parameter_name
             self.testing_parameter_value = test_parameter_value
 
@@ -47,6 +48,7 @@ class World(SaveMixin, HyperParameters):
                 "lost_demand",
                 "average_negative_deviation_ideal_state",
                 "deficient_battery",
+                "total_available_scooters",
             ]
             # Create dict with list for every field, start all values on zero
             fields = {field: [[0] * number_of_metrics] for field in average_fields}
@@ -126,6 +128,15 @@ class World(SaveMixin, HyperParameters):
                         if len(cluster.scooters) < cluster.ideal_state
                     ]
                 )
+                / len(world.state.get_scooters())
+            )
+            self.total_available_scooters.append(
+                sum(
+                    [
+                        len(cluster.get_available_scooters())
+                        for cluster in world.state.clusters
+                    ]
+                )
             )
             self.timeline.append(world.time)
 
@@ -137,6 +148,7 @@ class World(SaveMixin, HyperParameters):
                 self.lost_demand,
                 self.average_negative_deviation_ideal_state,
                 self.deficient_battery,
+                self.total_available_scooters,
             )
 
     def __init__(
