@@ -244,7 +244,7 @@ class RebalancingPolicy(Policy):
             else:
                 # Pick up as many scooters as possible, the min(scooter capacity, deviation from ideal state)
                 number_of_scooters_to_pick_up = min(
-                    vehicle.scooter_inventory_capacity - vehicle.scooter_inventory,
+                    vehicle.scooter_inventory_capacity - len(vehicle.scooter_inventory),
                     vehicle.battery_inventory,
                     len(vehicle.current_location.scooters)
                     - vehicle.current_location.ideal_state,
