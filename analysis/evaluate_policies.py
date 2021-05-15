@@ -94,7 +94,7 @@ def run_analysis(
     # Always add a policy that does nothing and a random action
     for baseline_policy_class in [
         decision.DoNothing,
-        decision.RandomActionPolicy,
+        decision.RebalancingPolicy,
         decision.SwapAllPolicy,
     ]:
         # Use the first world as the world for baseline policies
@@ -129,8 +129,12 @@ def run_analysis(
 if __name__ == "__main__":
     import sys
 
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
     if len(sys.argv) > 1:
         print(f"fetching world objects from {sys.argv[2]}")
         run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1])
     else:
-        run_analysis_from_path("world_cache/test_models")
+        run_analysis_from_path(
+            "world_cache/test_models", shift_duration=80, runs_per_policy=1
+        )

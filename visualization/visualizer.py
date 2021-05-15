@@ -336,18 +336,17 @@ def visualize_analysis(instances, title=None):
     fig = plt.figure(figsize=(20, 9.7))
 
     # creating subplots
-    spec = gridspec.GridSpec(
-        figure=fig, ncols=3, nrows=1, width_ratios=[1] * 3, wspace=0.2, hspace=0
-    )
+    spec = gridspec.GridSpec(figure=fig, ncols=2, nrows=2)
 
     subplots_labels = [
         ("Time", "Number of lost trips", " Lost demand"),
+        ("Time", "Number of available scooters", "Total available scooters"),
         (
             "Time",
-            "Avg. deficient number of scooters - absolute value",
+            "Avg. deficient number of scooters",
             "Negative deviation ideal state",
         ),
-        ("Time", "Total deficient battery in the world", "Deficient battery"),
+        ("Time", "Avg deficient battery per e-scooter (%)", "Deficient battery"),
     ]
     # figure
     subplots = []
@@ -361,22 +360,31 @@ def visualize_analysis(instances, title=None):
         )
         subplots.append(ax)
 
-    ax1, ax2, ax3 = subplots
-    ax3.yaxis.tick_right()
-    ax3.yaxis.set_label_position("right")
+    ax1, ax2, ax3, ax4 = subplots
+    ax2.yaxis.tick_right()
+    ax2.yaxis.set_label_position("right")
+    ax4.yaxis.tick_right()
+    ax4.yaxis.set_label_position("right")
 
     for i, instance in enumerate(instances):
         (
             lost_demand,
             deviation_ideal_state,
             deficient_battery,
+            total_available_scooters,
         ) = instance.metrics.get_all_metrics()
         x = instance.metrics.timeline
 
-        label = instance.label  # get_policy_label(instance.policy)
+        label = (
+            instance.label.split("/")[1]
+            if hasattr(instance.policy, "value_function")
+            else instance.label
+        )
+
         ax1.plot(x, lost_demand, c=COLORS[i], label=label)
-        ax2.plot(x, deviation_ideal_state, c=COLORS[i], label=label)
-        ax3.plot(x, deficient_battery, c=COLORS[i], label=label)
+        ax2.plot(x, total_available_scooters, c=COLORS[i], label=label)
+        ax3.plot(x, deviation_ideal_state, c=COLORS[i], label=label)
+        ax4.plot(x, deficient_battery, c=COLORS[i], label=label)
 
     for subplot in subplots:
         subplot.legend()
@@ -386,6 +394,8 @@ def visualize_analysis(instances, title=None):
             title,
             fontsize=16,
         )
+
+    fig.tight_layout()
 
     plt.show()
 
