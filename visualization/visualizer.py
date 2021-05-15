@@ -392,7 +392,7 @@ def visualize_analysis(instances, title=None):
     return fig
 
 
-def visualize_td_error(td_errors_and_label: [([float], str)]):
+def visualize_loss(losses: [[float]]):
     # generate plot and subplots
     fig = plt.figure(figsize=(20, 9.7))
 
@@ -404,21 +404,19 @@ def visualize_td_error(td_errors_and_label: [([float], str)]):
     ax = create_plot_with_axis_labels(
         fig,
         spec[0],
-        x_label="Update",
-        y_label="TD-error",
+        x_label="Epoch",
+        y_label="Loss",
         plot_title="",
     )
 
-    for i, (td_errors, label) in enumerate(td_errors_and_label):
-        x = np.arange(len(td_errors))
-        ax.plot(x, td_errors, color=COLORS[i], label=label, zorder=len(td_errors) - i)
+    x = np.arange(len(losses))
+    ax.plot(x, losses, color=COLORS[0])
 
     fig.suptitle(
-        f"TD-error development",
+        f"Loss development",
         fontsize=16,
     )
 
-    ax.legend()
     ax.set_xlim(xmin=0)
 
     plt.show()
