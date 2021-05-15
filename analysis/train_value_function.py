@@ -53,7 +53,7 @@ if __name__ == "__main__":
     NUMBER_OF_CLUSTERS = 30
     standard_parameters = globals.HyperParameters()
     world_to_analyse = classes.World(
-        60,
+        920,
         None,
         clustering.scripts.get_initial_state(
             SAMPLE_SIZE,
@@ -64,7 +64,8 @@ if __name__ == "__main__":
         verbose=False,
         visualize=False,
         MODELS_TO_BE_SAVED=3,
-        TRAINING_SHIFTS_BEFORE_SAVE=1,
+        TRAINING_SHIFTS_BEFORE_SAVE=33,
+        ANN_NETWORK_STRUCTURE=[1000, 1000, 1000, 1000, 500, 100],
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
