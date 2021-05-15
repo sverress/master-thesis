@@ -9,6 +9,7 @@ class ClusteringTests(unittest.TestCase):
         self.state_mid = get_initial_state(500)
         self.state_small = get_initial_state(100)
         self.state_big = get_initial_state(2000, initial_location_depot=False)
+        self.all_states = [self.state_small, self.state_mid, self.state_big]
 
     def test_sample_size(self):
         self.assertEqual(
@@ -17,7 +18,7 @@ class ClusteringTests(unittest.TestCase):
         )
 
     def test_ideal_state_sum_to_number_of_scooters(self):
-        self.assertAlmostEqual(
+        self.assertGreaterEqual(
             len(self.state_mid.get_scooters()),
             sum(cluster.ideal_state for cluster in self.state_mid.clusters),
             -1,
@@ -83,6 +84,16 @@ class ClusteringTests(unittest.TestCase):
                 self.assertFalse(
                     any([prob > 1 for prob in cluster.move_probabilities]),
                     "There are probabilities bigger than one in the move probabilities matrix",
+                )
+
+    def test_ideal_states(self):
+        # test that all ideal states are greater than or equal 0
+        for state in self.all_states:
+            for cluster in state.clusters:
+                self.assertGreaterEqual(
+                    cluster.ideal_state,
+                    0,
+                    f"A cluster is initialized with an ideal state less than or equal to 0",
                 )
 
 

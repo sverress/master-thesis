@@ -164,10 +164,15 @@ def simulate_state_outcomes(state_rebalanced_ideal_state, state):
         # setting the new ideal state of the clusters where not all outcomes are greater than ideal state to:
         # ideal state + %-percentile of the difference between ideal state - outcomes
         for cluster_id in delta_ideal_state_and_outcomes.keys():
-            new_ideal_states[cluster_id] = state_rebalanced_ideal_state.clusters[
-                cluster_id
-            ].ideal_state + round(
+            quantile_outcomes = round(
                 np.quantile(delta_ideal_state_and_outcomes[cluster_id], percentile)
+            )
+
+            new_ideal_states[cluster_id] = (
+                state_rebalanced_ideal_state.clusters[cluster_id].ideal_state
+                + quantile_outcomes
+                if quantile_outcomes > 0
+                else 0
             )
 
         sum_ideal_state = sum(list(new_ideal_states.values()))
