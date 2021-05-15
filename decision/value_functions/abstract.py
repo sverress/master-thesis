@@ -1,3 +1,5 @@
+from scipy import stats
+
 import classes
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
 import helpers
@@ -34,7 +36,7 @@ class ValueFunction(abc.ABC):
         # for vehicle - n bits for scooter inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # + n bits for battery inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # for every small depot - 1 float for degree of filling
-        self.number_of_features_per_cluster = 2
+        self.number_of_features_per_cluster = 3
         self.location_repetition = location_repetition
         self.vehicle_inventory_step_size = vehicle_inventory_step_size
         self.step_size = weight_update_step_size
@@ -154,7 +156,11 @@ class ValueFunction(abc.ABC):
             len(state.locations),
         )
         # Fetch all normalized scooter state representations
-        deviations, battery_deficiency = ValueFunction.get_normalized_lists(
+        (
+            positive_deviations,
+            negative_deviations,
+            battery_deficiency,
+        ) = ValueFunction.get_normalized_lists(
             state,
             cache,
             current_location=vehicle.current_location.id if is_next_action else None,
@@ -203,7 +209,8 @@ class ValueFunction(abc.ABC):
         ]
         return (
             location_indicators
-            + deviations
+            + positive_deviations
+            + negative_deviations
             + battery_deficiency
             + scooter_inventory_indication
             + battery_inventory_indication
@@ -330,20 +337,19 @@ class ValueFunction(abc.ABC):
                 [cluster.get_available_scooters() for cluster in state.clusters],
             )
         )  # Use cache if you have it
-        deviation, battery_deficiency = [], []
+        positive_deviations, negative_deviations, battery_deficiency = [], [], []
         for i, cluster in enumerate(state.clusters):
-            deviation.append(
-                (
-                    len(available_scooters[i])
-                    - cluster.ideal_state
-                    + (
-                        scooters_added_in_current_cluster
-                        if cluster.id == current_location
-                        else 0
-                    )  # Add available scooters from action
-                )
-                / cluster.ideal_state
+            deviation = (
+                len(available_scooters[i])
+                - cluster.ideal_state
+                + (
+                    scooters_added_in_current_cluster
+                    if cluster.id == current_location
+                    else 0
+                )  # Add available scooters from action
             )
+            positive_deviations.append(max(deviation, 0))
+            negative_deviations.append(min(deviation, 0) / (cluster.ideal_state + 1))
             battery_deficiency.append(
                 (
                     len(cluster.scooters)
@@ -354,10 +360,14 @@ class ValueFunction(abc.ABC):
                         else 0
                     )
                 )
-                / cluster.ideal_state
+                / cluster.average_number_of_scooters
             )
 
-        return deviation, battery_deficiency
+        return (
+            stats.zscore(positive_deviations).tolist(),
+            negative_deviations,
+            battery_deficiency,
+        )
 
     def get_inventory_indicator(self, percent) -> [int]:
         length_of_list = round(1 / self.vehicle_inventory_step_size)

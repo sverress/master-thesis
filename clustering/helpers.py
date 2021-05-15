@@ -180,6 +180,9 @@ def simulate_state_outcomes(state_rebalanced_ideal_state, state):
         # breaking
         if sum_ideal_state <= len(state.get_scooters()):
             for cluster_id in new_ideal_states.keys():
+                state.clusters[cluster_id].average_number_of_scooters = state.clusters[
+                    cluster_id
+                ].ideal_state
                 state.clusters[cluster_id].ideal_state = new_ideal_states[cluster_id]
             break
         elif percentile <= 0:
