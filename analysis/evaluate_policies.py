@@ -143,6 +143,8 @@ def run_analysis(
 if __name__ == "__main__":
     import sys
 
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
     if len(sys.argv) > 1:
         print(f"fetching world objects from {sys.argv[2]}")
         run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1])
