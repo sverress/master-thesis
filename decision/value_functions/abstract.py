@@ -2,7 +2,6 @@ import classes
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
 import helpers
 import abc
-from scipy import stats
 
 
 class Decorators:
@@ -331,28 +330,34 @@ class ValueFunction(abc.ABC):
                 [cluster.get_available_scooters() for cluster in state.clusters],
             )
         )  # Use cache if you have it
-
         deviation, battery_deficiency = [], []
         for i, cluster in enumerate(state.clusters):
             deviation.append(
-                len(available_scooters[i])
-                - cluster.ideal_state
-                + (
-                    scooters_added_in_current_cluster
-                    if cluster.id == current_location
-                    else 0
-                )  # Add available scooters from action
+                (
+                    len(available_scooters[i])
+                    - cluster.ideal_state
+                    + (
+                        scooters_added_in_current_cluster
+                        if cluster.id == current_location
+                        else 0
+                    )  # Add available scooters from action
+                )
+                / cluster.ideal_state
             )
             battery_deficiency.append(
-                len(cluster.scooters)
-                - current_states[i]
-                - (battery_percentage_added if cluster.id == current_location else 0)
+                (
+                    len(cluster.scooters)
+                    - current_states[i]
+                    - (
+                        battery_percentage_added
+                        if cluster.id == current_location
+                        else 0
+                    )
+                )
+                / cluster.ideal_state
             )
 
-        return [
-            stats.zscore(list_to_normalize).tolist()
-            for list_to_normalize in [deviation, battery_deficiency]
-        ]
+        return deviation, battery_deficiency
 
     def get_inventory_indicator(self, percent) -> [int]:
         length_of_list = round(1 / self.vehicle_inventory_step_size)
