@@ -22,12 +22,12 @@ def train_value_function(
         f"-------------------- {world.policy.value_function.__str__()} training --------------------"
     )
     number_of_shifts = world.TRAINING_SHIFTS_BEFORE_SAVE * world.MODELS_TO_BE_SAVED
-    world.EPSILON = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
+    world.policy.epsilon = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
     for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)
         policy_world.policy.value_function.update_shifts_trained(shift)
-        if epsilon_decay:
-            policy_world.EPSILON -= (
+        if epsilon_decay and shift > 0:
+            policy_world.policy.epsilon -= (
                 world.INITIAL_EPSILON - world.FINAL_EPSILON
             ) / number_of_shifts
         if shift % world.TRAINING_SHIFTS_BEFORE_SAVE == 0:
