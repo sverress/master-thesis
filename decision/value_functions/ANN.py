@@ -64,18 +64,18 @@ class ANN:
     def gen_loss(self, features, target):
         return (target - self._predict(features)) ** 2
 
-    def fit(self, features, target, td_error, epochs=1):
+    def fit(self, features, target, epochs=1):
         params = self.model.trainable_weights
-        features, td_error, target = [
+        features, target = [
             tf.convert_to_tensor(input_value, dtype="float32")
-            for input_value in [features, td_error, target]
+            for input_value in [features, target]
         ]
         for epoch_id in range(epochs):
             with tf.GradientTape() as tape:
                 loss = self.gen_loss(features, target)
-                gradients = tape.gradient(loss, params)
-                gradients = self.modify_gradients(gradients, td_error, epoch_id)
-                self.model.optimizer.apply_gradients(zip(gradients, params))
+            gradients = tape.gradient(loss, params)
+            gradients = self.modify_gradients(gradients, np.sqrt(loss), epoch_id)
+            self.model.optimizer.apply_gradients(zip(gradients, params))
 
     def modify_gradients(self, gradients, td_error, epoch_id):
         # Taking every 2 array since every other array is biases

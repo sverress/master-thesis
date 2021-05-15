@@ -89,7 +89,7 @@ class BasicSystemSimulationTests(unittest.TestCase):
         _, _, lost_demand = self.world.system_simulate()
 
         # test that system simulate generate lost demand
-        self.assertGreater(lost_demand, 0)
+        self.assertGreater(len(lost_demand), 0)
 
 
 if __name__ == "__main__":

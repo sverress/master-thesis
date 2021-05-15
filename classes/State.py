@@ -425,16 +425,8 @@ class State(SaveMixin):
     def compute_and_set_ideal_state(self, sample_scooters):
         clustering.methods.compute_and_set_ideal_state(self, sample_scooters)
 
-    def compute_and_set_trip_intensity(
-        self, sample_scooters, ideal_state_computation=False
-    ):
-        if ideal_state_computation:
-            for cluster in self.clusters:
-                cluster.trip_intensity_per_iteration = (
-                    cluster.ideal_state * self.TRIP_INTENSITY_RATE
-                )
-        else:
-            clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
+    def compute_and_set_trip_intensity(self, sample_scooters):
+        clustering.methods.compute_and_set_trip_intensity(self, sample_scooters)
 
     def sample(self, sample_size: int):
         # Filter out scooters not in sample
@@ -475,8 +467,8 @@ class State(SaveMixin):
                 [
                     max(
                         (
-                            len(cluster.get_available_scooters())
-                            - cluster.trip_intensity_per_iteration
+                            cluster.trip_intensity_per_iteration
+                            - len(cluster.get_available_scooters())
                         ),
                         0,
                     )

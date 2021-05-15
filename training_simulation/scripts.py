@@ -68,10 +68,7 @@ if __name__ == "__main__":
         960,
         None,
         clustering.scripts.get_initial_state(
-            2500,
-            30,
-            number_of_vans=3,
-            number_of_bikes=0,
+            2500, 30, number_of_vans=3, number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,

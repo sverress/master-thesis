@@ -68,7 +68,6 @@ class ANNValueFunction(ValueFunction):
         self.model.fit(
             [current_state_features],
             [td_error + current_state_value],
-            td_error,
             epochs=10,
         )
 
