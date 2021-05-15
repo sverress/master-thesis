@@ -22,6 +22,7 @@ def train_value_function(
         f"-------------------- {world.policy.value_function.__str__()} training --------------------"
     )
     number_of_shifts = world.TRAINING_SHIFTS_BEFORE_SAVE * world.MODELS_TO_BE_SAVED
+    # TODO value_function.epsilon has to be handled. Not world.epsilon
     world.EPSILON = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
     for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)

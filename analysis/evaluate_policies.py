@@ -17,6 +17,7 @@ def run_analysis_from_path(
     world_attribute="SHIFT_DURATION",
     number_of_extra_vehicles=0,
     export_to_excel=False,
+    multiprocess=True,
 ):
     # Sort the policies by the training duration
     world_objects = sorted(
@@ -50,6 +51,7 @@ def run_analysis_from_path(
         title=path.split("/")[-1],  # Use "last" folder as title in the plot
         world_attribute=world_attribute,
         export_to_excel=export_to_excel,
+        multiprocess=multiprocess,
     )
 
 
@@ -86,6 +88,7 @@ def run_analysis(
     title=None,
     world_attribute="SHIFT_DURATION",
     export_to_excel=False,
+    multiprocess=True,
 ):
     instances = []
     if baseline_policy_world:
@@ -94,9 +97,7 @@ def run_analysis(
         first_world, *rest = worlds
     # Always add a policy that does nothing and a random action
     for baseline_policy_class in [
-        decision.DoNothing,
         decision.RandomActionPolicy,
-        decision.SwapAllPolicy,
     ]:
         # Use the first world as the world for baseline policies
         baseline_policy_world = copy.deepcopy(first_world)
@@ -109,12 +110,23 @@ def run_analysis(
 
     print(worlds)
 
-    with Pool() as p:
-        results = p.starmap(
-            evaluate_world,
-            [(world, world_attribute, verbose, runs_per_policy) for world in worlds],
-        )
-        for world_result, td_error_tuple_result in results:
+    if multiprocess:
+        with Pool() as p:
+            results = p.starmap(
+                evaluate_world,
+                [
+                    (world, world_attribute, verbose, runs_per_policy)
+                    for world in worlds
+                ],
+            )
+            for world_result, td_error_tuple_result in results:
+                td_errors_and_label.append(td_error_tuple_result)
+                instances.append(world_result)
+    else:
+        for world in worlds:
+            world_result, td_error_tuple_result = evaluate_world(
+                world, world_attribute, verbose, runs_per_policy
+            )
             td_errors_and_label.append(td_error_tuple_result)
             instances.append(world_result)
 
@@ -136,4 +148,10 @@ if __name__ == "__main__":
         print(f"fetching world objects from {sys.argv[2]}")
         run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1])
     else:
-        run_analysis_from_path("world_cache/test_models")
+        run_analysis_from_path(
+            "world_cache/trained_models/ANNValueFunction/test",
+            visualize_route=True,
+            runs_per_policy=1,
+            shift_duration=240,
+            multiprocess=False,
+        )
