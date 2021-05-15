@@ -214,7 +214,7 @@ class PolicyTests(unittest.TestCase):
             policy_class=decision.DoNothing,
         )
         for cluster in self.world.state.clusters:
-            self.assertEqual(
+            self.assertLessEqual(
                 cluster.ideal_state,
                 len(cluster.get_available_scooters()),
                 "Do action should set all clusters in ideal state at the beginning of the shift",
