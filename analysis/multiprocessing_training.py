@@ -1,3 +1,4 @@
+import os
 from multiprocessing import Pool
 
 import decision.value_functions
@@ -31,6 +32,7 @@ def multiprocess_train(function, inputs):
 
 
 if __name__ == "__main__":
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
     multiprocess_train(
         learning_rates,
         [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
