@@ -244,7 +244,8 @@ class RebalancingPolicy(Policy):
             else:
                 # Pick up as many scooters as possible, the min(scooter capacity, deviation from ideal state)
                 number_of_scooters_to_pick_up = min(
-                    vehicle.scooter_inventory_capacity,
+                    vehicle.scooter_inventory_capacity - vehicle.scooter_inventory,
+                    vehicle.battery_inventory,
                     len(vehicle.current_location.scooters)
                     - vehicle.current_location.ideal_state,
                 )
@@ -270,7 +271,7 @@ class RebalancingPolicy(Policy):
                 reverse=is_finding_positive_deviation,
             )[0].id
 
-        # If scooters has under 10% battery inventory, go to depot.
+        # If vehicles has under 10% battery inventory, go to depot.
         if (
             vehicle.battery_inventory
             - number_of_scooters_to_swap
