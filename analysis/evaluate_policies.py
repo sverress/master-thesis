@@ -17,6 +17,7 @@ def run_analysis_from_path(
     world_attribute="SHIFT_DURATION",
     number_of_extra_vehicles=0,
     export_to_excel=False,
+    multiprocess=True,
 ):
     # Sort the policies by the training duration
     world_objects = sorted(
@@ -40,6 +41,9 @@ def run_analysis_from_path(
         # Always rollout for 8 hours
         world.shift_duration = shift_duration
 
+        # Do not learn anything more when during evaluation
+        world.disable_training = True
+
         # Add extra vans
         for _ in range(number_of_extra_vehicles):
             world.add_van()
@@ -50,6 +54,7 @@ def run_analysis_from_path(
         title=path.split("/")[-1],  # Use "last" folder as title in the plot
         world_attribute=world_attribute,
         export_to_excel=export_to_excel,
+        multiprocess=multiprocess,
     )
 
 
@@ -85,6 +90,7 @@ def run_analysis(
     title=None,
     world_attribute="SHIFT_DURATION",
     export_to_excel=False,
+    multiprocess=True,
 ):
     instances = []
     if baseline_policy_world:
@@ -106,12 +112,23 @@ def run_analysis(
 
     td_errors_and_label = []
 
-    with Pool() as p:
-        results = p.starmap(
-            evaluate_world,
-            [(world, world_attribute, verbose, runs_per_policy) for world in worlds],
-        )
-        for world_result, td_error_tuple_result in results:
+    if multiprocess:
+        with Pool() as p:
+            results = p.starmap(
+                evaluate_world,
+                [
+                    (world, world_attribute, verbose, runs_per_policy)
+                    for world in worlds
+                ],
+            )
+            for world_result, td_error_tuple_result in results:
+                td_errors_and_label.append(td_error_tuple_result)
+                instances.append(world_result)
+    else:
+        for world in worlds:
+            world_result, td_error_tuple_result = evaluate_world(
+                world, world_attribute, verbose, runs_per_policy
+            )
             td_errors_and_label.append(td_error_tuple_result)
             instances.append(world_result)
 

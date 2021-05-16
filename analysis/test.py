@@ -44,11 +44,14 @@ class AnalysisTests(unittest.TestCase):
             )
 
     def test_train_value_function(self):
+        initial_epsilon = self.world.INITIAL_EPSILON
         self.world.policy = self.world.set_policy(
             policy_class=decision.EpsilonGreedyValueFunctionPolicy,
             value_function_class=decision.value_functions.LinearValueFunction,
         )
         analysis.train_value_function.train_value_function(self.world)
+        self.assertLess(self.world.policy.epsilon, initial_epsilon)
+
         # Remove created files
         training_directory = os.path.join(
             globals.WORLD_CACHE_DIR, self.world.get_train_directory()
@@ -68,3 +71,7 @@ class AnalysisTests(unittest.TestCase):
         file_name = f"computational_study/Test.xlsx"
         # removing the test file that was created during the test
         os.remove(file_name)
+
+
+if __name__ == "__main__":
+    unittest.main()

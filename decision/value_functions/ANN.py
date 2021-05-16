@@ -77,6 +77,9 @@ class ANN:
             gradients = self.modify_gradients(gradients, np.sqrt(loss), epoch_id)
             self.model.optimizer.apply_gradients(zip(gradients, params))
 
+    def batch_fit(self, features_list, target_list, **kwargs):
+        self.model.fit(features_list, target_list, **kwargs)
+
     def modify_gradients(self, gradients, td_error, epoch_id):
         # Taking every 2 array since every other array is biases
         for i in range(0, len(self.eligibilities), 2):

@@ -75,26 +75,41 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             number_of_neighbours=self.number_of_neighbors,
         )
         state = world.state
+        # Cache current states in state
+        current_states, available_scooters = [], []
+        for cluster in state.clusters:
+            current_states.append(cluster.get_current_state())
+            available_scooters.append(cluster.get_available_scooters())
+        cache = [current_states, available_scooters]
+        # Generate the state features of the current state
+        state_features = self.value_function.get_state_features(
+            world.state, vehicle, world.time, cache
+        )
+        expected_lost_trip_reward = state.get_expected_lost_trip_reward(
+            world.LOST_TRIP_REWARD, exclude=vehicle.current_location.id
+        )
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
-            return random.choice(actions)
+            best_action = random.choice(actions)
+            # Record action info
+            reward = (
+                best_action.get_reward(vehicle, world.LOST_TRIP_REWARD)
+                + expected_lost_trip_reward
+            )
+            # Get the distance from current cluster to the new destination cluster
+            action_distance = state.get_distance(
+                vehicle.current_location.id, best_action.next_location
+            )
+            next_state_features = self.value_function.get_next_state_features(
+                state,
+                vehicle,
+                best_action,
+                world.time + best_action.get_action_time(action_distance),
+                cache,
+            )
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
-            # Cache current states in state
-            cache = [cluster.get_current_state() for cluster in state.clusters], [
-                cluster.get_available_scooters() for cluster in state.clusters
-            ]
-            # Generate the state features of the current state
-            state_features = self.value_function.get_state_features(
-                world.state, vehicle, world.time, cache
-            )
-            state_value = self.value_function.estimate_value_from_state_features(
-                state_features
-            )
-            expected_lost_trip_reward = state.get_expected_lost_trip_reward(
-                world.LOST_TRIP_REWARD, exclude=vehicle.current_location.id
-            )
             for action in actions:
                 # Get the distance from current cluster to the new destination cluster
                 action_distance = state.get_distance(
@@ -118,24 +133,28 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 action_info.append(
                     (
                         action,
-                        action.get_reward(vehicle, world.LOST_TRIP_REWARD),
+                        action.get_reward(vehicle, world.LOST_TRIP_REWARD)
+                        + expected_lost_trip_reward,
                         next_state_value,
+                        next_state_features,
                     )
                 )
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
-            best_action, reward, next_state_value = max(
+            best_action, reward, next_state_value, next_state_features = max(
                 action_info, key=lambda pair: pair[1] + pair[2]
             )
-
-            self.value_function.update_weights(
+        self.value_function.replay_buffer.append(
+            (
                 state_features,
-                state_value,
-                reward + expected_lost_trip_reward,
-                next_state_value,
+                best_action,
+                reward,
+                next_state_features,
             )
-
-            return best_action
+        )
+        if not world.disable_training:
+            self.value_function.train(world.REPLAY_BUFFER_SIZE)
+        return best_action
 
     def setup_from_state(self, state):
         self.value_function.setup(state)

@@ -22,12 +22,12 @@ def train_value_function(
         f"-------------------- {world.policy.value_function.__str__()} training --------------------"
     )
     number_of_shifts = world.TRAINING_SHIFTS_BEFORE_SAVE * world.MODELS_TO_BE_SAVED
-    world.EPSILON = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
+    world.policy.epsilon = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
     for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)
         policy_world.policy.value_function.update_shifts_trained(shift)
-        if epsilon_decay:
-            policy_world.EPSILON -= (
+        if epsilon_decay and shift > 0:
+            policy_world.policy.epsilon -= (
                 world.INITIAL_EPSILON - world.FINAL_EPSILON
             ) / number_of_shifts
         if shift % world.TRAINING_SHIFTS_BEFORE_SAVE == 0:
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     NUMBER_OF_CLUSTERS = 30
     standard_parameters = globals.HyperParameters()
     world_to_analyse = classes.World(
-        60,
+        920,
         None,
         clustering.scripts.get_initial_state(
             SAMPLE_SIZE,
@@ -64,7 +64,8 @@ if __name__ == "__main__":
         verbose=False,
         visualize=False,
         MODELS_TO_BE_SAVED=3,
-        TRAINING_SHIFTS_BEFORE_SAVE=1,
+        TRAINING_SHIFTS_BEFORE_SAVE=33,
+        ANN_NETWORK_STRUCTURE=[1000, 1000, 500, 100, 500, 1000, 3000, 1000, 500, 100],
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
