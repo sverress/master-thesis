@@ -11,14 +11,16 @@ class Cluster(Location):
         self,
         cluster_id: int,
         scooters: [Scooter],
-        ideal_state=10,
-        trip_intensity_per_iteration=2,
+        ideal_state=None,
+        trip_intensity_per_iteration=None,
         center_location=None,
         move_probabilities=None,
+        average_number_of_scooters=None,
     ):
         self.scooters = scooters
         self.ideal_state = ideal_state
         self.trip_intensity_per_iteration = trip_intensity_per_iteration
+        self.average_number_of_scooters = average_number_of_scooters
         super().__init__(
             *(center_location if center_location else self.__compute_center()),
             cluster_id,
@@ -33,6 +35,7 @@ class Cluster(Location):
             move_probabilities=self.move_probabilities,
             trip_intensity_per_iteration=self.trip_intensity_per_iteration,
             ideal_state=self.ideal_state,
+            average_number_of_scooters=self.average_number_of_scooters,
         )
 
     class Decorators:
