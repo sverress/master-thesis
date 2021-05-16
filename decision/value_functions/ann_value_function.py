@@ -1,3 +1,5 @@
+import random
+
 from .abstract import *
 import numpy as np
 from decision.value_functions.ANN import ANN
@@ -40,6 +42,23 @@ class ANNValueFunction(ValueFunction):
             self.step_size,
         )
         super(ANNValueFunction, self).setup(state)
+
+    def train(self, batch_size):
+        if len(self.replay_buffer) < batch_size:
+            return
+        random_sample = random.sample(self.replay_buffer, batch_size)
+        # Create training data
+        states, targets = [], []
+        for i, (
+            state_features,
+            best_action,
+            reward,
+            next_state_features,
+        ) in enumerate(random_sample):
+            states.append(state_features)
+            next_state_value = self.model.predict(next_state_features)
+            targets.append(next_state_value + reward)
+        self.model.batch_fit(states, targets, verbose=1, batch_size=64)
 
     def estimate_value(
         self,

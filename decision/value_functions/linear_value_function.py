@@ -1,10 +1,29 @@
 import itertools
+import random
+
 import numpy as np
 
 from .abstract import *
 
 
 class LinearValueFunction(ValueFunction):
+    def train(self, batch_size):
+        if len(self.replay_buffer) < batch_size:
+            return
+        random_sample = random.sample(self.replay_buffer, batch_size)
+        for i, (
+            state_features,
+            best_action,
+            reward,
+            next_state_features,
+        ) in enumerate(random_sample):
+            self.update_weights(
+                state_features,
+                self.estimate_value_from_state_features(state_features),
+                self.estimate_value_from_state_features(next_state_features),
+                reward,
+            )
+
     def __init__(
         self,
         weight_update_step_size,

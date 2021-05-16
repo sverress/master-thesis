@@ -7,7 +7,8 @@ from analysis.train_value_function import train_value_function
 import clustering.scripts
 
 
-def learning_rates(learning_rate, suffix):
+def learning_rates(input_arguments, suffix):
+    learning_rate, ann_structure = input_arguments
     world = classes.World(
         960,
         None,
@@ -17,7 +18,8 @@ def learning_rates(learning_rate, suffix):
         test_parameter_name="learning_rate",
         test_parameter_value=learning_rate,
         WEIGHT_UPDATE_STEP_SIZE=learning_rate,
-        ANN_NETWORK_STRUCTURE=[100, 100, 100, 100],
+        ANN_NETWORK_STRUCTURE=ann_structure,
+        TRAINING_SHIFTS_BEFORE_SAVE=100,
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
@@ -33,7 +35,35 @@ def multiprocess_train(function, inputs):
 
 if __name__ == "__main__":
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+    import itertools
+
     multiprocess_train(
         learning_rates,
-        [(value, f"lr_{value}") for value in [0.001, 0.0001, 0.00001, 0.000001]],
+        [
+            (value, f"kombinasjon_{value}")
+            for value in list(
+                itertools.product(
+                    [0.0001, 0.00001, 0.001],
+                    [
+                        [
+                            1000,
+                            1000,
+                            500,
+                            100,
+                            500,
+                            1000,
+                            1000,
+                            3000,
+                            1000,
+                            1000,
+                            500,
+                            100,
+                        ],
+                        [1000, 1000, 500, 100, 500, 1000, 3000, 1000, 500, 100],
+                        [1000, 1000, 500, 100, 500, 1000, 500, 100],
+                    ],
+                )
+            )
+        ],
     )

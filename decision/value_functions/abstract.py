@@ -46,6 +46,7 @@ class ValueFunction(abc.ABC):
 
         self.setup_complete = False
         self.location_indicator = None
+        self.replay_buffer = []
         self.shifts_trained = 0
         self.td_errors = []
 
@@ -79,6 +80,11 @@ class ValueFunction(abc.ABC):
         vehicle: classes.Vehicle,
         time: int,
     ):
+        pass
+
+    @abc.abstractmethod
+    @Decorators.check_setup
+    def train(self, batch_size):
         pass
 
     @abc.abstractmethod

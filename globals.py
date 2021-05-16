@@ -5,7 +5,7 @@ class HyperParameters:
         EPSILON=0.1,
         DIVIDE_GET_POSSIBLE_ACTIONS=2,
         WEIGHT_UPDATE_STEP_SIZE=0.00001,
-        ANN_LEARNING_RATE=0.001,
+        ANN_LEARNING_RATE=0.0001,
         TRACE_DECAY=0.9,
         VEHICLE_INVENTORY_STEP_SIZE=0.25,
         WEIGHT_INITIALIZATION_VALUE=0.10,
@@ -22,6 +22,7 @@ class HyperParameters:
         LOCATION_REPETITION=3,
         INITIAL_EPSILON=1,
         FINAL_EPSILON=0.0001,
+        REPLAY_BUFFER_SIZE=500,
         DEPOT_REWARD=1,
         PICK_UP_REWARD=0.5,
     ):
@@ -64,6 +65,8 @@ class HyperParameters:
         self.FINAL_EPSILON = FINAL_EPSILON
         self.DEPOT_REWARD = DEPOT_REWARD
         self.PICK_UP_REWARD = PICK_UP_REWARD
+
+        self.REPLAY_BUFFER_SIZE = REPLAY_BUFFER_SIZE
 
 
 """
