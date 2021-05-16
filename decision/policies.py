@@ -93,7 +93,13 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             best_action = random.choice(actions)
             # Record action info
             reward = (
-                best_action.get_reward(vehicle, world.LOST_TRIP_REWARD)
+                best_action.get_reward(
+                    vehicle,
+                    world.LOST_TRIP_REWARD,
+                    world.DEPOT_REWARD,
+                    world.VEHICLE_INVENTORY_STEP_SIZE,
+                    world.PICK_UP_REWARD,
+                )
                 + expected_lost_trip_reward
             )
             # Get the distance from current cluster to the new destination cluster
