@@ -153,5 +153,8 @@ if __name__ == "__main__":
         run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1])
     else:
         run_analysis_from_path(
-            "world_cache/test_models", shift_duration=80, runs_per_policy=1
+            "world_cache/test_models",
+            shift_duration=80,
+            runs_per_policy=1,
+            visualize_route=True,
         )

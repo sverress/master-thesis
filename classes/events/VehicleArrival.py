@@ -70,6 +70,13 @@ class VehicleArrival(Event):
             discount=True,
         )
 
+        action_time = (
+            action.get_action_time(
+                world.state.get_distance(arrival_cluster_id, action.next_location)
+            )
+            + refill_time
+        )
+
         if self.visualize:
             # visualize action performed by vehicle
             state_before_action.visualize_action(
@@ -77,6 +84,8 @@ class VehicleArrival(Event):
                 world.state,
                 vehicle,
                 action,
+                world.time,
+                action_time,
                 False,
                 world.policy.__str__(),
             )
@@ -85,13 +94,7 @@ class VehicleArrival(Event):
         super(VehicleArrival, self).perform(world, **kwargs)
 
         # Compute the arrival time for the Vehicle arrival event created by the action
-        arrival_time += (
-            self.time
-            + action.get_action_time(
-                world.state.get_distance(arrival_cluster_id, action.next_location)
-            )
-            + refill_time
-        )
+        arrival_time += self.time + action_time
 
         # Add a new Vehicle Arrival event for the next cluster arrival to the world stack
         world.add_event(VehicleArrival(arrival_time, vehicle.id, self.visualize))
