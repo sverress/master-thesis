@@ -118,7 +118,13 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 action_info.append(
                     (
                         action,
-                        action.get_reward(vehicle, world.LOST_TRIP_REWARD),
+                        action.get_reward(
+                            vehicle,
+                            world.LOST_TRIP_REWARD,
+                            world.DEPOT_REWARD,
+                            world.VEHICLE_INVENTORY_STEP_SIZE,
+                            world.PICK_UP_REWARD,
+                        ),
                         next_state_value,
                     )
                 )
@@ -171,7 +177,9 @@ class SwapAllPolicy(Policy):
             # Find all scooters that can be swapped here
             swappable_scooters_ids = [
                 scooter.id
-                for scooter in vehicle.current_location.get_swappable_scooters()
+                for scooter in vehicle.current_location.get_swappable_scooters(
+                    battery_limit=40
+                )
             ]
 
             # Calculate how many scooters that can be swapped
