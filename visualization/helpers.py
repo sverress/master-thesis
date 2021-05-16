@@ -119,7 +119,7 @@ def plot_action(action, current_location, world_time, action_time, ax, offset=0)
 
     action_string += f"\nCurrent : {current_location}\nNext : {action.next_location}"
 
-    action_string += f"\nCurrent time: {world_time}\nAction time: {action_time}\n"
+    action_string += f"\nCurrent time: {world_time}\nAction time: {action_time}"
 
     ax.text(
         0,
