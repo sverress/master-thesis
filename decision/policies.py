@@ -171,7 +171,9 @@ class SwapAllPolicy(Policy):
             # Find all scooters that can be swapped here
             swappable_scooters_ids = [
                 scooter.id
-                for scooter in vehicle.current_location.get_swappable_scooters()
+                for scooter in vehicle.current_location.get_swappable_scooters(
+                    battery_limit=40
+                )
             ]
 
             # Calculate how many scooters that can be swapped
