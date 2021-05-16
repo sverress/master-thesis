@@ -378,6 +378,7 @@ class World(SaveMixin, HyperParameters):
         new_world.tabu_list = self.tabu_list.copy()
         new_world.cluster_flow = self.cluster_flow.copy()
         new_world.metrics = copy.deepcopy(self.metrics)
+        new_world.disable_training = self.disable_training
         # Set all hyper parameters
         for parameter in HyperParameters().__dict__.keys():
             setattr(new_world, parameter, getattr(self, parameter))
