@@ -105,7 +105,7 @@ def plot_vehicle_info(current_vehicle, next_vehicle, ax):
     )
 
 
-def plot_action(action, current_location, ax, offset=0):
+def plot_action(action, current_location, world_time, action_time, ax, offset=0):
     """
     Adds action information to a subplot
     """
@@ -118,6 +118,8 @@ def plot_action(action, current_location, ax, offset=0):
     action_string += f"\nDeliveries:\n {len(action.delivery_scooters)}\n"
 
     action_string += f"\nCurrent : {current_location}\nNext : {action.next_location}"
+
+    action_string += f"\nCurrent time: {world_time}\nAction time: {action_time}\n"
 
     ax.text(
         0,
