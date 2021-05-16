@@ -1,6 +1,9 @@
 import copy
 import os
 import pickle
+import random
+import time
+from multiprocessing import Pool
 
 from progress.bar import IncrementalBar
 
@@ -34,11 +37,15 @@ def generate_simulation_buffer(world, number_of_shifts):
     if not os.path.exists("transitions"):
         os.makedirs("transitions")
 
-    with open(f"transitions/{world.get_filename()}_transitions.pickle", "wb") as file:
+    with open(
+        f"transitions/{world.get_filename()}_{number_of_shifts}_{random.getrandbits(10)}_transitions.pickle",
+        "wb",
+    ) as file:
         pickle.dump(world.policy.value_function.replay_buffer, file)
 
 
 if __name__ == "__main__":
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
     world = classes.World(
         960,
         None,
@@ -50,7 +57,8 @@ if __name__ == "__main__":
         policy_class=decision.EpsilonGreedyRebalancingPolicy,
         value_function_class=decision.value_functions.ANNValueFunction,
     )
-    generate_simulation_buffer(
-        world,
-        20_000,
-    )
+    with Pool() as p:
+        p.starmap(
+            generate_simulation_buffer,
+            [(world, iterations) for iterations in [5_000] * 10],
+        )
