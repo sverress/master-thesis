@@ -1,7 +1,8 @@
-import math
 import tempfile
+import time
 
 import numpy as np
+from tensorflow.keras.callbacks import TensorBoard
 from tensorflow import keras
 import tensorflow as tf
 
@@ -31,18 +32,23 @@ class ANN:
         for layer in nodes_in_rest_of_layers:
             self.model.add(keras.layers.Dropout(0.5))
             self.model.add(
-                keras.layers.Dense(
-                    layer, activation="relu", kernel_regularizer=keras.regularizers.L2()
-                )
+                keras.layers.Dense(layer, kernel_regularizer=keras.regularizers.L2())
             )
+            self.model.add(keras.layers.Activation("sigmoid"))
         # The last layer needs to have a single value function output
         self.model.add(keras.layers.Dense(1))
         optimizer = keras.optimizers.Adam(lr=learning_rate)
         self.model.compile(
-            loss="mean_squared_error", optimizer=optimizer, metrics=["accuracy"]
+            loss="mean_squared_error",
+            optimizer=optimizer,
+            metrics=["mean_absolute_percentage_error", "mean_absolute_error"],
         )
 
         self.reset_eligibilities()
+        self.tensorboard = ModifiedTensorBoard(
+            log_dir=f"logs/{network_structure}_{int(time.time())}",
+            profile_batch=100000000,  # https://github.com/tensorflow/tensorboard/issues/2819
+        )
 
     def predict(self, state_features):
         return float(self._predict(tf.convert_to_tensor([state_features])))
@@ -78,7 +84,9 @@ class ANN:
             self.model.optimizer.apply_gradients(zip(gradients, params))
 
     def batch_fit(self, features_list, target_list, **kwargs):
-        self.model.fit(features_list, target_list, **kwargs)
+        self.model.fit(
+            features_list, target_list, callbacks=[self.tensorboard], **kwargs
+        )
 
     def modify_gradients(self, gradients, td_error, epoch_id):
         # Taking every 2 array since every other array is biases
@@ -105,6 +113,7 @@ class ANN:
                 np.save(fd.name, numpy_array)
                 eligibilities.append(fd.read())
         state["eligibilities"] = eligibilities
+        state["tensorboard"] = None
         return state
 
     def __setstate__(self, state):
@@ -121,3 +130,53 @@ class ANN:
                 numpy_array = np.load(fd.name)
                 eligibilities.append(tf.convert_to_tensor(numpy_array, dtype="float32"))
         self.eligibilities = eligibilities
+        self.tensorboard = ModifiedTensorBoard()
+
+
+class ModifiedTensorBoard(TensorBoard):
+    """
+    Since normal tensorboard will create a new log file for every .fit call we create a custom Tensorboard class
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.step = 1
+        self.writer = tf.summary.create_file_writer(self.log_dir)
+        self._log_write_dir = self.log_dir
+        self._train_dir = self.log_dir
+        self._train_step = 0
+
+        # Overriding this method to stop creating default log writer
+
+    def set_model(self, model):
+        pass
+
+    # Overrided, saves logs with our step number
+    # (otherwise every .fit() will start writing from 0th step)
+    def on_epoch_end(self, epoch, logs=None):
+        self._train_step += 1
+        self.update_stats(**logs)
+
+    # Overrided
+    # We train for one batch only, no need to save anything at epoch end
+    def on_batch_end(self, batch, logs=None):
+        pass
+
+    # Overrided, so won't close writer
+    def on_train_end(self, _):
+        pass
+
+    def on_train_batch_end(self, batch, logs=None):
+        pass
+
+    # Custom method for saving own metrics
+    # Creates writer, writes custom metrics and closes writer
+    def update_stats(self, **stats):
+        self._write_logs(stats, self.step)
+
+    def _write_logs(self, logs, index):
+        with self.writer.as_default():
+            for name, value in logs.items():
+                tf.summary.scalar(name, value, step=index)
+                self.step += 1
+                self.writer.flush()

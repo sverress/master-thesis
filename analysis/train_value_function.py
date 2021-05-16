@@ -64,8 +64,9 @@ if __name__ == "__main__":
         verbose=False,
         visualize=False,
         MODELS_TO_BE_SAVED=3,
-        TRAINING_SHIFTS_BEFORE_SAVE=33,
-        ANN_NETWORK_STRUCTURE=[1000, 1000, 500, 100, 500, 1000, 3000, 1000, 500, 100],
+        TRAINING_SHIFTS_BEFORE_SAVE=30,
+        ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
+        REPLAY_BUFFER_SIZE=500,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
