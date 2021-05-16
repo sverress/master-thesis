@@ -64,6 +64,49 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         super().__init__(get_possible_actions_divide, number_of_neighbors)
         self.value_function = value_function
         self.epsilon = epsilon
+        self.train = True
+
+    def get_policy_action_info(
+        self, actions, state, vehicle, world, cache, expected_lost_trip_reward
+    ):
+        # Create list containing all actions and their rewards and values (action, reward, value_function_value)
+        action_info = []
+        for action in actions:
+            # Get the distance from current cluster to the new destination cluster
+            action_distance = state.get_distance(
+                vehicle.current_location.id, action.next_location
+            )
+            # Generate the features for this new state after the action
+            next_state_features = self.value_function.get_next_state_features(
+                state,
+                vehicle,
+                action,
+                world.time + action.get_action_time(action_distance),
+                cache,
+            )
+            # Calculate the expected future reward of being in this new state
+            next_state_value = self.value_function.estimate_value_from_state_features(
+                next_state_features
+            )
+
+            action_info.append(
+                (
+                    action,
+                    action.get_reward(vehicle, world.LOST_TRIP_REWARD)
+                    + expected_lost_trip_reward,
+                    next_state_value,
+                    next_state_features,
+                )
+            )
+        best_action, reward, next_state_value, next_state_features = max(
+            action_info, key=lambda pair: pair[1] + pair[2]
+        )
+        # Find the action with the highest reward and future expected reward - reward + value function next state
+        return (
+            best_action,
+            reward,
+            next_state_features,
+        )
 
     def get_best_action(self, world, vehicle):
         # Find all possible actions
@@ -108,41 +151,8 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 cache,
             )
         else:
-            # Create list containing all actions and their rewards and values (action, reward, value_function_value)
-            action_info = []
-            for action in actions:
-                # Get the distance from current cluster to the new destination cluster
-                action_distance = state.get_distance(
-                    vehicle.current_location.id, action.next_location
-                )
-                # Generate the features for this new state after the action
-                next_state_features = self.value_function.get_next_state_features(
-                    state,
-                    vehicle,
-                    action,
-                    world.time + action.get_action_time(action_distance),
-                    cache,
-                )
-                # Calculate the expected future reward of being in this new state
-                next_state_value = (
-                    self.value_function.estimate_value_from_state_features(
-                        next_state_features
-                    )
-                )
-
-                action_info.append(
-                    (
-                        action,
-                        action.get_reward(vehicle, world.LOST_TRIP_REWARD)
-                        + expected_lost_trip_reward,
-                        next_state_value,
-                        next_state_features,
-                    )
-                )
-
-            # Find the action with the highest reward and future expected reward - reward + value function next state
-            best_action, reward, next_state_value, next_state_features = max(
-                action_info, key=lambda pair: pair[1] + pair[2]
+            best_action, reward, next_state_features = self.get_policy_action_info(
+                actions, state, vehicle, world, cache, expected_lost_trip_reward
             )
         self.value_function.replay_buffer.append(
             (
@@ -152,7 +162,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 next_state_features,
             )
         )
-        if not world.disable_training:
+        if self.train and not world.disable_training:
             self.value_function.train(world.REPLAY_BUFFER_SIZE)
         return best_action
 
@@ -262,11 +272,15 @@ class RebalancingPolicy(Policy):
                 ]
             else:
                 # Pick up as many scooters as possible, the min(scooter capacity, deviation from ideal state)
-                number_of_scooters_to_pick_up = min(
-                    vehicle.scooter_inventory_capacity - len(vehicle.scooter_inventory),
-                    vehicle.battery_inventory,
-                    len(vehicle.current_location.scooters)
-                    - vehicle.current_location.ideal_state,
+                number_of_scooters_to_pick_up = max(
+                    min(
+                        vehicle.scooter_inventory_capacity
+                        - len(vehicle.scooter_inventory),
+                        vehicle.battery_inventory,
+                        len(vehicle.current_location.scooters)
+                        - vehicle.current_location.ideal_state,
+                    ),
+                    0,
                 )
                 scooters_to_pickup = [
                     scooter.id for scooter in vehicle.current_location.scooters
@@ -321,4 +335,50 @@ class RebalancingPolicy(Policy):
             scooters_to_pickup,
             scooters_to_deliver,
             next_location_id,
+        )
+
+
+class EpsilonGreedyRebalancingPolicy(EpsilonGreedyValueFunctionPolicy):
+    def __init__(
+        self,
+        get_possible_actions_divide,
+        number_of_neighbors,
+        epsilon,
+        value_function,
+    ):
+        super().__init__(
+            get_possible_actions_divide,
+            number_of_neighbors,
+            epsilon,
+            value_function,
+        )
+        self.value_function = value_function
+        self.epsilon = epsilon
+        self.policy = RebalancingPolicy()
+        self.train = False
+
+    def get_policy_action_info(
+        self, actions, state, vehicle, world, cache, expected_lost_trip_reward
+    ):
+        best_action = self.policy.get_best_action(world, vehicle)
+        # Record action info
+        reward = (
+            best_action.get_reward(vehicle, world.LOST_TRIP_REWARD)
+            + expected_lost_trip_reward
+        )
+        # Get the distance from current cluster to the new destination cluster
+        action_distance = state.get_distance(
+            vehicle.current_location.id, best_action.next_location
+        )
+        next_state_features = self.value_function.get_next_state_features(
+            state,
+            vehicle,
+            best_action,
+            world.time + best_action.get_action_time(action_distance),
+            cache,
+        )
+        return (
+            best_action,
+            reward,
+            next_state_features,
         )

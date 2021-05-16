@@ -292,7 +292,10 @@ class World(SaveMixin, HyperParameters):
         value_function_class=None,
     ):
         if policy is None:
-            if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
+            if (
+                policy_class is decision.EpsilonGreedyValueFunctionPolicy
+                or policy_class is decision.EpsilonGreedyRebalancingPolicy
+            ):
                 value_function = (
                     value_function_class(
                         self.ANN_LEARNING_RATE,

@@ -76,7 +76,7 @@ class WorldTestCase(unittest.TestCase):
     def test_save_world_linear(self):
         # Change weights in value function
         self.world.policy = self.world.set_policy(
-            policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+            policy_class=decision.EpsilonGreedyPolicy,
             value_function_class=decision.value_functions.LinearValueFunction,
         )
         self.world.policy.value_function.weights[1] = 0.1
@@ -85,7 +85,7 @@ class WorldTestCase(unittest.TestCase):
     def test_save_world_ann(self):
         # Change weights in value function
         self.world.policy = self.world.set_policy(
-            policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+            policy_class=decision.EpsilonGreedyPolicy,
             value_function_class=decision.value_functions.ANNValueFunction,
         )
         self.save_world()
