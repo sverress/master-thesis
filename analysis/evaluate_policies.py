@@ -41,6 +41,9 @@ def run_analysis_from_path(
         # Always rollout for 8 hours
         world.shift_duration = shift_duration
 
+        # Do not learn anything more when during evaluation
+        world.disable_training = True
+
         # Add extra vans
         for _ in range(number_of_extra_vehicles):
             world.add_van()

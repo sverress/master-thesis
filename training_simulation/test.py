@@ -14,6 +14,7 @@ class EpsilonGreedyPolicyTrainingTest(unittest.TestCase):
                 100, 10, initial_location_depot=starts_at_depot
             ),
             visualize=False,
+            REPLAY_BUFFER_SIZE=1,
         )
         world.policy = world.set_policy(
             policy_class=decision.EpsilonGreedyValueFunctionPolicy,
