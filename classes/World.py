@@ -171,11 +171,18 @@ class World(SaveMixin, HyperParameters):
         self.stack: List[classes.Event] = []
         self.tabu_list = []
         # Initialize the stack with a vehicle arrival for every vehicle at time zero
+        number_of_vans, number_of_bikes = 0, 0
         for vehicle in self.state.vehicles:
             self.stack.append(
                 classes.VehicleArrival(0, vehicle.id, visualize=visualize)
             )
             vehicle.service_route.append(vehicle.current_location)
+            if vehicle.scooter_inventory_capacity > 0:
+                number_of_vans += 1
+            else:
+                number_of_bikes += 1
+        self.NUMBER_OF_VANS = number_of_vans
+        self.NUMBER_OF_BIKES = number_of_bikes
         # Add Generate Scooter Trip event to the stack
         self.stack.append(classes.GenerateScooterTrips(ITERATION_LENGTH_MINUTES))
         self.cluster_flow = {
