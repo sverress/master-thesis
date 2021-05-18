@@ -358,6 +358,8 @@ class State(SaveMixin):
         current_state: State,
         vehicle: Vehicle,
         action: Action,
+        world_time,
+        action_time,
         scooter_battery: bool,
         policy: str,
     ):
@@ -367,6 +369,8 @@ class State(SaveMixin):
             current_state,
             vehicle,
             action,
+            world_time,
+            action_time,
             scooter_battery,
             policy,
         )
