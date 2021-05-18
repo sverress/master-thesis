@@ -3,7 +3,7 @@ class HyperParameters:
         self,
         DISCOUNT_RATE=0.90,
         EPSILON=0.1,
-        DIVIDE_GET_POSSIBLE_ACTIONS=3,
+        DIVIDE_GET_POSSIBLE_ACTIONS=2,
         WEIGHT_UPDATE_STEP_SIZE=0.00001,
         ANN_LEARNING_RATE=0.0001,
         TRACE_DECAY=0.9,
@@ -23,6 +23,8 @@ class HyperParameters:
         INITIAL_EPSILON=1,
         FINAL_EPSILON=0.0001,
         REPLAY_BUFFER_SIZE=500,
+        DEPOT_REWARD=1,
+        PICK_UP_REWARD=0.5,
     ):
         self.DISCOUNT_RATE = DISCOUNT_RATE  # From sutton 0.9-0.99
         self.EPSILON = EPSILON  # Probability of taking a random action
@@ -61,6 +63,8 @@ class HyperParameters:
 
         self.INITIAL_EPSILON = INITIAL_EPSILON
         self.FINAL_EPSILON = FINAL_EPSILON
+        self.DEPOT_REWARD = DEPOT_REWARD
+        self.PICK_UP_REWARD = PICK_UP_REWARD
 
         self.REPLAY_BUFFER_SIZE = REPLAY_BUFFER_SIZE
 

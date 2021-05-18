@@ -93,7 +93,13 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             best_action = random.choice(actions)
             # Record action info
             reward = (
-                best_action.get_reward(vehicle, world.LOST_TRIP_REWARD)
+                best_action.get_reward(
+                    vehicle,
+                    world.LOST_TRIP_REWARD,
+                    world.DEPOT_REWARD,
+                    world.VEHICLE_INVENTORY_STEP_SIZE,
+                    world.PICK_UP_REWARD,
+                )
                 + expected_lost_trip_reward
             )
             # Get the distance from current cluster to the new destination cluster
@@ -133,7 +139,13 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 action_info.append(
                     (
                         action,
-                        action.get_reward(vehicle, world.LOST_TRIP_REWARD)
+                        action.get_reward(
+                            vehicle,
+                            world.LOST_TRIP_REWARD,
+                            world.DEPOT_REWARD,
+                            world.VEHICLE_INVENTORY_STEP_SIZE,
+                            world.PICK_UP_REWARD,
+                        )
                         + expected_lost_trip_reward,
                         next_state_value,
                         next_state_features,
@@ -190,7 +202,9 @@ class SwapAllPolicy(Policy):
             # Find all scooters that can be swapped here
             swappable_scooters_ids = [
                 scooter.id
-                for scooter in vehicle.current_location.get_swappable_scooters()
+                for scooter in vehicle.current_location.get_swappable_scooters(
+                    battery_limit=50
+                )
             ]
 
             # Calculate how many scooters that can be swapped
@@ -262,11 +276,15 @@ class RebalancingPolicy(Policy):
                 ]
             else:
                 # Pick up as many scooters as possible, the min(scooter capacity, deviation from ideal state)
-                number_of_scooters_to_pick_up = min(
-                    vehicle.scooter_inventory_capacity - len(vehicle.scooter_inventory),
-                    vehicle.battery_inventory,
-                    len(vehicle.current_location.scooters)
-                    - vehicle.current_location.ideal_state,
+                number_of_scooters_to_pick_up = max(
+                    min(
+                        vehicle.scooter_inventory_capacity
+                        - len(vehicle.scooter_inventory),
+                        vehicle.battery_inventory,
+                        len(vehicle.current_location.scooters)
+                        - vehicle.current_location.ideal_state,
+                    ),
+                    0,
                 )
                 scooters_to_pickup = [
                     scooter.id for scooter in vehicle.current_location.scooters

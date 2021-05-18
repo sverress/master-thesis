@@ -186,6 +186,8 @@ def visualize_action(
     current_state: State,
     current_vehicle: Vehicle,
     action: Action,
+    world_time: float,
+    action_time: float,
     scooter_label=True,
     policy="",
 ):
@@ -200,6 +202,8 @@ def visualize_action(
     plot_action(
         action,
         vehicle_before_action.current_location.id,
+        world_time,
+        action_time,
         ax1,
         offset=(
             len(vehicle_before_action.scooter_inventory)

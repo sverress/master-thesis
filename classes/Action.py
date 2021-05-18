@@ -43,7 +43,14 @@ class Action:
             f" {len(self.delivery_scooters)} deliveries), next: {self.next_location} >"
         )
 
-    def get_reward(self, vehicle, lost_trip_reward):
+    def get_reward(
+        self,
+        vehicle,
+        lost_trip_reward,
+        deopt_reward,
+        vehicle_inventory_step,
+        pick_up_reward,
+    ):
         battery_reward = 0
         # Record number of scooters that become available during the action
         available_scooters = 0
@@ -68,8 +75,14 @@ class Action:
             # Get 1 in reward for every delivery and battery reward according to probability of usage
             return (
                 len(self.delivery_scooters)
+                + len(self.pick_ups) * pick_up_reward
                 + battery_reward
                 + estimated_lost_trip_reward
             )
         else:
-            return 0
+            return (
+                deopt_reward
+                if vehicle.battery_inventory / vehicle.battery_inventory_capacity
+                <= vehicle_inventory_step
+                else 0
+            )
