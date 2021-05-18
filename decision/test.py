@@ -34,7 +34,7 @@ class BasicDecisionTests(unittest.TestCase):
         current_cluster = self.vehicle.current_location
 
         for scooter in self.vehicle.current_location.scooters:
-            scooter.battery = 80.0
+            scooter.battery = 30.0
         start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
@@ -61,7 +61,7 @@ class BasicDecisionTests(unittest.TestCase):
         # Test battery percentage
         self.assertEqual(
             current_cluster.get_current_state() * 100,
-            start_battery_percentage + len(actions[-1].battery_swaps) * 20.0,
+            start_battery_percentage + len(actions[-1].battery_swaps) * 70.0,
         )
 
     def test_pick_ups(self):
@@ -120,7 +120,7 @@ class BasicDecisionTests(unittest.TestCase):
         current_cluster = self.vehicle.current_location
 
         for scooter in self.vehicle.current_location.scooters:
-            scooter.battery = 80.0
+            scooter.battery = 30.0
         start_battery_percentage = current_cluster.get_current_state() * 100
 
         # Get all possible actions
@@ -154,7 +154,7 @@ class BasicDecisionTests(unittest.TestCase):
         self.assertAlmostEqual(
             current_cluster.get_current_state() * 100,
             start_battery_percentage
-            + len(actions[-1].battery_swaps) * 20.0
+            + len(actions[-1].battery_swaps) * 70.0
             + delivery_scooter_battery,
         )
 
@@ -262,7 +262,13 @@ class ValueFunctionTests(unittest.TestCase):
         state = copy.deepcopy(self.world.state)
         state_features = value_function.get_state_features(state, vehicle, 0)
         copied_vehicle = copy.deepcopy(vehicle)
-        reward = action.get_reward(vehicle, self.world.LOST_TRIP_REWARD)
+        reward = action.get_reward(
+            vehicle,
+            self.world.LOST_TRIP_REWARD,
+            self.world.DEPOT_REWARD,
+            self.world.VEHICLE_INVENTORY_STEP_SIZE,
+            self.world.PICK_UP_REWARD,
+        )
         self.world.state.do_action(action, vehicle, self.world.time)
         for i in range(100):
             value_function.reset_eligibilities()
@@ -343,6 +349,9 @@ class ValueFunctionTests(unittest.TestCase):
             reward = action.get_reward(
                 vehicle,
                 0,
+                self.world.DEPOT_REWARD,
+                self.world.VEHICLE_INVENTORY_STEP_SIZE,
+                self.world.PICK_UP_REWARD,
             )
             unsimulated_states.append(
                 (

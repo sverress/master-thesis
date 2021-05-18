@@ -56,7 +56,13 @@ class VehicleArrival(Event):
         # Record current location of vehicle to compute action time
         arrival_cluster_id = vehicle.current_location.id
 
-        reward = action.get_reward(vehicle, world.LOST_TRIP_REWARD)
+        reward = action.get_reward(
+            vehicle,
+            world.LOST_TRIP_REWARD,
+            world.DEPOT_REWARD,
+            world.VEHICLE_INVENTORY_STEP_SIZE,
+            world.PICK_UP_REWARD,
+        )
         # perform the best action on the state and send vehicle to new location
         refill_time = world.state.do_action(action, vehicle, world.time)
 

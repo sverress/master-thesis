@@ -190,13 +190,24 @@ class State(SaveMixin):
                     for swap in get_range(swaps):
                         for drop_off in get_range(drop_offs):
                             if (
-                                (pick_up + swap) <= vehicle.battery_inventory
+                                pick_up <= vehicle.battery_inventory
                                 and (pick_up + swap)
                                 <= len(vehicle.current_location.scooters)
                                 and (pick_up + swap + drop_off > 0)
                             ):
                                 combinations.append(
-                                    [swap, pick_up, drop_off, location.id]
+                                    [
+                                        max(
+                                            min(
+                                                vehicle.battery_inventory - pick_up,
+                                                swap,
+                                            ),
+                                            0,
+                                        ),
+                                        pick_up,
+                                        drop_off,
+                                        location.id,
+                                    ]
                                 )
 
             # Assume that no battery swap or pick-up of scooters with 100% battery and

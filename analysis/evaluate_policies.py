@@ -156,5 +156,4 @@ if __name__ == "__main__":
             "world_cache/test_models",
             shift_duration=80,
             runs_per_policy=1,
-            visualize_route=True,
         )
