@@ -1,7 +1,6 @@
 import random
 
 from .abstract import *
-import numpy as np
 from decision.value_functions.ANN import ANN
 
 
@@ -26,6 +25,7 @@ class ANNValueFunction(ValueFunction):
         )
         self.network_structure = network_structure
         self.model = None
+        self.train_count = 0
 
     def setup(self, state: classes.State):
         if self.setup_complete:
@@ -47,7 +47,7 @@ class ANNValueFunction(ValueFunction):
         if len(self.replay_buffer) < batch_size:
             return
         random_sample = random.sample(self.replay_buffer, int(batch_size / 2))
-        # Create training data
+        # Create training data from random sample
         states, targets = [], []
         for i, (
             state_features,
@@ -58,7 +58,10 @@ class ANNValueFunction(ValueFunction):
             states.append(state_features)
             next_state_value = self.model.predict(next_state_features)
             targets.append(next_state_value + reward)
-        self.model.batch_fit(states, targets, verbose=1, batch_size=64)
+        self.model.batch_fit(states, targets, verbose=1, batch_size=128)
+        if self.train_count % 50:
+            self.model.update_predict_model()
+        self.train_count += 1
 
     def estimate_value(
         self,
@@ -89,9 +92,6 @@ class ANNValueFunction(ValueFunction):
             [td_error + current_state_value],
             epochs=10,
         )
-
-    def reset_eligibilities(self):
-        self.model.reset_eligibilities()
 
     def get_next_state_features(
         self,

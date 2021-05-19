@@ -107,11 +107,6 @@ class ValueFunction(abc.ABC):
 
     @abc.abstractmethod
     @Decorators.check_setup
-    def reset_eligibilities(self):
-        pass
-
-    @abc.abstractmethod
-    @Decorators.check_setup
     def get_state_features(
         self,
         state: classes.State,

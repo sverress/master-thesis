@@ -42,8 +42,6 @@ def train_value_function(
             else:
                 policy_world.run()
 
-            if hasattr(policy_world.policy, "value_function"):
-                policy_world.policy.value_function.reset_eligibilities()
             world.policy = policy_world.policy
             progress_bar.next()
 
