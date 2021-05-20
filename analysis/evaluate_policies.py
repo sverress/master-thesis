@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         print(f"fetching world objects from {sys.argv[2]}")
-        run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1])
+        run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1], runs_per_policy=3)
     else:
         run_analysis_from_path(
             "world_cache/test_models",

@@ -271,7 +271,6 @@ class ValueFunctionTests(unittest.TestCase):
         )
         self.world.state.do_action(action, vehicle, self.world.time)
         for i in range(100):
-            value_function.reset_eligibilities()
             state_value = value_function.estimate_value(state, copied_vehicle, 0)
             next_state_value = value_function.estimate_value(
                 self.world.state, vehicle, self.world.time
@@ -374,15 +373,12 @@ class ValueFunctionTests(unittest.TestCase):
 
         # training two times on the positive and negative rewarded states
         for _ in range(2):
-            value_function.reset_eligibilities()
             for i in range(len(system_simulated_states) - 1):
                 state_features, reward = system_simulated_states[i]
                 next_state_features = system_simulated_states[i + 1][0]
                 update_value_function(
                     value_function, state_features, next_state_features, reward
                 )
-
-            value_function.reset_eligibilities()
 
             for i in range(len(unsimulated_states) - 1):
                 state_features, reward = unsimulated_states[i]
@@ -404,6 +400,7 @@ class ValueFunctionTests(unittest.TestCase):
             decision.value_functions.LinearValueFunction(*self.value_function_args)
         )
 
+    @unittest.skip  # skipping this as we now do experience replay
     def test_ann_value_function(self):
         self.ann_learning(
             decision.value_functions.ANNValueFunction(

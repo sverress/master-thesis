@@ -147,3 +147,7 @@ state_cache/
 
 #Personal directory to computational folder on ondrive
 personal.py
+
+
+logs/
+value_functions/
