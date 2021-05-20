@@ -11,14 +11,16 @@ def learning_rates(input_arguments, suffix):
     world = classes.World(
         960,
         None,
-        clustering.scripts.get_initial_state(2500, 30),
+        clustering.scripts.get_initial_state(2500, 50),
         verbose=False,
         visualize=False,
         test_parameter_name="learning_rate",
         test_parameter_value=input_arguments,
-        WEIGHT_UPDATE_STEP_SIZE=input_arguments,
-        ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
-        TRAINING_SHIFTS_BEFORE_SAVE=100,
+        ANN_LEARNING_RATE=input_arguments,
+        ANN_NETWORK_STRUCTURE=[3000, 3000, 3000, 2000, 1000, 500, 250, 175, 100, 50],
+        TRAINING_SHIFTS_BEFORE_SAVE=1_000,
+        MODELS_TO_BE_SAVED=10,
+        REPLAY_BUFFER_SIZE=500,
     )
     world.policy = world.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
