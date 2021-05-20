@@ -157,7 +157,7 @@ class ValueFunction(abc.ABC):
         # Create a flag for if it is a get next state features call
         is_next_action = action is not None
         # Change location by swapping location indicator
-        location_indicators = self.get_location_indicator(
+        location_indicators = self._get_location_indicator(
             action.next_location if is_next_action else vehicle.current_location.id,
             len(state.locations),
         )
@@ -260,18 +260,19 @@ class ValueFunction(abc.ABC):
             for depot in state.depots[1:]
         ]
 
+    @staticmethod
     def get_location_indicator(
-        self, location_id, number_of_locations, location_repetition=None
+        location_repetition, location_id, number_of_locations
     ) -> [int]:
-        location_repetition = (
-            location_repetition
-            if location_repetition is not None
-            else self.location_repetition
-        )
         return (
             [0.0] * location_repetition * location_id
             + [1.0] * location_repetition
             + [0.0] * location_repetition * (number_of_locations - 1 - location_id)
+        )
+
+    def _get_location_indicator(self, location_id, number_of_locations) -> [int]:
+        return ValueFunction.get_location_indicator(
+            self.location_repetition, location_id, number_of_locations
         )
 
     @staticmethod
