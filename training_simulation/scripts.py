@@ -11,6 +11,12 @@ def training_simulation(world):
     next_is_vehicle_action = True
     # list of vehicle times for next arrival
     vehicle_times = [0] * len(world.state.vehicles)
+    # Get first sate action pair
+    vehicle_actions = []
+    for vehicle in world.state.vehicles:
+        action = world.policy.get_best_action(world, vehicle)
+        vehicle_actions.append(action)
+        world.tabu_list.append(action.next_location)
     while world.time < world.shift_duration:
         if next_is_vehicle_action:
             # choosing the vehicle with the earliest arrival time (index-method is choosing the first if multiple equal)
@@ -18,15 +24,14 @@ def training_simulation(world):
             # fetching the vehicle
             current_vehicle = world.state.vehicles[vehicle_index]
 
+            # fetch vehicle action
+            action = vehicle_actions[vehicle_index]
             # Remove current vehicle state from tabu list
             world.tabu_list = [
                 cluster_id
                 for cluster_id in world.tabu_list
                 if cluster_id != current_vehicle.current_location.id
             ]
-
-            # getting the best action
-            action = world.policy.get_best_action(world, current_vehicle)
 
             action_time = action.get_action_time(
                 world.state.get_distance(
@@ -45,6 +50,11 @@ def training_simulation(world):
             vehicle_times[vehicle_index] += action_time
             # setting the world time to the next vehicle arrival
             world.time = world.time + min(vehicle_times)
+
+            # getting the best action and setting this to current vehicle action
+            vehicle_actions[vehicle_index] = world.policy.get_best_action(
+                world, current_vehicle
+            )
 
         else:
             # performing a scooter trips simulation
@@ -68,7 +78,10 @@ if __name__ == "__main__":
         960,
         None,
         clustering.scripts.get_initial_state(
-            2500, 30, number_of_vans=3, number_of_bikes=0,
+            2500,
+            30,
+            number_of_vans=3,
+            number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,

@@ -34,9 +34,13 @@ class ANNValueFunction(ValueFunction):
             number_of_locations_indicators,
             number_of_state_features,
         ) = self.get_number_of_location_indicators_and_state_features(state)
+        # One hot encoding for next location. One parameter for each sub-action (battery-swap e.g.)
+        action_input_size = number_of_locations_indicators + 3
         self.model = ANN(
             self.network_structure,
-            number_of_locations_indicators + number_of_state_features,
+            number_of_locations_indicators
+            + number_of_state_features
+            + action_input_size,
             self.trace_decay,
             self.discount_factor,
             self.step_size,

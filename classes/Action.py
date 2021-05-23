@@ -88,16 +88,24 @@ class Action:
                 else 0
             )
 
-    def get_numeric_representation(
-        self, number_of_locations, vehicle_battery_capacity, vehicle_scooter_capacity
+    def get_sap(
+        self,
+        state_features,
+        number_of_locations,
+        vehicle_battery_capacity,
+        vehicle_scooter_capacity,
     ):
         return (
-            decision.value_functions.abstract.ValueFunction.get_location_indicator(
-                1, self.next_location, number_of_locations
+            state_features
+            + (
+                decision.value_functions.abstract.ValueFunction.get_location_indicator(
+                    1, self.next_location, number_of_locations
+                )
             )
-        ) + [
-            len(self.battery_swaps) / vehicle_battery_capacity,
-            len(self.pick_ups)
-            / (min(vehicle_scooter_capacity, vehicle_battery_capacity)),
-            len(self.delivery_scooters) / vehicle_scooter_capacity,
-        ]
+            + [
+                len(self.battery_swaps) / vehicle_battery_capacity,
+                len(self.pick_ups)
+                / (min(vehicle_scooter_capacity, vehicle_battery_capacity)),
+                len(self.delivery_scooters) / vehicle_scooter_capacity,
+            ]
+        )

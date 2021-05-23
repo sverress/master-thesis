@@ -91,28 +91,6 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
             best_action = random.choice(actions)
-            # Record action info
-            reward = (
-                best_action.get_reward(
-                    vehicle,
-                    world.LOST_TRIP_REWARD,
-                    world.DEPOT_REWARD,
-                    world.VEHICLE_INVENTORY_STEP_SIZE,
-                    world.PICK_UP_REWARD,
-                )
-                + expected_lost_trip_reward
-            )
-            # Get the distance from current cluster to the new destination cluster
-            action_distance = state.get_distance(
-                vehicle.current_location.id, best_action.next_location
-            )
-            next_state_features = self.value_function.get_next_state_features(
-                state,
-                vehicle,
-                best_action,
-                world.time + best_action.get_action_time(action_distance),
-                cache,
-            )
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
@@ -156,16 +134,16 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             best_action, reward, next_state_value, next_state_features = max(
                 action_info, key=lambda pair: pair[1] + pair[2]
             )
-        self.value_function.replay_buffer.append(
-            (
-                state_features,
-                best_action,
-                reward,
-                next_state_features,
+            self.value_function.replay_buffer.append(
+                (
+                    state_features,
+                    best_action,
+                    reward,
+                    next_state_features,
+                )
             )
-        )
-        if not world.disable_training:
-            self.value_function.train(world.REPLAY_BUFFER_SIZE)
+            if not world.disable_training:
+                self.value_function.train(world.REPLAY_BUFFER_SIZE)
         return best_action
 
     def setup_from_state(self, state):
