@@ -1,11 +1,6 @@
 import copy
-
-import classes
-import clustering.scripts
-import decision.value_functions
 import training_simulation.scripts
 from progress.bar import IncrementalBar
-
 import globals
 
 
@@ -49,11 +44,15 @@ def train_value_function(
 
 
 if __name__ == "__main__":
+    import classes
+    import clustering.scripts
+    import decision.value_functions
+
     SAMPLE_SIZE = 2500
-    NUMBER_OF_CLUSTERS = 30
+    NUMBER_OF_CLUSTERS = 50
     standard_parameters = globals.HyperParameters()
     world_to_analyse = classes.World(
-        920,
+        480,
         None,
         clustering.scripts.get_initial_state(
             SAMPLE_SIZE,
@@ -63,8 +62,8 @@ if __name__ == "__main__":
         ),
         verbose=False,
         visualize=False,
-        MODELS_TO_BE_SAVED=3,
-        TRAINING_SHIFTS_BEFORE_SAVE=30,
+        MODELS_TO_BE_SAVED=2,
+        TRAINING_SHIFTS_BEFORE_SAVE=1,
         ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
         REPLAY_BUFFER_SIZE=500,
     )

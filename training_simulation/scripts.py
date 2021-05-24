@@ -8,15 +8,15 @@ def training_simulation(world):
     :return: world object after shift
     """
     simulation_counter = 1
+    lost_demand = 0
+    # list to hold previous sap-features
+    vehicle_sap_features = [None] * len(world.state.vehicles)
     next_is_vehicle_action = True
     # list of vehicle times for next arrival
     vehicle_times = [0] * len(world.state.vehicles)
-    # Get first sate action pair
-    vehicle_actions = []
-    for vehicle in world.state.vehicles:
-        action = world.policy.get_best_action(world, vehicle)
-        vehicle_actions.append(action)
-        world.tabu_list.append(action.next_location)
+    # list to hold previous action rewards
+    vehicle_rewards = [0] * len(world.state.vehicles)
+
     while world.time < world.shift_duration:
         if next_is_vehicle_action:
             # choosing the vehicle with the earliest arrival time (index-method is choosing the first if multiple equal)
@@ -24,8 +24,9 @@ def training_simulation(world):
             # fetching the vehicle
             current_vehicle = world.state.vehicles[vehicle_index]
 
-            # fetch vehicle action
-            action = vehicle_actions[vehicle_index]
+            # getting the best action and setting this to current vehicle action
+            action, sap_features = world.policy.get_best_action(world, current_vehicle)
+
             # Remove current vehicle state from tabu list
             world.tabu_list = [
                 cluster_id
@@ -39,7 +40,14 @@ def training_simulation(world):
                 )
             )
 
-            # Performing the best action
+            reward = action.get_reward(
+                current_vehicle,
+                world.DEPOT_REWARD,
+                world.VEHICLE_INVENTORY_STEP_SIZE,
+                world.PICK_UP_REWARD,
+            )
+
+            # Performing the best action and adding refill_time to action_time
             action_time += world.state.do_action(action, current_vehicle, world.time)
 
             # Add next vehicle location to tabu list if its not a depot
@@ -51,18 +59,40 @@ def training_simulation(world):
             # setting the world time to the next vehicle arrival
             world.time = world.time + min(vehicle_times)
 
-            # getting the best action and setting this to current vehicle action
-            vehicle_actions[vehicle_index] = world.policy.get_best_action(
-                world, current_vehicle
-            )
+            if sap_features[vehicle_index]:
+                world.policy.value_function.replay_buffer.append(
+                    (
+                        vehicle_sap_features[vehicle_index],
+                        vehicle_rewards[vehicle_index]
+                        - lost_demand * world.LOST_TRIP_REWARD,
+                        sap_features,
+                    )
+                )
 
+            vehicle_sap_features[vehicle_index] = sap_features
+            vehicle_rewards[vehicle_index] = reward
         else:
             # performing a scooter trips simulation
-            world.system_simulate()
+            _, _, lost_demands = world.system_simulate()
+            lost_demand = (
+                sum(map(lambda lost_trips: lost_trips[0], lost_demands))
+                if len(lost_demands) > 0
+                else 0
+            )
             simulation_counter += 1
         # deciding if the next thing to do is a vehicle arrival or a system simulation
         next_is_vehicle_action = (
             world.time < simulation_counter * ITERATION_LENGTH_MINUTES
+        )
+
+    # adding the last sap to replay buffer and setting next-sap too None -> next-sap-value = 0 in train method
+    for vehicle_index in range(len(world.state.vehicles)):
+        world.policy.value_function.replay_buffer.append(
+            (
+                vehicle_sap_features[vehicle_index],
+                vehicle_rewards[vehicle_index] - lost_demand * world.LOST_TRIP_REWARD,
+                None,
+            )
         )
 
     return world

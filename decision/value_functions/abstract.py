@@ -1,6 +1,5 @@
 from scipy import stats
 
-import classes
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
 import helpers
 import abc
@@ -65,7 +64,7 @@ class ValueFunction(abc.ABC):
     def __repr__(self):
         return f"{self.__class__.__name__}"
 
-    def setup(self, state: classes.State):
+    def setup(self, state):
         """
         Method for setting up the value function when the state is known
         :param state: state to infer weights with
@@ -76,8 +75,8 @@ class ValueFunction(abc.ABC):
     @Decorators.check_setup
     def estimate_value(
         self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
+        state,
+        vehicle,
         time: int,
     ):
         pass
@@ -112,8 +111,8 @@ class ValueFunction(abc.ABC):
     @Decorators.check_setup
     def get_state_features(
         self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
+        state,
+        vehicle,
         time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
@@ -123,17 +122,15 @@ class ValueFunction(abc.ABC):
     @Decorators.check_setup
     def get_next_state_features(
         self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
-        action: classes.Action,
+        state,
+        vehicle,
+        action,
         time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
         pass
 
-    def get_number_of_location_indicators_and_state_features(
-        self, state: classes.State
-    ):
+    def get_number_of_location_indicators_and_state_features(self, state):
         return (
             len(state.locations) * self.location_repetition,
             (
@@ -227,8 +224,8 @@ class ValueFunction(abc.ABC):
     @Decorators.check_setup
     def convert_state_to_features(
         self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
+        state,
+        vehicle,
         time: int,
         cache=None,
     ):

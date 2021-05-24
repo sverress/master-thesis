@@ -129,9 +129,9 @@ class LinearValueFunction(ValueFunction):
 
     def get_next_state_features(
         self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
-        action: classes.Action,
+        state,
+        vehicle,
+        action,
         time: int,
         cache=None,  # current_states, available_scooters = cache
     ):

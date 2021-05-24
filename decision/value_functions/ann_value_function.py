@@ -27,7 +27,7 @@ class ANNValueFunction(ValueFunction):
         self.network_structure = network_structure
         self.model = None
 
-    def setup(self, state: classes.State):
+    def setup(self, state):
         if self.setup_complete:
             return
         (
@@ -35,7 +35,7 @@ class ANNValueFunction(ValueFunction):
             number_of_state_features,
         ) = self.get_number_of_location_indicators_and_state_features(state)
         # One hot encoding for next location. One parameter for each sub-action (battery-swap e.g.)
-        action_input_size = number_of_locations_indicators + 3
+        action_input_size = len(state.locations) + 3
         self.model = ANN(
             self.network_structure,
             number_of_locations_indicators
@@ -54,20 +54,21 @@ class ANNValueFunction(ValueFunction):
         # Create training data
         states, targets = [], []
         for i, (
-            state_features,
-            best_action,
+            sap_features,
             reward,
-            next_state_features,
+            next_sap_features,
         ) in enumerate(random_sample):
-            states.append(state_features)
-            next_state_value = self.model.predict(next_state_features)
+            states.append(sap_features)
+            next_state_value = (
+                self.model.predict(next_sap_features) if next_sap_features else 0
+            )
             targets.append(next_state_value + reward)
         self.model.batch_fit(states, targets, verbose=1, batch_size=64)
 
     def estimate_value(
         self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
+        state,
+        vehicle,
         time: int,
     ):
 
@@ -99,17 +100,15 @@ class ANNValueFunction(ValueFunction):
 
     def get_next_state_features(
         self,
-        state: classes.State,
-        vehicle: classes.Vehicle,
-        action: classes.Action,
+        state,
+        vehicle,
+        action,
         time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
         return self.convert_next_state_features(state, vehicle, action, time, cache)
 
-    def get_state_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int, cache=None
-    ):
+    def get_state_features(self, state, vehicle, time: int, cache=None):
         return self.convert_state_to_features(state, vehicle, time, cache=cache)
 
     def __str__(self):
