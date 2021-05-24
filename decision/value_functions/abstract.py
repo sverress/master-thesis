@@ -1,3 +1,4 @@
+import collections
 from scipy import stats
 
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
@@ -45,7 +46,7 @@ class ValueFunction(abc.ABC):
 
         self.setup_complete = False
         self.location_indicator = None
-        self.replay_buffer = []
+        self.replay_buffer = collections.deque(maxlen=300)
         self.shifts_trained = 0
         self.td_errors = []
 
