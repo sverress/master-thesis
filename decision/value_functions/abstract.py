@@ -241,6 +241,9 @@ class ValueFunction(abc.ABC):
     def update_shifts_trained(self, shifts_trained: int):
         self.shifts_trained = shifts_trained
 
+    def increment_shifts_trained(self):
+        self.shifts_trained += 1
+
     @Decorators.check_setup
     def convert_next_state_features(self, state, vehicle, action, time, cache=None):
         return self.create_features(

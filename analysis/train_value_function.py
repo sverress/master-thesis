@@ -20,7 +20,7 @@ def train_value_function(
     world.policy.epsilon = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
     for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)
-        policy_world.policy.value_function.update_shifts_trained(shift)
+        policy_world.policy.value_function.increment_shifts_trained()
         if epsilon_decay and shift > 0:
             policy_world.policy.epsilon -= (
                 world.INITIAL_EPSILON - world.FINAL_EPSILON
@@ -71,8 +71,8 @@ if __name__ == "__main__":
             ),
             verbose=False,
             visualize=False,
-            MODELS_TO_BE_SAVED=1,
-            TRAINING_SHIFTS_BEFORE_SAVE=1,
+            MODELS_TO_BE_SAVED=3,
+            TRAINING_SHIFTS_BEFORE_SAVE=200,
             ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
             REPLAY_BUFFER_SIZE=100,
         )
