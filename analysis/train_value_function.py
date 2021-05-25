@@ -47,29 +47,38 @@ if __name__ == "__main__":
     import classes
     import clustering.scripts
     import decision.value_functions
+    import sys
+    import os
 
-    SAMPLE_SIZE = 2500
-    NUMBER_OF_CLUSTERS = 50
-    standard_parameters = globals.HyperParameters()
-    world_to_analyse = classes.World(
-        960,
-        None,
-        clustering.scripts.get_initial_state(
-            SAMPLE_SIZE,
-            NUMBER_OF_CLUSTERS,
-            number_of_vans=4,
-            number_of_bikes=0,
-        ),
-        verbose=False,
-        visualize=False,
-        MODELS_TO_BE_SAVED=3,
-        TRAINING_SHIFTS_BEFORE_SAVE=200,
-        ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
-        REPLAY_BUFFER_SIZE=100,
-    )
-    world_to_analyse.policy = world_to_analyse.set_policy(
-        policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-        value_function_class=decision.value_functions.ANNValueFunction,
-    )
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+        world_obj_path = path.split("/")[-1]
+        dir_path = path.replace(world_obj_path, "")
+        world_to_train = classes.World.load(os.path.join(dir_path, world_obj_path))
 
-    train_value_function(world_to_analyse)
+    else:
+        SAMPLE_SIZE = 2500
+        NUMBER_OF_CLUSTERS = 50
+        standard_parameters = globals.HyperParameters()
+        world_to_train = classes.World(
+            960,
+            None,
+            clustering.scripts.get_initial_state(
+                SAMPLE_SIZE,
+                NUMBER_OF_CLUSTERS,
+                number_of_vans=4,
+                number_of_bikes=0,
+            ),
+            verbose=False,
+            visualize=False,
+            MODELS_TO_BE_SAVED=1,
+            TRAINING_SHIFTS_BEFORE_SAVE=1,
+            ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
+            REPLAY_BUFFER_SIZE=100,
+        )
+        world_to_train.policy = world_to_train.set_policy(
+            policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+            value_function_class=decision.value_functions.ANNValueFunction,
+        )
+
+    train_value_function(world_to_train)
