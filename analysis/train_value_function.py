@@ -56,7 +56,9 @@ if __name__ == "__main__":
         world_obj_path = path.split("/")[-1]
         dir_path = path.replace(world_obj_path, "")
         world_to_train = classes.World.load(os.path.join(dir_path, world_obj_path))
-        world_to_train.policy.value_function.model.reset_tensorboard()
+        world_to_train.policy.value_function.model.reset_tensorboard(
+            world_to_train.ANN_NETWORK_STRUCTURE
+        )
 
     else:
         SAMPLE_SIZE = 2500
