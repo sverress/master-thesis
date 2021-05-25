@@ -49,12 +49,14 @@ if __name__ == "__main__":
     import decision.value_functions
     import sys
     import os
+    import time
 
     if len(sys.argv) > 1:
         path = sys.argv[1]
         world_obj_path = path.split("/")[-1]
         dir_path = path.replace(world_obj_path, "")
         world_to_train = classes.World.load(os.path.join(dir_path, world_obj_path))
+        world_to_train.policy.value_function.model.reset_tensorboard()
 
     else:
         SAMPLE_SIZE = 2500

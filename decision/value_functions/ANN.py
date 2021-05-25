@@ -19,6 +19,7 @@ class ANN:
         self.eligibilities = []
         self.trace_decay = trace_decay
         self.discount_factor = discount_factor
+        self.network_structure = network_structure
 
         self.model = keras.models.Sequential()
         # First layer needs input size as argument
@@ -46,7 +47,7 @@ class ANN:
 
         self.reset_eligibilities()
         self.tensorboard = ModifiedTensorBoard(
-            log_dir=f"logs/{network_structure}_{int(time.time())}",
+            log_dir=f"logs/{self.network_structure}_{int(time.time())}",
             profile_batch=100000000,  # https://github.com/tensorflow/tensorboard/issues/2819
         )
 
@@ -131,6 +132,12 @@ class ANN:
                 eligibilities.append(tf.convert_to_tensor(numpy_array, dtype="float32"))
         self.eligibilities = eligibilities
         self.tensorboard = ModifiedTensorBoard()
+
+    def reset_tensorboard(self):
+        self.tensorboard = ModifiedTensorBoard(
+            log_dir=f"logs/{self.network_structure}_{int(time.time())}",
+            profile_batch=100000000,  # https://github.com/tensorflow/tensorboard/issues/2819
+        )
 
 
 class ModifiedTensorBoard(TensorBoard):
