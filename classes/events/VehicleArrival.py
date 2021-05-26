@@ -40,6 +40,9 @@ class VehicleArrival(Event):
         # find the best action from the current world state
         action = world.policy.get_best_action(world, vehicle)
 
+        if isinstance(action, tuple):
+            action = action[0]
+
         if self.visualize:
             # visualize vehicle route
             world.state.visualize_vehicle_routes(
@@ -58,7 +61,6 @@ class VehicleArrival(Event):
 
         reward = action.get_reward(
             vehicle,
-            world.LOST_TRIP_REWARD,
             world.DEPOT_REWARD,
             world.VEHICLE_INVENTORY_STEP_SIZE,
             world.PICK_UP_REWARD,

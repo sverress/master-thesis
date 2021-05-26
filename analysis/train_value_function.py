@@ -20,7 +20,6 @@ def train_value_function(
     world.policy.epsilon = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
     for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)
-        policy_world.policy.value_function.increment_shifts_trained()
         if epsilon_decay and shift > 0:
             policy_world.policy.epsilon -= (
                 world.INITIAL_EPSILON - world.FINAL_EPSILON
@@ -29,6 +28,8 @@ def train_value_function(
             policy_world.save_world(
                 cache_directory=world.get_train_directory(save_suffix), suffix=shift
             )
+
+        policy_world.policy.value_function.increment_shifts_trained()
 
         # avoid running the world after the last model is saved
         if shift != number_of_shifts:
