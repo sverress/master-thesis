@@ -127,7 +127,6 @@ VEHICLE_COLORS = ["blue", "green", "black", "purple"]
 ACTION_OFFSET = 0.018
 
 COLORS = [
-    "#e6194b",
     "#3cb44b",
     "#ffe119",
     "#4363d8",
@@ -136,6 +135,7 @@ COLORS = [
     "#46f0f0",
     "#f032e6",
     "#bcf60c",
+    "#e6194b",
     "#fabebe",
     "#008080",
     "#e6beff",

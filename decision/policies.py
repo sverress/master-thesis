@@ -1,3 +1,5 @@
+import math
+
 import decision.neighbour_filtering
 import classes
 import numpy.random as random
@@ -286,6 +288,22 @@ class RebalancingPolicy(Policy):
                 reverse=is_finding_positive_deviation,
             )[0].id
 
+        def closest_available_depot():
+            distance = math.inf
+            location_id = 0
+            batteries_to_swap = (
+                vehicle.battery_inventory_capacity - vehicle.battery_inventory
+            )
+            for depot in world.state.depots:
+                if depot.get_available_battery_swaps(world.time) >= batteries_to_swap:
+                    distance_to_depot = vehicle.current_location.distance_to(
+                        depot.lat, depot.lon
+                    )
+                    if distance_to_depot < distance:
+                        distance = distance_to_depot
+                        location_id = depot.id
+            return location_id
+
         # If vehicles has under 10% battery inventory, go to depot.
         if (
             vehicle.battery_inventory
@@ -293,7 +311,7 @@ class RebalancingPolicy(Policy):
             - number_of_scooters_to_pick_up
             < vehicle.battery_inventory_capacity * 0.1
         ) and not vehicle.is_at_depot():
-            next_location_id = world.state.depots[0].id
+            next_location_id = closest_available_depot()
         else:
             """
             If vehicle has scooter inventory upon arrival,

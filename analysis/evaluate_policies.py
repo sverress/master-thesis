@@ -99,9 +99,9 @@ def run_analysis(
         first_world, *rest = worlds
     # Always add a policy that does nothing and a random action
     for baseline_policy_class in [
-        decision.DoNothing,
+        # decision.DoNothing,
         decision.RebalancingPolicy,
-        decision.SwapAllPolicy,
+        # decision.SwapAllPolicy,
     ]:
         # Use the first world as the world for baseline policies
         baseline_policy_world = copy.deepcopy(first_world)
@@ -176,11 +176,11 @@ if __name__ == "__main__":
             clustering.scripts.get_initial_state(
                 SAMPLE_SIZE,
                 NUMBER_OF_CLUSTERS,
-                number_of_vans=4,
+                number_of_vans=2,
                 number_of_bikes=0,
             ),
             verbose=False,
-            visualize=False,
+            visualize=True,
             MODELS_TO_BE_SAVED=5,
             TRAINING_SHIFTS_BEFORE_SAVE=1000,
             ANN_LEARNING_RATE=0.00001,
@@ -191,7 +191,10 @@ if __name__ == "__main__":
         )
 
         instances = run_analysis(
-            [], baseline_policy_world=world_to_analyse, runs_per_policy=5
+            [],
+            baseline_policy_world=world_to_analyse,
+            runs_per_policy=1,
+            multiprocess=False,
         )
 
         analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)
