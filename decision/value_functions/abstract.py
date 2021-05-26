@@ -31,6 +31,7 @@ class ValueFunction(abc.ABC):
         vehicle_inventory_step_size,
         location_repetition,
         trace_decay,
+        replay_buffer_size,
     ):
         # for every location - 3 bit for each location
         # for every cluster, 1 float for deviation, 1 float for battery deficient
@@ -47,7 +48,7 @@ class ValueFunction(abc.ABC):
 
         self.setup_complete = False
         self.location_indicator = None
-        self.replay_buffer = deque(maxlen=500)
+        self.replay_buffer = deque(maxlen=replay_buffer_size)
         self.shifts_trained = 0
         self.td_errors = []
 

@@ -74,10 +74,10 @@ if __name__ == "__main__":
             ),
             verbose=False,
             visualize=False,
-            MODELS_TO_BE_SAVED=3,
-            TRAINING_SHIFTS_BEFORE_SAVE=200,
+            MODELS_TO_BE_SAVED=2,
+            TRAINING_SHIFTS_BEFORE_SAVE=25,
             ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
-            REPLAY_BUFFER_SIZE=100,
+            REPLAY_BUFFER_SIZE=300,
         )
         world_to_train.policy = world_to_train.set_policy(
             policy_class=decision.EpsilonGreedyValueFunctionPolicy,

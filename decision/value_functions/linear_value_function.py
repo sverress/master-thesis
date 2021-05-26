@@ -32,6 +32,7 @@ class LinearValueFunction(ValueFunction):
         vehicle_inventory_step_size,
         location_repetition,
         trace_decay,
+        replay_buffer_size,
     ):
         super().__init__(
             weight_update_step_size,
@@ -40,6 +41,7 @@ class LinearValueFunction(ValueFunction):
             vehicle_inventory_step_size,
             location_repetition,
             trace_decay,
+            replay_buffer_size,
         )
         self.weights = []
         self.eligibilities = None

@@ -57,14 +57,14 @@ def training_simulation(world):
             # updating the current vehicle time to the next arrival
             vehicle_times[vehicle_index] += action_time
             # setting the world time to the next vehicle arrival
-            world.time = world.time + min(vehicle_times)
+            world.time = min(vehicle_times)
 
-            if sap_features[vehicle_index]:
+            if vehicle_sap_features[vehicle_index]:
                 world.policy.value_function.replay_buffer.append(
                     (
                         vehicle_sap_features[vehicle_index],
                         vehicle_rewards[vehicle_index]
-                        - lost_demand * world.LOST_TRIP_REWARD,
+                        + lost_demand * world.LOST_TRIP_REWARD,
                         sap_features,
                     )
                 )

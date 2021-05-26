@@ -309,6 +309,7 @@ class World(SaveMixin, HyperParameters):
                         self.LOCATION_REPETITION,
                         self.TRACE_DECAY,
                         self.ANN_NETWORK_STRUCTURE,
+                        self.REPLAY_BUFFER_SIZE,
                     )
                     if value_function_class is decision.value_functions.ANNValueFunction
                     else value_function_class(
@@ -318,6 +319,7 @@ class World(SaveMixin, HyperParameters):
                         self.VEHICLE_INVENTORY_STEP_SIZE,
                         self.LOCATION_REPETITION,
                         self.TRACE_DECAY,
+                        self.REPLAY_BUFFER_SIZE,
                     )
                 )
                 policy = policy_class(

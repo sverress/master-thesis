@@ -23,8 +23,8 @@ class HyperParameters:
         INITIAL_EPSILON=0.8,
         FINAL_EPSILON=0.0001,
         REPLAY_BUFFER_SIZE=500,
-        DEPOT_REWARD=1,
-        PICK_UP_REWARD=0.5,
+        DEPOT_REWARD=2,
+        PICK_UP_REWARD=1,
     ):
         self.DISCOUNT_RATE = DISCOUNT_RATE  # From sutton 0.9-0.99
         self.EPSILON = EPSILON  # Probability of taking a random action

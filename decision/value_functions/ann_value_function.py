@@ -14,6 +14,7 @@ class ANNValueFunction(ValueFunction):
         location_repetition,
         trace_decay,
         network_structure: [int],
+        replay_buffer_size,
     ):
         super().__init__(
             learning_rate,
@@ -22,6 +23,7 @@ class ANNValueFunction(ValueFunction):
             vehicle_inventory_step_size,
             location_repetition,
             trace_decay,
+            replay_buffer_size,
         )
         self.network_structure = network_structure
         self.model = None
@@ -35,7 +37,7 @@ class ANNValueFunction(ValueFunction):
             number_of_state_features,
         ) = self.get_number_of_location_indicators_and_state_features(state)
         # One hot encoding for next location. One parameter for each sub-action (battery-swap e.g.)
-        action_input_size = len(state.locations) + 3
+        action_input_size = len(state.locations) * 3 + 9
         self.model = ANN(
             self.network_structure,
             number_of_locations_indicators
@@ -50,7 +52,7 @@ class ANNValueFunction(ValueFunction):
     def train(self, batch_size):
         if len(self.replay_buffer) < batch_size:
             return
-        random_sample = random.sample(self.replay_buffer, 256)
+        random_sample = random.sample(self.replay_buffer, 64)
         # Create training data from random sample
         states, targets = [], []
         for i, (
@@ -63,7 +65,7 @@ class ANNValueFunction(ValueFunction):
                 self.model.predict(next_sap_features) if next_sap_features else 0
             )
             targets.append(next_state_value + reward)
-        self.model.batch_fit(states, targets, verbose=1, batch_size=256, shuffle=False)
+        self.model.batch_fit(states, targets, verbose=1, batch_size=64, shuffle=False)
         if self.train_count % 5:
             self.model.update_predict_model()
         self.train_count += 1
