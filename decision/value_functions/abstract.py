@@ -1,4 +1,5 @@
-import collections
+from collections import deque
+
 from scipy import stats
 
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
@@ -46,7 +47,7 @@ class ValueFunction(abc.ABC):
 
         self.setup_complete = False
         self.location_indicator = None
-        self.replay_buffer = collections.deque(maxlen=300)
+        self.replay_buffer = deque(maxlen=500)
         self.shifts_trained = 0
         self.td_errors = []
 
@@ -101,11 +102,6 @@ class ValueFunction(abc.ABC):
         next_state_value: float,
         reward: float,
     ):
-        pass
-
-    @abc.abstractmethod
-    @Decorators.check_setup
-    def reset_eligibilities(self):
         pass
 
     @abc.abstractmethod

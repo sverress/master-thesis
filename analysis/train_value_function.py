@@ -20,6 +20,7 @@ def train_value_function(
     world.policy.epsilon = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
     for shift in range(number_of_shifts + 1):
         policy_world = copy.deepcopy(world)
+        policy_world.policy.value_function.update_shifts_trained(shift)
         if epsilon_decay and shift > 0:
             policy_world.policy.epsilon -= (
                 world.INITIAL_EPSILON - world.FINAL_EPSILON
@@ -38,8 +39,6 @@ def train_value_function(
             else:
                 policy_world.run()
 
-            if hasattr(policy_world.policy, "value_function"):
-                policy_world.policy.value_function.reset_eligibilities()
             world.policy = policy_world.policy
             progress_bar.next()
 
@@ -50,7 +49,6 @@ if __name__ == "__main__":
     import decision.value_functions
     import sys
     import os
-    import time
 
     if len(sys.argv) > 1:
         path = sys.argv[1]
