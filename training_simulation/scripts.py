@@ -44,7 +44,7 @@ def training_simulation(world):
             # updating the current vehicle time to the next arrival
             vehicle_times[vehicle_index] += action_time
             # setting the world time to the next vehicle arrival
-            world.time = world.time + min(vehicle_times)
+            world.time = min(vehicle_times)
 
         else:
             # performing a scooter trips simulation
@@ -68,7 +68,10 @@ if __name__ == "__main__":
         960,
         None,
         clustering.scripts.get_initial_state(
-            2500, 30, number_of_vans=3, number_of_bikes=0,
+            2500,
+            30,
+            number_of_vans=3,
+            number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,

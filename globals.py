@@ -20,7 +20,7 @@ class HyperParameters:
         NUMBER_OF_BIKES=0,
         ANN_NETWORK_STRUCTURE=None,
         LOCATION_REPETITION=3,
-        INITIAL_EPSILON=1,
+        INITIAL_EPSILON=0.8,
         FINAL_EPSILON=0.0001,
         REPLAY_BUFFER_SIZE=500,
         DEPOT_REWARD=1,
