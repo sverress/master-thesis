@@ -62,9 +62,11 @@ class ANNValueFunction(ValueFunction):
         ) in enumerate(random_sample):
             states.append(sap_features)
             next_state_value = (
-                self.model.predict(next_sap_features) if next_sap_features else 0
+                self.model.predict(next_sap_features)
+                if len(next_sap_features) > 1
+                else next_sap_features[0]
             )
-            targets.append(next_state_value + reward)
+            targets.append(self.discount_factor * next_state_value + reward)
         self.model.batch_fit(states, targets, verbose=1, batch_size=64, shuffle=False)
         if self.train_count % 5:
             self.model.update_predict_model()

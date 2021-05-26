@@ -49,7 +49,6 @@ if __name__ == "__main__":
     import decision.value_functions
     import sys
     import os
-    from pyinstrument import Profiler
 
     if len(sys.argv) > 1:
         path = sys.argv[1]
@@ -70,26 +69,20 @@ if __name__ == "__main__":
             clustering.scripts.get_initial_state(
                 SAMPLE_SIZE,
                 NUMBER_OF_CLUSTERS,
-                number_of_vans=4,
+                number_of_vans=3,
                 number_of_bikes=0,
             ),
             verbose=False,
             visualize=False,
-            MODELS_TO_BE_SAVED=1,
-            TRAINING_SHIFTS_BEFORE_SAVE=1,
-            ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
-            REPLAY_BUFFER_SIZE=300,
+            MODELS_TO_BE_SAVED=4,
+            TRAINING_SHIFTS_BEFORE_SAVE=25,
+            ANN_NETWORK_STRUCTURE=[1024] * 10,
+            REPLAY_BUFFER_SIZE=100,
+            ANN_LEARNING_RATE=0.00001,
         )
         world_to_train.policy = world_to_train.set_policy(
             policy_class=decision.EpsilonGreedyValueFunctionPolicy,
             value_function_class=decision.value_functions.ANNValueFunction,
         )
 
-    profiler = Profiler()
-    profiler.start()
-
     train_value_function(world_to_train)
-
-    profiler.stop()
-
-    print(profiler.output_text(unicode=True, color=True))

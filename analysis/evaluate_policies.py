@@ -108,7 +108,7 @@ def run_analysis(
         baseline_policy_world.policy = baseline_policy_world.set_policy(
             policy_class=baseline_policy_class
         )
-        worlds.append(baseline_policy_world)
+        # worlds.append(baseline_policy_world)
 
     td_errors_and_label = []
 
@@ -150,7 +150,9 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         print(f"fetching world objects from {sys.argv[2]}")
-        run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1], runs_per_policy=3)
+        run_analysis_from_path(
+            sys.argv[2], world_attribute=sys.argv[1], runs_per_policy=3
+        )
     else:
         run_analysis_from_path(
             "world_cache/test_models",

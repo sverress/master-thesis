@@ -17,6 +17,8 @@ def training_simulation(world):
     # list to hold previous action rewards
     vehicle_rewards = [0] * len(world.state.vehicles)
 
+    accumulated_lost_demand = 0
+
     while world.time < world.shift_duration:
         if next_is_vehicle_action:
             # choosing the vehicle with the earliest arrival time (index-method is choosing the first if multiple equal)
@@ -63,8 +65,7 @@ def training_simulation(world):
                 world.policy.value_function.replay_buffer.append(
                     (
                         vehicle_sap_features[vehicle_index],
-                        vehicle_rewards[vehicle_index]
-                        + lost_demand * world.LOST_TRIP_REWARD,
+                        accumulated_lost_demand * world.LOST_TRIP_REWARD,
                         sap_features,
                     )
                 )
@@ -79,6 +80,7 @@ def training_simulation(world):
                 if len(lost_demands) > 0
                 else 0
             )
+            accumulated_lost_demand += lost_demand
             simulation_counter += 1
         # deciding if the next thing to do is a vehicle arrival or a system simulation
         next_is_vehicle_action = (
@@ -87,13 +89,15 @@ def training_simulation(world):
 
     # adding the last sap to replay buffer and setting next-sap too None -> next-sap-value = 0 in train method
     for vehicle_index in range(len(world.state.vehicles)):
-        world.policy.value_function.replay_buffer.append(
-            (
-                vehicle_sap_features[vehicle_index],
-                vehicle_rewards[vehicle_index] - lost_demand * world.LOST_TRIP_REWARD,
-                None,
+        if accumulated_lost_demand == 0:
+            world.policy.value_function.replay_buffer.append(
+                (
+                    vehicle_sap_features[vehicle_index],
+                    vehicle_rewards[vehicle_index]
+                    - lost_demand * world.LOST_TRIP_REWARD,
+                    [10],
+                )
             )
-        )
 
     return world
 
@@ -121,11 +125,4 @@ if __name__ == "__main__":
         value_function_class=decision.value_functions.ANNValueFunction,
     )
 
-    from pyinstrument import Profiler
-
-    profiler = Profiler()
-    profiler.start()
     training_simulation(world_to_analyse)
-    profiler.stop()
-
-    print(profiler.output_text(unicode=True, color=True))
