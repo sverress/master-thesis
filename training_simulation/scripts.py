@@ -65,7 +65,7 @@ def training_simulation(world):
                 world.policy.value_function.replay_buffer.append(
                     (
                         vehicle_sap_features[vehicle_index],
-                        accumulated_lost_demand * world.LOST_TRIP_REWARD,
+                        lost_demand * world.LOST_TRIP_REWARD,
                         sap_features,
                     )
                 )
@@ -86,18 +86,6 @@ def training_simulation(world):
         next_is_vehicle_action = (
             world.time < simulation_counter * ITERATION_LENGTH_MINUTES
         )
-
-    # adding the last sap to replay buffer and setting next-sap too None -> next-sap-value = 0 in train method
-    for vehicle_index in range(len(world.state.vehicles)):
-        if accumulated_lost_demand == 0:
-            world.policy.value_function.replay_buffer.append(
-                (
-                    vehicle_sap_features[vehicle_index],
-                    vehicle_rewards[vehicle_index]
-                    - lost_demand * world.LOST_TRIP_REWARD,
-                    [10],
-                )
-            )
 
     return world
 
