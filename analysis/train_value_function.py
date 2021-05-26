@@ -47,11 +47,13 @@ def train_value_function(
 
 
 if __name__ == "__main__":
+    from pyinstrument import Profiler
+
     SAMPLE_SIZE = 2500
     NUMBER_OF_CLUSTERS = 50
     standard_parameters = globals.HyperParameters()
     world_to_analyse = classes.World(
-        920,
+        960,
         None,
         clustering.scripts.get_initial_state(
             SAMPLE_SIZE,
@@ -61,8 +63,8 @@ if __name__ == "__main__":
         ),
         verbose=False,
         visualize=False,
-        MODELS_TO_BE_SAVED=5,
-        TRAINING_SHIFTS_BEFORE_SAVE=1000,
+        MODELS_TO_BE_SAVED=1,
+        TRAINING_SHIFTS_BEFORE_SAVE=1,
         ANN_LEARNING_RATE=0.00001,
         ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
         REPLAY_BUFFER_SIZE=500,
@@ -72,4 +74,11 @@ if __name__ == "__main__":
         value_function_class=decision.value_functions.ANNValueFunction,
     )
 
+    profiler = Profiler()
+    profiler.start()
+
     train_value_function(world_to_analyse)
+
+    profiler.stop()
+
+    print(profiler.output_text(unicode=True, color=True))

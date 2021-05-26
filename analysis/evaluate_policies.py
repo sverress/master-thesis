@@ -145,15 +145,53 @@ def run_analysis(
 
 if __name__ == "__main__":
     import sys
+    import classes
+    import clustering.scripts
+    import decision.value_functions
+    import globals
+    import analysis.export_metrics_to_xlsx
 
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
     if len(sys.argv) > 1:
         print(f"fetching world objects from {sys.argv[2]}")
-        run_analysis_from_path(sys.argv[2], world_attribute=sys.argv[1], runs_per_policy=3)
+        run_analysis_from_path(
+            sys.argv[2], world_attribute=sys.argv[1], runs_per_policy=3
+        )
     else:
+        """
         run_analysis_from_path(
             "world_cache/test_models",
             shift_duration=80,
             runs_per_policy=1,
         )
+        """
+
+        SAMPLE_SIZE = 2500
+        NUMBER_OF_CLUSTERS = 100
+        standard_parameters = globals.HyperParameters()
+        world_to_analyse = classes.World(
+            960,
+            None,
+            clustering.scripts.get_initial_state(
+                SAMPLE_SIZE,
+                NUMBER_OF_CLUSTERS,
+                number_of_vans=4,
+                number_of_bikes=0,
+            ),
+            verbose=False,
+            visualize=False,
+            MODELS_TO_BE_SAVED=5,
+            TRAINING_SHIFTS_BEFORE_SAVE=1000,
+            ANN_LEARNING_RATE=0.00001,
+            ANN_NETWORK_STRUCTURE=[3000, 2000, 1000, 500, 250, 175, 100, 50],
+            REPLAY_BUFFER_SIZE=500,
+            test_parameter_name="quality_of_solutions",
+            test_parameter_value=69,
+        )
+
+        instances = run_analysis(
+            [], baseline_policy_world=world_to_analyse, runs_per_policy=5
+        )
+
+        analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)

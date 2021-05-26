@@ -82,6 +82,11 @@ class World(SaveMixin, HyperParameters):
                     for field, metric_list in fields.items()
                 }
             )
+            new_world_metric.testing_parameter_name = metrics[0].testing_parameter_name
+            new_world_metric.testing_parameter_value = metrics[
+                0
+            ].testing_parameter_value
+
             return new_world_metric
 
         def add_analysis_metrics(self, world):
@@ -342,7 +347,11 @@ class World(SaveMixin, HyperParameters):
                 for event in self.stack
                 if not isinstance(event, classes.VehicleArrival)
             ]
-            self.state = clustering.helpers.idealize_state(self.state)
+            for cluster in self.state.clusters:
+                cluster.ideal_state = len(cluster.get_available_scooters())
+                for scooter in cluster.scooters:
+                    if scooter.battery < 60:
+                        scooter.swap_battery()
 
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):
