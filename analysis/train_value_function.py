@@ -77,7 +77,7 @@ if __name__ == "__main__":
             MODELS_TO_BE_SAVED=4,
             TRAINING_SHIFTS_BEFORE_SAVE=25,
             ANN_NETWORK_STRUCTURE=[1024] * 10,
-            REPLAY_BUFFER_SIZE=100,
+            REPLAY_BUFFER_SIZE=500,
             ANN_LEARNING_RATE=0.00001,
         )
         world_to_train.policy = world_to_train.set_policy(
