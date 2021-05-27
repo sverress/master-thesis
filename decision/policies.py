@@ -81,13 +81,11 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             current_states.append(cluster.get_current_state())
             available_scooters.append(cluster.get_available_scooters())
         cache = [current_states, available_scooters]
-        # Generate the state features of the current state
+
         state_features = self.value_function.get_state_features(
-            world.state, vehicle, world.time, cache
+            world.state, vehicle, cache
         )
-        expected_lost_trip_reward = state.get_expected_lost_trip_reward(
-            world.LOST_TRIP_REWARD, exclude=vehicle.current_location.id
-        )
+
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
             best_action = random.choice(actions)
@@ -95,16 +93,11 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
             action_info = []
             for action in actions:
-                # Get the distance from current cluster to the new destination cluster
-                action_distance = state.get_distance(
-                    vehicle.current_location.id, action.next_location
-                )
                 # Generate the features for this new state after the action
                 next_state_features = self.value_function.get_next_state_features(
                     state,
                     vehicle,
                     action,
-                    world.time + action.get_action_time(action_distance),
                     cache,
                 )
                 # Calculate the expected future reward of being in this new state
@@ -117,34 +110,20 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 action_info.append(
                     (
                         action,
-                        action.get_reward(
-                            vehicle,
-                            world.LOST_TRIP_REWARD,
-                            world.DEPOT_REWARD,
-                            world.VEHICLE_INVENTORY_STEP_SIZE,
-                            world.PICK_UP_REWARD,
-                        )
-                        + expected_lost_trip_reward,
                         next_state_value,
                         next_state_features,
                     )
                 )
 
             # Find the action with the highest reward and future expected reward - reward + value function next state
-            best_action, reward, next_state_value, next_state_features = max(
-                action_info, key=lambda pair: pair[1] + pair[2]
+            best_action, next_state_value, next_state_features = max(
+                action_info, key=lambda pair: pair[1]
             )
-            self.value_function.replay_buffer.append(
-                (
-                    state_features,
-                    best_action,
-                    reward,
-                    next_state_features,
-                )
-            )
+
             if not world.disable_training:
                 self.value_function.train(world.REPLAY_BUFFER_SIZE)
-        return best_action
+
+        return best_action, state_features
 
     def setup_from_state(self, state):
         self.value_function.setup(state)

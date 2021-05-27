@@ -48,7 +48,8 @@ class ValueFunction(abc.ABC):
 
         self.setup_complete = False
         self.location_indicator = None
-        self.replay_buffer = deque(maxlen=1000)
+        self.replay_buffer = deque(maxlen=500)
+        self.replay_buffer_negative = deque(maxlen=500)
         self.shifts_trained = 0
         self.td_errors = []
 
@@ -111,7 +112,6 @@ class ValueFunction(abc.ABC):
         self,
         state: classes.State,
         vehicle: classes.Vehicle,
-        time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
         pass
@@ -123,7 +123,6 @@ class ValueFunction(abc.ABC):
         state: classes.State,
         vehicle: classes.Vehicle,
         action: classes.Action,
-        time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
         pass
@@ -131,33 +130,18 @@ class ValueFunction(abc.ABC):
     def get_number_of_location_indicators_and_state_features(
         self, state: classes.State
     ):
-        return (
-            len(state.locations) * self.location_repetition,
-            (
-                (self.number_of_features_per_cluster * len(state.clusters))
-                + (2 * round(1 / self.vehicle_inventory_step_size))
-                + len(state.locations)
-                - len(state.clusters)
-                - 1
-                + len(state.locations)  # Add location features for other vehicles
-            ),
-        )
+        return self.number_of_features_per_cluster * len(state.clusters)
 
     def create_features(
         self,
         state,
         vehicle,
-        time,
         action=None,
         cache=None,
     ):
         # Create a flag for if it is a get next state features call
         is_next_action = action is not None
-        # Change location by swapping location indicator
-        location_indicators = self.get_location_indicator(
-            action.next_location if is_next_action else vehicle.current_location.id,
-            len(state.locations),
-        )
+
         # Fetch all normalized scooter state representations
         (
             positive_deviations,
@@ -169,70 +153,19 @@ class ValueFunction(abc.ABC):
             current_location=vehicle.current_location.id if is_next_action else None,
             action=action,
         )
-        # Inventory indicators adjusting for action effects
-        scooter_inventory_indication = self.get_inventory_indicator(
-            helpers.zero_divide(
-                len(vehicle.scooter_inventory)
-                + (
-                    len(action.pick_ups) - len(action.delivery_scooters)
-                    if is_next_action
-                    else 0
-                ),
-                vehicle.scooter_inventory_capacity,
-            )
-        )
 
-        battery_inventory_indication = self.get_inventory_indicator(
-            helpers.zero_divide(
-                vehicle.battery_inventory
-                - (
-                    len(action.battery_swaps) + len(action.pick_ups)
-                    if is_next_action
-                    else 0
-                ),
-                vehicle.battery_inventory_capacity,
-            )
-        )
-        # Depot state
-        small_depot_degree_of_filling = ValueFunction.get_small_depot_degree_of_filling(
-            time, state
-        )
-        # Encode location of other vehicles
-        other_vehicles_locations = [
-            int(
-                any(
-                    [
-                        other_vehicle.current_location.id == location.id
-                        for other_vehicle in state.vehicles
-                        if other_vehicle.id != vehicle.id
-                    ]
-                )
-            )
-            for location in state.locations
-        ]
-        return (
-            location_indicators
-            + positive_deviations
-            + negative_deviations
-            + battery_deficiency
-            + scooter_inventory_indication
-            + battery_inventory_indication
-            + small_depot_degree_of_filling
-            + other_vehicles_locations
-        )
+        return positive_deviations + negative_deviations + battery_deficiency
 
     @Decorators.check_setup
     def convert_state_to_features(
         self,
         state: classes.State,
         vehicle: classes.Vehicle,
-        time: int,
         cache=None,
     ):
         return self.create_features(
             state,
             vehicle,
-            time,
             action=None,
             cache=cache,
         )
@@ -241,11 +174,10 @@ class ValueFunction(abc.ABC):
         self.shifts_trained = shifts_trained
 
     @Decorators.check_setup
-    def convert_next_state_features(self, state, vehicle, action, time, cache=None):
+    def convert_next_state_features(self, state, vehicle, action, cache=None):
         return self.create_features(
             state,
             vehicle,
-            time,
             action=action,
             cache=cache,
         )
