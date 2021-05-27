@@ -53,13 +53,22 @@ def training_simulation(world):
             world.time = min(vehicle_times)
 
             if vehicle_cluster_features[vehicle_index]:
-                world.policy.value_function.replay_buffer.append(
-                    (
-                        vehicle_cluster_features[vehicle_index],
-                        lost_demand * world.LOST_TRIP_REWARD,
-                        cluster_features,
+                if lost_demand == 0:
+                    world.policy.value_function.replay_buffer.append(
+                        (
+                            vehicle_cluster_features[vehicle_index],
+                            lost_demand * world.LOST_TRIP_REWARD,
+                            cluster_features,
+                        )
                     )
-                )
+                else:
+                    world.policy.value_function.replay_buffer_negative.append(
+                        (
+                            vehicle_cluster_features[vehicle_index],
+                            lost_demand * world.LOST_TRIP_REWARD,
+                            cluster_features,
+                        )
+                    )
 
             vehicle_cluster_features[vehicle_index] = cluster_features
 

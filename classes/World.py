@@ -358,7 +358,7 @@ class World(SaveMixin, HyperParameters):
     def save_world(self, cache_directory=None, suffix=""):
         directory = WORLD_CACHE_DIR
         if cache_directory:
-            directory = f"{WORLD_CACHE_DIR}/{cache_directory}"
+            directory = f"{WORLD_CACHE_DIR}/{cache_directory}_n"
         super().save(directory, f"-{suffix}")
 
     def get_train_directory(self, suffix=None):
