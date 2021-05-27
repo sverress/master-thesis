@@ -1,3 +1,5 @@
+import copy
+
 from globals import ITERATION_LENGTH_MINUTES
 
 
@@ -18,6 +20,7 @@ def training_simulation(world):
     vehicle_rewards = [0] * len(world.state.vehicles)
 
     accumulated_lost_demand = 0
+    lost_demands = []
 
     while world.time < world.shift_duration:
         if next_is_vehicle_action:
@@ -66,6 +69,7 @@ def training_simulation(world):
                     (
                         vehicle_sap_features[vehicle_index],
                         lost_demand * world.LOST_TRIP_REWARD,
+                        lost_demands,
                         sap_features,
                     )
                 )
@@ -95,22 +99,55 @@ if __name__ == "__main__":
     import classes
     import decision.value_functions
     import clustering.scripts
+    import pandas as pd
 
     world_to_analyse = classes.World(
         960,
         None,
         clustering.scripts.get_initial_state(
             2500,
-            30,
+            50,
             number_of_vans=3,
             number_of_bikes=0,
         ),
         verbose=False,
         visualize=False,
+        REPLAY_BUFFER_SIZE=2000,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
         value_function_class=decision.value_functions.ANNValueFunction,
     )
 
-    training_simulation(world_to_analyse)
+    for i in range(10):
+        world_to_train = copy.deepcopy(world_to_analyse)
+        training_simulation(world_to_train)
+        world_to_analyse.policy = world_to_train.policy
+
+    number_of_locations = len(world_to_analyse.state.locations)
+    number_of_clusters = len(world_to_analyse.state.clusters)
+
+    columns = (
+        ["reward"]
+        + ["lost_demand"]
+        + ["location_indicators"] * (3 * number_of_locations)
+        + ["positive_deviations"] * number_of_clusters
+        + ["negative_deviations"] * number_of_clusters
+        + ["battery_deficiency"] * number_of_clusters
+        + ["scooter_inventory_indication"] * 4
+        + ["battery_inventory_indication"] * 4
+        + ["small_depot_degree_of_filling"]
+        * (number_of_locations - number_of_clusters - 1)
+        + ["other_vehicles_locations"] * number_of_locations
+        + ["action_next_location"] * (3 * number_of_locations)
+        + ["action_swaps", "action_pickups", "action_deliveries"] * 3
+    )
+
+    reward_sap = [
+        [reward] + [lost_demand] + sap
+        for sap, reward, lost_demand, _ in world_to_analyse.policy.value_function.replay_buffer
+    ]
+
+    df = pd.DataFrame(reward_sap, columns=columns)
+
+    df.to_excel("computational_study/sap_analysis.xlsx", startrow=1, startcol=1)

@@ -108,7 +108,7 @@ def run_analysis(
         baseline_policy_world.policy = baseline_policy_world.set_policy(
             policy_class=baseline_policy_class
         )
-        # worlds.append(baseline_policy_world)
+        worlds.append(baseline_policy_world)
 
     td_errors_and_label = []
 
