@@ -40,6 +40,9 @@ class VehicleArrival(Event):
         # find the best action from the current world state
         action = world.policy.get_best_action(world, vehicle)
 
+        if isinstance(action, tuple):
+            action, _ = action
+
         if self.visualize:
             # visualize vehicle route
             world.state.visualize_vehicle_routes(

@@ -119,7 +119,6 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             best_action, next_state_value, next_state_features = max(
                 action_info, key=lambda pair: pair[1]
             )
-
             if not world.disable_training:
                 self.value_function.train(world.REPLAY_BUFFER_SIZE)
 
