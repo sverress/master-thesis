@@ -61,10 +61,10 @@ if __name__ == "__main__":
         ),
         verbose=False,
         visualize=False,
-        MODELS_TO_BE_SAVED=4,
-        TRAINING_SHIFTS_BEFORE_SAVE=50,
+        MODELS_TO_BE_SAVED=5,
+        TRAINING_SHIFTS_BEFORE_SAVE=20,
         ANN_LEARNING_RATE=0.0001,
-        ANN_NETWORK_STRUCTURE=[128] * 20,
+        ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 100],
         REPLAY_BUFFER_SIZE=100,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(

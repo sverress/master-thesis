@@ -305,7 +305,7 @@ class ValueFunction(abc.ABC):
     @staticmethod
     def get_one_hot_range(percent, step_size) -> [int]:
         length_of_list = round(1 / step_size)
-        percent = math.floor(percent) if percent > 1 else percent
+        percent = 1 if percent > 1 else percent
         filter_list = [
             int(percent <= i * step_size + step_size) for i in range(length_of_list)
         ]
