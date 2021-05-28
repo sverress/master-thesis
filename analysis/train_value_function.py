@@ -62,7 +62,7 @@ if __name__ == "__main__":
         verbose=False,
         visualize=False,
         MODELS_TO_BE_SAVED=5,
-        TRAINING_SHIFTS_BEFORE_SAVE=20,
+        TRAINING_SHIFTS_BEFORE_SAVE=50,
         ANN_LEARNING_RATE=0.0001,
         ANN_NETWORK_STRUCTURE=[1000, 2000, 500, 50],
         REPLAY_BUFFER_SIZE=100,
