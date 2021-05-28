@@ -52,7 +52,7 @@ class ANNValueFunction(ValueFunction):
             random_sample = (
                 random.sample(self.replay_buffer, 64)
                 if j == 0
-                else random.sample(self.replay_buffer, 64)
+                else random.sample(self.replay_buffer_negative, 64)
             )
             # Create training data from random sample
             states, targets = [], []
