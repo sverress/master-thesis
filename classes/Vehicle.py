@@ -53,9 +53,9 @@ class Vehicle:
         self.scooter_inventory.remove(scooter)
         return scooter
 
-    def set_current_location(self, location: Cluster):
+    def set_current_location(self, location: Cluster, action):
+        self.service_route.append((self.current_location, action))
         self.current_location = location
-        self.service_route.append(location)
 
     def add_battery_inventory(self, number_of_batteries):
         if (

@@ -8,7 +8,7 @@ from visualization.visualizer import *
 import decision.neighbour_filtering
 import numpy as np
 import math
-from globals import STATE_CACHE_DIR, BATTERY_LIMIT
+from globals import STATE_CACHE_DIR
 import copy
 
 
@@ -98,16 +98,13 @@ class State(SaveMixin):
         vehicle: Vehicle,
         number_of_neighbours=None,
         divide=None,
-        random_neighbours=0,
         exclude=None,
         time=None,
     ):
         """
         Enumerate all possible actions from the current state
         :param time: time of the world when the actions is to be performed
-        :param random_neighbours: number of random neighbours to add to the possible next location
         :param exclude: clusters to exclude from next cluster
-        :param random_neighbours: number of random neighbours to add to possible next locations
         :param vehicle: vehicle to perform this action
         :param number_of_neighbours: number of neighbours to evaluate, if None: all neighbors are returned
         :param divide: number to divide by to create range increment
@@ -116,20 +113,15 @@ class State(SaveMixin):
         actions = []
         # Return empty action if
         if vehicle.is_at_depot():
-            neighbours = (
-                decision.neighbour_filtering.filtering_neighbours(
-                    self,
-                    vehicle,
-                    number_of_neighbours,
-                    random_neighbours,
-                    exclude=exclude + [depot.id for depot in self.depots],
-                )
-                if number_of_neighbours
-                else self.get_neighbours(
-                    vehicle.current_location, is_sorted=False, exclude=exclude
-                )
+            neighbours = decision.neighbour_filtering.filtering_neighbours(
+                self,
+                vehicle,
+                0,
+                0,
+                number_of_neighbours,
+                exclude=exclude,
             )
-
+            return [Action([], [], [], neighbour.id) for neighbour in neighbours]
         else:
 
             def get_range(max_int):
@@ -158,6 +150,7 @@ class State(SaveMixin):
                     0,
                 ),
                 vehicle.scooter_inventory_capacity - len(vehicle.scooter_inventory),
+                vehicle.battery_inventory,
             )
             swaps = vehicle.get_max_number_of_swaps()
             drop_offs = max(
@@ -168,32 +161,25 @@ class State(SaveMixin):
                 ),
                 0,
             )
-            neighbours = (
-                decision.neighbour_filtering.filtering_neighbours(
-                    self,
-                    vehicle,
-                    number_of_neighbours,
-                    random_neighbours,
-                    time=time,
-                    exclude=exclude,
-                    max_swaps=max(pick_ups, swaps),
-                )
-                if number_of_neighbours
-                else self.get_neighbours(
-                    vehicle.current_location, is_sorted=False, exclude=exclude
-                )
-            )
             combinations = []
             # Different combinations of battery swaps, pick-ups, drop-offs and clusters
-            for location in neighbours:
-                for pick_up in get_range(pick_ups):
-                    for swap in get_range(swaps):
-                        for drop_off in get_range(drop_offs):
-                            if (
-                                pick_up <= vehicle.battery_inventory
-                                and (pick_up + swap)
-                                <= len(vehicle.current_location.scooters)
-                                and (pick_up + swap + drop_off > 0)
+            for pick_up in get_range(pick_ups):
+                for swap in get_range(swaps):
+                    for drop_off in get_range(drop_offs):
+                        if (
+                            (pick_up + swap) <= len(vehicle.current_location.scooters)
+                            and (pick_up + swap) <= vehicle.battery_inventory
+                            and (pick_up + swap + drop_off > 0)
+                        ):
+                            for (
+                                location
+                            ) in decision.neighbour_filtering.filtering_neighbours(
+                                self,
+                                vehicle,
+                                pick_up,
+                                drop_off,
+                                number_of_neighbours,
+                                exclude=exclude,
                             ):
                                 combinations.append(
                                     [
@@ -218,6 +204,22 @@ class State(SaveMixin):
             ]
             # Adding every action. Actions are the IDs of the scooters to be handled.
             for battery_swap, pick_up, drop_off, cluster_id in combinations:
+                if not vehicle.is_at_depot() and (
+                    vehicle.battery_inventory - battery_swap - pick_up
+                    < vehicle.battery_inventory_capacity * 0.1
+                ):
+                    # If battery inventory is low, go to depot
+                    cluster_id = [
+                        depot.id
+                        for depot in sorted(
+                            self.depots,
+                            key=lambda depot: self.get_distance(
+                                vehicle.current_location.id, depot.id
+                            ),
+                        )
+                        if depot.get_available_battery_swaps(time)
+                        > vehicle.battery_inventory_capacity * 0.9
+                    ][0]
                 actions.append(
                     Action(
                         swappable_scooters_id[pick_up : battery_swap + pick_up],
@@ -228,12 +230,7 @@ class State(SaveMixin):
                         cluster_id,
                     )
                 )
-
-        return (
-            actions
-            if len(actions) > 0
-            else [Action([], [], [], neighbour.id) for neighbour in neighbours]
-        )
+            return actions
 
     def do_action(self, action: Action, vehicle: Vehicle, time: int):
         """
@@ -283,7 +280,9 @@ class State(SaveMixin):
                 vehicle.current_location.add_scooter(delivery_scooter)
 
         # Moving the state/vehicle from this to next cluster
-        vehicle.set_current_location(self.get_location_by_id(action.next_location))
+        vehicle.set_current_location(
+            self.get_location_by_id(action.next_location), action
+        )
 
         return refill_time
 

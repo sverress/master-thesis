@@ -5,60 +5,32 @@ import helpers
 def filtering_neighbours(
     state,
     vehicle,
+    pick_up,
+    delivery,
     number_of_neighbours,
-    number_of_random_neighbours,
-    time=None,
     exclude=None,
-    max_swaps=0,
 ):
-    """
-    Filtering out neighbours based on a score of deviation of ideal state and distance from current cluster
-    :param max_swaps: max possible battery swaps of all actions
-    :param exclude: locations to be excluded as neighbours
-    :param time: time of the world so charging at depot can be controlled
-    :param vehicle: vehicle to find neighbours from
-    :param state: state object to evaluate
-    :param number_of_neighbours: number of neighbours to be returned
-    :param number_of_random_neighbours: int - number of random neighbours to be added to the neighbourhood list
-    :return:
-    """
-    exclude = exclude if exclude else []
-    distance_to_all_clusters = state.get_distance_to_all_clusters(
-        vehicle.current_location.id
-    )
-    distance_scores = helpers.normalize_list(distance_to_all_clusters)
-
-    if len(vehicle.scooter_inventory) > 0:
-        # If the vehicle has scooters in its inventory, we want to value clusters far away from the ideal state
-        cluster_values = get_deviation_ideal_state(state)
-    else:
-        # If the vehicle has no scooters in its inventory,
-        # it is more interesting to look at clusters with deficient batteries
-        cluster_values = get_battery_deficient_in_clusters(state)
-    # Low values are desirable. Hence, a high deviation or battery deficient should give a low value
-    cluster_values = [1 - value for value in helpers.normalize_list(cluster_values)]
-
-    # Sort clusters by the sum of distance and score. Exclude current cluster and excluded clusters
-    all_sorted_neighbours = sorted(
+    has_inventory = len(vehicle.scooter_inventory) + pick_up - delivery > 0
+    clusters = sorted(
         [
             cluster
             for cluster in state.clusters
             if cluster.id != vehicle.current_location.id and cluster.id not in exclude
         ],
-        key=lambda cluster: distance_scores[cluster.id] + cluster_values[cluster.id],
+        key=lambda cluster: len(cluster.get_available_scooters()) - cluster.ideal_state,
+        reverse=not has_inventory,
     )
-
-    # Reduce number of neighbours to "number_of_neighbours" and add random neighbours
-    neighbours = (
-        all_sorted_neighbours[: number_of_neighbours - number_of_random_neighbours]
-        + np.random.choice(
-            all_sorted_neighbours[number_of_neighbours - number_of_random_neighbours :],
-            size=number_of_random_neighbours,
-        ).tolist()
+    has_inventory_snacks = (
+        [clusters[-1]]
+        if len(vehicle.scooter_inventory) + pick_up - delivery
+        < vehicle.scooter_inventory_capacity
+        else []
     )
-
-    # Add depot neighbours and return
-    return neighbours + add_depots_as_neighbours(state, time, vehicle, max_swaps)
+    return (
+        clusters[: number_of_neighbours - 1] + has_inventory_snacks
+        if has_inventory
+        else clusters[:number_of_neighbours]
+    )
 
 
 def add_depots_as_neighbours(state, time, vehicle, max_swaps):
