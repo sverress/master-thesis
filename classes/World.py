@@ -350,13 +350,13 @@ class World(SaveMixin, HyperParameters):
     def get_filename(self):
         return (
             f"{self.created_at}_World_T_e{self.time}_t_{self.shift_duration}_"
-            f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}"
+            f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}_relu"
         )
 
     def save_world(self, cache_directory=None, suffix=""):
         directory = WORLD_CACHE_DIR
         if cache_directory:
-            directory = f"{WORLD_CACHE_DIR}/{cache_directory}"
+            directory = f"{WORLD_CACHE_DIR}/{cache_directory}_relu"
         super().save(directory, f"-{suffix}")
 
     def get_train_directory(self, suffix=None):
