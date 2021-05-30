@@ -11,26 +11,44 @@ def filtering_neighbours(
     exclude=None,
 ):
     has_inventory = len(vehicle.scooter_inventory) + pick_up - delivery > 0
-    clusters = sorted(
+
+    clusters_positive_deviation = sorted(
         [
             cluster
             for cluster in state.clusters
-            if cluster.id != vehicle.current_location.id and cluster.id not in exclude
+            if cluster.id != vehicle.current_location.id
+            and cluster.id not in exclude
+            and len(cluster.get_available_scooters()) - cluster.ideal_state > 0
         ],
         key=lambda cluster: len(cluster.get_available_scooters()) - cluster.ideal_state,
-        reverse=not has_inventory,
+        reverse=True,
     )
-    has_inventory_snacks = (
-        [clusters[-1]]
-        if len(vehicle.scooter_inventory) + pick_up - delivery
+
+    clusters_negative_deviation = sorted(
+        [
+            cluster
+            for cluster in state.clusters
+            if cluster.id != vehicle.current_location.id
+            and cluster.id not in exclude
+            and len(cluster.get_available_scooters()) - cluster.ideal_state < 0
+        ],
+        key=lambda cluster: len(cluster.get_available_scooters()) - cluster.ideal_state,
+    )
+
+    has_more_capacity = (
+        len(vehicle.scooter_inventory) + pick_up - delivery
         < vehicle.scooter_inventory_capacity
-        else []
     )
-    return (
-        clusters[: number_of_neighbours - 1] + has_inventory_snacks
-        if has_inventory
-        else clusters[:number_of_neighbours]
-    )
+
+    if has_inventory:
+        if has_more_capacity and len(clusters_positive_deviation) > 0:
+            return clusters_negative_deviation[: number_of_neighbours - 1] + [
+                clusters_positive_deviation[0]
+            ]
+        else:
+            return clusters_negative_deviation[:number_of_neighbours]
+    else:
+        return clusters_positive_deviation[:number_of_neighbours]
 
 
 def add_depots_as_neighbours(state, time, vehicle, max_swaps):

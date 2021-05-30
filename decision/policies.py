@@ -118,7 +118,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 next_action_actions = forward_state.get_possible_actions(
                     forward_vehicle,
                     divide=self.get_possible_actions_divide,
-                    exclude=world.tabu_list,
+                    exclude=world.tabu_list + [action.next_location],
                     time=world.time
                     + action.get_action_time(
                         state.get_distance(
@@ -148,7 +148,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                         (next_state_action, next_state_value, next_state_features)
                     )
 
-                best_action, next_state_value, next_state_features = max(
+                best_next_action, next_state_value, next_state_features = max(
                     forward_action_info, key=lambda pair: pair[1]
                 )
                 action_info.append(
@@ -200,17 +200,19 @@ class SwapAllPolicy(Policy):
             vehicle.battery_inventory - number_of_scooters_to_swap
             < vehicle.battery_inventory_capacity * 0.1
         ) and not vehicle.is_at_depot():
-            next_location_id = world.state.depots[0].id
+            next_location = world.state.depots[0]
         else:
-            next_location_id = sorted(
+            next_location = sorted(
                 [
-                    cluster.id
+                    cluster
                     for cluster in world.state.clusters
                     if cluster.id != vehicle.current_location.id
                     and cluster.id not in world.tabu_list
                 ],
-                key=lambda cluster: len(cluster.get_available_scooters())
-                - cluster.ideal_state,
+                key=lambda cluster: (
+                    len(cluster.scooters) - cluster.get_current_state()
+                )
+                / (len(cluster.scooters) + 1),
             )[0]
 
         # Return an action with no re-balancing, only scooter swapping
@@ -218,7 +220,7 @@ class SwapAllPolicy(Policy):
             battery_swaps=swappable_scooters_ids[:number_of_scooters_to_swap],
             pick_ups=[],
             delivery_scooters=[],
-            next_location=next_location_id,
+            next_location=next_location.id,
         )
 
 

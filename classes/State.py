@@ -202,6 +202,23 @@ class State(SaveMixin):
                 scooter.id
                 for scooter in vehicle.current_location.get_swappable_scooters()
             ]
+
+            none_swappable_scooters_id = [
+                scooter.id
+                for scooter in vehicle.current_location.scooters
+                if scooter.battery >= 70
+            ]
+
+            def choose_pick_up(swaps, pickups):
+                number_of_none_swappable_scooters = max(
+                    swaps + pickups - len(swappable_scooters_id), 0
+                )
+
+                return (
+                    swappable_scooters_id[swaps : swaps + pick_up]
+                    + none_swappable_scooters_id[:number_of_none_swappable_scooters]
+                )
+
             # Adding every action. Actions are the IDs of the scooters to be handled.
             for battery_swap, pick_up, drop_off, cluster_id in combinations:
                 if not vehicle.is_at_depot() and (
@@ -222,8 +239,8 @@ class State(SaveMixin):
                     ][0]
                 actions.append(
                     Action(
-                        swappable_scooters_id[pick_up : battery_swap + pick_up],
-                        swappable_scooters_id[:pick_up],
+                        swappable_scooters_id[:battery_swap],
+                        choose_pick_up(battery_swap, pick_up),
                         [scooter.id for scooter in vehicle.scooter_inventory][
                             :drop_off
                         ],
@@ -241,7 +258,7 @@ class State(SaveMixin):
         :return: float - reward for doing the action on the state
         """
         refill_time = 0
-        if vehicle.is_at_depot() and len(vehicle.service_route) > 1:
+        if vehicle.is_at_depot():
             batteries_to_swap = min(
                 vehicle.flat_batteries(),
                 vehicle.current_location.get_available_battery_swaps(time),

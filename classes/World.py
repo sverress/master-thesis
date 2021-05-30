@@ -176,7 +176,6 @@ class World(SaveMixin, HyperParameters):
             self.stack.append(
                 classes.VehicleArrival(0, vehicle.id, visualize=visualize)
             )
-            vehicle.service_route.append(vehicle.current_location)
             if vehicle.scooter_inventory_capacity > 0:
                 number_of_vans += 1
             else:
@@ -342,7 +341,6 @@ class World(SaveMixin, HyperParameters):
                 for event in self.stack
                 if not isinstance(event, classes.VehicleArrival)
             ]
-            self.state = clustering.helpers.idealize_state(self.state)
 
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):
@@ -394,8 +392,8 @@ class World(SaveMixin, HyperParameters):
     def add_van(self):
         # Create a new vehicle object
         vehicle = classes.Vehicle(
-            len(self.state.vehicles) + 1,
-            self.state.get_location_by_id(0),
+            len(self.state.vehicles),
+            self.state.get_location_by_id(len(self.state.clusters)),
             globals.VAN_BATTERY_INVENTORY,
             globals.VAN_SCOOTER_INVENTORY,
         )
@@ -405,5 +403,3 @@ class World(SaveMixin, HyperParameters):
         self.stack.append(
             classes.VehicleArrival(20, vehicle.id, visualize=self.visualize)
         )
-        # Add the current location to the service route
-        vehicle.service_route.append(vehicle.current_location)

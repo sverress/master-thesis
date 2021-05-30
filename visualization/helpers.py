@@ -377,7 +377,7 @@ def add_vehicle_routes(
     for vehicle in vehicles:
         route = vehicle.service_route
         for i in range(len(route) - 1):
-            start, end = route[i].id, route[i + 1].id
+            start, end = route[i][0].id, route[i][1].next_location
             if i != len(route) - 1 or vehicle.id == current_vehicle_id:
                 graph.add_edge(start, end, color=COLORS[vehicle.id], width=2)
                 if not route_labels.keys().__contains__((start, end)):

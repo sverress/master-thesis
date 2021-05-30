@@ -44,6 +44,14 @@ def run_analysis_from_path(
         # Do not learn anything more when during evaluation
         world.disable_training = True
 
+        world.policy.epsilon = 0
+
+        for vehicle in world.state.vehicles:
+            vehicle.service_route = []
+
+        world.metrics.testing_parameter_name = "Quality_of_solution"
+        world.metrics.testing_parameter_value = 69
+
         # Add extra vans
         for _ in range(number_of_extra_vehicles):
             world.add_van()
@@ -154,8 +162,11 @@ if __name__ == "__main__":
             sys.argv[2], world_attribute=sys.argv[1], runs_per_policy=3
         )
     else:
-        run_analysis_from_path(
-            "world_cache/test_models",
-            shift_duration=80,
-            runs_per_policy=1,
+        instances = run_analysis_from_path(
+            "world_cache/trained_models/ANNValueFunction/c20_s1001/longest_trained",
+            shift_duration=960,
+            runs_per_policy=10,
+            number_of_extra_vehicles=1,
         )
+
+        analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)

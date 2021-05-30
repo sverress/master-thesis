@@ -118,7 +118,7 @@ class Cluster(Location):
             )
         return string if string != "" else "Empty cluster"
 
-    def get_swappable_scooters(self, battery_limit=100):
+    def get_swappable_scooters(self, battery_limit=70):
         """
         Filter out scooters with 100% battery and sort them by battery percentage
         """
