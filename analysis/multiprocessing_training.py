@@ -8,24 +8,34 @@ import clustering.scripts
 
 
 def learning_rates(input_arguments, suffix):
-    learning_rate, ann_structure = input_arguments
-    world = classes.World(
+    SAMPLE_SIZE = 2500
+    NUMBER_OF_CLUSTERS = 50
+    learning_rate, network_structure = input_arguments
+    world_to_analyse = classes.World(
         960,
         None,
-        clustering.scripts.get_initial_state(2500, 30),
+        clustering.scripts.get_initial_state(
+            SAMPLE_SIZE,
+            NUMBER_OF_CLUSTERS,
+            number_of_vans=2,
+            number_of_bikes=0,
+        ),
         verbose=False,
         visualize=False,
-        test_parameter_name="learning_rate",
-        test_parameter_value=learning_rate,
-        WEIGHT_UPDATE_STEP_SIZE=learning_rate,
-        ANN_NETWORK_STRUCTURE=ann_structure,
-        TRAINING_SHIFTS_BEFORE_SAVE=100,
+        MODELS_TO_BE_SAVED=5,
+        TRAINING_SHIFTS_BEFORE_SAVE=50,
+        ANN_LEARNING_RATE=learning_rate,
+        ANN_NETWORK_STRUCTURE=network_structure,
+        REPLAY_BUFFER_SIZE=100,
     )
-    world.policy = world.set_policy(
+    world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
         value_function_class=decision.value_functions.ANNValueFunction,
     )
-    train_value_function(world, save_suffix=f"{suffix}")
+    for cluster in world_to_analyse.state.clusters:
+        cluster.scooters = cluster.scooters[: round(len(cluster.scooters) * 0.8)]
+        cluster.ideal_state = round(cluster.ideal_state * 0.8)
+    train_value_function(world_to_analyse, save_suffix=f"{suffix}")
 
 
 def multiprocess_train(function, inputs):
@@ -41,27 +51,20 @@ if __name__ == "__main__":
     multiprocess_train(
         learning_rates,
         [
-            (value, f"kombinasjon_{value}")
+            (value, f"relu_lr_struct_{value}")
             for value in list(
                 itertools.product(
-                    [0.0001, 0.00001, 0.001],
+                    [0.0001, 0.00001, 0.001, 0.01],
                     [
-                        [
-                            1000,
-                            1000,
-                            500,
-                            100,
-                            500,
-                            1000,
-                            1000,
-                            3000,
-                            1000,
-                            1000,
-                            500,
-                            100,
-                        ],
-                        [1000, 1000, 500, 100, 500, 1000, 3000, 1000, 500, 100],
-                        [1000, 1000, 500, 100, 500, 1000, 500, 100],
+                        [1000],
+                        [1000] * 2,
+                        [1000] * 3,
+                        [500],
+                        [500] * 2,
+                        [500] * 3,
+                        [100],
+                        [100] * 2,
+                        [100] * 3,
                     ],
                 )
             )

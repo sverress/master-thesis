@@ -26,7 +26,7 @@ class ANN:
         self.update_predict_model()
 
         self.tensorboard = ModifiedTensorBoard(
-            log_dir=f"logs/{network_structure}_{int(time.time())}_relu",
+            log_dir=f"logs/relu_{learning_rate}_{network_structure}_{int(time.time())}",
             profile_batch=100000000,  # https://github.com/tensorflow/tensorboard/issues/2819
         )
 
