@@ -82,6 +82,11 @@ class World(SaveMixin, HyperParameters):
                     for field, metric_list in fields.items()
                 }
             )
+
+            new_world_metric.testing_parameter_name = metrics[0].testing_parameter_name
+            new_world_metric.testing_parameter_value = metrics[
+                0
+            ].testing_parameter_value
             return new_world_metric
 
         def add_analysis_metrics(self, world):
@@ -341,6 +346,23 @@ class World(SaveMixin, HyperParameters):
                 for event in self.stack
                 if not isinstance(event, classes.VehicleArrival)
             ]
+        elif isinstance(policy, decision.NightShift):
+            self.stack = [
+                event
+                for event in self.stack
+                if not isinstance(event, classes.VehicleArrival)
+            ]
+            for cluster in self.state.clusters:
+                for scooter in cluster.scooters:
+                    if scooter.battery < 70:
+                        scooter.swap_battery()
+
+        elif isinstance(policy, decision.SwapAllPolicy):
+            for vehicle in self.state.vehicles:
+                vehicle.battery_inventory_capacity = 250
+                vehicle.battery_inventory = 250
+                vehicle.scooter_inventory_capacity = 0
+                vehicle.scooter_inventory = 0
 
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):

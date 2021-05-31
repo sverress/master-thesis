@@ -189,7 +189,7 @@ class SwapAllPolicy(Policy):
             swappable_scooters_ids = [
                 scooter.id
                 for scooter in vehicle.current_location.get_swappable_scooters(
-                    battery_limit=50
+                    battery_limit=70
                 )
             ]
 
@@ -213,6 +213,7 @@ class SwapAllPolicy(Policy):
                     len(cluster.scooters) - cluster.get_current_state()
                 )
                 / (len(cluster.scooters) + 1),
+                reverse=True,
             )[0]
 
         # Return an action with no re-balancing, only scooter swapping
@@ -243,6 +244,14 @@ class RandomActionPolicy(Policy):
 
 
 class DoNothing(Policy):
+    def __init__(self):
+        super().__init__(0, 0)
+
+    def get_best_action(self, world, vehicle):
+        return classes.Action([], [], [], 0)
+
+
+class NightShift(Policy):
     def __init__(self):
         super().__init__(0, 0)
 
