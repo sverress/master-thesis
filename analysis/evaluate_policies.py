@@ -118,7 +118,7 @@ def run_analysis(
         baseline_policy_world.policy = baseline_policy_world.set_policy(
             policy_class=baseline_policy_class
         )
-        worlds.append(baseline_policy_world)
+        # worlds.append(baseline_policy_world)
 
     td_errors_and_label = []
 
@@ -248,4 +248,4 @@ if __name__ == "__main__":
                     runs_per_policy=1,
                 )
 
-        analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)
+        # analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)
