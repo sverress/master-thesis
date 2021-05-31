@@ -45,7 +45,7 @@ class ANN:
             model.add(
                 keras.layers.Dense(layer, kernel_regularizer=keras.regularizers.L2())
             )
-            model.add(keras.layers.Activation("sigmoid"))
+            model.add(keras.layers.Activation("relu"))
         # The last layer needs to have a single value function output
         model.add(keras.layers.Dense(1))
         optimizer = keras.optimizers.Adam(lr=self.learning_rate)
