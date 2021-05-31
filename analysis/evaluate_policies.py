@@ -48,10 +48,6 @@ def run_analysis_from_path(
 
         world.policy.epsilon = 0
 
-        # system simulate the states to shake up the states
-        for i in range(5):
-            system_simulation.scripts.system_simulate(world_to_analyse.state)
-
         for vehicle in world.state.vehicles:
             vehicle.service_route = []
 
@@ -146,7 +142,7 @@ def run_analysis(
             td_errors_and_label.append(td_error_tuple_result)
             instances.append(world_result)
 
-    visualize_analysis(instances, title=title)
+    # visualize_analysis(instances, title=title)
     if save:
         for world_result in instances:
             world_result.save_world()
@@ -216,8 +212,25 @@ if __name__ == "__main__":
                     ]
                     cluster.ideal_state = round(cluster.ideal_state * percentage)
 
-                instances += run_analysis_from_path(
+                # system simulate the states to shake up the states
+                for i in range(5):
+                    system_simulation.scripts.system_simulate(world_to_analyse.state)
+
+                models = run_analysis_from_path(
                     "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
+                    return_worlds=True,
+                )
+                worlds = []
+                for model in models:
+                    world = copy.deepcopy(world_to_analyse)
+                    world.policy = model.policy
+                    world.disable_training = True
+                    world.policy.epsilon = 0
+                    worlds.append(world)
+
+                instances += run_analysis(
+                    worlds,
+                    baseline_policy_world=world_to_analyse,
                     runs_per_policy=10,
                 )
 
