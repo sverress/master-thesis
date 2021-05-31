@@ -118,7 +118,7 @@ def run_analysis(
         baseline_policy_world.policy = baseline_policy_world.set_policy(
             policy_class=baseline_policy_class
         )
-        # worlds.append(baseline_policy_world)
+        worlds.append(baseline_policy_world)
 
     td_errors_and_label = []
 
@@ -181,71 +181,55 @@ if __name__ == "__main__":
         NUMBER_OF_CLUSTERS = 50
         standard_parameters = globals.HyperParameters()
         instances = []
-        small_depots_coord = [
-            [],
-            [(59.908009, 10.741604)],
-            [(59.908009, 10.741604), (59.944473, 10.748624)],
-            [
-                (59.908009, 10.741604),
-                (59.944473, 10.748624),
-                (59.944473, 10.748624),
-            ],
-        ]
         for sample_size in number_of_scooters:
-            for small_depots in small_depots_coord:
-                globals.SMALL_DEPOT_LOCATIONS = small_depots
-                world_to_analyse = classes.World(
-                    960,
-                    None,
-                    clustering.scripts.get_initial_state(
-                        SAMPLE_SIZE,
-                        NUMBER_OF_CLUSTERS,
-                        number_of_vans=2,
-                        number_of_bikes=0,
-                    ),
-                    verbose=False,
-                    visualize=False,
-                    MODELS_TO_BE_SAVED=5,
-                    TRAINING_SHIFTS_BEFORE_SAVE=50,
-                    ANN_LEARNING_RATE=0.0001,
-                    ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
-                    REPLAY_BUFFER_SIZE=100,
-                    test_parameter_name="small_depots",
-                    test_parameter_value=len(small_depots),
-                )
+            world_to_analyse = classes.World(
+                960,
+                None,
+                clustering.scripts.get_initial_state(
+                    SAMPLE_SIZE,
+                    NUMBER_OF_CLUSTERS,
+                    number_of_vans=2,
+                    number_of_bikes=0,
+                ),
+                verbose=False,
+                visualize=False,
+                MODELS_TO_BE_SAVED=5,
+                TRAINING_SHIFTS_BEFORE_SAVE=50,
+                ANN_LEARNING_RATE=0.0001,
+                ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
+                REPLAY_BUFFER_SIZE=100,
+                test_parameter_name="quality_of_solutions",
+                test_parameter_value=69,
+            )
 
-                world_to_analyse.state.depots = clustering.methods.generate_depots(
-                    small_depots, NUMBER_OF_CLUSTERS
-                )
+            percentage = sample_size / SAMPLE_SIZE
 
-                percentage = sample_size / SAMPLE_SIZE
+            for cluster in world_to_analyse.state.clusters:
+                cluster.scooters = cluster.scooters[
+                    : round(len(cluster.scooters) * percentage)
+                ]
+                cluster.ideal_state = round(cluster.ideal_state * percentage)
 
-                for cluster in world_to_analyse.state.clusters:
-                    cluster.scooters = cluster.scooters[
-                        : round(len(cluster.scooters) * percentage)
-                    ]
-                    cluster.ideal_state = round(cluster.ideal_state * percentage)
+            # system simulate the states to shake up the states
+            for i in range(5):
+                system_simulation.scripts.system_simulate(world_to_analyse.state)
 
-                # system simulate the states to shake up the states
-                for i in range(5):
-                    system_simulation.scripts.system_simulate(world_to_analyse.state)
+            models = run_analysis_from_path(
+                "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
+                return_worlds=True,
+            )
+            worlds = []
+            for model in models:
+                world = copy.deepcopy(world_to_analyse)
+                world.policy = model.policy
+                world.disable_training = True
+                world.policy.epsilon = 0
+                worlds.append(world)
 
-                models = run_analysis_from_path(
-                    "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
-                    return_worlds=True,
-                )
-                worlds = []
-                for model in models:
-                    world = copy.deepcopy(world_to_analyse)
-                    world.policy = model.policy
-                    world.disable_training = True
-                    world.policy.epsilon = 0
-                    worlds.append(world)
+            instances += run_analysis(
+                worlds,
+                baseline_policy_world=world_to_analyse,
+                runs_per_policy=10,
+            )
 
-                instances += run_analysis(
-                    worlds,
-                    baseline_policy_world=world_to_analyse,
-                    runs_per_policy=1,
-                )
-
-        # analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)
+        analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)
