@@ -176,24 +176,7 @@ if __name__ == "__main__":
         )
         """
 
-        number_of_scooters = [
-            2500,
-            2400,
-            2300,
-            2200,
-            2100,
-            2000,
-            1900,
-            1800,
-            1700,
-            1600,
-            1500,
-            1400,
-            1300,
-            1200,
-            1100,
-            1000,
-        ]
+        number_of_scooters = [1500]
         SAMPLE_SIZE = 2500
         NUMBER_OF_CLUSTERS = 50
         standard_parameters = globals.HyperParameters()
@@ -210,6 +193,7 @@ if __name__ == "__main__":
             system_simulation.scripts.system_simulate(state)
 
         try:
+            sample_size = number_of_scooters[0]
             world_to_analyse = classes.World(
                 960,
                 None,
@@ -221,27 +205,27 @@ if __name__ == "__main__":
                 ANN_LEARNING_RATE=0.0001,
                 ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
                 REPLAY_BUFFER_SIZE=100,
-                test_parameter_name="number_of_scooters",
+                test_parameter_name="small_depots",
             )
             model = run_analysis_from_path(
                 "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
                 return_worlds=True,
             )[0]
+            percentage = sample_size / SAMPLE_SIZE
+            for cluster in world_to_analyse.state.clusters:
+                cluster.scooters = cluster.scooters[
+                    : round(len(cluster.scooters) * percentage)
+                ]
+                cluster.ideal_state = round(cluster.ideal_state * percentage)
             worlds = []
-            for sample_size in number_of_scooters:
+            for i in range(3):
                 world = copy.deepcopy(world_to_analyse)
-                percentage = sample_size / SAMPLE_SIZE
-
-                for cluster in world.state.clusters:
-                    cluster.scooters = cluster.scooters[
-                        : round(len(cluster.scooters) * percentage)
-                    ]
-                    cluster.ideal_state = round(cluster.ideal_state * percentage)
-
                 world.policy = model.policy
                 world.disable_training = True
                 world.policy.epsilon = 0
-                world.metrics.testing_parameter_value = sample_size
+                world.metrics.testing_parameter_value = i
+                world.state.depots = world.state.depots[: 1 + i]
+                world.state.locations = world.state.locations[: 51 + i]
                 worlds.append(world)
 
             instances += run_analysis(
