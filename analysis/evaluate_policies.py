@@ -142,7 +142,7 @@ def run_analysis(
             td_errors_and_label.append(td_error_tuple_result)
             instances.append(world_result)
 
-    visualize_analysis(instances, title=title)
+    # visualize_analysis(instances, title=title)
     if save:
         for world_result in instances:
             world_result.save_world()

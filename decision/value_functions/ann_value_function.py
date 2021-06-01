@@ -14,6 +14,7 @@ class ANNValueFunction(ValueFunction):
         location_repetition,
         trace_decay,
         network_structure: [int],
+        lost_trip_reward,
     ):
         super().__init__(
             learning_rate,
@@ -26,6 +27,7 @@ class ANNValueFunction(ValueFunction):
         self.network_structure = network_structure
         self.model = None
         self.train_count = 0
+        self.lost_trip_reward = lost_trip_reward
 
     def setup(self, state: classes.State):
         if self.setup_complete:
@@ -39,6 +41,7 @@ class ANNValueFunction(ValueFunction):
             self.trace_decay,
             self.discount_factor,
             self.step_size,
+            self.lost_trip_reward,
         )
         super(ANNValueFunction, self).setup(state)
 
