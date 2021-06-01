@@ -41,7 +41,6 @@ class ANNValueFunction(ValueFunction):
             self.trace_decay,
             self.discount_factor,
             self.step_size,
-            self.lost_trip_reward,
         )
         super(ANNValueFunction, self).setup(state)
 

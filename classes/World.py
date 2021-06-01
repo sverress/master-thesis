@@ -313,7 +313,6 @@ class World(SaveMixin, HyperParameters):
                         self.LOCATION_REPETITION,
                         self.TRACE_DECAY,
                         self.ANN_NETWORK_STRUCTURE,
-                        self.LOST_TRIP_REWARD,
                     )
                     if value_function_class is decision.value_functions.ANNValueFunction
                     else value_function_class(

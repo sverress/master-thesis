@@ -176,7 +176,24 @@ if __name__ == "__main__":
         )
         """
 
-        number_of_scooters = [1500]
+        number_of_scooters = [
+            2500,
+            2400,
+            2300,
+            2200,
+            2100,
+            2000,
+            1900,
+            1800,
+            1700,
+            1600,
+            1500,
+            1400,
+            1300,
+            1200,
+            1100,
+            1000,
+        ]
         SAMPLE_SIZE = 2500
         NUMBER_OF_CLUSTERS = 50
         standard_parameters = globals.HyperParameters()
@@ -187,65 +204,50 @@ if __name__ == "__main__":
             number_of_vans=2,
             number_of_bikes=0,
         )
-        scooter_capacities = [0, 10, 20, 30, 40, 50]
-        battery_capacities = [250, 210, 170, 130, 90, 50]
 
         # system simulate the states to shake up the states
         for i in range(5):
             system_simulation.scripts.system_simulate(state)
 
         try:
-
+            world_to_analyse = classes.World(
+                960,
+                None,
+                state,
+                verbose=False,
+                visualize=False,
+                MODELS_TO_BE_SAVED=5,
+                TRAINING_SHIFTS_BEFORE_SAVE=50,
+                ANN_LEARNING_RATE=0.0001,
+                ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
+                REPLAY_BUFFER_SIZE=100,
+                test_parameter_name="number_of_scooters",
+            )
+            model = run_analysis_from_path(
+                "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
+                return_worlds=True,
+            )[0]
+            worlds = []
             for sample_size in number_of_scooters:
-                world_to_analyse = classes.World(
-                    960,
-                    None,
-                    state,
-                    verbose=False,
-                    visualize=False,
-                    MODELS_TO_BE_SAVED=5,
-                    TRAINING_SHIFTS_BEFORE_SAVE=50,
-                    ANN_LEARNING_RATE=0.0001,
-                    ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
-                    REPLAY_BUFFER_SIZE=100,
-                    test_parameter_name="vehicle_capacities",
-                )
-
+                world = copy.deepcopy(world_to_analyse)
                 percentage = sample_size / SAMPLE_SIZE
 
-                for cluster in world_to_analyse.state.clusters:
+                for cluster in world.state.clusters:
                     cluster.scooters = cluster.scooters[
                         : round(len(cluster.scooters) * percentage)
                     ]
                     cluster.ideal_state = round(cluster.ideal_state * percentage)
 
-                model = run_analysis_from_path(
-                    "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
-                    return_worlds=True,
-                )[0]
+                world.policy = model.policy
+                world.disable_training = True
+                world.policy.epsilon = 0
+                world.metrics.testing_parameter_value = sample_size
+                worlds.append(world)
 
-                worlds = []
-
-                for bat_cap in battery_capacities:
-                    for sco_cap in scooter_capacities:
-                        if bat_cap + 4 * sco_cap <= 250:
-                            world = copy.deepcopy(world_to_analyse)
-                            world.policy = model.policy
-                            world.disable_training = True
-                            world.policy.epsilon = 0
-                            world.metrics.testing_parameter_value = (
-                                f"S-{sco_cap}|B-{bat_cap}"
-                            )
-                            for vehicle in world.state.vehicles:
-                                vehicle.battery_inventory_capacity = bat_cap
-                                vehicle.battery_inventory = bat_cap
-                                vehicle.scooter_inventory_capacity = sco_cap
-                            worlds.append(world)
-
-                instances += run_analysis(
-                    worlds,
-                    baseline_policy_world=world_to_analyse,
-                    runs_per_policy=10,
-                )
+            instances += run_analysis(
+                worlds,
+                baseline_policy_world=world_to_analyse,
+                runs_per_policy=10,
+            )
         finally:
             analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances)

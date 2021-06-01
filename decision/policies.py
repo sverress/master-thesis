@@ -98,7 +98,13 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             best_action = random.choice(actions)
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
-            action_info = []
+            action_info = [
+                (
+                    classes.Action([], [], [], random.choice(world.state.locations).id),
+                    -1000,
+                    [],
+                )
+            ]
             for action in actions:
                 # look one action ahead
                 forward_state: classes.State = copy.deepcopy(state)
@@ -129,7 +135,15 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     number_of_neighbours=self.number_of_neighbors,
                 )
                 cache = EpsilonGreedyValueFunctionPolicy.get_cache(forward_state)
-                forward_action_info = []
+                forward_action_info = [
+                    (
+                        classes.Action(
+                            [], [], [], random.choice(world.state.locations).id
+                        ),
+                        -1000,
+                        [],
+                    )
+                ]
                 for next_state_action in next_action_actions:
                     # Generate the features for this new state after the action
                     next_state_features = self.value_function.get_next_state_features(

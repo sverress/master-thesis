@@ -14,7 +14,6 @@ class ANN:
         trace_decay,
         discount_factor,
         learning_rate,
-        lost_trip_reward,
     ):
         self.trace_decay = trace_decay
         self.discount_factor = discount_factor
@@ -27,7 +26,7 @@ class ANN:
         self.update_predict_model()
 
         self.tensorboard = ModifiedTensorBoard(
-            log_dir=f"logs/relu_{discount_factor}_{lost_trip_reward}_{int(time.time())}",
+            log_dir=f"logs/relu_{discount_factor}_{network_structure}_{learning_rate}_{int(time.time())}",
             profile_batch=100000000,  # https://github.com/tensorflow/tensorboard/issues/2819
         )
 
