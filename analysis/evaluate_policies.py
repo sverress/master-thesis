@@ -183,77 +183,63 @@ if __name__ == "__main__":
         all_times = []
         instances = []
 
-        try:
-            for clusters in NUMBER_OF_CLUSTERS:
-                cluster_times = []
-                state = clustering.scripts.get_initial_state(
-                    SAMPLE_SIZE,
-                    clusters,
-                    number_of_vans=2,
-                    number_of_bikes=0,
-                )
+        for clusters in NUMBER_OF_CLUSTERS:
+            state = clustering.scripts.get_initial_state(
+                SAMPLE_SIZE,
+                clusters,
+                number_of_vans=2,
+                number_of_bikes=0,
+            )
 
-                # system simulate the states to shake up the states
-                for i in range(5):
-                    system_simulation.scripts.system_simulate(state)
+            # system simulate the states to shake up the states
+            for i in range(5):
+                system_simulation.scripts.system_simulate(state)
 
-                sample_size = number_of_scooters[0]
+            sample_size = number_of_scooters[0]
 
-                percentage = sample_size / SAMPLE_SIZE
-                for cluster in state.clusters:
-                    cluster.scooters = cluster.scooters[
-                        : round(len(cluster.scooters) * percentage)
-                    ]
-                    cluster.ideal_state = round(cluster.ideal_state * percentage)
+            percentage = sample_size / SAMPLE_SIZE
+            for cluster in state.clusters:
+                cluster.scooters = cluster.scooters[
+                    : round(len(cluster.scooters) * percentage)
+                ]
+                cluster.ideal_state = round(cluster.ideal_state * percentage)
 
-                world_to_analyse = classes.World(
-                    960,
-                    None,
-                    state,
-                    verbose=False,
-                    visualize=False,
-                    MODELS_TO_BE_SAVED=5,
-                    TRAINING_SHIFTS_BEFORE_SAVE=50,
-                    ANN_LEARNING_RATE=0.0001,
-                    ANN_NETWORK_STRUCTURE=[1000, 2000, 200],
-                    REPLAY_BUFFER_SIZE=100,
-                    test_parameter_name="divide",
-                )
+            world_to_analyse = classes.World(
+                960,
+                None,
+                state,
+                verbose=False,
+                visualize=False,
+                MODELS_TO_BE_SAVED=5,
+                TRAINING_SHIFTS_BEFORE_SAVE=50,
+                ANN_LEARNING_RATE=0.0001,
+                ANN_NETWORK_STRUCTURE=[1000, 2000, 200],
+                REPLAY_BUFFER_SIZE=100,
+                test_parameter_name="computational_time",
+            )
 
-                worlds = []
-                for divide in divides:
-                    world = copy.deepcopy(world_to_analyse)
-                    world.policy = world.set_policy(
-                        policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-                        value_function_class=decision.value_functions.LinearValueFunction,
-                    )
-                    world.disable_training = True
-                    world.policy.epsilon = 0
-                    world.DIVIDE_GET_POSSIBLE_ACTIONS = divide
-                    worlds.append(world)
+            world_to_analyse.policy = world_to_analyse.set_policy(
+                policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+                value_function_class=decision.value_functions.LinearValueFunction,
+            )
+            world_to_analyse.disable_training = True
+            world_to_analyse.policy.epsilon = 0
 
-                instances = run_analysis(
-                    worlds,
-                    baseline_policy_world=world_to_analyse,
-                    runs_per_policy=1,
-                )
-                time = []
-                number_of_actions = []
+            instances = run_analysis(
+                [world_to_analyse],
+                baseline_policy_world=world_to_analyse,
+                runs_per_policy=1,
+            )
 
-                for instance in instances:
-                    time += instance.policy.time
-                    number_of_actions += instance.policy.number_of_actions
+            all_times = [
+                sum(instance.policy.time) / len(instance.policy.time)
+                for instance in instances
+            ]
+        df = pd.DataFrame(
+            all_times, index=NUMBER_OF_CLUSTERS, columns=["Avg. time per decision"]
+        )
 
-                    print(
-                        f"Number of clusters - {clusters} | Divide - {instance.NUMBER_OF_NEIGHBOURS}\n"
-                        f"Avg decision time: {sum(time) / len(time)}\n"
-                        f"Avg number of actions: {sum(number_of_actions) / len(number_of_actions)}"
-                        f" | Number of decisions: {len(number_of_actions)}\n"
-                        f"Actions: {number_of_actions}"
-                    )
-                    cluster_times.append(sum(time) / len(time))
-                all_times.append(cluster_times)
-        finally:
-            df = pd.DataFrame(all_times, index=NUMBER_OF_CLUSTERS, columns=divides)
+        if not os.path.exists("computational_study"):
+            os.makedirs("computational_study")
 
-            df.to_excel("computational_study/tech_analysis.xlsx")
+        df.to_excel("computational_study/decision_time_clusters.xlsx")

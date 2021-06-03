@@ -9,8 +9,7 @@ import clustering.scripts
 
 def training(input_arguments, suffix):
     SAMPLE_SIZE = 2500
-    NUMBER_OF_CLUSTERS = 50
-    discount_rate, lost_trip_reward = input_arguments
+    NUMBER_OF_CLUSTERS = input_arguments
     world_to_analyse = classes.World(
         960,
         None,
@@ -27,8 +26,6 @@ def training(input_arguments, suffix):
         ANN_LEARNING_RATE=0.0001,
         ANN_NETWORK_STRUCTURE=[1000, 2000, 100],
         REPLAY_BUFFER_SIZE=100,
-        DISCOUNT_RATE=discount_rate,
-        LOST_TRIP_REWARD=lost_trip_reward,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
@@ -52,13 +49,5 @@ if __name__ == "__main__":
 
     multiprocess_train(
         training,
-        [
-            (value, f"dr_ltr_{value}")
-            for value in list(
-                itertools.product(
-                    [0.8, 0.85, 0.9, 0.95, 0.97, 0.98, 0.99, 0.999],
-                    [-0.5, -1, -2, -3, -5, -10, -100],
-                )
-            )
-        ],
+        [(value, f"c_{value}") for value in [10, 20, 30, 50, 75, 100, 200, 400, 500]],
     )
