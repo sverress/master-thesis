@@ -19,7 +19,7 @@ class ScooterArrival(Event):
 
     def perform(self, world, **kwargs) -> None:
         """
-            :param world: world object
+        :param world: world object
         """
 
         # get arrival cluster

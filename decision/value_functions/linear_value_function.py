@@ -7,22 +7,14 @@ from .abstract import *
 
 
 class LinearValueFunction(ValueFunction):
-    def train(self, batch_size):
-        if len(self.replay_buffer) < batch_size:
-            return
-        random_sample = random.sample(self.replay_buffer, batch_size)
-        for i, (
+    def train(self, state_features, reward, next_state_features):
+
+        self.update_weights(
             state_features,
-            best_action,
+            self.estimate_value_from_state_features(state_features),
+            self.estimate_value_from_state_features(next_state_features),
             reward,
-            next_state_features,
-        ) in enumerate(random_sample):
-            self.update_weights(
-                state_features,
-                self.estimate_value_from_state_features(state_features),
-                self.estimate_value_from_state_features(next_state_features),
-                reward,
-            )
+        )
 
     def __init__(
         self,
@@ -47,30 +39,11 @@ class LinearValueFunction(ValueFunction):
     def setup(self, state):
         if self.setup_complete:
             return
-        (
-            number_of_locations_indicators,
-            number_of_state_features,
-        ) = self.get_number_of_location_indicators_and_state_features(state)
-        self.weights = [self.weight_init_value] * (
-            1  # Bias
-            + number_of_locations_indicators
-            + number_of_state_features
-            + len(
-                list(
-                    itertools.combinations(
-                        list(
-                            range(
-                                number_of_locations_indicators
-                                + number_of_state_features
-                            )
-                        ),
-                        2,
-                    )
-                )
-            )
+        number_of_state_features = (
+            self.get_number_of_location_indicators_and_state_features(state)
         )
+        self.weights = [self.weight_init_value] * (1 + number_of_state_features)  # Bias
         self.reset_eligibilities()
-        self.location_indicator = [0] * number_of_locations_indicators
         super(LinearValueFunction, self).setup(state)
 
     def estimate_value(
@@ -84,7 +57,7 @@ class LinearValueFunction(ValueFunction):
         )
 
     def estimate_value_from_state_features(self, state_features: [float]):
-        return float(np.dot(self.weights, state_features))
+        return float(np.dot(self.weights, [1] + state_features))
 
     def update_weights(
         self,
@@ -96,7 +69,7 @@ class LinearValueFunction(ValueFunction):
 
         self.eligibilities = (
             self.discount_factor * self.trace_decay * self.eligibilities
-            + current_state_features
+            + ([1] + current_state_features)
         )
 
         self.weights += np.multiply(
@@ -122,22 +95,17 @@ class LinearValueFunction(ValueFunction):
 
         return [1] + state_features + locations_features_combination
 
-    def get_state_features(self, state, vehicle, time, cache=None):
-        return self.create_location_features_combination(
-            self.convert_state_to_features(state, vehicle, time, cache=cache)
-        )
+    def get_state_features(self, state, vehicle, cache=None):
+        return self.convert_state_to_features(state, vehicle, cache=cache)
 
     def get_next_state_features(
         self,
         state: classes.State,
         vehicle: classes.Vehicle,
         action: classes.Action,
-        time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
-        return self.create_location_features_combination(
-            self.convert_next_state_features(state, vehicle, action, time, cache)
-        )
+        return self.convert_next_state_features(state, vehicle, action, cache)
 
     def __str__(self):
         return f"LinearValueFunction - {self.shifts_trained}"

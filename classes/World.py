@@ -5,7 +5,6 @@ from typing import List
 import numpy as np
 import bisect
 import classes
-import clustering.helpers
 import globals
 from classes.SaveMixin import SaveMixin
 
@@ -372,7 +371,7 @@ class World(SaveMixin, HyperParameters):
     def get_filename(self):
         return (
             f"{self.created_at}_World_T_e{self.time}_t_{self.shift_duration}_"
-            f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}_relu"
+            f"S_c{len(self.state.clusters)}_s{len(self.state.get_scooters())}"
         )
 
     def save_world(self, cache_directory=None, suffix=""):

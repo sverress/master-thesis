@@ -68,6 +68,8 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         super().__init__(get_possible_actions_divide, number_of_neighbors)
         self.value_function = value_function
         self.epsilon = epsilon
+        self.time = []
+        self.number_of_actions = 0
 
     @staticmethod
     def get_cache(state):
@@ -79,6 +81,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         return current_states, available_scooters
 
     def get_best_action(self, world, vehicle):
+        start_time = time.time()
         # Find all possible actions
         actions = world.state.get_possible_actions(
             vehicle,
@@ -178,6 +181,8 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             if not world.disable_training:
                 self.value_function.train(world.REPLAY_BUFFER_SIZE)
 
+        self.time.append(time.time() - start_time)
+        self.number_of_actions += 1
         return best_action, state_features
 
     def setup_from_state(self, state):
