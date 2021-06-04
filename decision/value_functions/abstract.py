@@ -288,7 +288,7 @@ class ValueFunction(abc.ABC):
                         else 0
                     )
                 )
-                / cluster.average_number_of_scooters
+                / (cluster.average_number_of_scooters + 1)
             )
 
         def range_one_hot(cluster_list):

@@ -49,5 +49,5 @@ if __name__ == "__main__":
 
     multiprocess_train(
         training,
-        [(value, f"c_{value}") for value in [10, 20, 30, 50, 75, 100, 200, 400, 500]],
+        [(value, f"c_{value}") for value in [500]],
     )
