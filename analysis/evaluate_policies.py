@@ -182,6 +182,12 @@ if __name__ == "__main__":
         divides = [2, 3, 4, 5, 10]
         all_times = []
         instances = []
+        state = clustering.scripts.get_initial_state(
+            SAMPLE_SIZE,
+            NUMBER_OF_CLUSTERS,
+            number_of_vans=4,
+            number_of_bikes=0,
+        )
 
         for clusters in NUMBER_OF_CLUSTERS:
             state = clustering.scripts.get_initial_state(

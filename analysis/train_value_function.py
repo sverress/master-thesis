@@ -64,12 +64,14 @@ if __name__ == "__main__":
         MODELS_TO_BE_SAVED=5,
         TRAINING_SHIFTS_BEFORE_SAVE=200,
         ANN_LEARNING_RATE=0.0001,
-        ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
+        ANN_NETWORK_STRUCTURE=[1000, 3000, 500],
         REPLAY_BUFFER_SIZE=100,
+        LOST_TRIP_REWARD=-0.5,
+        DISCOUNT_RATE=0.99,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-        value_function_class=decision.value_functions.LinearValueFunction,
+        value_function_class=decision.value_functions.ANNValueFunction,
     )
     for cluster in world_to_analyse.state.clusters:
         cluster.scooters = cluster.scooters[: round(len(cluster.scooters) * 0.6)]
