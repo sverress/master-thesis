@@ -54,10 +54,7 @@ if __name__ == "__main__":
     import os
 
     SAMPLE_SIZE = 2500
-    NUMBER_OF_CLUSTERS = [
-        10,
-        20,
-    ]  # 30, 50, 75, 100, 200, 300, 500
+    NUMBER_OF_CLUSTERS = [10, 20, 30, 50, 75, 100, 200, 300, 500]
     standard_parameters = globals.HyperParameters()
     decision_times = []
     for num_clusters in NUMBER_OF_CLUSTERS:
@@ -94,7 +91,7 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(
         avg_training_times,
-        index=[10, 20],
+        index=NUMBER_OF_CLUSTERS,
         columns=["Avg. time per training"],
     )
 
