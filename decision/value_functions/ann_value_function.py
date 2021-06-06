@@ -1,4 +1,5 @@
 import random
+import time
 
 from .abstract import *
 from decision.value_functions.ANN import ANN
@@ -44,15 +45,16 @@ class ANNValueFunction(ValueFunction):
 
     def train(self, batch_size):
         if (
-            len(self.replay_buffer) < batch_size
-            or len(self.replay_buffer_negative) < batch_size
+            len(self.replay_buffer)
+            < batch_size
+            # or len(self.replay_buffer_negative) < batch_size
         ):
             return
         for j in range(2):
             random_sample = (
                 random.sample(self.replay_buffer, 64)
-                if j == 0
-                else random.sample(self.replay_buffer_negative, 64)
+                # if j == 0
+                # else random.sample(self.replay_buffer_negative, 64)
             )
             # Create training data from random sample
             states, targets = [], []
@@ -66,7 +68,7 @@ class ANNValueFunction(ValueFunction):
                 targets.append(self.discount_factor * next_state_value + reward)
             self.model.batch_fit(states, targets, verbose=1, batch_size=64)
 
-        if self.train_count % 50:
+        if self.train_count % 1:
             self.model.update_predict_model()
         self.train_count += 1
 

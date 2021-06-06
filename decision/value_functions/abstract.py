@@ -46,8 +46,8 @@ class ValueFunction(abc.ABC):
 
         self.setup_complete = False
         self.location_indicator = None
-        self.replay_buffer = deque(maxlen=500)
-        self.replay_buffer_negative = deque(maxlen=500)
+        self.replay_buffer = deque(maxlen=64)
+        self.replay_buffer_negative = deque(maxlen=64)
         self.shifts_trained = 0
         self.td_errors = []
 

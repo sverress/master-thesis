@@ -45,34 +45,60 @@ def train_value_function(
             world.policy = policy_world.policy
             progress_bar.next()
 
+        if len(world.policy.decision_times) > 10:
+            return world.policy.decision_times
+
 
 if __name__ == "__main__":
-    SAMPLE_SIZE = 2500
-    NUMBER_OF_CLUSTERS = 50
-    standard_parameters = globals.HyperParameters()
-    world_to_analyse = classes.World(
-        960,
-        None,
-        clustering.scripts.get_initial_state(
-            SAMPLE_SIZE,
-            NUMBER_OF_CLUSTERS,
-            number_of_vans=2,
-            number_of_bikes=0,
-        ),
-        verbose=False,
-        visualize=False,
-        MODELS_TO_BE_SAVED=5,
-        TRAINING_SHIFTS_BEFORE_SAVE=200,
-        ANN_LEARNING_RATE=0.0001,
-        ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
-        REPLAY_BUFFER_SIZE=100,
-    )
-    world_to_analyse.policy = world_to_analyse.set_policy(
-        policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-        value_function_class=decision.value_functions.LinearValueFunction,
-    )
-    for cluster in world_to_analyse.state.clusters:
-        cluster.scooters = cluster.scooters[: round(len(cluster.scooters) * 0.6)]
-        cluster.ideal_state = round(cluster.ideal_state * 0.6)
+    import pandas as pd
+    import os
 
-    train_value_function(world_to_analyse)
+    SAMPLE_SIZE = 2500
+    NUMBER_OF_CLUSTERS = [
+        10,
+        20,
+    ]  # 30, 50, 75, 100, 200, 300, 500
+    standard_parameters = globals.HyperParameters()
+    decision_times = []
+    for num_clusters in NUMBER_OF_CLUSTERS:
+        world_to_analyse = classes.World(
+            960,
+            None,
+            clustering.scripts.get_initial_state(
+                SAMPLE_SIZE,
+                num_clusters,
+                number_of_vans=2,
+                number_of_bikes=0,
+            ),
+            verbose=False,
+            visualize=False,
+            MODELS_TO_BE_SAVED=5,
+            TRAINING_SHIFTS_BEFORE_SAVE=200,
+            ANN_LEARNING_RATE=0.0001,
+            ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
+            REPLAY_BUFFER_SIZE=64,
+        )
+        world_to_analyse.policy = world_to_analyse.set_policy(
+            policy_class=decision.EpsilonGreedyValueFunctionPolicy,
+            value_function_class=decision.value_functions.ANNValueFunction,
+        )
+        for cluster in world_to_analyse.state.clusters:
+            cluster.scooters = cluster.scooters[: round(len(cluster.scooters) * 0.6)]
+            cluster.ideal_state = round(cluster.ideal_state * 0.6)
+
+        decision_times.append(train_value_function(world_to_analyse))
+
+    avg_training_times = []
+    for times in decision_times:
+        avg_training_times.append(sum(times) / len(times))
+
+    df = pd.DataFrame(
+        avg_training_times,
+        index=[10, 20],
+        columns=["Avg. time per training"],
+    )
+
+    if not os.path.exists("computational_study"):
+        os.makedirs("computational_study")
+
+    df.to_excel("computational_study/training_time_clusters.xlsx")
