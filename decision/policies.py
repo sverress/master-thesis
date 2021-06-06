@@ -80,7 +80,6 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         return current_states, available_scooters
 
     def get_best_action(self, world, vehicle):
-        start = time.time()
         # Find all possible actions
         actions = world.state.get_possible_actions(
             vehicle,
@@ -179,9 +178,6 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             )
             if not world.disable_training:
                 self.value_function.train(world.REPLAY_BUFFER_SIZE)
-
-        if len(self.value_function.replay_buffer) >= world.REPLAY_BUFFER_SIZE:
-            self.decision_times.append(time.time() - start)
 
         return best_action, state_features
 

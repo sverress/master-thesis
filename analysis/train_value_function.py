@@ -1,4 +1,5 @@
 import copy
+import time
 
 import classes
 import clustering.scripts
@@ -23,7 +24,9 @@ def train_value_function(
     )
     number_of_shifts = world.TRAINING_SHIFTS_BEFORE_SAVE * world.MODELS_TO_BE_SAVED
     world.policy.epsilon = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
+    training_times = []
     for shift in range(number_of_shifts + 1):
+        start = time.time()
         policy_world = copy.deepcopy(world)
         policy_world.policy.value_function.update_shifts_trained(shift)
         if epsilon_decay and shift > 0:
@@ -44,9 +47,9 @@ def train_value_function(
 
             world.policy = policy_world.policy
             progress_bar.next()
+        training_times.append(time.time() - start)
 
-        if len(world.policy.decision_times) > 10:
-            return world.policy.decision_times
+    return sum(training_times) / number_of_shifts
 
 
 if __name__ == "__main__":
@@ -54,7 +57,7 @@ if __name__ == "__main__":
     import os
 
     SAMPLE_SIZE = 2500
-    NUMBER_OF_CLUSTERS = [10, 20, 30, 50, 75, 100, 200, 300, 500]
+    NUMBER_OF_CLUSTERS = [10, 20, 30, 50, 75, 100, 200, 300]
     standard_parameters = globals.HyperParameters()
     decision_times = []
     for num_clusters in NUMBER_OF_CLUSTERS:
@@ -69,8 +72,8 @@ if __name__ == "__main__":
             ),
             verbose=False,
             visualize=False,
-            MODELS_TO_BE_SAVED=5,
-            TRAINING_SHIFTS_BEFORE_SAVE=200,
+            MODELS_TO_BE_SAVED=1,
+            TRAINING_SHIFTS_BEFORE_SAVE=50,
             ANN_LEARNING_RATE=0.0001,
             ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
             REPLAY_BUFFER_SIZE=64,
@@ -85,17 +88,13 @@ if __name__ == "__main__":
 
         decision_times.append(train_value_function(world_to_analyse))
 
-    avg_training_times = []
-    for times in decision_times:
-        avg_training_times.append(sum(times) / len(times))
-
     df = pd.DataFrame(
-        avg_training_times,
+        decision_times,
         index=NUMBER_OF_CLUSTERS,
-        columns=["Avg. time per training"],
+        columns=["Avg. time per shift"],
     )
 
     if not os.path.exists("computational_study"):
         os.makedirs("computational_study")
 
-    df.to_excel("computational_study/training_time_clusters.xlsx")
+    df.to_excel("computational_study/training_time_clusters_shift.xlsx")
