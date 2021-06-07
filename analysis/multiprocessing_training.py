@@ -5,6 +5,7 @@ import decision.value_functions
 import classes
 from analysis.train_value_function import train_value_function
 import clustering.scripts
+import pandas as pd
 
 
 def training(input_arguments, suffix):
@@ -21,7 +22,7 @@ def training(input_arguments, suffix):
         ),
         verbose=False,
         visualize=False,
-        MODELS_TO_BE_SAVED=5,
+        MODELS_TO_BE_SAVED=1,
         TRAINING_SHIFTS_BEFORE_SAVE=50,
         ANN_LEARNING_RATE=0.0001,
         ANN_NETWORK_STRUCTURE=[1000, 2000, 100],
@@ -34,7 +35,18 @@ def training(input_arguments, suffix):
     for cluster in world_to_analyse.state.clusters:
         cluster.scooters = cluster.scooters[: round(len(cluster.scooters) * 0.6)]
         cluster.ideal_state = round(cluster.ideal_state * 0.6)
-    train_value_function(world_to_analyse, save_suffix=f"{suffix}")
+    decision_times = train_value_function(world_to_analyse, save_suffix=f"{suffix}")
+
+    df = pd.DataFrame(
+        decision_times,
+        index=NUMBER_OF_CLUSTERS,
+        columns=["Avg. time per shift"],
+    )
+
+    if not os.path.exists("computational_study"):
+        os.makedirs("computational_study")
+
+    df.to_excel(f"computational_study/training_time_{NUMBER_OF_CLUSTERS}.xlsx")
 
 
 def multiprocess_train(function, inputs):
@@ -49,5 +61,5 @@ if __name__ == "__main__":
 
     multiprocess_train(
         training,
-        [(value, f"c_{value}") for value in [500]],
+        [(value, f"c_{value}") for value in [10, 20, 30, 50, 75, 100, 200, 300]],
     )

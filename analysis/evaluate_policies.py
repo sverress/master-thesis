@@ -186,9 +186,8 @@ if __name__ == "__main__":
         number_of_scooters = [1500]
         SAMPLE_SIZE = 2500
         NUMBER_OF_CLUSTERS = 50
-        ACTION_INTERVAL = [2, 3]  # ,  4, 5, 10
-        NUMBER_OF_NEIGHBOURS = [2, 3]  #  4, 5, 6
-        instances = []
+        ACTION_INTERVAL = [1, 2, 3, 4, 5]
+        NUMBER_OF_NEIGHBOURS = [2, 3, 4, 5, 6]
         state = clustering.scripts.get_initial_state(
             SAMPLE_SIZE,
             NUMBER_OF_CLUSTERS,
@@ -235,7 +234,7 @@ if __name__ == "__main__":
                 neighbour_worlds.append(world)
 
             instances.append(
-                run_analysis(neighbour_worlds, runs_per_policy=1, multiprocess=False)
+                run_analysis(neighbour_worlds, runs_per_policy=2, multiprocess=False)
             )
 
     desicion_time = []
