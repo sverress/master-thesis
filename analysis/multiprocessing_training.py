@@ -10,13 +10,13 @@ import pandas as pd
 
 def training(input_arguments, suffix):
     SAMPLE_SIZE = 2500
-    NUMBER_OF_CLUSTERS = input_arguments
+    action_interval, number_of_neighbours = input_arguments
     world_to_analyse = classes.World(
         960,
         None,
         clustering.scripts.get_initial_state(
             SAMPLE_SIZE,
-            NUMBER_OF_CLUSTERS,
+            50,
             number_of_vans=2,
             number_of_bikes=0,
         ),
@@ -27,6 +27,8 @@ def training(input_arguments, suffix):
         ANN_LEARNING_RATE=0.0001,
         ANN_NETWORK_STRUCTURE=[1000, 2000, 100],
         REPLAY_BUFFER_SIZE=100,
+        NUMBER_OF_NEIGHBOURS=number_of_neighbours,
+        DIVIDE_GET_POSSIBLE_ACTIONS=action_interval,
     )
     world_to_analyse.policy = world_to_analyse.set_policy(
         policy_class=decision.EpsilonGreedyValueFunctionPolicy,
@@ -45,7 +47,9 @@ def training(input_arguments, suffix):
     if not os.path.exists("computational_study"):
         os.makedirs("computational_study")
 
-    df.to_excel(f"computational_study/training_time_{NUMBER_OF_CLUSTERS}.xlsx")
+    df.to_excel(
+        f"computational_study/training_time_ai{action_interval}_nn{number_of_neighbours}.xlsx"
+    )
 
 
 def multiprocess_train(function, inputs):
@@ -60,5 +64,8 @@ if __name__ == "__main__":
 
     multiprocess_train(
         training,
-        [(value, f"c_{value}") for value in [10, 20, 30, 50, 75, 100, 200, 300]],
+        [
+            (value, f"ai_{value[0]}_nn{value[1]}")
+            for value in itertools.product([1, 2], [2, 5, 10, 20])
+        ],
     )
