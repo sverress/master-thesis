@@ -37,7 +37,7 @@ def training(input_arguments, suffix):
     for cluster in world_to_analyse.state.clusters:
         cluster.scooters = cluster.scooters[: round(len(cluster.scooters) * 0.6)]
         cluster.ideal_state = round(cluster.ideal_state * 0.6)
-    decision_times = train_value_function(world_to_analyse, save_suffix=f"{suffix}")
+    decision_times = [train_value_function(world_to_analyse, save_suffix=f"{suffix}")]
 
     df = pd.DataFrame(
         decision_times,
@@ -66,6 +66,9 @@ if __name__ == "__main__":
         training,
         [
             (value, f"ai_{value[0]}_nn{value[1]}")
-            for value in itertools.product([1, 2], [2, 5, 10, 20])
+            for value in itertools.product(
+                [1, 2],
+                [2, 5, 10, 20],
+            )
         ],
     )

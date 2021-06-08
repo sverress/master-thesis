@@ -176,18 +176,105 @@ if __name__ == "__main__":
 
         """
 
-        instances = run_analysis_from_path(
-            "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
-            shift_duration=960,
-            runs_per_policy=10,
+            instances = run_analysis_from_path(
+                "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
+                shift_duration=960,
+                runs_per_policy=10)
 
+            number_of_scooters = [1500]
+            SAMPLE_SIZE = 2500
+            NUMBER_OF_CLUSTERS = 50
+            ACTION_INTERVAL = [1, 2, 3, 4, 5]
+            NUMBER_OF_NEIGHBOURS = [2, 3, 4, 5, 6]
+            state = clustering.scripts.get_initial_state(
+                SAMPLE_SIZE,
+                NUMBER_OF_CLUSTERS,
+                number_of_vans=2,
+                number_of_bikes=0,
+            )
+
+            # system simulate the states to shake up the states
+            for i in range(5):
+                system_simulation.scripts.system_simulate(state)
+
+            sample_size = number_of_scooters[0]
+
+            percentage = sample_size / SAMPLE_SIZE
+            for cluster in state.clusters:
+                cluster.scooters = cluster.scooters[
+                    : round(len(cluster.scooters) * percentage)
+                ]
+                cluster.ideal_state = round(cluster.ideal_state * percentage)
+
+            world_to_analyse = classes.World(
+                960,
+                None,
+                state,
+                verbose=False,
+                visualize=False,
+                test_parameter_name="Action Interval - Number of Neighbours",
+            )
+
+            instance = run_analysis_from_path(
+                "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
+                return_worlds=True,
+            )[0]
+            instances = []
+            for action_interval in ACTION_INTERVAL:
+                neighbour_worlds = []
+                for number_of_neighbours in NUMBER_OF_NEIGHBOURS:
+                    world = copy.deepcopy(world_to_analyse)
+                    world.policy = instance.policy
+                    world.disable_training = True
+                    world.policy.epsilon = 0
+                    world.policy.get_possible_actions_divide = action_interval
+                    world.policy.number_of_neighbors = number_of_neighbours
+                    neighbour_worlds.append(world)
+
+                instances.append(
+                    run_analysis(neighbour_worlds, runs_per_policy=2, multiprocess=False)
+                )
+
+        desicion_time = []
+        total_time = []
+        for neighbour_instances in instances:
+            desicion_time.append(
+                [
+                    sum(world.decision_times) / len(world.decision_times)
+                    for world in neighbour_instances[0]
+                ]
+            )
+            total_time.append([total for total in neighbour_instances[1]])
+
+        columns = pd.MultiIndex.from_product(
+            [["Number of Neighbours"], NUMBER_OF_NEIGHBOURS]
+        )
+        index = pd.MultiIndex.from_product([["Action Interval"], ACTION_INTERVAL])
+
+        df = pd.DataFrame(
+            desicion_time,
+            index=index,
+            columns=columns,
+        )
+        df2 = pd.DataFrame(
+            total_time,
+            index=index,
+            columns=columns,
+        )
+
+        if not os.path.exists("computational_study"):
+            os.makedirs("computational_study")
+
+        df.to_excel("computational_study/action_interval_neighbours_decision.xlsx")
+        df2.to_excel("computational_study/action_interval_neighbours_total.xlsx")
+        analysis.export_metrics_to_xlsx.metrics_to_xlsx(
+            [world for neighbour_worlds in instances for world in neighbour_worlds[0]]
+        )
         """
 
         number_of_scooters = [1500]
         SAMPLE_SIZE = 2500
         NUMBER_OF_CLUSTERS = 50
-        ACTION_INTERVAL = [1, 2, 3, 4, 5]
-        NUMBER_OF_NEIGHBOURS = [2, 3, 4, 5, 6]
         state = clustering.scripts.get_initial_state(
             SAMPLE_SIZE,
             NUMBER_OF_CLUSTERS,
@@ -214,61 +301,21 @@ if __name__ == "__main__":
             state,
             verbose=False,
             visualize=False,
-            test_parameter_name="Action Interval - Number of Neighbours",
+            test_parameter_name="StochasticVariations",
         )
 
         instance = run_analysis_from_path(
             "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
             return_worlds=True,
         )[0]
-        instances = []
-        for action_interval in ACTION_INTERVAL:
-            neighbour_worlds = []
-            for number_of_neighbours in NUMBER_OF_NEIGHBOURS:
-                world = copy.deepcopy(world_to_analyse)
-                world.policy = instance.policy
-                world.disable_training = True
-                world.policy.epsilon = 0
-                world.policy.get_possible_actions_divide = action_interval
-                world.policy.number_of_neighbors = number_of_neighbours
-                neighbour_worlds.append(world)
 
-            instances.append(
-                run_analysis(neighbour_worlds, runs_per_policy=2, multiprocess=False)
-            )
-
-    desicion_time = []
-    total_time = []
-    for neighbour_instances in instances:
-        desicion_time.append(
-            [
-                sum(world.decision_times) / len(world.decision_times)
-                for world in neighbour_instances[0]
-            ]
-        )
-        total_time.append([total for total in neighbour_instances[1]])
-
-    columns = pd.MultiIndex.from_product(
-        [["Number of Neighbours"], NUMBER_OF_NEIGHBOURS]
-    )
-    index = pd.MultiIndex.from_product([["Action Interval"], ACTION_INTERVAL])
-
-    df = pd.DataFrame(
-        desicion_time,
-        index=index,
-        columns=columns,
-    )
-    df2 = pd.DataFrame(
-        total_time,
-        index=index,
-        columns=columns,
-    )
-
-    if not os.path.exists("computational_study"):
-        os.makedirs("computational_study")
-
-    df.to_excel("computational_study/action_interval_neighbours_decision.xlsx")
-    df2.to_excel("computational_study/action_interval_neighbours_total.xlsx")
-    analysis.export_metrics_to_xlsx.metrics_to_xlsx(
-        [world for neighbour_worlds in instances for world in neighbour_worlds[0]]
-    )
+        worlds = []
+        for i in range(100):
+            world = copy.deepcopy(world_to_analyse)
+            world.policy = instance.policy
+            world.disable_training = True
+            world.policy.epsilon = 0
+            world.testing_parameter_value = i
+            worlds.append(world)
+        instances = run_analysis(worlds, runs_per_policy=1)
+        analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances[0])
