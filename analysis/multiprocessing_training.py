@@ -39,7 +39,6 @@ def training(input_arguments, suffix):
 
     df = pd.DataFrame(
         decision_times,
-        index=NUMBER_OF_CLUSTERS,
         columns=["Avg. time per shift"],
     )
 
