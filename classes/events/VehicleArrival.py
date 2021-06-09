@@ -38,10 +38,8 @@ class VehicleArrival(Event):
             vehicle_before_action = copy.deepcopy(vehicle)
 
         arrival_time = 0
-        start = time.time()
         # find the best action from the current world state
         action = world.policy.get_best_action(world, vehicle)
-        world.decision_times.append(time.time() - start)
 
         if isinstance(action, tuple):
             action, _ = action
