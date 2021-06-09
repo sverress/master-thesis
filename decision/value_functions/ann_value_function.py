@@ -45,16 +45,15 @@ class ANNValueFunction(ValueFunction):
 
     def train(self, batch_size):
         if (
-            len(self.replay_buffer)
-            < batch_size
-            # or len(self.replay_buffer_negative) < batch_size
+            len(self.replay_buffer) < batch_size
+            or len(self.replay_buffer_negative) < batch_size
         ):
             return
         for j in range(2):
             random_sample = (
                 random.sample(self.replay_buffer, 64)
-                # if j == 0
-                # else random.sample(self.replay_buffer_negative, 64)
+                if j == 0
+                else random.sample(self.replay_buffer_negative, 64)
             )
             # Create training data from random sample
             states, targets = [], []
