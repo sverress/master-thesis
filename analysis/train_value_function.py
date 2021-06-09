@@ -73,7 +73,7 @@ if __name__ == "__main__":
             verbose=False,
             visualize=False,
             MODELS_TO_BE_SAVED=1,
-            TRAINING_SHIFTS_BEFORE_SAVE=50,
+            TRAINING_SHIFTS_BEFORE_SAVE=10,
             ANN_LEARNING_RATE=0.0001,
             ANN_NETWORK_STRUCTURE=[1000, 2000, 1000, 200],
             REPLAY_BUFFER_SIZE=64,
@@ -97,4 +97,4 @@ if __name__ == "__main__":
     if not os.path.exists("computational_study"):
         os.makedirs("computational_study")
 
-    df.to_excel("computational_study/training_time_clusters_shift.xlsx")
+    df.to_excel("computational_study/training_time_clusters_shift_short.xlsx")
