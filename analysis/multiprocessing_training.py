@@ -64,11 +64,5 @@ if __name__ == "__main__":
 
     multiprocess_train(
         training,
-        [
-            (value, f"ai_{value[0]}_nn{value[1]}")
-            for value in itertools.product(
-                [1, 2],
-                [2, 5, 10, 20],
-            )
-        ],
+        [(value, f"ai_{value[0]}_nn{value[1]}") for value in [[3, 2], [4, 2], [3, 5]]],
     )

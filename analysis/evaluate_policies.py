@@ -282,10 +282,6 @@ if __name__ == "__main__":
             number_of_bikes=0,
         )
 
-        # system simulate the states to shake up the states
-        for i in range(5):
-            system_simulation.scripts.system_simulate(state)
-
         sample_size = number_of_scooters[0]
 
         percentage = sample_size / SAMPLE_SIZE
@@ -294,6 +290,9 @@ if __name__ == "__main__":
                 : round(len(cluster.scooters) * percentage)
             ]
             cluster.ideal_state = round(cluster.ideal_state * percentage)
+            for scooter in cluster.scooters:
+                if scooter.battery < 70:
+                    scooter.swap_battery()
 
         world_to_analyse = classes.World(
             960,
@@ -301,7 +300,7 @@ if __name__ == "__main__":
             state,
             verbose=False,
             visualize=False,
-            test_parameter_name="StochasticVariations",
+            test_parameter_name="Night_and_Day",
         )
 
         instance = run_analysis_from_path(
@@ -309,13 +308,8 @@ if __name__ == "__main__":
             return_worlds=True,
         )[0]
 
-        worlds = []
-        for i in range(100):
-            world = copy.deepcopy(world_to_analyse)
-            world.policy = instance.policy
-            world.disable_training = True
-            world.policy.epsilon = 0
-            world.testing_parameter_value = i
-            worlds.append(world)
-        instances = run_analysis(worlds, runs_per_policy=1)
+        world_to_analyse.policy = instance.policy
+        world_to_analyse.disable_training = True
+        world_to_analyse.policy.epsilon = 0
+        instances = run_analysis([world_to_analyse], runs_per_policy=10)
         analysis.export_metrics_to_xlsx.metrics_to_xlsx(instances[0])
