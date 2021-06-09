@@ -66,6 +66,6 @@ if __name__ == "__main__":
         training,
         [
             (value, f"ai_{value[0]}_nn{value[1]}")
-            for value in list(itertools.product([1, 2, 3], [3, 4]))
+            for value in list(itertools.product([4], [3, 4]))
         ],
     )
