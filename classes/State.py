@@ -96,7 +96,7 @@ class State(SaveMixin):
     def get_possible_actions(
         self,
         vehicle: Vehicle,
-        number_of_neighbours=None,
+        number_of_neighbours,
         divide=None,
         exclude=None,
         time=None,
@@ -111,18 +111,16 @@ class State(SaveMixin):
         :return: List of Action objects
         """
         actions = []
+        neighbours = decision.neighbour_filtering.filtering_neighbours(
+            self,
+            vehicle,
+            0,
+            0,
+            number_of_neighbours,
+            exclude=exclude,
+        )
         # Return empty action if
-        if vehicle.is_at_depot():
-            neighbours = decision.neighbour_filtering.filtering_neighbours(
-                self,
-                vehicle,
-                0,
-                0,
-                number_of_neighbours,
-                exclude=exclude,
-            )
-            return [Action([], [], [], neighbour.id) for neighbour in neighbours]
-        else:
+        if not vehicle.is_at_depot():
 
             def get_range(max_int):
                 if divide and divide > 0 and max_int > 0:
@@ -247,7 +245,11 @@ class State(SaveMixin):
                         cluster_id,
                     )
                 )
-            return actions
+        return (
+            actions
+            if len(actions) > 0
+            else [Action([], [], [], neighbour.id) for neighbour in neighbours]
+        )
 
     def do_action(self, action: Action, vehicle: Vehicle, time: int):
         """

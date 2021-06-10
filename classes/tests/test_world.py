@@ -13,7 +13,7 @@ class WorldTestCase(unittest.TestCase):
         self.world = classes.World(
             40,
             policy=decision.SwapAllPolicy(),
-            initial_state=clustering.scripts.get_initial_state(100, 10),
+            initial_state=clustering.scripts.get_initial_state(100, 20),
             visualize=False,
         )
 
@@ -55,7 +55,7 @@ class WorldTestCase(unittest.TestCase):
             [
                 action.next_location
                 for action in self.world.state.get_possible_actions(
-                    vehicle, exclude=self.world.tabu_list
+                    vehicle, number_of_neighbours=10, exclude=self.world.tabu_list
                 )
             ],
         )
@@ -64,7 +64,7 @@ class WorldTestCase(unittest.TestCase):
         # Check that the old vehicle location is not in the tabu list
         self.assertNotIn(first_vehicle_location, self.world.tabu_list)
 
-    def save_world(self, run=False):
+    def save_world(self):
         filepath = f"{globals.WORLD_CACHE_DIR}/{self.world.get_filename()}.pickle"
         self.world.save(globals.WORLD_CACHE_DIR)
         file_world = classes.World.load(filepath)
@@ -79,7 +79,6 @@ class WorldTestCase(unittest.TestCase):
             policy_class=decision.EpsilonGreedyValueFunctionPolicy,
             value_function_class=decision.value_functions.LinearValueFunction,
         )
-        self.world.policy.value_function.weights[1] = 0.1
         self.save_world()
 
     def test_save_world_ann(self):

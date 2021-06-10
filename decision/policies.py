@@ -1,11 +1,9 @@
 import copy
-import time
 
 import classes
 import numpy.random as random
 import abc
 
-import decision.value_functions
 import system_simulation.scripts
 
 
@@ -138,15 +136,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     number_of_neighbours=self.number_of_neighbors,
                 )
                 cache = EpsilonGreedyValueFunctionPolicy.get_cache(forward_state)
-                forward_action_info = [
-                    (
-                        classes.Action(
-                            [], [], [], random.choice(world.state.locations).id
-                        ),
-                        -1000,
-                        [],
-                    )
-                ]
+                forward_action_info = []
                 for next_state_action in next_action_actions:
                     # Generate the features for this new state after the action
                     next_state_features = self.value_function.get_next_state_features(
@@ -179,7 +169,9 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 action_info, key=lambda pair: pair[1]
             )
             if not world.disable_training:
-                if len(self.value_function.replay_buffer) == 0:
+                if self.value_function.use_replay_buffer():
+                    self.value_function.train(world.REPLAY_BUFFER_SIZE)
+                else:
                     self.value_function.train(
                         (
                             state_features,
@@ -187,9 +179,6 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                             next_state_features,
                         )
                     )
-                else:
-                    self.value_function.train(world.REPLAY_BUFFER_SIZE)
-
         return best_action, state_features
 
     def setup_from_state(self, state):

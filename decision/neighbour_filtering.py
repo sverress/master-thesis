@@ -1,7 +1,3 @@
-import numpy as np
-import helpers
-
-
 def filtering_neighbours(
     state,
     vehicle,

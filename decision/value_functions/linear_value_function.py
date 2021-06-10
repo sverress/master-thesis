@@ -38,6 +38,9 @@ class LinearValueFunction(ValueFunction):
         self.weights = []
         self.eligibilities = None
 
+    def use_replay_buffer(self):
+        return False
+
     def setup(self, state):
         if self.setup_complete:
             return
@@ -55,7 +58,7 @@ class LinearValueFunction(ValueFunction):
         time,
     ):
         return self.estimate_value_from_state_features(
-            self.get_state_features(state, vehicle, time)
+            self.get_state_features(state, vehicle)
         )
 
     def estimate_value_from_state_features(self, state_features: [float]):

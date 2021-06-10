@@ -43,17 +43,21 @@ class ANNValueFunction(ValueFunction):
         )
         super(ANNValueFunction, self).setup(state)
 
+    def use_replay_buffer(self):
+        return True
+
     def train(self, batch_size):
         if (
             len(self.replay_buffer) < batch_size
             or len(self.replay_buffer_negative) < batch_size
         ):
             return
+        batch_size = min(batch_size, 64)
         for j in range(2):
             random_sample = (
-                random.sample(self.replay_buffer, 64)
+                random.sample(self.replay_buffer, batch_size)
                 if j == 0
-                else random.sample(self.replay_buffer_negative, 64)
+                else random.sample(self.replay_buffer_negative, batch_size)
             )
             # Create training data from random sample
             states, targets = [], []
@@ -65,7 +69,7 @@ class ANNValueFunction(ValueFunction):
                 states.append(state_features)
                 next_state_value = self.model.predict(next_state_features)
                 targets.append(self.discount_factor * next_state_value + reward)
-            self.model.batch_fit(states, targets, verbose=1, batch_size=64)
+            self.model.batch_fit(states, targets, verbose=1, batch_size=batch_size)
 
         if self.train_count % 1:
             self.model.update_predict_model()

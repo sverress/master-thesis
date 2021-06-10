@@ -6,7 +6,7 @@ from clustering.scripts import get_initial_state
 
 class BasicSystemSimulationTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.world = classes.World(1, None, get_initial_state(100))
+        self.world = classes.World(1, None, get_initial_state(2500, 50))
 
     def test_equal_number_of_scooters(self):
         number_of_scooters_before = sum(
@@ -78,18 +78,6 @@ class BasicSystemSimulationTests(unittest.TestCase):
 
         # Test that total flow out equal to total flow in
         self.assertEqual(sum(out_flow.values()), sum(in_flow.values()))
-
-    def test_lost_demand(self):
-        # set all scooter batteries to 0 and increase trip intensity to ensure lost demand
-        for cluster in self.world.state.clusters:
-            cluster.trip_intensity_per_iteration = 5
-            for scooter in cluster.scooters:
-                scooter.battery = 0
-
-        _, _, lost_demand = self.world.system_simulate()
-
-        # test that system simulate generate lost demand
-        self.assertGreater(len(lost_demand), 0)
 
 
 if __name__ == "__main__":

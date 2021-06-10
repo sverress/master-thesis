@@ -74,6 +74,10 @@ class ValueFunction(abc.ABC):
         self.setup_complete = True
 
     @abc.abstractmethod
+    def use_replay_buffer(self):
+        pass
+
+    @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
         self,
@@ -141,7 +145,7 @@ class ValueFunction(abc.ABC):
         is_next_action = action is not None
 
         # Fetch all normalized scooter state representations
-        (negative_deviations, battery_deficiency,) = ValueFunction.get_normalized_lists(
+        negative_deviations, battery_deficiency = ValueFunction.get_normalized_lists(
             state,
             cache,
             current_location=vehicle.current_location.id if is_next_action else None,
