@@ -7,7 +7,9 @@ from .abstract import *
 
 
 class LinearValueFunction(ValueFunction):
-    def train(self, state_features, reward, next_state_features):
+    def train(self, batch):
+
+        state_features, reward, next_state_features = batch
 
         self.update_weights(
             state_features,

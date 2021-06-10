@@ -11,7 +11,7 @@ def filtering_neighbours(
     exclude=None,
 ):
     has_inventory = len(vehicle.scooter_inventory) + pick_up - delivery > 0
-
+    exclude = exclude if exclude else []
     clusters_positive_deviation = sorted(
         [
             cluster

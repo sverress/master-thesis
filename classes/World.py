@@ -361,7 +361,7 @@ class World(SaveMixin, HyperParameters):
                 vehicle.battery_inventory_capacity = 250
                 vehicle.battery_inventory = 250
                 vehicle.scooter_inventory_capacity = 0
-                vehicle.scooter_inventory = 0
+                vehicle.scooter_inventory = []
 
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):
@@ -377,7 +377,7 @@ class World(SaveMixin, HyperParameters):
     def save_world(self, cache_directory=None, suffix=""):
         directory = WORLD_CACHE_DIR
         if cache_directory:
-            directory = f"{WORLD_CACHE_DIR}/{cache_directory}_relu"
+            directory = f"{WORLD_CACHE_DIR}/{cache_directory}"
         super().save(directory, f"-{suffix}")
 
     def get_train_directory(self, suffix=None):

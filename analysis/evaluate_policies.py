@@ -81,7 +81,6 @@ def evaluate_world(world, world_attribute, verbose, runs_per_policy):
         # run the world and add the world object to a list containing all world instances
         run_world.run()
         metrics.append(run_world.metrics)
-        world.decision_times += run_world.decision_times
     world.metrics = classes.World.WorldMetric.aggregate_metrics(metrics)
 
     td_error_tuple = None

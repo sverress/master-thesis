@@ -5,6 +5,7 @@ import classes
 import numpy.random as random
 import abc
 
+import decision.value_functions
 import system_simulation.scripts
 
 
@@ -106,6 +107,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     [],
                 )
             ]
+            reward = 0
             for action in actions:
                 # look one action ahead
                 forward_state: classes.State = copy.deepcopy(state)
@@ -177,7 +179,16 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 action_info, key=lambda pair: pair[1]
             )
             if not world.disable_training:
-                self.value_function.train(world.REPLAY_BUFFER_SIZE)
+                if len(self.value_function.replay_buffer) == 0:
+                    self.value_function.train(
+                        (
+                            state_features,
+                            reward * world.LOST_TRIP_REWARD,
+                            next_state_features,
+                        )
+                    )
+                else:
+                    self.value_function.train(world.REPLAY_BUFFER_SIZE)
 
         return best_action, state_features
 
