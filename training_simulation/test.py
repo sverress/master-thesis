@@ -11,25 +11,16 @@ class EpsilonGreedyPolicyTrainingTest(unittest.TestCase):
             80,
             None,
             clustering.scripts.get_initial_state(
-                100, 10, initial_location_depot=starts_at_depot
+                100, 20, initial_location_depot=starts_at_depot
             ),
             visualize=False,
             REPLAY_BUFFER_SIZE=1,
         )
         world.policy = world.set_policy(
             policy_class=decision.EpsilonGreedyValueFunctionPolicy,
-            value_function_class=decision.value_functions.LinearValueFunction,
+            value_function_class=decision.value_functions.ANNValueFunction,
         )
-        world = training_simulation(world)
-        self.assertTrue(
-            any(
-                [
-                    world.policy.value_function.weight_init_value != weight
-                    for weight in world.policy.value_function.weights
-                ]
-            ),
-            "The weights have not changed after a full training simulation",
-        )
+        training_simulation(world)
 
     def test_start_in_depot(self):
         self.training_simulation(True)

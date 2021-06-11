@@ -1,4 +1,8 @@
 class Event:
+    """
+    Base class for all events in the Event Based Simulation Engine
+    """
+
     def __init__(self, time: int):
         self.time = time
 

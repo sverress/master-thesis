@@ -4,6 +4,10 @@ import abc
 
 
 class SaveMixin(abc.ABC):
+    """
+    Inherit from this class and a basic implementation of saving an object using pickling is added to the class
+    """
+
     @abc.abstractmethod
     def get_filename(self):
         pass

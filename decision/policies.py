@@ -1,10 +1,20 @@
-import decision.neighbour_filtering
+"""
+This file contains all the policies used in the thesis.
+"""
+import copy
+
 import classes
 import numpy.random as random
 import abc
 
+import system_simulation.scripts
+
 
 class Policy(abc.ABC):
+    """
+    Base Policy class. Used mainly as an interface for the get best action method
+    """
+
     def __init__(
         self,
         get_possible_actions_divide,
@@ -51,7 +61,8 @@ class Policy(abc.ABC):
 
 class EpsilonGreedyValueFunctionPolicy(Policy):
     """
-    Chooses an action based on a epsilon greedy policy. Will update weights after chosen action
+    This is the primary policy of the thesis. It chooses an action based on a epsilon greedy policy.
+    Will update weights after chosen action
     """
 
     def __init__(
@@ -64,6 +75,16 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         super().__init__(get_possible_actions_divide, number_of_neighbors)
         self.value_function = value_function
         self.epsilon = epsilon
+        self.decision_times = []
+
+    @staticmethod
+    def get_cache(state):
+        # Cache current states in state
+        current_states, available_scooters = [], []
+        for cluster in state.clusters:
+            current_states.append(cluster.get_current_state())
+            available_scooters.append(cluster.get_available_scooters())
+        return current_states, available_scooters
 
     def get_best_action(self, world, vehicle):
         # Find all possible actions
@@ -75,82 +96,117 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
             number_of_neighbours=self.number_of_neighbors,
         )
         state = world.state
-        # Cache current states in state
-        current_states, available_scooters = [], []
-        for cluster in state.clusters:
-            current_states.append(cluster.get_current_state())
-            available_scooters.append(cluster.get_available_scooters())
-        cache = [current_states, available_scooters]
-        # Generate the state features of the current state
+        cache = EpsilonGreedyValueFunctionPolicy.get_cache(state)
+        # Get state representation of current state
         state_features = self.value_function.get_state_features(
-            world.state, vehicle, world.time, cache
+            world.state, vehicle, cache
         )
-        expected_lost_trip_reward = state.get_expected_lost_trip_reward(
-            world.LOST_TRIP_REWARD, exclude=vehicle.current_location.id
-        )
+
         # Epsilon greedy choose an action based on value function
         if self.epsilon > random.rand():
             best_action = random.choice(actions)
         else:
             # Create list containing all actions and their rewards and values (action, reward, value_function_value)
-            action_info = []
+            action_info = [
+                (
+                    classes.Action([], [], [], random.choice(world.state.locations).id),
+                    -1000,
+                    [],
+                )  # No actions bug
+            ]
+            reward = 0
             for action in actions:
-                # Get the distance from current cluster to the new destination cluster
-                action_distance = state.get_distance(
-                    vehicle.current_location.id, action.next_location
+                # look one action ahead
+                forward_state: classes.State = copy.deepcopy(state)
+                forward_vehicle: classes.Vehicle = forward_state.get_vehicle_by_id(
+                    vehicle.id
                 )
-                # Generate the features for this new state after the action
-                next_state_features = self.value_function.get_next_state_features(
-                    state,
-                    vehicle,
-                    action,
-                    world.time + action.get_action_time(action_distance),
-                    cache,
+                # perform action
+                forward_state.do_action(action, forward_vehicle, world.time)
+                # Simulate the system to generate potential lost trips
+                _, _, lost_demands = system_simulation.scripts.system_simulate(
+                    forward_state
                 )
-                # Calculate the expected future reward of being in this new state
-                next_state_value = (
-                    self.value_function.estimate_value_from_state_features(
-                        next_state_features
+                # Record lost trip rewards
+                reward = (
+                    sum(map(lambda lost_trips: lost_trips[0], lost_demands))
+                    if len(lost_demands) > 0
+                    else 0
+                )
+                # Find all actions after taking the action moving the state to s_{t+1}
+                next_action_actions = forward_state.get_possible_actions(
+                    forward_vehicle,
+                    divide=self.get_possible_actions_divide,
+                    exclude=world.tabu_list + [action.next_location],
+                    time=world.time
+                    + action.get_action_time(
+                        state.get_distance(
+                            vehicle.current_location.id,
+                            forward_vehicle.current_location.id,
+                        )
+                    ),
+                    number_of_neighbours=self.number_of_neighbors,
+                )
+                cache = EpsilonGreedyValueFunctionPolicy.get_cache(forward_state)
+                forward_action_info = []
+                for next_state_action in next_action_actions:
+                    # Generate the features for this new state after the action
+                    next_state_features = self.value_function.get_next_state_features(
+                        forward_state,
+                        forward_vehicle,
+                        next_state_action,
+                        cache,
                     )
-                )
+                    # Calculate the expected future reward of being in this new state
+                    next_state_value = (
+                        self.value_function.estimate_value_from_state_features(
+                            next_state_features
+                        )
+                    )
+                    # Add the transition to a list for later evaluation
+                    forward_action_info.append(
+                        (next_state_action, next_state_value, next_state_features)
+                    )
 
+                # find the greedy best next action
+                best_next_action, next_state_value, next_state_features = max(
+                    forward_action_info, key=lambda pair: pair[1]
+                )
+                # Add this transition for later evaluation
                 action_info.append(
                     (
                         action,
-                        action.get_reward(
-                            vehicle,
-                            world.LOST_TRIP_REWARD,
-                            world.DEPOT_REWARD,
-                            world.VEHICLE_INVENTORY_STEP_SIZE,
-                            world.PICK_UP_REWARD,
-                        )
-                        + expected_lost_trip_reward,
-                        next_state_value,
+                        next_state_value + reward * world.LOST_TRIP_REWARD,
                         next_state_features,
                     )
                 )
-
-            # Find the action with the highest reward and future expected reward - reward + value function next state
-            best_action, reward, next_state_value, next_state_features = max(
-                action_info, key=lambda pair: pair[1] + pair[2]
-            )
-            self.value_function.replay_buffer.append(
-                (
-                    state_features,
-                    best_action,
-                    reward,
-                    next_state_features,
-                )
+            # Choose the action with the highest value and reward
+            best_action, next_state_value, next_state_features = max(
+                action_info, key=lambda pair: pair[1]
             )
             if not world.disable_training:
-                self.value_function.train(world.REPLAY_BUFFER_SIZE)
-        return best_action
+                if self.value_function.use_replay_buffer():
+                    self.value_function.train(world.REPLAY_BUFFER_SIZE)
+                else:
+                    self.value_function.train(
+                        (
+                            state_features,
+                            reward * world.LOST_TRIP_REWARD,
+                            next_state_features,
+                        )
+                    )
+        return best_action, state_features
 
     def setup_from_state(self, state):
         self.value_function.setup(state)
 
     def __str__(self):
         return f"EpsilonGreedyPolicy w/ {self.value_function.__str__()}"
+
+
+"""
+SECONDARY POLICIES
+"""
 
 
 class SwapAllPolicy(Policy):
@@ -160,18 +216,6 @@ class SwapAllPolicy(Policy):
 
     def get_best_action(self, world, vehicle):
         # Choose a random cluster
-        next_location: classes.Location = (
-            decision.neighbour_filtering.filtering_neighbours(
-                world.state,
-                vehicle,
-                self.number_of_neighbors,
-                0,
-                exclude=world.tabu_list,
-                max_swaps=vehicle.get_max_number_of_swaps(),
-            )[0]
-            if vehicle.battery_inventory > vehicle.battery_inventory_capacity * 0.1
-            else world.state.depots[0]
-        )
 
         if vehicle.is_at_depot():
             swappable_scooters_ids = []
@@ -181,12 +225,32 @@ class SwapAllPolicy(Policy):
             swappable_scooters_ids = [
                 scooter.id
                 for scooter in vehicle.current_location.get_swappable_scooters(
-                    battery_limit=50
+                    battery_limit=70
                 )
             ]
 
             # Calculate how many scooters that can be swapped
             number_of_scooters_to_swap = vehicle.get_max_number_of_swaps()
+
+        if (
+            vehicle.battery_inventory - number_of_scooters_to_swap
+            < vehicle.battery_inventory_capacity * 0.1
+        ) and not vehicle.is_at_depot():
+            next_location = world.state.depots[0]
+        else:
+            next_location = sorted(
+                [
+                    cluster
+                    for cluster in world.state.clusters
+                    if cluster.id != vehicle.current_location.id
+                    and cluster.id not in world.tabu_list
+                ],
+                key=lambda cluster: (
+                    len(cluster.scooters) - cluster.get_current_state()
+                )
+                / (len(cluster.scooters) + 1),
+                reverse=True,
+            )[0]
 
         # Return an action with no re-balancing, only scooter swapping
         return classes.Action(
@@ -216,6 +280,14 @@ class RandomActionPolicy(Policy):
 
 
 class DoNothing(Policy):
+    def __init__(self):
+        super().__init__(0, 0)
+
+    def get_best_action(self, world, vehicle):
+        return classes.Action([], [], [], 0)
+
+
+class NightShift(Policy):
     def __init__(self):
         super().__init__(0, 0)
 

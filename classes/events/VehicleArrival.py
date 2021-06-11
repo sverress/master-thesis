@@ -1,8 +1,15 @@
+import time
+
 from classes.events.Event import Event
 import copy
 
 
 class VehicleArrival(Event):
+    """
+    Event where the main decision is done. A vehicle arrives to a cluster and need to determine what to do.
+    Different policies can be applied depending on the policy object in the world object.
+    """
+
     def __init__(self, arrival_time: int, vehicle_id: int, visualize=True):
         super().__init__(arrival_time)
         self.visualize = visualize
@@ -36,9 +43,11 @@ class VehicleArrival(Event):
             vehicle_before_action = copy.deepcopy(vehicle)
 
         arrival_time = 0
-
         # find the best action from the current world state
         action = world.policy.get_best_action(world, vehicle)
+
+        if isinstance(action, tuple):
+            action, _ = action
 
         if self.visualize:
             # visualize vehicle route

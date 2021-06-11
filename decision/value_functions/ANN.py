@@ -7,6 +7,10 @@ import tensorflow as tf
 
 
 class ANN:
+    """
+    Wrapper class for the keras Sequential model
+    """
+
     def __init__(
         self,
         network_structure,
@@ -26,7 +30,7 @@ class ANN:
         self.update_predict_model()
 
         self.tensorboard = ModifiedTensorBoard(
-            log_dir=f"logs/{network_structure}_{int(time.time())}",
+            log_dir=f"logs/relu_{discount_factor}_{network_structure}_{learning_rate}_{int(time.time())}",
             profile_batch=100000000,  # https://github.com/tensorflow/tensorboard/issues/2819
         )
 
@@ -45,7 +49,7 @@ class ANN:
             model.add(
                 keras.layers.Dense(layer, kernel_regularizer=keras.regularizers.L2())
             )
-            model.add(keras.layers.Activation("sigmoid"))
+            model.add(keras.layers.Activation("relu"))
         # The last layer needs to have a single value function output
         model.add(keras.layers.Dense(1))
         optimizer = keras.optimizers.Adam(lr=self.learning_rate)

@@ -3,6 +3,10 @@ import classes
 
 
 class ScooterArrival(Event):
+    """
+    Event performed when an e-scooter arrives at a cluster after a e-scooter departure
+    """
+
     def __init__(
         self,
         arrival_time: int,
@@ -19,7 +23,7 @@ class ScooterArrival(Event):
 
     def perform(self, world, **kwargs) -> None:
         """
-            :param world: world object
+        :param world: world object
         """
 
         # get arrival cluster

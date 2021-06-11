@@ -1,3 +1,6 @@
+"""
+General methods for exporting results for evaluation to excel
+"""
 import analysis.evaluate_policies
 import classes
 from globals import HyperParameters, EXCEL_EXPORT_DIR

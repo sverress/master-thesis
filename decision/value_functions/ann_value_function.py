@@ -5,6 +5,11 @@ from decision.value_functions.ANN import ANN
 
 
 class ANNValueFunction(ValueFunction):
+    """
+    Class for the Artificial Neural Network function approximation. This class use the ANN class to call keras model
+    methods.
+    """
+
     def __init__(
         self,
         learning_rate,
@@ -30,36 +35,48 @@ class ANNValueFunction(ValueFunction):
     def setup(self, state: classes.State):
         if self.setup_complete:
             return
-        (
-            number_of_locations_indicators,
-            number_of_state_features,
-        ) = self.get_number_of_location_indicators_and_state_features(state)
+        number_of_state_features = (
+            self.get_number_of_location_indicators_and_state_features(state)
+        )
         self.model = ANN(
             self.network_structure,
-            number_of_locations_indicators + number_of_state_features,
+            number_of_state_features,
             self.trace_decay,
             self.discount_factor,
             self.step_size,
         )
         super(ANNValueFunction, self).setup(state)
 
-    def train(self, batch_size):
-        if len(self.replay_buffer) < batch_size:
+    def use_replay_buffer(self):
+        return True
+
+    def train(self, training_input):
+        buffer_size = training_input
+        if (
+            len(self.replay_buffer) < buffer_size
+            or len(self.replay_buffer_negative) < buffer_size
+        ):
             return
-        random_sample = random.sample(self.replay_buffer, int(batch_size / 2))
-        # Create training data from random sample
-        states, targets = [], []
-        for i, (
-            state_features,
-            best_action,
-            reward,
-            next_state_features,
-        ) in enumerate(random_sample):
-            states.append(state_features)
-            next_state_value = self.model.predict(next_state_features)
-            targets.append(next_state_value + reward)
-        self.model.batch_fit(states, targets, verbose=1, batch_size=128)
-        if self.train_count % 50:
+        buffer_size = min(buffer_size, 64)
+        for j in range(2):
+            random_sample = (
+                random.sample(self.replay_buffer, buffer_size)
+                if j == 0
+                else random.sample(self.replay_buffer_negative, buffer_size)
+            )
+            # Create training data from random sample
+            states, targets = [], []
+            for i, (
+                state_features,
+                reward,
+                next_state_features,
+            ) in enumerate(random_sample):
+                states.append(state_features)
+                next_state_value = self.model.predict(next_state_features)
+                targets.append(self.discount_factor * next_state_value + reward)
+            self.model.batch_fit(states, targets, verbose=1, batch_size=buffer_size)
+
+        if self.train_count % 1:
             self.model.update_predict_model()
         self.train_count += 1
 
@@ -98,15 +115,14 @@ class ANNValueFunction(ValueFunction):
         state: classes.State,
         vehicle: classes.Vehicle,
         action: classes.Action,
-        time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
-        return self.convert_next_state_features(state, vehicle, action, time, cache)
+        return self.convert_next_state_features(state, vehicle, action, cache)
 
     def get_state_features(
-        self, state: classes.State, vehicle: classes.Vehicle, time: int, cache=None
+        self, state: classes.State, vehicle: classes.Vehicle, cache=None
     ):
-        return self.convert_state_to_features(state, vehicle, time, cache=cache)
+        return self.convert_state_to_features(state, vehicle, cache=cache)
 
     def __str__(self):
         return f"ANNValueFunction - {self.shifts_trained}"

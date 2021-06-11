@@ -5,6 +5,11 @@ import numpy as np
 
 
 class ScooterDeparture(Event):
+    """
+    Event fired when a customer requests a trip from a given departure cluster. Creates a Lost Trip or Scooter arrival
+    event based on the availability of the cluster
+    """
+
     def __init__(self, departure_time: int, departure_cluster_id: int):
         super().__init__(departure_time)
         self.departure_cluster_id = departure_cluster_id

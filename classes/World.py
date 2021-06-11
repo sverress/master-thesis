@@ -5,7 +5,6 @@ from typing import List
 import numpy as np
 import bisect
 import classes
-import clustering.helpers
 import globals
 from classes.SaveMixin import SaveMixin
 
@@ -23,7 +22,17 @@ from system_simulation.scripts import system_simulate
 
 
 class World(SaveMixin, HyperParameters):
+    """
+    Class containing all metadata about an instance. This class contains both the state, the policy and parameters.
+    This class uses the state as the environment and the policy as the actor. Additionally, it is the main driver of the
+    event based simulation system using the event classes.
+    """
+
     class WorldMetric:
+        """
+        Class for storing and aggregate the metric data of the instance
+        """
+
         def __init__(self, test_parameter_name="", test_parameter_value=0.0):
             self.lost_demand = []
             self.average_negative_deviation_ideal_state = []
@@ -82,6 +91,11 @@ class World(SaveMixin, HyperParameters):
                     for field, metric_list in fields.items()
                 }
             )
+
+            new_world_metric.testing_parameter_name = metrics[0].testing_parameter_name
+            new_world_metric.testing_parameter_value = metrics[
+                0
+            ].testing_parameter_value
             return new_world_metric
 
         def add_analysis_metrics(self, world):
@@ -176,7 +190,6 @@ class World(SaveMixin, HyperParameters):
             self.stack.append(
                 classes.VehicleArrival(0, vehicle.id, visualize=visualize)
             )
-            vehicle.service_route.append(vehicle.current_location)
             if vehicle.scooter_inventory_capacity > 0:
                 number_of_vans += 1
             else:
@@ -210,6 +223,12 @@ class World(SaveMixin, HyperParameters):
         return f"<World with {self.time} of {self.shift_duration} elapsed. {len(self.stack)} events in stack>"
 
     def run(self):
+        """
+        Main method for running the Event Based Simulation Engine.
+
+        The world object uses a stack initialized with vehicle arrival events and a GenerateScooterTrips event.
+        It then pops events from this stack. The stack is always sorted in by the time of the events.
+        """
         while self.time < self.shift_duration:
             event = self.stack.pop(0)
             event.perform(self)
@@ -298,6 +317,14 @@ class World(SaveMixin, HyperParameters):
         policy_class=None,
         value_function_class=None,
     ):
+        """
+        Method used to set the policy of the world based on the parameters of the world object.
+        Can either take in policy object or policy class and value function class.
+        :param policy: policy object
+        :param policy_class
+        :param value_function_class:
+        :return the updated policy
+        """
         if policy is None:
             if policy_class is decision.EpsilonGreedyValueFunctionPolicy:
                 value_function = (
@@ -342,7 +369,23 @@ class World(SaveMixin, HyperParameters):
                 for event in self.stack
                 if not isinstance(event, classes.VehicleArrival)
             ]
-            self.state = clustering.helpers.idealize_state(self.state)
+        elif isinstance(policy, decision.NightShift):
+            self.stack = [
+                event
+                for event in self.stack
+                if not isinstance(event, classes.VehicleArrival)
+            ]
+            for cluster in self.state.clusters:
+                for scooter in cluster.scooters:
+                    if scooter.battery < 70:
+                        scooter.swap_battery()
+
+        elif isinstance(policy, decision.SwapAllPolicy):
+            for vehicle in self.state.vehicles:
+                vehicle.battery_inventory_capacity = 250
+                vehicle.battery_inventory = 250
+                vehicle.scooter_inventory_capacity = 0
+                vehicle.scooter_inventory = []
 
         # If the policy has a value function. Initialize it from the world state
         if hasattr(policy, "value_function"):
@@ -390,20 +433,3 @@ class World(SaveMixin, HyperParameters):
         for parameter in HyperParameters().__dict__.keys():
             setattr(new_world, parameter, getattr(self, parameter))
         return new_world
-
-    def add_van(self):
-        # Create a new vehicle object
-        vehicle = classes.Vehicle(
-            len(self.state.vehicles) + 1,
-            self.state.get_location_by_id(0),
-            globals.VAN_BATTERY_INVENTORY,
-            globals.VAN_SCOOTER_INVENTORY,
-        )
-        # Add vehicle to state
-        self.state.vehicles.append(vehicle)
-        # Add a vehicle arrival event for this vehicle in the stack
-        self.stack.append(
-            classes.VehicleArrival(20, vehicle.id, visualize=self.visualize)
-        )
-        # Add the current location to the service route
-        vehicle.service_route.append(vehicle.current_location)

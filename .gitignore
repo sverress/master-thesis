@@ -145,9 +145,6 @@ computational_study/
 state_cache/
 /world_cache/trained_models/
 
-#Personal directory to computational folder on ondrive
-personal.py
-
 
 logs/
 value_functions/

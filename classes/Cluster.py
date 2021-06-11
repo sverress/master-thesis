@@ -7,6 +7,10 @@ import copy
 
 
 class Cluster(Location):
+    """
+    Cluster class representing a collection of e-scooters. Contains all customer behaviour data.
+    """
+
     def __init__(
         self,
         cluster_id: int,

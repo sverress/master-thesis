@@ -2,6 +2,10 @@ from classes import Event
 
 
 class LostTrip(Event):
+    """
+    Event for a lost trip recording a lost trip for the world object
+    """
+
     def __init__(self, time: int, location_id: int):
         super().__init__(time)
         self.location_id = location_id

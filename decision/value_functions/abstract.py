@@ -1,10 +1,7 @@
 from collections import deque
 
-from scipy import stats
-
 import classes
 from globals import SMALL_DEPOT_CAPACITY, BATTERY_LIMIT
-import helpers
 import abc
 
 
@@ -24,6 +21,12 @@ class Decorators:
 
 
 class ValueFunction(abc.ABC):
+    """
+    This is the base value function class. It contains methods for creating the state representation and contains the
+    common variables for both of the value functions. This class also works as a interface so both value functions use
+    the same method names.
+    """
+
     def __init__(
         self,
         weight_update_step_size,
@@ -38,7 +41,7 @@ class ValueFunction(abc.ABC):
         # for vehicle - n bits for scooter inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # + n bits for battery inventory in percentage ranges (e.g 0-10%, 10%-20%, etc..)
         # for every small depot - 1 float for degree of filling
-        self.number_of_features_per_cluster = 3
+        self.number_of_features_per_cluster = 20
         self.location_repetition = location_repetition
         self.vehicle_inventory_step_size = vehicle_inventory_step_size
         self.step_size = weight_update_step_size
@@ -48,7 +51,8 @@ class ValueFunction(abc.ABC):
 
         self.setup_complete = False
         self.location_indicator = None
-        self.replay_buffer = deque(maxlen=1000)
+        self.replay_buffer = deque(maxlen=64)
+        self.replay_buffer_negative = deque(maxlen=64)
         self.shifts_trained = 0
         self.td_errors = []
 
@@ -75,6 +79,10 @@ class ValueFunction(abc.ABC):
         self.setup_complete = True
 
     @abc.abstractmethod
+    def use_replay_buffer(self):
+        pass
+
+    @abc.abstractmethod
     @Decorators.check_setup
     def estimate_value(
         self,
@@ -86,7 +94,7 @@ class ValueFunction(abc.ABC):
 
     @abc.abstractmethod
     @Decorators.check_setup
-    def train(self, batch_size):
+    def train(self, training_input):
         pass
 
     @abc.abstractmethod
@@ -111,7 +119,6 @@ class ValueFunction(abc.ABC):
         self,
         state: classes.State,
         vehicle: classes.Vehicle,
-        time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
         pass
@@ -123,7 +130,6 @@ class ValueFunction(abc.ABC):
         state: classes.State,
         vehicle: classes.Vehicle,
         action: classes.Action,
-        time: int,
         cache=None,  # current_states, available_scooters = cache
     ):
         pass
@@ -131,108 +137,38 @@ class ValueFunction(abc.ABC):
     def get_number_of_location_indicators_and_state_features(
         self, state: classes.State
     ):
-        return (
-            len(state.locations) * self.location_repetition,
-            (
-                (self.number_of_features_per_cluster * len(state.clusters))
-                + (2 * round(1 / self.vehicle_inventory_step_size))
-                + len(state.locations)
-                - len(state.clusters)
-                - 1
-                + len(state.locations)  # Add location features for other vehicles
-            ),
-        )
+        return self.number_of_features_per_cluster * len(state.clusters)
 
     def create_features(
         self,
         state,
         vehicle,
-        time,
         action=None,
         cache=None,
     ):
         # Create a flag for if it is a get next state features call
         is_next_action = action is not None
-        # Change location by swapping location indicator
-        location_indicators = self.get_location_indicator(
-            action.next_location if is_next_action else vehicle.current_location.id,
-            len(state.locations),
-        )
+
         # Fetch all normalized scooter state representations
-        (
-            positive_deviations,
-            negative_deviations,
-            battery_deficiency,
-        ) = ValueFunction.get_normalized_lists(
+        negative_deviations, battery_deficiency = ValueFunction.get_normalized_lists(
             state,
             cache,
             current_location=vehicle.current_location.id if is_next_action else None,
             action=action,
         )
-        # Inventory indicators adjusting for action effects
-        scooter_inventory_indication = self.get_inventory_indicator(
-            helpers.zero_divide(
-                len(vehicle.scooter_inventory)
-                + (
-                    len(action.pick_ups) - len(action.delivery_scooters)
-                    if is_next_action
-                    else 0
-                ),
-                vehicle.scooter_inventory_capacity,
-            )
-        )
 
-        battery_inventory_indication = self.get_inventory_indicator(
-            helpers.zero_divide(
-                vehicle.battery_inventory
-                - (
-                    len(action.battery_swaps) + len(action.pick_ups)
-                    if is_next_action
-                    else 0
-                ),
-                vehicle.battery_inventory_capacity,
-            )
-        )
-        # Depot state
-        small_depot_degree_of_filling = ValueFunction.get_small_depot_degree_of_filling(
-            time, state
-        )
-        # Encode location of other vehicles
-        other_vehicles_locations = [
-            int(
-                any(
-                    [
-                        other_vehicle.current_location.id == location.id
-                        for other_vehicle in state.vehicles
-                        if other_vehicle.id != vehicle.id
-                    ]
-                )
-            )
-            for location in state.locations
-        ]
-        return (
-            location_indicators
-            + positive_deviations
-            + negative_deviations
-            + battery_deficiency
-            + scooter_inventory_indication
-            + battery_inventory_indication
-            + small_depot_degree_of_filling
-            + other_vehicles_locations
-        )
+        return negative_deviations + battery_deficiency
 
     @Decorators.check_setup
     def convert_state_to_features(
         self,
         state: classes.State,
         vehicle: classes.Vehicle,
-        time: int,
         cache=None,
     ):
         return self.create_features(
             state,
             vehicle,
-            time,
             action=None,
             cache=cache,
         )
@@ -241,11 +177,10 @@ class ValueFunction(abc.ABC):
         self.shifts_trained = shifts_trained
 
     @Decorators.check_setup
-    def convert_next_state_features(self, state, vehicle, action, time, cache=None):
+    def convert_next_state_features(self, state, vehicle, action, cache=None):
         return self.create_features(
             state,
             vehicle,
-            time,
             action=action,
             cache=cache,
         )
@@ -340,7 +275,7 @@ class ValueFunction(abc.ABC):
                 [cluster.get_available_scooters() for cluster in state.clusters],
             )
         )  # Use cache if you have it
-        positive_deviations, negative_deviations, battery_deficiency = [], [], []
+        negative_deviations, battery_deficiency = [], []
         for i, cluster in enumerate(state.clusters):
             deviation = (
                 len(available_scooters[i])
@@ -351,7 +286,6 @@ class ValueFunction(abc.ABC):
                     else 0
                 )  # Add available scooters from action
             )
-            positive_deviations.append(max(deviation, 0))
             negative_deviations.append(min(deviation, 0) / (cluster.ideal_state + 1))
             battery_deficiency.append(
                 (
@@ -363,24 +297,29 @@ class ValueFunction(abc.ABC):
                         else 0
                     )
                 )
-                / cluster.average_number_of_scooters
+                / (cluster.average_number_of_scooters + 1)
             )
+
+        def range_one_hot(cluster_list):
+            output = []
+            for cluster in cluster_list:
+                output += ValueFunction.get_one_hot_range(abs(cluster), 0.1)
+            return output
 
         return (
-            stats.zscore(positive_deviations).tolist(),
-            negative_deviations,
-            battery_deficiency,
+            range_one_hot(negative_deviations),
+            range_one_hot(battery_deficiency),
         )
 
-    def get_inventory_indicator(self, percent) -> [int]:
-        length_of_list = round(1 / self.vehicle_inventory_step_size)
+    @staticmethod
+    def get_one_hot_range(percent, step_size) -> [int]:
+        length_of_list = round(1 / step_size)
+        percent = 1 if percent > 1 else percent
         filter_list = [
-            int(
-                percent
-                <= i * self.vehicle_inventory_step_size
-                + self.vehicle_inventory_step_size
-            )
-            for i in range(length_of_list)
+            int(percent <= i * step_size + step_size) for i in range(length_of_list)
         ]
         index = filter_list.index(1)
         return [0] * index + [1] + [0] * (length_of_list - index - 1)
+
+    def get_inventory_indicator(self, percent) -> [int]:
+        ValueFunction.get_one_hot_range(percent, self.vehicle_inventory_step_size)
