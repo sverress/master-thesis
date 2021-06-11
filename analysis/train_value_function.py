@@ -1,3 +1,7 @@
+"""
+MAIN SCRIPT FOR TRAINING THE MODEL
+"""
+
 import copy
 import time
 
@@ -13,6 +17,15 @@ import globals
 def train_value_function(
     world, save_suffix="", scenario_training=True, epsilon_decay=True
 ):
+    """
+    Main method for training any value function attached to world object
+    :param world: world object with l
+    :param save_suffix:
+    :param scenario_training:
+    :param epsilon_decay:
+    :return:
+    """
+    # Add progress bar
     progress_bar = IncrementalBar(
         "Training value function",
         check_tty=False,
@@ -22,18 +35,24 @@ def train_value_function(
     print(
         f"-------------------- {world.policy.value_function.__str__()} training --------------------"
     )
+    # Determine number of shifts to run based on the training parameters
     number_of_shifts = world.TRAINING_SHIFTS_BEFORE_SAVE * world.MODELS_TO_BE_SAVED
+    # Initialize the epsilon parameter
     world.policy.epsilon = world.INITIAL_EPSILON if epsilon_decay else world.EPSILON
     training_times = []
     for shift in range(number_of_shifts + 1):
+        # Start timer for computational time analysis
         start = time.time()
         policy_world = copy.deepcopy(world)
+        # Update shifts trained counter
         policy_world.policy.value_function.update_shifts_trained(shift)
         if epsilon_decay and shift > 0:
+            # Decay epsilon
             policy_world.policy.epsilon -= (
                 world.INITIAL_EPSILON - world.FINAL_EPSILON
             ) / number_of_shifts
         if shift % world.TRAINING_SHIFTS_BEFORE_SAVE == 0:
+            # Save model for intervals set by training parameters
             policy_world.save_world(
                 cache_directory=world.get_train_directory(save_suffix), suffix=shift
             )
@@ -41,12 +60,15 @@ def train_value_function(
         # avoid running the world after the last model is saved
         if shift != number_of_shifts:
             if scenario_training:
+                # scenario training is a faster simulation engine used when learning
                 training_simulation.scripts.training_simulation(policy_world)
             else:
+                # Train using event based simulation engine
                 policy_world.run()
-
+            # Save the policy for "master" world copy
             world.policy = policy_world.policy
             progress_bar.next()
+        # stop timer
         training_times.append(time.time() - start)
 
     return sum(training_times) / number_of_shifts

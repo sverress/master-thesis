@@ -7,6 +7,10 @@ import tensorflow as tf
 
 
 class ANN:
+    """
+    Wrapper class for the keras Sequential model
+    """
+
     def __init__(
         self,
         network_structure,

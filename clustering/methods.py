@@ -232,6 +232,11 @@ def compute_and_set_ideal_state(state: State, sample_scooters: list):
 
 
 def compute_and_set_trip_intensity(state: State, sample_scooters: list):
+    """
+    Counts the number of e-scooters leaving each cluster and average over all snapshots to calculate the trip intensity
+    :param state: state object
+    :param sample_scooters: ids of e-scooters in the sample used
+    """
     progress = Bar(
         "| Computing trip intensity",
         max=len(os.listdir(TEST_DATA_DIRECTORY)),
@@ -285,7 +290,12 @@ def compute_and_set_trip_intensity(state: State, sample_scooters: list):
     progress.finish()
 
 
-def generate_depots(number_of_clusters=None):
+def generate_depots(number_of_clusters):
+    """
+    Generate depot objects
+    :param number_of_clusters: the number of clusters in the state created
+    :return: depot objects
+    """
     main_depot_lat, main_depot_lon = MAIN_DEPOT_LOCATION
     depots = [
         Depot(main_depot_lat, main_depot_lon, number_of_clusters, main_depot=True)
@@ -298,6 +308,12 @@ def generate_depots(number_of_clusters=None):
 
 
 def generate_scenarios(state: State, number_of_scenarios=10000):
+    """
+    Generate system simulation scenarios. This is used to speed up the training simulation
+    :param state: new state
+    :param number_of_scenarios: how many scenarios to generate
+    :return: the scenarios list of (cluster id, number of trips, list of end cluster ids)
+    """
     scenarios = []
     cluster_indices = np.arange(len(state.clusters))
     for i in range(number_of_scenarios):

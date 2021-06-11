@@ -5,6 +5,11 @@ import copy
 
 
 class VehicleArrival(Event):
+    """
+    Event where the main decision is done. A vehicle arrives to a cluster and need to determine what to do.
+    Different policies can be applied depending on the policy object in the world object.
+    """
+
     def __init__(self, arrival_time: int, vehicle_id: int, visualize=True):
         super().__init__(arrival_time)
         self.visualize = visualize

@@ -3,6 +3,10 @@ from globals import GEOSPATIAL_BOUND_NEW
 
 
 class Location:
+    """
+    Base location class. All classes representing a geographic position inherit from the Location class
+    """
+
     def __init__(self, lat: float, lon: float, location_id: int):
         self.lat = lat
         self.lon = lon

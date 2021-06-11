@@ -1,3 +1,8 @@
+"""
+File containing the important neighbour filtering schema used to reduce the action space
+"""
+
+
 def filtering_neighbours(
     state,
     vehicle,

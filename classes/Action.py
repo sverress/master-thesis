@@ -2,6 +2,10 @@ from globals import *
 
 
 class Action:
+    """
+    Class representing an action.
+    """
+
     def __init__(
         self,
         battery_swaps: [int],

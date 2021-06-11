@@ -2,6 +2,10 @@ from classes.Location import Location
 
 
 class Scooter(Location):
+    """
+    E-scooter class containing state and all operations necessary
+    """
+
     def __init__(self, lat: float, lon: float, battery: float, scooter_id: int):
         super().__init__(lat, lon, scooter_id)
         self.battery = battery

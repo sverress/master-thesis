@@ -10,6 +10,9 @@ import pandas as pd
 
 
 def battery_analysis():
+    """
+    Find average used battery for trip
+    """
     previous_snapshot = None
     averages = []
     for index, file_path in enumerate(sorted(os.listdir(TEST_DATA_DIRECTORY))):

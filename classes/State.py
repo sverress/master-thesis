@@ -13,6 +13,10 @@ import copy
 
 
 class State(SaveMixin):
+    """
+    Container class for the whole state of all clusters. Data concerning the interplay between clusters are stored here
+    """
+
     def __init__(
         self,
         clusters: [Cluster],

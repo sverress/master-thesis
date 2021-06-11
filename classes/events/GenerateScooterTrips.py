@@ -5,6 +5,10 @@ import numpy as np
 
 
 class GenerateScooterTrips(Event):
+    """
+    This event creates e-scooter departure events based on the trip intensity parameter and a Possion Distribution
+    """
+
     def __init__(self, time: int):
         super().__init__(time)
 

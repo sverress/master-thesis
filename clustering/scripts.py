@@ -1,3 +1,6 @@
+"""
+Main file for clustering module
+"""
 from classes import Vehicle, State
 import clustering.methods as methods
 import os
@@ -14,6 +17,19 @@ def get_initial_state(
     number_of_bikes=0,
     ideal_state_computation=False,
 ) -> State:
+    """
+    Main method for setting up a state object based on EnTur data from test_data directory.
+    This method saves the state objects and reuse them if a function call is done with the same properties.
+    :param sample_size: number of e-scooters in the instance
+    :param number_of_clusters
+    :param save: if the model should save the state
+    :param cache: if the model should check for a cached version
+    :param initial_location_depot: set the initial current location of the vehicles to the depot
+    :param number_of_vans: the number of vans to use
+    :param number_of_bikes: the number of bikes to use
+    :param ideal_state_computation: Fake ideal state
+    :return:
+    """
     # If this combination has been requested before we fetch a cached version
     filepath = (
         f"{STATE_CACHE_DIR}/"

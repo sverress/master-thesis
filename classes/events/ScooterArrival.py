@@ -3,6 +3,10 @@ import classes
 
 
 class ScooterArrival(Event):
+    """
+    Event performed when an e-scooter arrives at a cluster after a e-scooter departure
+    """
+
     def __init__(
         self,
         arrival_time: int,

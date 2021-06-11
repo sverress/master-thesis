@@ -1,5 +1,4 @@
 import itertools
-import random
 
 import numpy as np
 
@@ -7,16 +6,9 @@ from .abstract import *
 
 
 class LinearValueFunction(ValueFunction):
-    def train(self, batch):
-
-        state_features, reward, next_state_features = batch
-
-        self.update_weights(
-            state_features,
-            self.estimate_value_from_state_features(state_features),
-            self.estimate_value_from_state_features(next_state_features),
-            reward,
-        )
+    """
+    Class for the value function approximation with the linear model
+    """
 
     def __init__(
         self,
@@ -40,6 +32,15 @@ class LinearValueFunction(ValueFunction):
 
     def use_replay_buffer(self):
         return False
+
+    def train(self, training_input):
+        state_features, reward, next_state_features = training_input
+        self.update_weights(
+            state_features,
+            self.estimate_value_from_state_features(state_features),
+            self.estimate_value_from_state_features(next_state_features),
+            reward,
+        )
 
     def setup(self, state):
         if self.setup_complete:

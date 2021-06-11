@@ -1,13 +1,18 @@
+"""
+MAIN FILE FOR RUNNING EVALUATIONS OF WORLD OBJECTS/MODELS
+
+Run from terminal: python analysis/evaluate_policies.py <world_attribute> <directory with models>
+make sure it is ran from repository root
+"""
+
 import copy
 import os
 import math
-import time
 from multiprocessing import Pool
 import classes
 import decision.value_functions
 import decision
 import analysis.export_metrics_to_xlsx
-import system_simulation.scripts
 from visualization.visualizer import visualize_analysis
 
 
@@ -17,11 +22,19 @@ def run_analysis_from_path(
     runs_per_policy=10,
     shift_duration=960,
     world_attribute="SHIFT_DURATION",
-    number_of_extra_vehicles=0,
     export_to_excel=False,
     multiprocess=True,
-    return_worlds=False,
 ):
+    """
+    Run analysis from the input path
+    :param path: string path of folder with models to analyse
+    :param visualize_route: is route should vi visualized
+    :param runs_per_policy: how many runs to do for every model
+    :param shift_duration: length of shift
+    :param world_attribute: Attribute to label models in end chart
+    :param export_to_excel: if excel export
+    :param multiprocess: true if method use multiprocessing
+    """
     # Sort the policies by the training duration
     world_objects = sorted(
         [
@@ -52,37 +65,42 @@ def run_analysis_from_path(
         for vehicle in world.state.vehicles:
             vehicle.service_route = []
 
-        # Add extra vans
-        for _ in range(number_of_extra_vehicles):
-            world.add_van()
-
-    if return_worlds:
-        return world_objects
-    else:
-        return run_analysis(
-            world_objects,
-            runs_per_policy=runs_per_policy,
-            title=path.split("/")[-1],  # Use "last" folder as title in the plot
-            world_attribute=world_attribute,
-            export_to_excel=export_to_excel,
-            multiprocess=multiprocess,
-        )
+    return run_analysis(
+        world_objects,
+        runs_per_policy=runs_per_policy,
+        title=path.split("/")[-1],  # Use "last" folder as title in the plot
+        world_attribute=world_attribute,
+        export_to_excel=export_to_excel,
+        multiprocess=multiprocess,
+    )
 
 
 def evaluate_world(world, world_attribute, verbose, runs_per_policy):
+    """
+    Base method for evaluation of a world object
+    :param world: world to analyze
+    :param world_attribute: Attribute to label models in end chart
+    :param verbose: show console logs
+    :param runs_per_policy: how many runs to do for every model
+    :return: tuple of world after evaluation and td errors
+    """
+    # Create label for each model/world
     world.label = (
         f"{world.policy} - {world_attribute}: {getattr(world, world_attribute)}"
     )
     if verbose:
         print(f"\n---------- {world.label} ----------")
     metrics = []
+    # Run world run_per_policy times
     for _ in range(runs_per_policy):
         run_world = copy.deepcopy(world)
         # run the world and add the world object to a list containing all world instances
         run_world.run()
         metrics.append(run_world.metrics)
+    # Aggregate results from all runs
     world.metrics = classes.World.WorldMetric.aggregate_metrics(metrics)
 
+    # If the model has a value function add the td errors to the output
     td_error_tuple = None
     if hasattr(world.policy, "value_function"):
         td_error_tuple = (
@@ -103,6 +121,18 @@ def run_analysis(
     export_to_excel=False,
     multiprocess=True,
 ):
+    """
+    Run analysis based on list of world objects
+    :param worlds: list of world objects
+    :param runs_per_policy: how many runs to do for every model
+    :param verbose: show console logs
+    :param save: save the world after analysis
+    :param baseline_policy_world: world to use for secondary polices
+    :param title: Title of graph
+    :param world_attribute: Attribute to label models in end chart
+    :param export_to_excel: if excel export
+    :param multiprocess: true if method use multiprocessing
+    """
     instances = []
     if baseline_policy_world:
         first_world = baseline_policy_world
@@ -161,15 +191,15 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         print(f"fetching world objects from {sys.argv[2]}")
-        instances = run_analysis_from_path(
+        run_analysis_from_path(
             sys.argv[2],
             world_attribute=sys.argv[1],
             runs_per_policy=1,
             multiprocess=False,
         )
     else:
-        instances = run_analysis_from_path(
-            "world_cache/trained_models/ANNValueFunction/c50_s1998/longest_trained",
+        run_analysis_from_path(
+            "world_cache/trained_models/LinearValueFunction/c50_s2500/2021-05-27T20:01",
             shift_duration=960,
             runs_per_policy=10,
         )

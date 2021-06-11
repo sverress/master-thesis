@@ -3,7 +3,8 @@ from globals import ITERATION_LENGTH_MINUTES
 
 def training_simulation(world):
     """
-    Does scenario simulations until shift end
+    Faster simulation engine than the event based simulation in the world class.
+    All customer trips are in this case done instantly and not distributed across the 20 minute interval
     :param world: snapshot copy of world
     :return: world object after shift
     """

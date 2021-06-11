@@ -1,4 +1,8 @@
 class HyperParameters:
+    """
+    Class inherited by World class. Sets all parameters for the instance.
+    """
+
     def __init__(
         self,
         DISCOUNT_RATE=0.90,

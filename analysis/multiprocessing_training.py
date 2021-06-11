@@ -1,3 +1,6 @@
+"""
+Multiprocessing extension of train_value_function.py
+"""
 import os
 from multiprocessing import Pool
 

@@ -1,3 +1,6 @@
+"""
+This file contains all the policies used in the thesis.
+"""
 import copy
 
 import classes
@@ -8,6 +11,10 @@ import system_simulation.scripts
 
 
 class Policy(abc.ABC):
+    """
+    Base Policy class. Used mainly as an interface for the get best action method
+    """
+
     def __init__(
         self,
         get_possible_actions_divide,
@@ -54,7 +61,8 @@ class Policy(abc.ABC):
 
 class EpsilonGreedyValueFunctionPolicy(Policy):
     """
-    Chooses an action based on a epsilon greedy policy. Will update weights after chosen action
+    This is the primary policy of the thesis. It chooses an action based on a epsilon greedy policy.
+    Will update weights after chosen action
     """
 
     def __init__(
@@ -89,6 +97,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
         )
         state = world.state
         cache = EpsilonGreedyValueFunctionPolicy.get_cache(state)
+        # Get state representation of current state
         state_features = self.value_function.get_state_features(
             world.state, vehicle, cache
         )
@@ -103,7 +112,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                     classes.Action([], [], [], random.choice(world.state.locations).id),
                     -1000,
                     [],
-                )
+                )  # No actions bug
             ]
             reward = 0
             for action in actions:
@@ -114,14 +123,17 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                 )
                 # perform action
                 forward_state.do_action(action, forward_vehicle, world.time)
+                # Simulate the system to generate potential lost trips
                 _, _, lost_demands = system_simulation.scripts.system_simulate(
                     forward_state
                 )
+                # Record lost trip rewards
                 reward = (
                     sum(map(lambda lost_trips: lost_trips[0], lost_demands))
                     if len(lost_demands) > 0
                     else 0
                 )
+                # Find all actions after taking the action moving the state to s_{t+1}
                 next_action_actions = forward_state.get_possible_actions(
                     forward_vehicle,
                     divide=self.get_possible_actions_divide,
@@ -151,13 +163,16 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                             next_state_features
                         )
                     )
+                    # Add the transition to a list for later evaluation
                     forward_action_info.append(
                         (next_state_action, next_state_value, next_state_features)
                     )
 
+                # find the greedy best next action
                 best_next_action, next_state_value, next_state_features = max(
                     forward_action_info, key=lambda pair: pair[1]
                 )
+                # Add this transition for later evaluation
                 action_info.append(
                     (
                         action,
@@ -165,6 +180,7 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
                         next_state_features,
                     )
                 )
+            # Choose the action with the highest value and reward
             best_action, next_state_value, next_state_features = max(
                 action_info, key=lambda pair: pair[1]
             )
@@ -186,6 +202,11 @@ class EpsilonGreedyValueFunctionPolicy(Policy):
 
     def __str__(self):
         return f"EpsilonGreedyPolicy w/ {self.value_function.__str__()}"
+
+
+"""
+SECONDARY POLICIES
+"""
 
 
 class SwapAllPolicy(Policy):

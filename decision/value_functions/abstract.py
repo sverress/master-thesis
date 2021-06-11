@@ -1,4 +1,3 @@
-import math
 from collections import deque
 
 import classes
@@ -22,6 +21,12 @@ class Decorators:
 
 
 class ValueFunction(abc.ABC):
+    """
+    This is the base value function class. It contains methods for creating the state representation and contains the
+    common variables for both of the value functions. This class also works as a interface so both value functions use
+    the same method names.
+    """
+
     def __init__(
         self,
         weight_update_step_size,
@@ -89,7 +94,7 @@ class ValueFunction(abc.ABC):
 
     @abc.abstractmethod
     @Decorators.check_setup
-    def train(self, batch_size):
+    def train(self, training_input):
         pass
 
     @abc.abstractmethod

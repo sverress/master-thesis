@@ -5,6 +5,10 @@ from classes.Scooter import Scooter
 
 
 class Vehicle:
+    """
+    Class for vehicle state. Keeps track of current location and inventory including a service route log.
+    """
+
     def __init__(
         self,
         vehicle_id: int,
